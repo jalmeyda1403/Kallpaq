@@ -24,7 +24,7 @@ class AccionObserver
             $hallazgo->fecha_cierre_acciones = $ultimaFecha;
 
             $totalAcciones = $hallazgo->acciones()->count();
-            $accionesCompletadas = $hallazgo->acciones()->where('estado', 'Completada')->count();
+            $accionesCompletadas = $hallazgo->acciones()->where('estado', 'Cerrada')->count();
 
             // Calcular el porcentaje de avance
             $avance = ($accionesCompletadas / $totalAcciones) * 100;

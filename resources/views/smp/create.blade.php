@@ -1,5 +1,15 @@
 @extends('facilitador.layout.master')
 @section('title', 'SIG')
+@section('css')
+
+    <style>
+        .selected {
+            background-color: #ECECEC;
+            /* Light gray background for selected row */
+        }
+    </style>
+@endsection
+@section('content')
 
 
     <div class="container-fluid">

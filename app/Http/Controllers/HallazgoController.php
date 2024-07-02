@@ -8,6 +8,8 @@ use App\Models\Accion;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Notifications\ActionApprovedNotificacion;
+use Illuminate\Support\Facades\Notification;
 
 class HallazgoController extends Controller
 {
@@ -202,7 +204,20 @@ class HallazgoController extends Controller
         // Actualizar el estado a 'enviado'
         $hallazgo->estado = 'Aprobado';
         $hallazgo->fecha_aprobacion = Carbon::now()->format('Y-m-d');
+       
+
+        // Obtener las acciones relacionadas con el hallazgo
+        $acciones = $hallazgo->acciones()->get();
         $hallazgo->save();
+        // Enviar notificación a los correos de los responsables
+        foreach ($acciones as $accion) {
+            $responsableCorreo = $accion->responsable_correo;
+
+            // Enviar la notificación por correo
+            Notification::route('mail', $responsableCorreo)->notify(new ActionApprovedNotificacion($accion));
+        }
+        
+        
         return redirect()->back()->with('success', 'Se ha aprobado el plan de acción');
     }
 
@@ -268,7 +283,7 @@ class HallazgoController extends Controller
         $hallazgos = Hallazgo::all();
 
         $clasificaciones = ['NCM', 'Ncme', 'Obs', 'Odm']; // Agrega las clasificaciones que necesites
-        $estados = ['Abierto', 'Aprobado', 'En implementación', 'Pendiente', 'Cerrado'];
+        $estados = ['Abierto', 'En implementación', 'Pendiente', 'Cerrado'];
 
         $smp = [];
         foreach ($clasificaciones as $clasificacion) {
@@ -280,9 +295,9 @@ class HallazgoController extends Controller
             ];
 
             foreach ($estados as $estado) {
-                if ($estado == 'Aprobado' || $estado == 'En implementación') {
+                if ($estado == 'En implementación') {
                     // Combina las cuentas de 'Aprobado' y 'En implementación'
-                    $smp[$clasificacion]['En implementación'] += $hallazgos->where('clasificacion', $clasificacion)->where('estado', $estado)->count();
+                    $smp[$clasificacion]['En implementación'] = $hallazgos->where('clasificacion', $clasificacion)->whereIn('estado', ['En implementación', 'Aprobado'])->count();
                 } else {
                     $smp[$clasificacion][$estado] = $hallazgos->where('clasificacion', $clasificacion)->where('estado', $estado)->count();
                 }

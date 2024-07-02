@@ -1,5 +1,5 @@
 @extends('facilitador.layout.master')
-@section('title', 'SIG')
+@section('title', 'Kallpaq')
 @section('css')
 
     <style>

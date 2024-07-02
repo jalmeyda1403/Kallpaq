@@ -14,6 +14,7 @@ use App\Http\Controllers\HallazgoController;
 use App\Http\Controllers\AccionController;
 use App\Http\Controllers\CausaController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -65,7 +66,7 @@ Route::get('/smp/create/{clasificacion?}', [HallazgoController::class, 'create']
 Route::post('/smp/{id}/aprobar', [HallazgoController::class, 'aprobar'])->name('smp.aprobar');
 Route::post('/smp/imprimir/{id}', [HallazgoController::class, 'imprimir'])->name('smp.imprimir');
 Route::get('/smp/{id}/plan', [HallazgoController::class,'planes'])->name('smp.plan');
-Route::get('dashboard/', [HallazgoController::class, 'dashboard'])->name('smp.dashboard');
+Route::get('smp/dashboard/home', [HallazgoController::class, 'dashboard'])->name('smp.dashboard');
 
 //acciones
 Route::get('/smp/{hallazgo_id}/acciones/seguimiento', [AccionController::class, 'index'])->name('smp.acciones.seguimiento');
@@ -109,7 +110,7 @@ Route::group(['namespace' => 'Admin', 'middleware'=> ['auth', 'role:admin']], fu
     Route::post('usuarios/asignar-procesos/{id}', [UserController::class,'guardarProcesos'])->name('usuarios.guardar-procesos');
 });
 
-Route::group(['namespace' => 'Admin', 'middleware'=> ['auth', 'role:facilitador']], function () {
+Route::group(['namespace' => 'Admin', 'middleware' => ['auth', 'role:facilitador']], function () {
    
     Route::get('usuario/ver-mapa', [UserController::class, 'mapearProcesos'])->name('usuario.mapear-procesos');
     

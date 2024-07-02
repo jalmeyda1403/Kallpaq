@@ -48,8 +48,7 @@ class AccionController extends Controller
         $accion->accion = $request->accion;
         $accion->fecha_inicio = $request->fecha_inicio;
         $accion->fecha_fin = $request->fecha_fin;
-        $accion->comentario = $request->comentario;
-        $accion->estado = 'Programada';
+        $accion->comentario = $request->comentario;    
         $accion->es_correctiva = $request->es_correctiva;
         $accion->responsable_id = $request->responsable_id;
         $accion->responsable_correo = $request->responsable_correo;
@@ -113,11 +112,17 @@ class AccionController extends Controller
         $hallazgo = Hallazgo::findOrFail($hallazgo_id);
         $smp_cod = $hallazgo->smp_cod;
 
-        // Crear la carpeta si no existe
+        // Crear la carpeta SMP si no existe
         $folderPath = 'evidencias/' . $smp_cod;
         if (!Storage::disk('public')->exists($folderPath)) {
             Storage::disk('public')->makeDirectory($folderPath);
         }
+        // Crear la carpeta Accion si no existe
+        $folderPath = 'evidencias/' . $smp_cod.'/'.$accion->accion_cod;
+        if (!Storage::disk('public')->exists($folderPath)) {
+            Storage::disk('public')->makeDirectory($folderPath);
+        }
+
 
         // Manejar la subida de archivos
         if ($request->hasFile('archivos')) {
@@ -137,8 +142,9 @@ class AccionController extends Controller
     public function listarArchivos($hallazgo_id, $id)
     {
         $hallazgo = Hallazgo::findOrFail($hallazgo_id);
+        $accion = Accion::findOrFail($id);
         $smp_cod = $hallazgo->smp_cod;
-        $folderPath = 'evidencias/' . $smp_cod;
+        $folderPath = 'evidencias/' . $smp_cod.'/'.$accion->accion_cod;
 
         // Obtiene todos los archivos en la carpeta
         $files = Storage::disk('public')->files($folderPath);

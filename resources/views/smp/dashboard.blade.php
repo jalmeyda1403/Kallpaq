@@ -1,5 +1,5 @@
 @extends('facilitador.layout.master')
-@section('title', 'SIG')
+@section('title', 'Kallpaq')
 @section('css')
     <style>
         .table-condensed th,
@@ -10,6 +10,7 @@
         }
     </style>
 @endsection
+
 @section('content')
 
     <div class="container-fluid">
@@ -83,138 +84,141 @@
                 </div>
             </div>
         </div>
-    @endsection
+    </div>
+@stop
 
-    @section('js')
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-        <script>
-            var colores = {
-                'Abierto': '#e9ecef',
-                'En implementación': '#e4a35e',
-                'Pendiente': '#df4666',
-                'Cerrado': '#7a9ebb'
-            };
+@section('js')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script>
+        var colores = {
+            'Abierto': '#e9ecef',
+            'En implementación': '#e4a35e',
+            'Pendiente': '#df4666',
+            'Cerrado': '#7a9ebb'
+        };
 
-            var smpEstadoCtx = document.getElementById('smpEstadoChart').getContext('2d');
-            var smpEstadoChart = new Chart(smpEstadoCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Abiertas', 'En implementación', 'Pendientes', 'Cerradas'],
-                    datasets: [{
-                        data: [{{ $smpAbiertas }}, {{ $smpImplementacion }}, {{ $smpPendientes }},
-                            {{ $smpCerradas }}
-                        ],
-                        backgroundColor: Object.values(colores),
-                        borderColor: '#cccccc',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    cutout: '60%',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        datalabels: {
-                            color: '#fff',
-                            formatter: (value, ctx) => {
-                                let sum = 0;
-                                let dataArr = ctx.chart.data.datasets[0].data;
-                                dataArr.map(data => {
-                                    sum += data;
-                                });
-                                let percentage = (value * 100 / sum).toFixed(1) + "%";
-                                return value + ', (' + percentage + ')';
-                            },
-                            anchor: 'end',
-                            align: 'center',
-                            offset: -5,
-                            borderWidth: 1,
-                            borderColor: '#000',
-                            borderRadius: 0,
-                            backgroundColor: '#000',
-                            font: {
-                                weight: 'bold'
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.raw !== null) {
-                                        label += context.raw;
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels] // Agrega el plugin ChartDataLabels
-            });
-
-
-            var ctx2 = document.getElementById('hallazgosChart').getContext('2d');
-            // Datos del controlador
-            var hallazgosData = @json($smp);
-            // Obtiene las clasificaciones y estados
-            var clasificaciones = Object.keys(hallazgosData);;
-            var estados = Object.keys(hallazgosData[clasificaciones[0]]);
-
-            // Crea los datasets para cada estado
-            var datasets = estados.map(function(estado) {
-                return {
-                    label: estado,
-                    data: clasificaciones.map(function(clasificacion) {
-                        return hallazgosData[clasificacion][estado];
-                    }),
-                    backgroundColor: colores[estado] || '#cccccc',
+        var smpEstadoCtx = document.getElementById('smpEstadoChart').getContext('2d');
+        var smpEstadoChart = new Chart(smpEstadoCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Abiertas', 'En implementación', 'Pendientes', 'Cerradas'],
+                datasets: [{
+                    data: [{{ $smpAbiertas }}, {{ $smpImplementacion }}, {{ $smpPendientes }},
+                        {{ $smpCerradas }}
+                    ],
+                    backgroundColor: Object.values(colores),
                     borderColor: '#cccccc',
-                    borderWidth: 1,
-                    stack: 0
-                };
-            });
-
-            // Configuración del gráfico
-            var hallazgosChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: clasificaciones,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.raw !== null) {
-                                        label += context.raw;
-                                    }
-                                    return label;
-                                }
-                            }
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                cutout: '60%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: '#fff',
+                        formatter: (value, ctx) => {
+                            let sum = 0;
+                            let dataArr = ctx.chart.data.datasets[0].data;
+                            dataArr.map(data => {
+                                sum += data;
+                            });
+                            let percentage = (value * 100 / sum).toFixed(1) + "%";
+                            return value + ', (' + percentage + ')';
+                        },
+                        anchor: 'end',
+                        align: 'center',
+                        offset: -5,
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        borderRadius: 0,
+                        backgroundColor: '#000',
+                        font: {
+                            weight: 'bold'
                         }
                     },
-                    interaction: {
-                        intersect: true,
-                    },
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: false
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw;
+                                }
+                                return label;
+                            }
                         }
                     }
                 }
-            });
-        </script>
-    @endsection
+            },
+            plugins: [ChartDataLabels] // Agrega el plugin ChartDataLabels
+        });
+
+
+        var ctx2 = document.getElementById('hallazgosChart').getContext('2d');
+        // Datos del controlador
+        var hallazgosData = @json($smp);
+        
+        // Obtiene las clasificaciones y estados
+        var clasificaciones = Object.keys(hallazgosData);;
+        var estados = ['Abierto', 'En implementación', 'Pendiente', 'Cerrado'];
+       
+        // Crea los datasets para cada estado
+        var datasets = estados.map(function(estado) {
+            return {
+                label: estado,
+                data: clasificaciones.map(function(clasificacion) {
+                    return hallazgosData[clasificacion][estado];
+                }),
+                backgroundColor: colores[estado],
+                borderColor: '#cccccc',
+                borderWidth: 1,
+                stack: 0,
+            };
+        });
+        console.log(datasets);
+        // Configuración del gráfico
+        var hallazgosChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: clasificaciones,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+  
+    </script>
+@endsection
