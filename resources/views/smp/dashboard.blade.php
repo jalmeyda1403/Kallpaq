@@ -20,8 +20,33 @@
                 <li class="breadcrumb-item active" aria-current="page">Dashboard Mejora de Procesos</li>
             </ol>
         </nav>
-        <div class="row">
-            <div class="col-md-8">
+        <div class="row justify-content-center">    
+            <div class="col-md-10">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="card-title">SMP por Estado</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="smpEstadoChart" ></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="card-title">Clasificación de SMP</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="hallazgosChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>      
+              
+            <div class="col-md-10">
                 <div class="card">
                     <div class="card-header bg-danger text-white">
                         <h5 class="card-title">Estado SMP</h5>
@@ -35,16 +60,20 @@
                                     <th>SMP En implementación</th>
                                     <th>SMP Pendientes</th>
                                     <th>SMP Cerradas</th>
+                                    <th>SMP Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($estadoSmpData as $data)
                                     <tr class="p-0 m-0">
-                                        <td>{{ $data->proceso }}</td>
+                                        <td> <a href="{{ route('smp.proceso', ['id' => $data->id]) }}">
+                                            {{ $data->cod_proceso }} - {{ $data->proceso }}  
+                                        </a></td>
                                         <td>{{ $data->abiertos }}</td>
                                         <td>{{ $data->implementaciones }}</td>
                                         <td>{{ $data->pendientes }}</td>
                                         <td>{{ $data->cerradas }}</td>
+                                        <td>{{ $data->total }}</td>
                                     </tr>
                                 @endforeach
                                 <tr>
@@ -53,36 +82,60 @@
                                     <td>{{ $totalImplementacion }}</td>
                                     <td>{{ $totalPendientes }}</td>
                                     <td>{{ $totalCerradas }}</td>
+                                    <td>{{ $totalHallazgos }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header bg-danger text-white">
-                                <h5 class="card-title">SMP por Estado</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="smpEstadoChart" style="width:300; height:300"></canvas>
-                            </div>
-                        </div>
+
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="card-title">Estado Observaciones y Oportunidades de Mejora</h5>
                     </div>
-                    <div class="col-md-12 mt-3">
-                        <div class="card">
-                            <div class="card-header bg-danger text-white">
-                                <h5 class="card-title">Clasificación de SMP</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="hallazgosChart"></canvas>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-condensed">
+                            <thead>
+                                <tr class="p-0 m-0">
+                                    <th>Proceso</th>
+                                    <th>Obs y Odm Abiertas</th>
+                                    <th>Obs y Odm En implementación</th>
+                                    <th>Obs y Odm Pendientes</th>
+                                    <th>Obs y Odm Cerradas</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @foreach ($estadoObsData as $data)
+                                    <tr class="p-0 m-0">
+                                        <td> <a href="{{ route('smp.proceso', ['id' => $data->id]) }}">
+                                            {{ $data->cod_proceso }} - {{ $data->proceso }}  
+                                        </a></td>
+                                        <td>{{ $data->abiertos }}</td>
+                                        <td>{{ $data->implementaciones }}</td>
+                                        <td>{{ $data->pendientes }}</td>
+                                        <td>{{ $data->cerradas }}</td>
+                                        <td>{{ $data->total }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr>
+                                    <td><strong>Total</strong></td>
+                                    <td>{{ $ObsAbiertas }}</td>
+                                    <td>{{ $ObsImplementacion }}</td>
+                                    <td>{{ $ObsPendientes }}</td>
+                                    <td>{{ $ObsCerradas }}</td>
+                                    <td>{{ $ObsTotal }}</td>
+                                </tr>
+                               
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
+            </div> 
+            
         </div>
     </div>
 @stop
@@ -113,7 +166,7 @@
                 }]
             },
             options: {
-                cutout: '60%',
+                cutout: '50%',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
