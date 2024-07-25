@@ -78,16 +78,9 @@ class Hallazgo extends Model
 
     public function scopeFilterByClasificacion($query, $clasificacion)
     {
-        if ($clasificacion) {
-            if ($clasificacion === 'Ncm') {
-                return $query->where(function ($query) {
-                    $query->where('clasificacion', 'NCM')
-                        ->orWhere('clasificacion', 'NCMe');
-                });
-            } else {
-                return $query->where('clasificacion', $clasificacion);
-            }
+        if (is_array($clasificacion)) {
+            return $query->whereIn('clasificacion', $clasificacion);
         }
-        return $query;
+        return $query->where('clasificacion', $clasificacion);
     }
 }

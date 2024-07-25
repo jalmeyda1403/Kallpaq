@@ -20,7 +20,28 @@
                 <li class="breadcrumb-item active" aria-current="page">Dashboard Mejora de Procesos</li>
             </ol>
         </nav>
-        <div class="row justify-content-center">    
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header">
+                        <form action="{{ route('smp.dashboard') }}" method="GET" class="form-inline">
+                            <div class="form-group mb-2 d-flex align-items-center">
+                                <label class="mr-2">Filtrar por:</label>
+                                <select class="form-control mr-2" id="sig" name="sig" required>
+                                    @foreach (config('opciones.sig') as $clave => $valor)
+                                        <option value="{{ $clave }}"
+                                            {{ request('sig') == $clave ? 'selected' : '' }}>
+                                            {{ $valor }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                            </div>
+                            <button type="submit" class="btn btn-primary mb-2">Filtrar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
             <div class="col-md-10">
                 <div class="row">
                     <div class="col-md-6">
@@ -29,7 +50,7 @@
                                 <h5 class="card-title">SMP por Estado</h5>
                             </div>
                             <div class="card-body">
-                                <canvas id="smpEstadoChart" ></canvas>
+                                <canvas id="smpEstadoChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -44,12 +65,12 @@
                         </div>
                     </div>
                 </div>
-            </div>      
-              
+            </div>
+
             <div class="col-md-10">
                 <div class="card">
                     <div class="card-header bg-danger text-white">
-                        <h5 class="card-title">Estado SMP</h5>
+                        <h5 class="card-title">Estado Solicitudes de Mejora de Procesos (NC)</h5>
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered table-condensed">
@@ -66,9 +87,10 @@
                             <tbody>
                                 @foreach ($estadoSmpData as $data)
                                     <tr class="p-0 m-0">
-                                        <td> <a href="{{ route('smp.proceso', ['id' => $data->id]) }}">
-                                            {{ $data->cod_proceso }} - {{ $data->proceso }}  
-                                        </a></td>
+                                        <td> <a
+                                                href="{{ route('proceso.hallazgos', ['id' => $data->id, 'clasificacion' => 'NCM,Ncme']) }}">
+                                                {{ $data->cod_proceso }} - {{ $data->proceso }}
+                                            </a></td>
                                         <td>{{ $data->abiertos }}</td>
                                         <td>{{ $data->implementaciones }}</td>
                                         <td>{{ $data->pendientes }}</td>
@@ -111,9 +133,10 @@
 
                                 @foreach ($estadoObsData as $data)
                                     <tr class="p-0 m-0">
-                                        <td> <a href="{{ route('smp.proceso', ['id' => $data->id]) }}">
-                                            {{ $data->cod_proceso }} - {{ $data->proceso }}  
-                                        </a></td>
+                                        <td> <a
+                                                href="{{ route('proceso.hallazgos', ['id' => $data->id, 'clasificacion' => 'Obs,Odm']) }}">
+                                                {{ $data->cod_proceso }} - {{ $data->proceso }}
+                                            </a></td>
                                         <td>{{ $data->abiertos }}</td>
                                         <td>{{ $data->implementaciones }}</td>
                                         <td>{{ $data->pendientes }}</td>
@@ -129,13 +152,13 @@
                                     <td>{{ $ObsCerradas }}</td>
                                     <td>{{ $ObsTotal }}</td>
                                 </tr>
-                               
+
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div> 
-            
+            </div>
+
         </div>
     </div>
 @stop
@@ -215,11 +238,11 @@
         var ctx2 = document.getElementById('hallazgosChart').getContext('2d');
         // Datos del controlador
         var hallazgosData = @json($smp);
-        
+
         // Obtiene las clasificaciones y estados
         var clasificaciones = Object.keys(hallazgosData);;
         var estados = ['Abierto', 'En implementación', 'Pendiente', 'Cerrado'];
-       
+
         // Crea los datasets para cada estado
         var datasets = estados.map(function(estado) {
             return {
@@ -249,7 +272,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: function (context) {
+                            label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) {
                                     label += ': ';
@@ -272,6 +295,5 @@
                 }
             }
         });
-  
     </script>
 @endsection

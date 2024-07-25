@@ -101,7 +101,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('smp.index', ['clasificacion' => 'Ncm']) }}"
+                            <a href="{{ route('smp.index', ['clasificacion' => 'NCM,Ncme']) }}"
                                 class="nav-link {{ request()->segment(3) == 'Ncm' ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-times-circle"></i>
                                 <p>No Conformidades</p>

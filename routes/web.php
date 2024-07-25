@@ -66,7 +66,7 @@ Route::get('/smp/create/{clasificacion?}', [HallazgoController::class, 'create']
 Route::post('/smp/{id}/aprobar', [HallazgoController::class, 'aprobar'])->name('smp.aprobar');
 Route::post('/smp/imprimir/{id}', [HallazgoController::class, 'imprimir'])->name('smp.imprimir');
 Route::get('/smp/{id}/plan', [HallazgoController::class,'planes'])->name('smp.plan');
-Route::get('/smp/{id}/proceso', [HallazgoController::class,'porProceso'])->name('smp.proceso');
+Route::get('/smp/{id}/clasificacion/{clasificacion}', [HallazgoController::class, 'porProceso'])->name('proceso.hallazgos');
 Route::get('smp/dashboard/home', [HallazgoController::class, 'dashboard'])->name('smp.dashboard');
 
 //acciones

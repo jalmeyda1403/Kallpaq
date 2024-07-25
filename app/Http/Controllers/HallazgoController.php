@@ -16,14 +16,15 @@ class HallazgoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, $clasificacion = null)
+    public function index(Request $request, $clasificacion)
     {
         $breadcrumb = [];
+        $clasificacionArray = explode(',', $clasificacion);
         $hallazgos = Hallazgo::query()
             ->filterBySig($request->sig)
             ->filterByInformeId($request->informe_id)
             ->filterByYear($request->year)
-            ->filterByClasificacion($clasificacion)
+            ->filterByClasificacion($clasificacionArray)
             ->get();
 
         if ($clasificacion == 'Ncm') {
@@ -244,12 +245,15 @@ class HallazgoController extends Controller
         return view('smp.plan', compact('planesAccion', 'hallazgo', 'correctivas', 'preventivas', 'breadcrumb'));
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        $sig = $request->sig;
         // Crear una consulta base con el filtro de clasificación para grafico pie
         $classifications = ['Ncme', 'NCM'];
 
-        $queryBase = Hallazgo::whereIn('clasificacion', $classifications);
+        $query = Hallazgo::whereIn('clasificacion', $classifications);
+        $queryBase = $query->filterBySig($sig);
+
 
         $smpAbiertas = (clone $queryBase)
             ->where('estado', 'Abierto')
@@ -272,31 +276,31 @@ class HallazgoController extends Controller
         $clasificacionFiltro = function ($query) {
             $query->whereIn('clasificacion', ['Ncme', 'NCM']);
         };
-        
-        $estadoSmpData = Proceso::select('id','cod_proceso', 'nombre as proceso')
-        ->withCount([
-            'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro) {
-                $query->where('estado', 'Abierto')->where($clasificacionFiltro);
-            },
-            'hallazgos as pendientes' => function ($query) use ($clasificacionFiltro) {
-                $query->where('estado', 'Pendiente')->where($clasificacionFiltro);
-            },
-            'hallazgos as implementaciones' => function ($query) use ($clasificacionFiltro) {
-                $query->whereIn('estado', ['En implementación', 'Aprobado'])->where($clasificacionFiltro);
-            },
-            'hallazgos as cerradas' => function ($query) use ($clasificacionFiltro) {
-                $query->where('estado', 'Cerrado')->where($clasificacionFiltro);
-            }
-        ])
-        ->get()
-        ->filter(function ($proceso) {
-            return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
-        });
-
+       
+        $estadoSmpData = Proceso::select('id', 'cod_proceso', 'nombre as proceso')
+            ->withCount([
+                'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->where('estado', 'Abierto')->where($clasificacionFiltro)->filterBySig($sig);
+                },
+                'hallazgos as pendientes' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->where('estado', 'Pendiente')->where($clasificacionFiltro)->filterBySig($sig);
+                },
+                'hallazgos as implementaciones' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->whereIn('estado', ['En implementación', 'Aprobado'])->where($clasificacionFiltro)->filterBySig($sig);
+                },
+                'hallazgos as cerradas' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->where('estado', 'Cerrado')->where($clasificacionFiltro)->filterBySig($sig);
+                }
+            ])
+            ->get()
+            ->filter(function ($proceso) {
+                return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
+            });
+  
         $estadoSmpData->each(function ($proceso) {
             $proceso->total = $proceso->abiertos + $proceso->pendientes + $proceso->implementaciones + $proceso->cerradas;
         });
-    
+
 
         $totalAbiertas = $estadoSmpData->sum('abiertos');
         $totalPendientes = $estadoSmpData->sum('pendientes');
@@ -305,7 +309,8 @@ class HallazgoController extends Controller
         $totalHallazgos = $totalAbiertas + $totalPendientes + $totalImplementacion + $totalCerradas;
 
         // Crear una consulta de clasificacion para gráfico SMP 
-        $hallazgos = Hallazgo::all();
+        $hallazgos = Hallazgo::where('sig', $sig)->get();
+      
         $estados = ['Abierto', 'En implementación', 'Pendiente', 'Cerrado'];
         $smp = [];
         foreach ($classifications as $clasificacion) {
@@ -319,9 +324,13 @@ class HallazgoController extends Controller
             foreach ($estados as $estado) {
                 if ($estado == 'En implementación') {
                     // Combina las cuentas de 'Aprobado' y 'En implementación'
-                    $smp[$clasificacion]['En implementación'] = $hallazgos->where('clasificacion', $clasificacion)->whereIn('estado', ['En implementación', 'Aprobado'])->count();
+                    $smp[$clasificacion]['En implementación'] = $hallazgos->where('clasificacion', $clasificacion)
+                        ->whereIn('estado', ['En implementación', 'Aprobado'])->count();
+
                 } else {
-                    $smp[$clasificacion][$estado] = $hallazgos->where('clasificacion', $clasificacion)->where('estado', $estado)->count();
+                    $smp[$clasificacion][$estado] = $hallazgos->where('clasificacion', $clasificacion)
+                        ->where('estado', $estado)->count();
+
                 }
             }
         }
@@ -331,24 +340,25 @@ class HallazgoController extends Controller
             $query->whereIn('clasificacion', ['Obs', 'Odm']);
         };
         $estadoObsData = Proceso::select('id', 'cod_proceso', 'nombre as proceso')
-        ->withCount([
-            'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro) {
-                $query->where('estado', 'Abierto')->where($clasificacionFiltro);
-            },
-            'hallazgos as pendientes' => function ($query) use ($clasificacionFiltro) {
-                $query->where('estado', 'Pendiente')->where($clasificacionFiltro);
-            },
-            'hallazgos as implementaciones' => function ($query) use ($clasificacionFiltro) {
-                $query->whereIn('estado', ['En implementación', 'Aprobado'])->where($clasificacionFiltro);
-            },
-            'hallazgos as cerradas' => function ($query) use ($clasificacionFiltro) {
-                $query->where('estado', 'Cerrado')->where($clasificacionFiltro);
-            }
-        ])
-        ->get()
-        ->filter(function ($proceso) {
-            return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
-        });
+            ->withCount([
+                'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->where('estado', 'Abierto')->where($clasificacionFiltro)->filterBySig($sig);
+                },
+                'hallazgos as pendientes' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->where('estado', 'Pendiente')->where($clasificacionFiltro)->filterBySig($sig);
+                },
+                'hallazgos as implementaciones' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->whereIn('estado', ['En implementación', 'Aprobado'])->where($clasificacionFiltro)->filterBySig($sig);
+                },
+                'hallazgos as cerradas' => function ($query) use ($clasificacionFiltro, $sig) {
+                    $query->where('estado', 'Cerrado')->where($clasificacionFiltro)->filterBySig($sig);
+                    ;
+                }
+            ])
+            ->get()
+            ->filter(function ($proceso) {
+                return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
+            });
 
         $estadoObsData->each(function ($proceso) {
             $proceso->total = $proceso->abiertos + $proceso->pendientes + $proceso->implementaciones + $proceso->cerradas;
@@ -385,17 +395,18 @@ class HallazgoController extends Controller
         );
     }
 
-    public function porProceso($id)
+    public function porProceso($id, $clasificacion)
     {
         $proceso = Proceso::with('hallazgos')->findOrFail($id);
-        $hallazgos = $proceso->hallazgos;
+        $clasificacionArray = explode(',', $clasificacion);
+        $hallazgos = $proceso->hallazgos()->filterByClasificacion($clasificacionArray)->get();
 
         $breadcrumb = [];
-        $breadcrumb['nombre'] = "Procesos " . $proceso->nombre .  " - Listado de SMP";
-        $breadcrumb['codigo'] = "Ncm";
+        $breadcrumb['nombre'] = "Procesos " . $proceso->nombre . " - Listado de SMP";
+        $breadcrumb['codigo'] = $clasificacion;
 
         return view('smp.index', compact('hallazgos', 'breadcrumb'));
-  
+
 
     }
 
