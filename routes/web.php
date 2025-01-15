@@ -13,6 +13,8 @@ use App\Http\Controllers\ProgramaAuditoriaController;
 use App\Http\Controllers\HallazgoController;
 use App\Http\Controllers\AccionController;
 use App\Http\Controllers\CausaController;
+use App\Http\Controllers\ContextoDeterminacionController;
+
 
 
 /*
@@ -85,10 +87,13 @@ Route::put('analisis/{id}', [CausaController::class, 'update'])->name('analisis.
 Route::delete('analisis/{id}', [CausaController::class, 'destroy'])->name('analisis.destroy');
 });
 
+//COntexto
+
+Route::get('/contexto/', [ContextoDeterminacionController::class, 'index'])->name('contexto.index');
 
 
 
-Route::group(['namespace' => 'Admin', 'middleware'=> ['auth', 'role:admin']], function () {
+
     Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
     Route::post('admin/usuarios', [UserController::class, 'store'])->name('usuarios.store');
     Route::get('admin/usuarios/', [UserController::class, 'index'])->name('usuarios.index');
@@ -109,7 +114,6 @@ Route::group(['namespace' => 'Admin', 'middleware'=> ['auth', 'role:admin']], fu
     Route::get('usuarios/resetear-contrasena/{id}', [UserController::class,'resetPassword'])->name('usuarios.reset-password');
     Route::get('usuarios/asignar-procesos/{id}', [UserController::class, 'asignarProcesos'])->name('usuarios.asignar-procesos');
     Route::post('usuarios/asignar-procesos/{id}', [UserController::class,'guardarProcesos'])->name('usuarios.guardar-procesos');
-});
 
 Route::group(['namespace' => 'Admin', 'middleware' => ['auth', 'role:facilitador']], function () {
    

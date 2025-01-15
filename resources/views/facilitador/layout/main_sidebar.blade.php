@@ -26,7 +26,7 @@
         </div>
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-
+                @if (Auth::check())
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-cog"></i>
@@ -42,7 +42,9 @@
                                 <p> Mapa de Procesos</p>
                             </a>
                         </li>
+                       
                         <li class="nav-item">
+                          
                             <a href="{{ route('usuario.listar-procesos', auth()->user()->id) }}" class="nav-link">
                                 <i class="fas fa-clipboard-list"></i>
                                 <p> Listar Procesos</p>
@@ -62,7 +64,7 @@
                         </li>
                     </ul>
                 </li>
-
+                @endif
                 <!-- Configuración Auditorias SIG (SMP) 
                  <li class="nav-item">
                     <a href="#" class="nav-link">                       
@@ -155,6 +157,32 @@
 
                     </ul>
                 </li>
+
+                 <!-- Configuracion Contexto -->
+                 <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-project-diagram"></i>
+                        <p>
+                            Análisis de Contexto
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('contexto.index') }}" class="nav-link">
+                                <i class="fas fa-sliders-h"></i>
+                                <p>Determinación Contexto</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fas fa-sliders-h"></i>
+                                <p>Analisis de Contexto</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <!-- Configuracion Riesgos -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
@@ -165,16 +193,11 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+                        
                         <li class="nav-item">
                             <a href="#" class="nav-link">
-                                <i class="fas fa-cog"></i>
-                                <p>Determinar Contexto</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-table"></i>
-                                <p>Matriz de Riesgos</p>
+                                <i class="fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -189,12 +212,7 @@
                                 <p>Riesgos Cerrados</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
+                       
                     </ul>
                 </li>
 

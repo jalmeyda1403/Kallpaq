@@ -17,11 +17,11 @@ class HomeController extends Controller
         $user = Auth::user();
         if ($user->hasRole('facilitador')) {
             return view('facilitador.home');
-       }
+        }
 
-       if ($user->hasRole('admin')) {
+        if ($user->hasRole('admin')) {
             return view('admin.home');
-      }
+       }
        
     }
 }

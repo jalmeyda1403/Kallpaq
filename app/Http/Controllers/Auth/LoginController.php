@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use App\Models\User;
 
 
 class LoginController extends Controller
-{ 
+{
     use AuthenticatesUsers;
 
     protected $redirectTo = '/login';
@@ -29,23 +30,22 @@ class LoginController extends Controller
 
     protected function authenticated($user)
     {
-        
+
+        // Verificar si el usuario está autenticado
         if (!Auth::check()) {
             return redirect()->route('login'); // Redireccionar al login si no está autenticado
-        }else{
-            $user = Auth::user();
+        } else {
+            $user = Auth::user(); // Recuperar el usuario autenticado
         }
+
+        // Realizar acciones según el rol del usuario
         if ($user->role == 'admin') {
             return redirect()->route('admin.home');
         } elseif ($user->role == 'facilitador') {
             return redirect()->route('facilitador.home');
         }
-
-      
     }
 
-    
-    
 
     public function logout()
     {
@@ -59,15 +59,15 @@ class LoginController extends Controller
         $role = Auth::user()->role; // assuming you have a role field in users table
 
         switch ($role) {
-            case 'admin':                
-            return view('admin.home');
-               
+            case 'admin':
+                return view('admin.home');
+
             case 'facilitador':
-            return view('facilitador.home');
-              
+                return view('facilitador.home');
+
             default:
                 return '/home';
-              
+
         }
     }
 }
