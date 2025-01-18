@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-06-2024 a las 00:42:39
+-- Tiempo de generación: 18-01-2025 a las 01:29:09
 -- Versión del servidor: 10.4.27-MariaDB
 -- Versión de PHP: 8.2.0
 
@@ -178,6 +178,71 @@ INSERT INTO `configuracion` (`id`, `clave`, `valor`, `created_at`, `updated_at`)
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `contexto_analisis`
+--
+
+CREATE TABLE `contexto_analisis` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `contexto_determinacion_id` bigint(20) UNSIGNED NOT NULL,
+  `internal_context_id` bigint(20) UNSIGNED NOT NULL,
+  `external_context_id` bigint(20) UNSIGNED NOT NULL,
+  `analisis` text NOT NULL,
+  `nivel` enum('Muy Alto','Alto','Medio','Bajo') NOT NULL,
+  `valoracion` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `contexto_determinacion`
+--
+
+CREATE TABLE `contexto_determinacion` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `proceso_id` bigint(20) UNSIGNED NOT NULL,
+  `year` year(4) NOT NULL,
+  `version` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `contexto_externo`
+--
+
+CREATE TABLE `contexto_externo` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `contexto_determinacion_id` bigint(20) UNSIGNED NOT NULL,
+  `perspective_type` enum('legal','politico','institucional','tecnologia','social','economico') NOT NULL,
+  `amenazas` text NOT NULL,
+  `oportunidades` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `contexto_interno`
+--
+
+CREATE TABLE `contexto_interno` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `contexto_determinacion_id` bigint(20) UNSIGNED NOT NULL,
+  `perspective_type` enum('normativa','infraestructura','tecnologia','organizacion','personal','cultura_organizacional') NOT NULL,
+  `fortalezas` text NOT NULL,
+  `debilidades` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `documentos`
 --
 
@@ -326,11 +391,42 @@ CREATE TABLE `hallazgos` (
 --
 
 INSERT INTO `hallazgos` (`id`, `smp_cod`, `informe_id`, `proceso_id`, `resumen`, `descripcion`, `evidencia`, `criterio`, `clasificacion`, `origen`, `estado`, `sig`, `auditor`, `auditor_tipo`, `fecha_solicitud`, `fecha_aprobacion`, `fecha_cierre_acciones`, `avance`, `fecha_planificacion_evaluacion`, `evaluacion`, `fecha_evaluacion`, `fecha_cierre_hallazgo`, `estado_final`, `created_at`, `updated_at`) VALUES
-(1, 'SMP-RH-IN-0044', '03-2024(I)', 196, 'No se ha designado al Oficial de Compliance del SGCM, por lo que no pudo evidenciarse su legajo.', 'Conforme indica la Norma ISO 37301:2021 (Requisito 7.2.1),  la organización debe asegurarse de que las personas sean competentes sobre la base de una educación, formación o experiencia adecuadas; asimismo, la información documentada apropiada debe estar disponible como evidencia de competencia.\r\n\r\nSegún lo revisado durante el proceso de auditoría, las competencias de compliance para el puesto de Oficial de Compliance se encuentran descritas en el documento \"MATRIZ DE COMPETENCIAS PARA EL SISTEMA DE GESTIÓN COMPLIANCE Función de compliance: Oficial de Compliance”, que cuenta con los V°B° de la Subgerente de Modernización y Subgerente de Políticas y Desarrollo Humano con fecha 17/04/24. Se solicita, la información que sustente lo indicado en la Matriz de Competencias, sin embargo, no fue posible evidenciar el legajo del puesto de Oficial de Compliance. Conforme indica personal de Capital Humano debido a que aún no se ha designado este puesto dentro del SGCM.', 'Según lo revisado durante el proceso de auditoría, las competencias de compliance para el puesto de Oficial de Compliance se encuentran descritas en el documento \"MATRIZ DE COMPETENCIAS PARA EL SISTEMA DE GESTIÓN COMPLIANCE Función de compliance: Oficial de Compliance”, que cuenta con los V°B° de la Subgerente de Modernización y Subgerente de Políticas y Desarrollo Humano con fecha 17/04/24. Se solicita, la información que sustente lo indicado en la Matriz de Competencias, sin embargo, no fue posible evidenciar el legajo del puesto de Oficial de Compliance. Conforme indica personal de Capital Humano debido a que aún no se ha designado este puesto dentro del SGCM.', 'Norma ISO 37301, requisitos: 7.2 Competencia, 7.2.1. Generalidades.', 'Ncme', 'IN', 'Aprobado', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-06-26', '2024-06-25', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 15:43:44', '2024-06-26 21:35:48'),
+(1, 'SMP-RH-IN-0044', '03-2024(I)', 196, 'No se ha designado al Oficial de Compliance del SGCM, por lo que no pudo evidenciarse su legajo.', 'Conforme indica la Norma ISO 37301:2021 (Requisito 7.2.1),  la organización debe asegurarse de que las personas sean competentes sobre la base de una educación, formación o experiencia adecuadas; asimismo, la información documentada apropiada debe estar disponible como evidencia de competencia.\r\n\r\nSegún lo revisado durante el proceso de auditoría, las competencias de compliance para el puesto de Oficial de Compliance se encuentran descritas en el documento \"MATRIZ DE COMPETENCIAS PARA EL SISTEMA DE GESTIÓN COMPLIANCE Función de compliance: Oficial de Compliance”, que cuenta con los V°B° de la Subgerente de Modernización y Subgerente de Políticas y Desarrollo Humano con fecha 17/04/24. Se solicita, la información que sustente lo indicado en la Matriz de Competencias, sin embargo, no fue posible evidenciar el legajo del puesto de Oficial de Compliance. Conforme indica personal de Capital Humano debido a que aún no se ha designado este puesto dentro del SGCM.', 'Según lo revisado durante el proceso de auditoría, las competencias de compliance para el puesto de Oficial de Compliance se encuentran descritas en el documento \"MATRIZ DE COMPETENCIAS PARA EL SISTEMA DE GESTIÓN COMPLIANCE Función de compliance: Oficial de Compliance”, que cuenta con los V°B° de la Subgerente de Modernización y Subgerente de Políticas y Desarrollo Humano con fecha 17/04/24. Se solicita, la información que sustente lo indicado en la Matriz de Competencias, sin embargo, no fue posible evidenciar el legajo del puesto de Oficial de Compliance. Conforme indica personal de Capital Humano debido a que aún no se ha designado este puesto dentro del SGCM.', 'Norma ISO 37301, requisitos: 7.2 Competencia, 7.2.1. Generalidades.', 'Ncme', 'IN', 'Aprobado', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-07-01', '2024-06-25', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 15:43:44', '2024-07-04 01:04:14'),
 (2, 'SMP-MODER-IN-0015', '03-2024(I)', 107, 'Se identificaron desviaciones en la identificación de riesgos de compliance.', 'La norma ISO 37301:2021, en su requisito 6.1, establece que la organización debe considerar los problemas a los que se hace referencia en 4.1 y los requisitos mencionados en 4.2 y determinar los riesgos y  oportunidades que deben abordarse. (Requisito 6.1 Acciones para abordar riesgos y oportunidades), sin embargo, se identificaron algunas desviaciones en la identificación de riesgos.', 'Durante el desarrollo de la auditoría, se identificó las siguientes desviaciones en los procesos evaluados:\r\nProcesos Administración de información del personal:\r\nSe evidenció en la auditoria, en la revisión documentaria que el proceso en mención, no contaba con algún riesgo del \"Contexto de la organización\" F01(PR-MODER-04)02, como, por ejemplo: \r\nA1 Falta de interiorización por parte de los colaboradores de la obligatoriedad del cumplimiento del procedimiento.\r\nGestión de Capital Humano - Entrega de Puesto del Colaborador:\r\nRiesgo MO-CHP-001 y MO-CHP-002 no están relacionados con los factores externos e internos.\r\nGestión de las Comunicaciones (Diseño del plan de comunicación corporativa, Gestión de la comunicación interna y Gestión de la publicación institucional):\r\nEl riesgo MO-COM-007 no está relacionados con los factores externos e internos.\r\nPlaneamiento Estratégico:\r\nEl riesgo MO-PEI-001 \"No contar con la documentación administrativa que sustente la elaboración, seguimiento y evaluación del PEI (hoja informativa, reportes, anexos de la Guía CEPLAN, debido a la omisión por parte del personal\" no están relacionado con los factores externos e internos. Asimismo, no se evidencia la evaluación del riesgo MO-PEI-002 \"No cumplir con el plazo establecido para el seguimiento del PEI, de acuerdo a los \r\nestablecido en la Guía CEPLAN debido a la falta de información necesaria para el análisis y evaluación del PEI, que debe ser remitida por los OUO responsables de indicadores\".\r\nGestión de Activos Documentarios (Archivo, custodia y conservación de Documentos):\r\nEl riesgo MO-ARCH-004 Solicitudes de eliminación rechazadas debido a desconocimiento del procedimiento vigente, no están relacionado con los factores externos e internos.\r\nEvaluación de Prestaciones Adicionales de Obra - 1era instancia y Evaluación de Prestaciones Adicionales de Supervisión de Obra - 1era instancia:\r\nEl riesgo MO-CPRE-003 “Posible aprobación del PO o PASO a causa de inobservar el plazo que establece la Ley de Contrataciones del Estado y su Reglamento” no están relacionado con los factores externos e internos.\r\nAuditoría de la Cuenta General de la República:\r\nEl riesgo MO-ACGR-001 \"Presentación inconsistente del Informe de la Auditoría de la Cuenta General de la República, a causa de que los informes de la auditoría de las entidades (materia de insumo del informe de la \r\nauditoría de la cuenta general de la República)\" no están relacionado con los factores externos e internos.\r\nOperativo de Control Simultáneo:\r\nEl riesgo MO-GSCS-CS-001 \"Probabilidad de presentación del Informe de Operativo de Control Simultáneo incompleto (no incluye el total de resultados esperados, los cuales se encuentran contenidos en el Plan Operativo), debido a la falta de priorización de las visitas de control por parte de las unidades orgánicas participantes\" no están relacionado con los factores externos e internos.\r\nAuditoría de Cumplimiento:\r\nEl riesgo MO-SCP-AC-001 \"Que el planeamiento de la auditoría de cumplimiento (carpeta de servicio) se efectúe sin cumplir con lo dispuesto en la normativa y lineamientos aplicables (*), a causa de la limitada \r\ncompetencia del personal” no están relacionado con los factores externos e internos.\r\nGestión de Capital Humano - Encargo de Jefatura de Órgano o Unidad Orgánica:\r\nEl Riesgo MO-EFJUO-001 \"Incumplir la normativa dejando sin encargar de funciones a la unidad orgánica por mala comunicación no están relacionados con los factores externos e internos”.\r\nGestión de Abastecimiento - Gestión de Bienes Patrimoniales:\r\nPara la Oportunidad (O1, F1), se ha establecido como plan de tratamiento \"Realizar capacitaciones, al personal de Patrimonio y a los usuarios”, sin embargo, no se indica en qué temas se darán las capacitaciones ni el mecanismo para asegurar que la acción sea permanente. \r\nPara el Riesgo (MO-GBPAT-005), se ha establecido como plan de tratamiento \" Emitir por correo electrónico el enlace a los procedimientos internos del proceso de Gestión de Bienes Patrimoniales”, sin embargo, no se indica el mecanismo para garantizar que la acción de envío de correos electrónicos sea de manera permanente para mitigar el riesgo.\r\nProceso Gestión Antisoborno:\r\nEl proceso ha identificado el riesgo (D1, A4) el cual está registrado en la Matriz integral de riesgos y oportunidades F02(PR-MODER-04)04, Vs.04 aprobado el 18/04/2024, sin embargo, el factor \"A4\" de la \"Determinación del contexto\" del proceso, no es correspondiente con el riesgo en mención.', 'Norma ISO 37301, requisitos: 6.1 Acciones para abordar los riesgos y oportunidades.', 'Ncme', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-26 16:47:15', '2024-06-26 18:55:54'),
-(3, 'SMP-GCM-IN-001', '03-2024(I)', 114, 'No se evidencia la designación de la función de compliance de la CGR', 'No se evidencia que se haya designado la función de compliance en la CGR, ni que se implementen los principios de acceso directo, independencia, autoridad y competencia adecuada de la función de compliance.', 'Durante la auditoría a los procesos Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance, en la cual se entrevistó a la Subgerenta de Modernización , Supervisora General de Modernización y la Supervisora del SIG, se declara que a la fecha no se cuenta con el nombramiento de la función de cumplimiento.', 'Norma ISO 37301, 5.1.1 Órgano y  Alta Dirección.', 'NCM', 'IN', 'Aprobado', 'SGC', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-06-26', '2024-06-25', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 21:53:09', '2024-06-26 22:10:34'),
-(4, 'SMP-GCM-IN-002', '03-2024(I)', 114, 'No se cuenta con Política de Compliance', 'No se evidencia que se haya aprobado, implementado, comunicado la Política de Compliance y que esté disponible para las partes interesadadas, según corresponda.', 'Al respecto, la Política de Compliance presentada en la auditoría de los procesos de \r\n administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance, no se encuentra aprobada, implementada, comunicada dentro de la organización ni está disponible para las partes interesadas.', 'Norma ISO 37301, requisito: 5.2 Política de Compliance.', 'NCM', 'IN', 'Aprobado', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-06-26', '2024-06-30', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 22:16:38', '2024-06-26 22:37:55'),
-(5, 'SMP-114-IN-003', '03-2024(I)', 114, 'No se cuenta con objetivos para el Sistema de Gestión de Compliance', 'No se evidencia que se haya aprobado y comunicado los Objetivos de Compliance en las funciones y niveles relevantes', 'Durante la auditoría a los procesos de \"Administración de los Sistemas de Gestión\", \"Gestión de Riesgos\", \"Gestión por Procesos\" y \"Gestión Compliance\" se presentó el documento \"Planificación de los objetivos del Sistema Integrado de Gestión\", indicando que que los Objetivos de Compliance se  encuentran en proceso de \"revisión\", en consecuencia no están implementados, ni comunicados en la entidad.', 'Norma ISO 37301, requisito:  6.2. Objetivos de cumplimiento y planificación para lograrlos.', 'NCM', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-26 22:40:54', '2024-06-26 22:40:54');
+(3, 'SMP-GCM-IN-001', '03-2024(I)', 114, 'No se evidencia la designación de la función de compliance de la CGR', 'No se evidencia que se haya designado la función de compliance en la CGR, ni que se implementen los principios de acceso directo, independencia, autoridad y competencia adecuada de la función de compliance.', 'Durante la auditoría a los procesos Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance, en la cual se entrevistó a la Subgerenta de Modernización , Supervisora General de Modernización y la Supervisora del SIG, se declara que a la fecha no se cuenta con el nombramiento de la función de cumplimiento.', 'Norma ISO 37301, 5.1.1 Órgano y  Alta Dirección.', 'NCM', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-06-26', '2024-06-25', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 21:53:09', '2024-06-27 15:51:49'),
+(4, 'SMP-GCM-IN-002', '03-2024(I)', 114, 'No se cuenta con Política de Compliance', 'No se evidencia que se haya aprobado, implementado, comunicado la Política de Compliance y que esté disponible para las partes interesadadas, según corresponda.', 'Al respecto, la Política de Compliance presentada en la auditoría de los procesos de \r\n administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance, no se encuentra aprobada, implementada, comunicada dentro de la organización ni está disponible para las partes interesadas.', 'Norma ISO 37301, requisito: 5.2 Política de Compliance.', 'NCM', 'IN', 'Aprobado', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-07-01', '2024-07-30', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 22:16:38', '2024-07-02 01:49:44'),
+(5, 'SMP-GCM-IN-003', '03-2024(I)', 114, 'No se cuenta con objetivos para el Sistema de Gestión de Compliance', 'No se evidencia que se haya aprobado y comunicado los Objetivos de Compliance en las funciones y niveles relevantes', 'Durante la auditoría a los procesos de \"Administración de los Sistemas de Gestión\", \"Gestión de Riesgos\", \"Gestión por Procesos\" y \"Gestión Compliance\" se presentó el documento \"Planificación de los objetivos del Sistema Integrado de Gestión\", indicando que que los Objetivos de Compliance se  encuentran en proceso de \"revisión\", en consecuencia no están implementados, ni comunicados en la entidad.', 'Norma ISO 37301, requisito:  6.2. Objetivos de cumplimiento y planificación para lograrlos.', 'NCM', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-06-27', '2024-06-26', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-26 22:40:54', '2024-06-27 14:56:45'),
+(6, 'SMP-GCM-IN-004', '03-2024(I)', 114, 'No se evidencia cumplimiento de requisitos en el proceso  Recepción y Evaluación de Denuncias', 'La Norma ISO 37301:2021 indica que la organización debe establecer, implementar, mantener y mejorar continuamente un sistema de gestión del cumplimiento,\r\nincluidos los procesos necesarios y sus interacciones, de acuerdo con los requisitos de este documento. Al respecto , durante la auditoría al proceso de Recepción y Evaluación de Denuncias el personal entrevistado: -Subgerente de Participación Ciudadana y Control Social -Especialista en Procesos -Analista - Coordinador del Área de Asistencia Técnica-Analista de Denuncias Declaran no ejecutar el proceso de Recepción y Evaluación de Denuncias dado que actualmente está bajo su control el proceso de Asistencia Técnica y Capacitación, no pudiendo verificar de manera adecuada los requisitos de la norma en\r\nmención para el proceso, según lo planificado para la auditoría interna (Recepción y Evaluación de Denuncias.', 'Durante la auditoría al proceso de Recepción y Evaluación de Denuncias el personal entrevistado: -Subgerente de Participación Ciudadana y Control Social -Especialista en Procesos -Analista - Coordinador del Área de Asistencia Técnica-Analista de Denuncias Declaran no ejecutar el proceso de Recepción y Evaluación de Denuncias', 'Norma ISO 37301, requisito: 4.4 Sistema de gestión compliance', 'NCM', 'IN', 'Aprobado', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-07-01', '2024-06-28', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-27 15:08:08', '2024-07-02 01:37:02'),
+(7, 'SMP-GCM-IN-005', '03-2024(I)', 114, 'No se presentaron los resultados de la medición de los indicadores relacionados al logro de los objetivos de compliance', 'La organización debe desarrollar, implementar y mantener un conjunto de indicadores apropiados que ayudaran a la organización a evaluar el logro de sus objetivos de compliance y evaluar su desempeño de cumplimiento. Al respecto no se evidenció la implementación y mantenimiento de indicadores que ayuden al logro de los objetivos de compliance. (Requisito 9.1. Seguimiento, medición, análisis y evaluación)', 'Auditoría a los procesos Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance donde no se pudo presentar los resultados de la medición de los indicadores relacionados al logro de los objetivos de compliance', 'Norma ISO 37301, requsito: 9.1. Seguimiento, medición, análisis y evaluación.', 'Ncme', 'IN', 'Aprobado', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-07-01', '2024-06-26', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-27 15:33:08', '2024-07-02 01:39:09'),
+(8, 'SMP-NORM-IN-003', '03-2024(I)', 117, 'La organización debe asegurar que la información documentada sea la apropiada.', 'La Norma ISO 37301:2021 indica en su requisito 7.5 que, al crear y actualizar información documentada, la organización debe asegurarse de que sea apropiado: Durante el desarrollo de las auditorías se obtuvieron las siguientes desviaciones en relación con este requisito: Respaldo y restauración de la información, administración y Verificación de Rendición de Cuentas de los Titulares, Administración y Verificación de Rendición de Cuentas de los Titulares, Gestión del Capital Humano - Administración de Información del Personal, Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance y Administración y evaluación de la implementación del control interno en las Entidades Públicas.', 'Respaldo y restauración de la información: Los siguientes documentos no se encuentran aprobados para este proceso: Determinación de Contexto de los procesos, F01(PR-MODER-04)02, Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18)00, Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 y Matriz de Caracterización del Proceso F09(PR-NORM-06)02.\r\n\r\nAdministración y Verificación de Rendición de Cuentas de los Titulares: Se cuenta con la Matriz de Identificación de Principales Obligaciones Compliance (fecha de actualización del 12.04.24), sin codificación, ni aprobación. \r\n\r\nGestión del Capital Humano - Reclutamiento y Selección: Se puede evidenciar que el documento \"Determinación de Contexto F01(PR-MODER-04)02”, aún no se encuentra aprobado. Se verificó que el área de Modernización solicitó la aprobación del documento en mención según Memorando N°000189-2024-CG/MODER de fecha 09/04/2024, sin embargo, aún se encuentra pendiente por el Propietario de Proceso. \r\n\r\nGestión del Capital Humano - Administración de Información del Personal: Al revisar la documentación del proceso se evidenció que la \"Matriz de caracterización\" F09(PR-NORM-06) Ve.01 del proceso no se encontraba con el formato actualizado de acuerdo con el Procedimiento de alcance del SIG, siendo su  última fecha de actualización el 27/05/2022. Asimismo, el Procedimiento de \"Administración de información del personal\", adecuado al proceso de Gestión de Compliance no se encuentra aprobado. \r\n\r\nGestión del Capital Humano - Proceso Vinculación del personal: De acuerdo con el proceso de auditoría, al revisar la documentación del proceso se evidenció que la \"Matriz de Caracterización\" F09(PR-NORM-06) VE.01 no se encuentra aprobado, siendo su última fecha de aprobación en agosto del 2023. \r\n\r\nAdministración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance: Durante la auditoría al proceso Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance se observa que los siguientes documentos están en proceso de revisión: Manual del Sistema \r\nIntegrado de Gestión (MG-MODER-02), Política del SGCM, Objetivos del SGCM \r\n\r\nAdministración y evaluación de la implementación del control interno en las Entidades Públicas: En los siguientes casos no tienen la versión vigente: • F01(PR-MODER-04)01 se muestra la versión 01 siendo la versión vigente 02• F02(PR-MODER-04)03 se muestra en versión 03 siendo la versión vigente 04.', 'Norma ISO 37301, requisito: 7.5 Información documentada.', 'Ncme', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', '2024-07-01', '2024-06-10', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-27 16:03:20', '2024-07-01 17:41:34'),
+(9, 'SMP-SCS-IN-001', '03-2024(I)', 125, 'La Gerencia Regional de Control de Ancash no tuvo acceso a la información documentada del proceso de Visita de Control.', 'La información documentada requerida por el Sistema de Gestión de Compliance se debe controlar para asegurarse que: está disponible y es adecuada para su uso, dónde y cuándo se necesite.\r\nNo se evidencia que en el proceso de Visita de Control se asegure que la información documentada requerida por el Sistema de Gestión de Compliance se encuentre disponible y adecuada para su uso, dónde y \r\ncuándo se necesite.', 'La Gerencia Regional de Control de Ancash no tuvo acceso a la información con respecto a:\r\n- Matriz de caracterización del Proceso \r\n- Determinación del Contexto\r\n- Matriz integral de riesgos y oportunidades\r\n- Matriz de principales obligaciones de compliance \r\nDocumentos aprobados el 19 de marzo de 2024 por el propietario del proceso de Visita de Control', 'Norma SO 37301, requisito: 7.5 Información documentada.', 'Ncme', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, '2024-06-14', '0.00', NULL, NULL, NULL, NULL, NULL, '2024-06-27 16:07:16', '2024-06-27 16:25:44'),
+(10, 'Obs-RDGD-IN-001', '03-2024(I)', 78, 'Falta identificar partes interesadas para el proceso de Recepción de Documentos.', 'Si bien algunos de los subprocesos de Gestión de Activos Documentarios han determinado sus partes interesadas pertinentes, falta que se identifique para el subprocesos de Recepción de Documentos. Cabe señalar que, el auditado mencionó algunas partes externas tales como: ciudadanos, personas jurídicas entre otros.', 'Matriz de Caracterización del Proceso.', 'Norma ISO 37301, requisito: 4.2 Comprensión de las necesidades y expectativas de las partes interesadas.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 20:16:55', '2024-06-27 20:16:55'),
+(11, 'Obs-ERPS-IN-001', '03-2024(I)', 213, 'Algunos subprocesos de Gestión del Capital Humano no han determinado sus partes interesadas.', 'Si bien algunos de los subprocesos de Gestión del Capital Humano han determinado sus partes interesadas pertinentes, falta que se identifiquen para los subprocesos de Entrega de puestos al colaborador y Encargatura de jefatura de OUO.', 'Matrices de caracterización de los procesos de Entrega de puestos al colaborador y Encargatura de jefatura de OUO.', 'Norma ISO 37301, requisito 4.2. Comprender las necesidades y expectativas de las partes interesadas.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 21:53:56', '2024-06-27 21:54:15'),
+(12, 'Obs-GOCI-IN-001', '03-2024(I)', 76, 'No se ha identificado los elementos de obligatoriedad en la Identificación de Obligaciones de Compliance.', 'Se cuenta con la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) con fecha de aprobación 26/03/24, en la que se han identificado 04 obligaciones relacionadas a este proceso; para las cuales en el campo de “Principales Obligaciones/compromisos que contiene una Obligación” se han indicado los objetivos o alcances de dichas obligaciones, mas no los elementos de obligatoriedad.', 'Matriz de Identificación de Principales Obligaciones Compliance del proceso de Gestión del Jefe y personal OCI.', 'Norma ISO 37301, requisito 4.5 Obligaciones de compliance.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:04:49', '2024-06-27 22:04:49'),
+(13, 'Obs-GCAP-IN-001', '03-2024(I)', 201, 'No se ha identificado los elementos de obligatoriedad en la Identificación de Obligaciones de Compliance.', 'Se cuenta con la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) con fecha de aprobación 22/04/24, en la que se han identificado 04 obligaciones relacionadas a este proceso; para las cuales en el campo de “Principales Obligaciones/compromisos que contiene una Obligación” se han indicado los objetivos o alcances de dichas obligaciones , mas no los elementos de obligatoriedad , como por ejemplo: en el caso de la Directiva N°141-2026, las  obligaciones de los plazos establecidos para la planificación, ejecución; asi como la emisión de una resolución para aprobar el Plan de Desarrollo de las Personas al Servicio del Estado (PDP).', 'Matriz de Identificación de Principales Obligaciones Compliance del proceso de Gestión de la Capacitación.', 'Norma ISO 37301, requisito 4.5 Obligaciones de Compliance', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:09:50', '2024-06-27 22:39:21'),
+(14, 'Obs-AIPE-IN-001', '03-2024(I)', 210, 'Procedimiento de \"Administración de información del personal\" no cita los documentos normativos identificados en la MIPOC.', 'Se evidenció que en el Procedimiento de \"Administración de información del personal\" (punto \"Marco legal\") no se encuentra identificado la principal normativa del proceso como es el caso de la Directiva N° 001-2023-SERVIR-GDSRH “Normas para la Gestión del Proceso de Administración de Legajos”.', 'PR-ACH-06 Procedimiento \"Administración de Información de Personal\"', 'Norma ISO 37301, requsito 8.1. Planificación y control operacional.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:22:33', '2024-06-27 22:28:46'),
+(15, 'Obs-DPPC-IN-001', '03-2024(I)', 200, 'No se ha identificado los elementos de obligatoriedad en la Identificación de Obligaciones de Compliance.', 'Se cuenta con la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) con fecha de aprobación 18/04/24, en la que se han identificado 03 obligaciones relacionadas a este proceso; para las cuales se ha registrado como principal obligación el “Verificar el cumplimiento de requisitos y condiciones para acceder al cargo en el proceso de designación o encargo\". Sin embargo, durante las entrevistas al personal pudo identificar que cada una de estas obligaciones (leyes) implican otros aspectos relevantes de cumplimiento para el proceso, por lo que deben quedar claramente registradas en su actual Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18). -Ley N° 28175, Ley Marco del Empleo Público: Establece el % total que se puede tener de puestos de confianza en la entidad. ´-Ley N° 31419, Ley y reglamento de Ley la cual establece las disposiciones para garantizar la idoneidad en el acceso y ejercicio de la función pública de funcionarios y directivos de libre designación y remoción, y otras disposiciones: Determina los requisitos para establecer los puestos de trabajo. Se debe indicar también el reglamento en relación. ´-Ley N° 31676, Ley que modifica el código penal, con la finalidad de reprimir las conductas que afectan los principios de mérito, idoneidad y legalidad para el acceso a la función pública: Establece las sanciones legales tanto para el postulante como para el funcionario en caso de portar información falsa de los puestos de confianza.', 'Matriz de Identificación de Principales Obligaciones Compliance del proceso de Designación de personal en puestos de confianza.', 'Norma ISO 37301, requisito 4.5 Obligaciones de compliance.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:35:58', '2024-06-27 22:39:07'),
+(16, 'Obs-VIPE-IN-001', '03-2024(I)', 198, 'Procedimiento de \"Vinculación de Personal\" no cita los documentos normativos identificados en la MIPOC.', 'Se evidenció que en el Procedimiento de \"Vinculación del personal\" no se encuentra identificado uno de sus principales normativas (punto \"Marco\" legal\", como es el caso del Decreto Supremo Nº 075-2008-PCM, que aprueba el Reglamento del Decreto Legislativo Nº 1057 que regula el Régimen Especial de Contratación Administrativa de Servicios. (Requisito 8.1. Planificación y control operacional)', 'PR-ICP-05 Procedimiento \"Vinculación de Personal\"', 'Norma ISO 37301, requsito 8.1. Planificación y control operacional.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:38:31', '2024-06-27 22:38:31'),
+(17, 'Obs-REST-IN-001', '03-2024(I)', 118, 'No se han registrado controles para el riesgo MO-REST-0002.', 'Si bien en la Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04, se indica que no se cuentan con controles actuales para el riesgo MO-REST-0002, a la fecha sí se vienen realizando coordinaciones con el proveedor por el aspecto de tiempos, como por ejemplo mantener los tickets abiertos. Este control no está incluido en la MIRO.', 'Matriz Integral de Riesgos y Oportunidades del Proceso de Respaldo de Información', 'Norma ISO 37301, requisito 8.1 Planificación y control operacional', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:54:47', '2024-06-28 00:06:29'),
+(18, 'Obs-SGCM-IN-006', '03-2024(I)', 114, 'Manual del Sistema Integrado de Gestión, no contempla organo de gobierno.', 'El Órgano de Gobierno y la Alta Dirección deben demostrar liderazgo y compromiso con respecto al sistema de gestión de cumplimiento.\r\n\r\nAl respecto durante la auditoría a los procesos Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance se revisó el Anexo 2 Estructura del SGCM de la CGR contenido en el Manual del Sistema Integrado de Gestión (MG-MODER-02) conformada por la Alta Dirección CMI (Contralor, Vicecontralor de Integridad y Control, Vicecontralor de Control Sectorial y Territorial y Secretario General), no evidenciando la representación del órgano de gobierno y alta dirección, asimismo en el punto 5 de Manual del Sistema Integrado de Gestión (MG-MODER-02) se declara \"no contar con un órgano de gobierno\".', 'Manual del Sistema Integrado de Gestión.', 'Norma ISO 37301, requisito: 5.1.1 Órgano de gobierno y alta dirección', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 22:59:55', '2024-06-28 00:06:39'),
+(19, 'Obs-SGCM-IN-007', '03-2024(I)', 114, 'No se evidencia que se haya asignado los roles y responsabilidades para el Órgano de Gobierno.', 'El órgano de gobierno y la alta dirección se aseguran que las responsabilidades y autoridades para los roles relevantes se asignen y se comuniquen dentro de la organización. El órgano de gobierna deberá: — asegurarse de que la alta dirección se mida en función del logro de los objetivos de cumplimiento; — ejercer la supervisión de la alta dirección con respecto al funcionamiento del sistema de gestión del cumplimiento. La alta dirección deberá: — asignar recursos adecuados y apropiados para establecer, desarrollar, implementar, evaluar, mantener y mejorar el sistema de gestión del cumplimiento; — asegurar que existan sistemas efectivos de informes oportunos sobre el desempeño del cumplimiento; — asegurar la alineación entre los objetivos estratégicos y operativos y las obligaciones de cumplimiento; — establecer y mantener mecanismos de rendición de cuentas, incluidas acciones disciplinarias y consecuencias; — Asegurar la integración del desempeño de cumplimiento en las evaluaciones de desempeño del personal. Al respecto, durante la auditoría a los procesos Administración de los Sistemas de Gestión, Gestión de Riesgos, Gestión por Procesos y Gestión Compliance, se revisó el documento Matriz de Competencia para el Sistema de Gestión Compliance F02(MG-MODER-02) con fecha de aprobación del 17/04/2024, en la cual no se evidencia que se haya asignado los roles y responsabilidades para el Órgano de Gobierno.', 'Matriz de Competencia para el Sistema de Gestión Compliance F02(MG-MODER-02) con fecha de aprobación del 17/04/2024', 'Norma ISO 37301, requisito: 7.2 Competencia.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor interno', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:02:34', '2024-06-28 00:06:50'),
+(20, 'Obs-OROF-IN-001', '03-2024(I)', 126, 'No se ha identificado los elementos de obligatoriedad en la Identificación de Obligaciones de Compliance.', 'Se cuenta con la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) con fecha de aprobación 27/03/24, en la que se han identificado 02 obligaciones relacionadas a este proceso; para las cuales en el campo de “Principales obligaciones/compromisos que contiene una Obligación” se han indicado los objetivos o alcances de dichas obligaciones, mas no los elementos de obligatoriedad.', 'Matriz de Identificación de Principales Obligaciones Compliance', 'Norma ISO 37301, requsiito 4.5 Obligaciones de compliance', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:10:51', '2024-06-28 00:07:23'),
+(21, 'Obs-FECP-IN-001', '03-2024(I)', 219, 'No se pudo evidenciar la eficacia de controles.', 'Se solicitó una muestra para realizar la trazabilidad al procedimiento \"PR-PROY-09) VE.00 Gestión de Pagos a Consultores Individuales (ve.00) con fecha de aprobación 02.02.2022”,a efectos de verificar los controles;  sin embargo, no se pudo evidenciar documentación ya que la usuaria no estaba disponible.', 'Procedimiento (PR-PROY-09) VE.00 Gestión de Pagos a Consultores Individuales', 'Norma ISO 37301, requisito: 8.2 Establecimiento de controles y procedimientos', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:13:55', '2024-06-28 00:07:06'),
+(22, 'Obs-PCMC-IN-001', '03-2024(I)', 283, 'No se ha identificado los elementos de obligatoriedad en la Identificación de Obligaciones de Compliance.', 'En el proceso de auditoria se evidenció en la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) del proceso, no se encuentra identificada la Directiva N° 006-2024-CG/GPCS aprobada mediante Resolución de Contraloría N° 204-2024-CG.', 'Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18', 'Norma ISO 37301, requisito: 4.5 Obligaciones de compliance', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:16:02', '2024-06-27 23:16:02'),
+(23, 'Obs--IN-001', '03-2024(I)', 97, 'No se ha identificado los elementos de obligatoriedad en la Identificación de Obligaciones de Compliance.', 'Se cuenta con la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) con fecha de aprobación 02/04/24, en la que se han identificado 06 obligaciones relacionadas a este proceso; para las cuales en el campo de “Principales Obligaciones/compromisos que contiene una Obligación” se han indicado los objetivos o alcances de dichas obligaciones , mas no los elementos de obligatoriedad como por ejemplo , para el caso del \"DLNº 1326 que reestructura el Sistema Administrativo de Defensa Jurídica del Estado y su reglamento\",  el auditado mencionó  que este decreto  establece las funciones y atribuciones del equipo de defensa de los procuradores , y no se ha indicado en la F4(PR-MODER-18).', 'Matriz de Identificación de Principales Obligaciones Compliance', 'Norma ISO 37301, requisito 4.5 Obligaciones de compliance.', 'Obs', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:17:44', '2024-06-27 23:17:44'),
+(24, 'Odm-GOCI-IN-002', '03-2024(I)', 76, 'Evaluar la actualización de la  Matriz Integral de Riesgos y Oportunidades', 'De acuerdo a lo revisado en la Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 con fecha 26/03/24 , se recomienda :\r\n-Se puedan identificar oportunidades en la Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04. , de acuerdo a los elementos de la \"Determinación de Contexto de los procesos en revisión F01(PR-MODER-04)02´\r\n-Enfatizar el punto de la directiva (numeral 7.7) que incide como control preventivo al riesgo R(D1,A1).\r\n-Replantear el plan de tratamiento ya que la acción que se ha establecido es una acción puntual.', 'Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 con fecha 26/03/24 .', 'Norma ISO 37301, requisito 6.1. Acciones para abordar riesgos y oportunidades.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:25:16', '2024-06-27 23:42:24'),
+(25, 'Odm-DPPC-IN-002', '03-2024(I)', 200, 'Evaluar la actualización de la Determinación del Contexto', 'De acuerdo con lo revisado en el documento \"Determinación de Contexto F01(PR-MODER-04)02 aprobado el 18/04/2024 por la Gerencia de Capital Humano, se sugiere se evalúe lo descrito en la D1 (SERVIR no ha determinado alcances de similares en el cumplimiento de los perfiles) y se reformule como una probable amenaza; o en su defecto, se señale la cuestión interna relacionada a dicha problemática.', 'Determinación de Contexto F01(PR-MODER-04)02 aprobado el 18/04/2024.', 'Norma ISO 37301, requisito 4.1 Comprender la organización y su contexto.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:27:24', '2024-06-28 00:06:03'),
+(26, 'Odm-DPPC-IN-003', '03-2024(I)', 200, 'Evaluar la actualización de los controles del Procedimiento de designación o encargo de personal en puestos de confianza', 'Se recomienda que para el control \"Procedimiento de designación o encargo de personal en puestos de confianza (PR-ICP-01) el cual señala las responsabilidades de la GCH, POLDEH, PER, GJNC y AJ.\", sujeto al Riesgo (MO-DPC-0002) se puedan incluir las actividades \"6\" y \"9\" del PR-ICP-01 VE.01 (Procedimiento Designación o Encargo en Puestos de Confianza). \r\nSe recomienda que para el control \"Verificación posterior de legajos de manera aleatoria\", sujeto al Riesgo (MO-DPC-0001), se pueda incluir la actividad \"5\" del PR-ICP-01 VE.01 (Procedimiento Designación o Encargo en Puestos de Confianza). \r\nAsimismo, se debería precisar que se emiten memorandos, cuando se rechazan los expedientes que no tengan información exacta o veraz. (Requisito 6.1. Acciones para abordar riesgos y oportunidades)', 'Procedimiento de designación o encargo de personal en puestos de confianza (PR-ICP-01)', 'Norma ISO 37301, 8.2 Establecimiento de controles y procedimientos', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:29:25', '2024-06-27 23:42:35'),
+(27, 'Odm-GPAD-IN-001', '03-2024(I)', 279, 'Evaluar la actualización de la Determinación del Contexto', 'Se cuenta con la Determinación de Contexto de los procesos en revisión F01(PR-MODER-04)02 y fecha de aprobación 16/04/24, en el cual se ha determinado 08 debilidades, 04 amenazas, 08 fortalezas y 03 oportunidades del SGCM. Según lo revisado durante la auditoría, se dan las siguientes recomendaciones:\r\n●	D2: (No se cuenta con procedimiento de gestión que regule la atención de recursos impugnatorios por sanciones disciplinarias). A la fecha, ya se tiene un procedimiento (PR-ACH-04), motivo por el que se sugiere evaluar el retirar dicha D2.\r\n●	A4: Se recomienda precisar que la STPAD podría conocer petitorios ajenos a sus competencias cuando éstos estén con plazo limitado o vencido.', 'Determinación de Contexto  F01(PR-MODER-04)02', 'Norma ISO 37301, requisito 4.1 Comprender la organización y su contexto)', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor interno', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:31:28', '2024-06-27 23:56:06'),
+(28, 'Odm-INPE-IN-001', '03-2024(I)', 199, 'Evaluar la actualización de Matriz Integral de Riesgos y Oportunidades', 'Conforme a lo revisado en la Matriz Integral de Riesgos y Oportunidades F02(PR MODER-04)04 con fecha de aprobación 09/04/24, se sugiere que:\r\n-Para el riesgo MO-IND-001 (\"Que el personal incorporado desconozca sobre la entidad y sobre el puesto que va ocupar , debido a que no recibe la información correspondiente en la inducción\") , se sugiere redireccionar el riesgo al proceso de inducción , y que sería el de no ejecutarse dentro del tiempo planificado para asegurar el cumplimiento del objetivo del proceso según MCAR.\r\n-Para el control actual del riesgo MO-IND-001 (Ejecución de las actividades establecidas en el procedimiento - Gestión de Inducción del Personal PR-ICP-02) , se recomienda poder precisar como control el \"cumplimiento del programa de inducción (inducciones masivas) y el correo enviado a las OUO u órganos para ejecutar las inducciones específicas , de tal forma que incida sobre el riesgo.', 'Matriz Integral de Riesgos y Oportunidades F02(PR MODER-04)04 con fecha de aprobación 09/04/2024.', 'Norma ISO 37301, requisito 6.1. Acciones para abordar riesgos y oportunidades.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor interno', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:34:39', '2024-06-28 00:05:46'),
+(29, 'Odm-GBPA-IN-001', '03-2024(I)', 85, 'Evaluar la actualización de las partes interesadas.', 'Conforme a lo indicado por los entrevistados, se identificó la relación del proceso Gestión de Bienes Patrimoniales con la empresa que brinda el servicio de corretaje de seguro, por lo que se recomienda se evalúe la conveniencia de incluirla como una parte interesada.', 'Matriz de Caracterización del Proceso', 'Norma ISO 37301, requisito 4.2 Comprender las necesidades y expectativas de las partes interesadas.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:37:02', '2024-06-28 00:11:06'),
+(30, 'Odm-SGCM-IN-008', '03-2024(I)', 114, 'Evaluar la enmienda del cambio climático.', 'Se recomienda considerar la inclusión de la enmienda del cambio climático puesto que es una reciente modificación al requisito 4, la cual indica que las organizaciones deberán determinar si el cambio climático es un tema relevante.', 'Norma ISO 37301, enmienda.', 'Norma ISO 37301, requisito 4.1. Comprensión de la organización y su contexto.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor interno', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:39:24', '2024-06-27 23:39:24'),
+(31, 'Odm-POI-IN-001', '03-2024(I)', 32, 'Evaluar la actualización de la Determinación del Contexto', 'En el proceso de auditoría se evidencio que el proceso Planeamiento Operativo contaba con la Determinación del contexto F01(PR-MODER-04)02, con fecha de aprobación 08/04/2024, sin embargo se recomienda evaluar los factores de las Fortaleza (legales) y Oportunidades (legales) y que estos sean acorde al proceso en mención, es decir las fortalezas en el aspecto legal deben incluir normativas legales internas que forman parte el proceso y en las oportunidades se deben considerar normativas legales externas que pueden influir en el proceso.', 'Determinación del contexto F01(PR-MODER-04)02, con fecha de aprobación 08/04/24,', 'Norma ISO 37301, requisito 4.1 Comprender la organización y su contexto.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:41:15', '2024-06-27 23:44:32'),
+(32, 'Odm-ADES-IN-001', '03-2024(I)', 143, 'Evaluar la actualización de la Determinación del Contexto', 'Se revisó en la Determinación de Contexto de los procesos en revisión F01(PR-MODER-04), la debilidad \"D8”, que indica la limitación en el uso del procedimiento, y el auditado precisó que la debilidad viene porque el proceso aún no tiene un instrumento normativo o lineamiento que ayude al cumplimiento del procedimiento sancionador que fortalezca o contribuya a la evaluación de desempeño, por lo que se sugiere se concrete dicho punto.', 'Determinación de Contexto', 'Norma ISO37301, requisito 4.1 Comprender la organización y su contexto.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:44:10', '2024-06-27 23:44:40'),
+(33, 'Odm-ADES-IN-002', '03-2024(I)', 143, 'Evaluar la valoración del riesgo MO-SCP-AD-0002', 'Para el Riesgo (MO-SCP-AD-0002), se ha indicado como consecuencia \"Obtener resultados que no se encuentran alineados con los objetivos de la auditoría de desempeño\". Durante la auditoría, el entrevistado amplió esas posibilidades de consecuencias con aspectos de relevancia para el proceso, motivo por es conveniente se detallen en su matriz MIRO, considerando que dicho riesgo tiene un Impacto de nivel \"ALTO”, (Alta responsabilidad legal para la institución, sus funcionarios o frente a terceros. Grave incumplimiento de las obligaciones).', 'Matria Integral de Riesgos y Oportunidades.', 'Norma ISO 37301, requisito 4.6. Evaluación de riesgos de compliance.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor interno', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-27 23:47:13', '2024-06-27 23:47:13'),
+(34, 'Odm-FECP-IN-002', '03-2024(I)', 219, 'Se sugiere adecuar el impacto del Riesgo (D13, D14, A48)', 'Se revisó el Riesgo (D13, D14, A48), relacionado a la afectación del cumplimiento de los objetivos de proyectos para el cual se estableció como consecuencia \"No cumplir con los tiempos de ejecución de los proyectos\". Por lo expuesto y comentado por el auditado, se sugiere adicionar las consecuencias de mayor impacto como por ejemplo el incumplimiento del cronograma del proyecto, o las limitaciones con los términos contractuales con el BID, con fines de establecer controles específicos a estas posibles situaciones.', 'Matriz integral de riesgos y oportunidades', 'Norma ISO 37301, requisito 6.1. Acciones para abordar riesgos y oportunidades', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-28 00:00:26', '2024-06-28 00:05:29'),
+(35, 'Odm-PCAP-IN-001', '03-2024(I)', 284, 'Se sugiere actualizar la Matriz de Identificación de Principales Obligaciones Compliance', 'Se evidenció en la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) del proceso, no se encuentra identificada la Directiva N° 006-2024-CG/GPCS aprobada mediante Resolución de Contraloría N° 204-2024-CG', 'Matriz de Identificación de Principales Obligaciones Compliance', 'Norma ISO 37301, requisito 4.5. Obligaciones de compliance.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-25', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-28 00:02:13', '2024-06-28 00:02:13'),
+(36, 'Odm-GPRJ-IN-002', '03-2024(I)', 97, 'Evaluar la incorporación de controles en la Matriz Integral de Riesgos y Oportunidades.', 'De acuerdo a lo revisado en la Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 con fecha 02/04/2024 , se recomienda considerar elementos con los que ya cuenta el proceso auditado y que no se mencionan en su F02(PR-MODER-04)04 , según se cita:\r\n-Incluir como control actual el Sistema de Gestión de la Procuraduría (SGP ) , en el cual se puede ver el estatus de los casos llevados por la Procuraduría.\r\n- Incluir como control actual el uso de Memorandos para anticipar o comunicar los plazos de presentación de escritos.\r\n-Hacer referencia a los procedimientos recientemente implementados , como parte de los controles actuales ; como por ejemplo el PR-GP-JUD-01 VE.00 Gestión de los Procesos Civiles Resultantes de los Servicios de Control (Aprobación 22/04) , y el PR-GP-JUD-02 Gestión de los Procesos Penales Resultantes de los Servicios de Control', 'Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 con fecha 02/04/2024', 'Norma ISO 37301, requisito 6.1. Acciones para abordar riesgos y oportunidades)', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-28 00:05:03', '2024-06-28 00:05:03');
 
 -- --------------------------------------------------------
 
@@ -363,16 +459,34 @@ CREATE TABLE `hallazgos_acciones` (
 --
 
 INSERT INTO `hallazgos_acciones` (`id`, `hallazgo_id`, `accion_cod`, `accion`, `fecha_inicio`, `fecha_fin`, `responsable_id`, `responsable_correo`, `comentario`, `fecha_fin_reprogramada`, `fecha_cancelada`, `fecha_fin_real`, `ruta_evidencia`, `estado`, `es_correctiva`, `created_at`, `updated_at`) VALUES
-(12, 1, 'SMP-RH-IN-0044-001', 'Verificación del perfil del Oficial de Compliance.', '2024-06-13', '2024-06-17', 'Daniel Sedan Villacorta', 'dsedan@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 20:57:03', '2024-06-26 20:57:03'),
-(13, 1, 'SMP-RH-IN-0044-002', 'Resguardo de legajo, con los documentos presentados por el Oficial de Compliance.', '2024-06-13', '2024-06-19', 'Daniel Sedan Villacorta', 'dsedan@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 20:58:31', '2024-06-26 20:58:31'),
-(14, 1, 'SMP-RH-IN-0044-003', 'Designar la función de compliance en la CGR .', '2024-06-13', '2024-06-21', 'Luis Miguel Iglesias León', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 21:00:26', '2024-06-26 21:00:26'),
-(15, 1, 'SMP-RH-IN-0044-004', 'Difundir dicha designacion a todo el personal en CGR.', '2024-06-13', '2024-06-25', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 21:01:39', '2024-06-26 21:01:39'),
-(16, 3, 'SMP-GCM-IN-001-001', 'Designar la función de compliance en la CGR', '2024-06-06', '2024-06-21', 'Luis Miguel Iglesias León (Ata Dirección)', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 22:09:17', '2024-06-26 22:09:17'),
-(17, 3, 'SMP-GCM-IN-001-002', 'Difundir dicha designacion a todo el personal en la CGR', '2024-06-06', '2024-06-25', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 22:10:03', '2024-06-26 22:10:03'),
-(18, 4, 'SMP-GCM-IN-002-001', 'Presentar la propuesta de la Política de Compliance para la evaluación de las unidades orgánicas que conforman el \r\nproceso de revisión establecido dentro de la CGR.', '2024-06-06', '2024-06-30', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 22:31:53', '2024-06-26 22:32:08'),
-(19, 4, 'SMP-GCM-IN-002-002', 'Aprobar la Política Compliance', '2024-06-06', '2024-06-21', 'Luis Miguel Iglesias León (Ata Dirección)', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 22:32:58', '2024-06-26 22:32:58'),
-(20, 4, 'SMP-GCM-IN-002-003', 'Comunicar la Política Compliance', '2024-06-06', '2024-06-26', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 22:33:30', '2024-06-26 22:33:30'),
-(21, 4, 'SMP-GCM-IN-002-004', 'Poner a disposicion de las partes internas la Política Compliance', '2024-06-06', '2024-06-26', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Programada', 0, '2024-06-26 22:34:05', '2024-06-26 22:34:05');
+(12, 1, 'SMP-RH-IN-0044-001', 'Verificación del perfil del Oficial de Compliance.', '2024-06-13', '2024-06-17', 'Daniel Sedan Villacorta', 'dsedan@contraloria.gob.pe', 'Nuevo registro', NULL, NULL, NULL, NULL, 'Completada', 0, '2024-06-26 20:57:03', '2024-07-04 01:04:10'),
+(13, 1, 'SMP-RH-IN-0044-002', 'Resguardo de legajo, con los documentos presentados por el Oficial de Compliance.', '2024-06-13', '2024-06-19', 'Daniel Sedan Villacorta', 'dsedan@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-26 20:58:31', '2024-07-02 01:42:58'),
+(14, 1, 'SMP-RH-IN-0044-003', 'Designar la función de compliance en la CGR .', '2024-06-13', '2024-06-21', 'Luis Miguel Iglesias León', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-26 21:00:26', '2024-07-02 01:42:58'),
+(15, 1, 'SMP-RH-IN-0044-004', 'Difundir dicha designacion a todo el personal en CGR.', '2024-06-13', '2024-06-25', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-26 21:01:39', '2024-07-02 01:42:58'),
+(16, 3, 'SMP-GCM-IN-001-001', 'Designar la función de compliance en la CGR', '2024-06-06', '2024-06-21', 'Luis Miguel Iglesias León (Ata Dirección)', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-26 22:09:17', '2024-07-02 01:42:58'),
+(17, 3, 'SMP-GCM-IN-001-002', 'Difundir dicha designacion a todo el personal en la CGR', '2024-06-06', '2024-06-25', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-26 22:10:03', '2024-07-02 01:42:58'),
+(18, 4, 'SMP-GCM-IN-002-001', 'Presentar la propuesta de la Política de Compliance para la evaluación de las unidades orgánicas que conforman el \r\nproceso de revisión establecido dentro de la CGR.', '2024-06-06', '2024-07-30', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'En implementación', 0, '2024-06-26 22:31:53', '2024-07-02 01:51:58'),
+(19, 4, 'SMP-GCM-IN-002-002', 'Aprobar la Política Compliance', '2024-06-06', '2024-06-21', 'Luis Miguel Iglesias León (Ata Dirección)', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Pendiente', 0, '2024-06-26 22:32:58', '2024-07-02 01:48:06'),
+(20, 4, 'SMP-GCM-IN-002-003', 'Comunicar la Política Compliance', '2024-06-06', '2024-06-26', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Pendiente', 0, '2024-06-26 22:33:30', '2024-07-02 01:48:06'),
+(21, 4, 'SMP-GCM-IN-002-004', 'Poner a disposicion de las partes internas la Política Compliance', '2024-06-06', '2024-06-26', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, 'Pendiente', 0, '2024-06-26 22:34:05', '2024-07-02 01:48:06'),
+(22, 5, 'SMP-GCM-IN-003-001', 'Presentar la propuesta de los Objetivos de Compliance para la \r\nevaluación de las unidades orgánicas que conforman el proceso de revisión establecido dentro de la CGR.', '2024-06-06', '2024-05-31', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 14:54:26', '2024-07-02 01:42:58'),
+(23, 5, 'SMP-GCM-IN-003-002', 'Aprobar Objetivos Compliance', '2024-06-06', '2024-06-21', 'Luis Miguel Iglesias León (Ata Dirección)', 'liglesias@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 14:55:10', '2024-07-02 01:42:58'),
+(24, 5, 'SMP-GCM-IN-003-003', 'Comunicar los Objetivos Compliance', '2024-06-06', '2024-06-26', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 14:55:58', '2024-07-02 01:42:58'),
+(25, 6, 'SMP-GCM-IN-004-001', 'Revisión y elaboración de informe complementario que sustente el cambio en el alcance del SGCM', '2024-06-06', '2024-06-10', 'Ana Elsa Gonzales Napaico', 'agonzalesn@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:21:25', '2024-07-02 01:42:58'),
+(26, 6, 'SMP-GCM-IN-004-002', 'Aprobación de informe complementario que sustente el\r\ncambio en el alcance del SGCM.', '2024-06-06', '2024-06-21', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:22:16', '2024-07-02 01:42:58'),
+(27, 6, 'SMP-GCM-IN-004-003', 'Actualización de Manual del Sistema Integrado de Gestión', '2024-06-06', '2024-06-21', 'Ana Elsa Gonzales Napaico', 'agonzalesn@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:22:52', '2024-07-02 01:42:58'),
+(28, 6, 'SMP-GCM-IN-004-004', 'Presentación de alcance del SGCM al Comité de Modernización\r\nInstutuciona', '2024-06-06', '2024-06-28', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:23:33', '2024-07-02 01:42:58'),
+(29, 7, 'SMP-GCM-IN-005-001', 'Aprobar Política y Objetivos de compliance.', '2024-06-06', '2024-06-21', 'Adriana Arciniega Muñoz', 'aarciniega@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:44:08', '2024-07-02 01:42:58'),
+(30, 7, 'SMP-GCM-IN-005-002', 'evisar y adecuar los indicadores de la Planificación del SGCM en los procesos de la CGR.(Matriz cliente proveedor)', '2024-06-06', '2024-06-25', 'Johnny Elmo Ponce Cajas', 'jponcec@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:45:08', '2024-07-02 01:42:58'),
+(31, 7, 'SMP-GCM-IN-005-003', 'Medir los indicadores', '2024-06-06', '2024-06-26', 'Johnny Elmo Ponce Cajas', 'jponcec@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 15:46:06', '2024-07-02 01:42:58'),
+(32, 9, 'SMP-SCS-IN-001-001', 'Emitir un memorando circular para:\r\n1. Remitir documentos aprobados del SGCM: \r\nDeterminación de contexto y MIRO.\r\n2. Informar que los documentos: MCAR y la MIPOC se \r\nencuentran disponibles en la Intranet de la CGR.', '2024-05-30', '2024-05-31', 'Luis Carlos Echeverria Tamayo', 'lecheverria@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 1, '2024-06-27 16:18:42', '2024-07-02 01:42:58'),
+(33, 9, 'SMP-SCS-IN-001-002', 'Sensibilización del Sistema de Gestión de Compliance.', '2024-05-30', '2024-06-14', 'Luis Carlos Echeverria Tamayo', 'lecheverria@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 16:21:37', '2024-07-02 01:42:58'),
+(34, 9, 'SMP-SCS-IN-001-003', 'Capacitación sobre los accesos a los documentos de gestión, relacionados al proceso de Visita de Control.', '2024-06-14', '2024-06-14', 'Ana Patricia Alvarez Giraldo', 'aalvarez@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 16:23:19', '2024-07-02 01:42:58'),
+(35, 9, 'SMP-SCS-IN-001-004', 'Charla de orientación para afrontar auditorias.', '2024-06-14', '2024-06-14', 'Luis Carlos Echeverria Tamayo', 'lecheverria@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 16:24:09', '2024-07-02 01:42:58'),
+(36, 9, 'SMP-SCS-IN-001-005', 'Definir los roles de quienes participan en el proceso de \r\nauditoria, a través de un correo electrónico de los \r\nacuerdos', '2024-05-30', '2024-05-31', 'Ana Patricia Alvarez Giraldo', 'aalvarez@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 16:24:58', '2024-07-02 01:42:58'),
+(37, 9, 'SMP-SCS-IN-001-006', 'Difundir la política y los objetivos del SGCM.', '2024-06-14', '2024-06-14', 'Luis Carlos Echeverria Tamayo', 'lecheverria@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-06-27 16:25:44', '2024-07-02 01:42:58'),
+(38, 8, 'SMP-NORM-IN-003-001', 'Respaldo y restauración de la información´-Aprobar el documento Determinación de Contexto de los procesos, F01(PR-MODER-04)02,´-Aprobar la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18)00,', '2024-06-06', '2024-06-10', 'Juan Manuel Almeyda Requejo', 'jalmeyda@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 1, '2024-07-01 17:17:44', '2024-07-02 01:42:58'),
+(39, 8, 'SMP-NORM-IN-003-002', 'Difusión de la cápsula del conocimiento del procedimiento \"Gestión de documentos normativos en el alcance del SIG\", así como la aplicación del procedimiento del procedimiento \"Gestión de documentos normativos en el alcance del SIG\" (PR-NORM-06).', '2024-06-06', '2024-06-06', 'Juan Manuel Almeyda Requejo', 'jalmeyda1403@gmail.com', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-07-01 17:20:09', '2024-07-02 01:42:58');
 
 -- --------------------------------------------------------
 
@@ -408,7 +522,11 @@ INSERT INTO `hallazgos_causas` (`id`, `hallazgo_id`, `metodo`, `por_que_1`, `por
 (6, 1, 'ishikawa', '¿Porque no se evidenció el legajo del puesto del Oficial de Compliance?\r\nNo se tiene designado al profesional que realizará las labores de la función de compliance de la CGR.', NULL, NULL, NULL, NULL, 'Falta de designación de personal para la función de compliance de la CGR.', NULL, NULL, NULL, NULL, NULL, 'No se tiene designado al profesional que realizará las labores de la función de compliance de la CGR.', '2024-06-26 20:55:18', '2024-06-26 21:34:42'),
 (7, 3, 'cinco_porques', '¿Por qué no se evidencia que se haya designado la función de compliance en la CGR ni que se implementen los principios de acceso directo, independencia, autoridad y competencia adecuada de la función de compliance?\r\nNo se ha designado la función de compliance en la CGR ni implementado los principios de acceso directo, independencia, autoridad y competencia adecuada de la función de compliance porque no se  tenia identificado al profesional que cumpla con las competencias establecidas para el Oficial Compliance. Durante la ejecucion de la auditoría interna se estaba evaluando al profesional idóneo.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'No se tenía identificado al profesional que cumpla con las competencias establecidas para el Oficial Compliance.', '2024-06-26 22:03:35', '2024-06-26 22:10:27'),
 (8, 4, 'cinco_porques', '¿Por qué no se evidencia que se haya aprobado, implementado, comunicado la Política de Compliance y que esté disponible para las partes interesadadas?\r\nPorque al momento de la auditoria interna se encontraba en proceso de revisión para aprobación.', '¿Por qué al momento de la auditoria interna la Política de Compliance se encontraba en proceso de revisión?\r\nDada la relevancia y el alcance previsto para el Sistema de Gestión de Compliance (SGCM), para la evaluación de la Politica del SGCM se solicitó opinión a otras unidades orgánicas que no forman parte del proceso de revisión establecido dentro de la CGR.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Se solicitó opinión a otras unidades orgánicas que no forman parte del proceso de revisión establecido dentro de la CGR.', '2024-06-26 22:26:50', '2024-06-26 22:30:01'),
-(9, 5, 'cinco_porques', '¿Por qué no se evidencia que se haya aprobado y comunicado los Objetivos de Compliance en las funciones y niveles relevantes?\r\nPorque al momento de la auditoria interna se encontraba en proceso de revision para aprobación', 'Por qué al momento de la auditoria interna los Objetivos de Compliance se encontraban en proceso de revisión?\r\nDada la relavancia y el alcance previsto para el Sistema de Gestión de Compliance (SGCM), para la evaluación de los Objetivos de Copmpliance se solicitó opinion a otras unidades orgánicas que no forman parte del proceso de revisión establecido dentro de la CGR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Se solicitó opinion a otras unidades orgánicas que no forman parte del proceso de revisión establecido dentro de la CGR.', '2024-06-26 22:41:25', '2024-06-26 22:41:56');
+(9, 5, 'cinco_porques', '¿Por qué no se evidencia que se haya aprobado y comunicado los Objetivos de Compliance en las funciones y niveles relevantes?\r\nPorque al momento de la auditoria interna se encontraba en proceso de revision para aprobación', 'Por qué al momento de la auditoria interna los Objetivos de Compliance se encontraban en proceso de revisión?\r\nDada la relavancia y el alcance previsto para el Sistema de Gestión de Compliance (SGCM), para la evaluación de los Objetivos de Copmpliance se solicitó opinion a otras unidades orgánicas que no forman parte del proceso de revisión establecido dentro de la CGR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Se solicitó opinion a otras unidades orgánicas que no forman parte del proceso de revisión establecido dentro de la CGR.', '2024-06-26 22:41:25', '2024-06-26 22:41:56'),
+(10, 6, 'cinco_porques', 'Por qué no se encontraba adecudamente implementando el proceso Recepción y Evaluación de Denuncias?\r\nC1: El personal entrevistado actualmente se encarga de brindar asistencia técnica y capacitación al proceso de recepción y evaluación de denuncia', 'Por qué el personal ya no esta a cargo del proceso de recepciòn y evaluaciòn de denuncias?\r\nC2: Debido a cambios en la estructura de la organización los cuales quedan reflejados en el documento Reglamento de Oganización y Funciones vigente desde el 3 de enero 2024 y que no se tomaron acciones ante estos cambios.', 'Por qué no se tomaron acciones antes los cambios de la estructura de la organización con respecto al proceso de recepciòn y evaluaciòn de denuncias?\r\nC3: Debido a que se encontraba en implementación de actividades para la adecuación de la norma ISO 37301 y se priorizó estas actividades.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'En el transcurso de las actividades de implementación hubieron cambios en la estructura de la organización (ROF) que no fueron contemplados en el Alcance del SGCM.', '2024-06-27 15:20:21', '2024-06-27 15:20:21'),
+(11, 7, 'cinco_porques', '¿Por qué no se evidenció los resultados de la medición de los indicadores relacionados al logro de los Objetivos de Compliance?\r\nC1: Durante el proceso de auditoría, la Política y Objetivos de compliance se encontraban en proceso de revisión.', '¿Se cuenta con indicadores para medir estos Objetivos de Compliance?\r\nC2: Si bien se cuenta con indicadores para la planificación del objetivos del SGCM, estos aún no están incoporados en los procesos.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Los indicadores para la planificación del objetivos del SGCM, aún no están incoporados en los procesos.', '2024-06-27 15:34:43', '2024-06-27 15:34:43'),
+(12, 9, 'cinco_porques', '¿Por qué el personal de la Gerencia Regional de Control de Ancash, en el desarrollo de la auditoría no logró acceder a los documentos del SGCM Determinación del contexto, MIRO, MCAR y MIPOC)?\r\nC1: Porque no fueron enviados los documentos aprobados (Determinación del contexto y la MIRO) al personal de Visita de Control.\r\nC2: Porque el personal no tuvo la orientación adecuada para afrontar la auditoría.\r\nC3: Por falta de coordinación para la realización de la auditoría interna.\r\nC4: Porque el personal desconocía las políticas y objetivos del SGCM.\r\nC5: Porque el personal no tuvo clara la ruta de acceso a los documentos publicados en la intranet (MCAR y MIPOC)', '¿Por qué no fueron enviados los documentos (Determinación del contexto y MIRO) al personal de visita de control?\r\nC1.2: Por que la Vicecontraloría de Control Sectorial y Territorial estuvo a cargo de 9 procesos que simultáneamente se estaba implementando para el Sistema de Gestión Compliance, en el cual se brindó prioridad a la aprobación de los documentos correspondientes y no al envío de la información al personal.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Se brindó prioridad a la aprobación de los documentos correspondientes y no al envío de la información al personal.', '2024-06-27 16:20:26', '2024-06-27 16:20:26'),
+(13, 8, 'cinco_porques', '¿Por qué no se tienen aprobados, codificados , migrado al formato vigente y usado los documentos vigentes en los diferentes casos?\r\nDesconocimiento por parte de las Unidades Orgánicas de la aplicación del procedimiento PR-MODER-06 \"Gestión de Documentos del SIG\", que contempla el control documental de los documentos del SIG de la CGR.', '¿Por qué hay desconocimiento por parte de las Unidades Orgánicas de la aplicación del procedimiento PR-MODER-06 \"Gestión de Documentos del SIG\"?\r\nFalta de capacitación a los facilitadores de las UO en relación a la aplicación del del procedimiento PR-MODER-06 \"Gestión de Documentos del SIG.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Desconocimiento y limitada capacitación en  la aplicación del procedimiento PR-MODER-06 \"Gestión de Documentos del SIG\",', '2024-07-01 17:19:12', '2024-07-01 17:19:12');
 
 -- --------------------------------------------------------
 
@@ -476,6 +594,24 @@ INSERT INTO `indicadores_historico` (`id`, `indicador_id`, `año`, `meta`, `valo
 (1, 1, 2021, 0.75, 1.00, '2023-05-26 23:01:48', NULL),
 (2, 1, 2022, 0.75, 0.75, '2023-05-26 23:01:48', NULL),
 (3, 1, 2023, 0.75, 0.67, '2023-05-26 23:01:48', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `indicadores_proceso_ouo`
+--
+
+CREATE TABLE `indicadores_proceso_ouo` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `id_proceso_ouo` bigint(20) UNSIGNED NOT NULL,
+  `id_indicador` bigint(20) UNSIGNED NOT NULL,
+  `meta` double(8,2) NOT NULL,
+  `year` char(255) NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -553,6 +689,24 @@ CREATE TABLE `informe_auditoria` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `inventario_procesos`
+--
+
+CREATE TABLE `inventario_procesos` (
+  `id_inventario` bigint(20) UNSIGNED NOT NULL,
+  `id_proceso` bigint(20) UNSIGNED NOT NULL,
+  `id_ouo_responsable` bigint(20) UNSIGNED NOT NULL,
+  `id_ouo_delegada` bigint(20) UNSIGNED NOT NULL,
+  `version` varchar(255) NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `migrations`
 --
 
@@ -601,7 +755,15 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (87, '2024_05_06_211747_create_requerimiento_necesidad', 17),
 (88, '2024_06_10_190503_create_especialistas_table', 17),
 (89, '2024_06_10_191830_create_especialista_hallazgo_table', 18),
-(90, '2024_06_11_142926_add_cinco_porques_to_analisis_causa_raiz_table', 19);
+(90, '2024_06_11_142926_add_cinco_porques_to_analisis_causa_raiz_table', 19),
+(91, '2024_08_27_112811_create_determinacion_contexto', 20),
+(94, '2024_08_27_115127_create_contexto_interno', 21),
+(95, '2024_08_27_115136_create_contexto_externo', 21),
+(96, '2024_08_27_120745_create_contexto_analisis', 22),
+(97, '2025_01_16_113704_create_ouo', 23),
+(98, '2025_01_16_173807_create_inventario_procesos', 24),
+(99, '2025_01_16_175307_create_procesos_ouo', 25),
+(100, '2025_01_16_182503_create_indicadores_proceso_ouo', 26);
 
 -- --------------------------------------------------------
 
@@ -646,6 +808,99 @@ CREATE TABLE `model_has_roles` (
 INSERT INTO `model_has_roles` (`model_id`, `model_type`, `role_id`) VALUES
 (2, 'App\\Models\\User', 2),
 (1, 'App\\Models\\User', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `ouo`
+--
+
+CREATE TABLE `ouo` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `nombre` varchar(255) NOT NULL,
+  `codigo` varchar(255) NOT NULL,
+  `ouo_padre` bigint(20) UNSIGNED DEFAULT NULL,
+  `subgerente_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `nivel_jerarquico` int(11) NOT NULL,
+  `fecha_vigencia_inicio` date NOT NULL,
+  `fecha_vigencia_fin` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `ouo`
+--
+
+INSERT INTO `ouo` (`id`, `nombre`, `codigo`, `ouo_padre`, `subgerente_id`, `nivel_jerarquico`, `fecha_vigencia_inicio`, `fecha_vigencia_fin`, `created_at`, `updated_at`) VALUES
+(1, 'Despacho del Contralor', 'D100', NULL, 9, 1, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(2, 'Órgano de Auditoría Interna', 'D200', 1, 10, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(3, 'Procuraduría Pública', 'D900', 1, 11, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(4, 'Oficina de Gestión de la Potestad Administrativa', 'E200', 1, 12, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(5, 'Oficina de Integridad Institucional', 'A260', 1, 13, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(6, 'Tribunal Superior de Responsabilidades Administrativas', 'E300', 1, 14, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(7, 'Vicecontraloría de Gestión Estratégica, Integridad y Control', 'L110', 1, 15, 2, '2024-11-08', NULL, '2025-01-16 20:27:32', '2025-01-16 20:27:32'),
+(8, 'Gerencia de Prevención y Control Social', 'C601', 7, 16, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(9, 'Gerencia de Análisis de Información para el Control', 'C120', 7, 17, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(10, 'Gerencia de Recursos Estratégicos', 'D500', 7, 18, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(11, 'Escuela Nacional de Control', 'D400', 7, 19, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(12, 'Subgerencia de Prevención e Integridad', 'C370', 8, 20, 4, '2024-11-08', NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
+(13, 'Subgerencia de Auditoría de Desempeño', 'L200', 8, 21, 4, '2024-11-08', NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
+(14, 'Subgerencia de Participación Ciudadana y Control Social', 'C600', 8, 22, 4, '2024-11-08', NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
+(15, 'Subgerencia del Observatorio Anticorrupción', 'C602', 9, 23, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(16, 'Subgerencia de Gestión de Declaraciones Juradas', 'C122', 9, 24, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(17, 'Subgerencia de Fiscalización', 'L1540', 9, 25, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(18, 'Subgerencia de Contrataciones Estratégicas', 'D501', 10, 26, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(19, 'Subgerencia de Gestión de Inversiones', 'C322', 10, 27, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(20, 'Subdirección Académica', 'D401', 11, 19, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(21, 'Subdirección de Posgrado', 'D403', 11, 28, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(22, 'Vicecontraloría de Control Sectorial y Territorial', 'L100', 1, 30, 2, '2024-11-08', NULL, '2025-01-16 20:41:44', '2025-01-16 20:41:44'),
+(23, 'Gerencia de Control Político, Institucional y Económico', 'L301', 22, 31, 3, '2024-11-08', NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
+(24, 'Gerencia de Control de Servicios Públicos Básicos', 'L303', 22, 32, 3, '2024-11-08', NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
+(25, 'Gerencia de Control de Megaproyectos', 'L304', 22, 33, 3, '2024-11-08', NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
+(26, 'Subgerencia de Control del Sector Seguridad Interna y Externa', 'L340', 23, 34, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(27, 'Subgerencia de Control del Sector Justicia, Político y Electoral', 'L352', 23, 35, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(28, 'Subgerencia de Control del Sector Social y Cultura', 'L315', 23, 36, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(29, 'Subgerencia de Control del Sector Económico y Financiero', 'L320', 23, 37, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(30, 'Subgerencia de Control del Sector Productivo y Trabajo', 'L330', 23, 38, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(31, 'Subgerencia de Control del Sector Transportes y Comunicaciones', 'L331', 24, 39, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(32, 'Subgerencia de Control del Sector Vivienda, Construcción y Saneamiento', 'L336', 24, 40, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(33, 'Subgerencia de Control del Sector Agricultura y Ambiente', 'L332', 24, 32, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(34, 'Subgerencia de Control del Sector Educación', 'L351', 24, 41, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(35, 'Subgerencia de Control del Sector Salud', 'L316', 24, 42, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(36, 'Subgerencia de Control de Universidades', 'L353', 24, 43, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(37, 'Subgerencia de Control de Megaproyectos', 'L334', 25, 184, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(38, 'Subgerencia de Control de Asociaciones Público Privadas y Obras por Impuestos', 'C920', 25, 44, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(39, 'Subgerencia de Control Previo de Adicionales de Obra', 'L556', 25, 33, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(40, 'Secretaría General', 'D300', 1, 46, 2, '2024-11-08', NULL, '2025-01-16 21:01:05', '2025-01-16 21:01:05'),
+(41, 'Oficina de Seguridad y Defensa Nacional', 'D531', 40, 47, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(42, 'Gerencia de Administración', 'C200', 40, 48, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(43, 'Gerencia de Capital Humano', 'D550', 40, 50, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(44, 'Gerencia de Tecnologías de la Información', 'D600', 40, 53, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(45, 'Gerencia de Comunicación Corporativa', 'C401', 40, 57, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(46, 'Gerencia de Asesoría Jurídica y Normatividad en Control Gubernamental', 'D700', 40, 60, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(47, 'Gerencia de Modernización y Planeamiento', 'L527', 40, 63, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(48, 'Gerencia de Relaciones Institucionales', 'C381', 40, 67, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(69, 'Subgerencia de Abastecimiento', 'D530', 42, NULL, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(70, 'Subgerencia de Gestión Documentaria', 'D320', 42, 49, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(71, 'Subgerencia de Políticas y Desarrollo Humano', 'D517', 43, 50, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(72, 'Subgerencia de Personal y Compensaciones', 'D510', 43, 51, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(73, 'Subgerencia de Bienestar y Relaciones Laborales', 'D511', 43, 52, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(74, 'Subgerencia de Sistemas de Información', 'D610', 44, 54, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(75, 'Subgerencia de Operaciones y Plataforma Tecnológica', 'D602', 44, 55, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(76, 'Subgerencia de Gobierno Digital', 'D603', 44, 56, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(77, 'Subgerencia de Prensa', 'C360', 45, 58, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(78, 'Subgerencia de Imagen y Relaciones Corporativas', 'D310', 45, 59, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(79, 'Subgerencia de Comunicación y Medios Digitales', 'C402', 45, 58, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(80, 'Subgerencia de Asesoría Jurídica', 'D710', 46, 60, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(81, 'Subgerencia de Normatividad en Control Gubernamental', 'C312', 46, 61, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(82, 'Subgerencia de Aseguramiento de la Calidad', 'L157', 46, 62, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(83, 'Subgerencia de Planeamiento, Presupuesto y Programación de Inversiones', 'L520', 47, 64, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(84, 'Subgerencia de Seguimiento y Evaluación del SNC', 'L590', 47, 65, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(85, 'Subgerencia de Modernización', 'C321', 47, 66, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(86, 'Subgerencia de Coordinación Parlamentaria', 'C380', 48, 67, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(87, 'Subgerencia de Coordinación Institucional Nacional', 'C382', 48, 68, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(88, 'Subgerencia de Cooperación y Asuntos Internacionales', 'D800', 48, 69, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08');
 
 -- --------------------------------------------------------
 
@@ -803,7 +1058,7 @@ INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, 
 (65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', NULL, 'Misional', 'PM03', 1, NULL, '2023-08-09 17:28:23', NULL),
 (66, 'PM04.01', 'Gestión de sanciones administrativas', 'GSAD', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
 (67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', 'GPSA', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
-(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', 'GPJU', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
+(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', '', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
 (69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', 'SEIR', 'Misional', 'PM05', 1, NULL, '2023-08-09 17:28:23', NULL),
 (70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', 'DBPM', 'Misional', 'PM05', 1, NULL, '2023-08-09 17:28:23', NULL),
 (71, 'PA01.01', 'Planificación del capital humano', 'PLCH', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
@@ -832,7 +1087,7 @@ INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, 
 (94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, NULL, '2023-08-09 18:30:44', NULL),
 (95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, NULL, '2023-08-09 18:30:44', NULL),
 (96, 'PA06.01', 'Gestión y difusión de productos de interés legal', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
-(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
+(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', 'GPRJ', 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
 (98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
 (99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
 (100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', 'ACCJ', 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
@@ -966,9 +1221,8 @@ INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, 
 (253, 'PM03.05.03', 'Reformulación de informes de control', 'REIC', 'Misional', 'PM03.05', 1, NULL, '2024-06-25 22:11:46', NULL),
 (254, 'PA01.03.05.01', 'Recategorización de personal', 'RCPR', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
 (255, 'PA01.03.05.02', 'Convocatoria interna', 'CINT', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(256, 'PA01.03.05.03', 'Traslados del personal (rotación)', 'TPER', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(257, 'PA01.03.05.04', 'Encargaturas del personal', 'ECPR', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(258, 'PA01.03.05.05', 'Entrega de puesto del colaborador', 'EPCL', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
+(256, 'PA01.03.06.01', 'Traslados del personal (rotación)', 'TPER', 'Apoyo', 'PA01.03.06', 1, NULL, '2024-06-25 22:20:25', NULL),
+(257, 'PA01.03.06.02', 'Encargo de jefatura del órgano o unidad órganica', 'ECPR', 'Apoyo', 'PA01.03.06', 1, NULL, '2024-06-25 22:20:25', NULL),
 (259, 'PA01.04.01.01', 'Control de asistencia del personal', 'CAPR', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
 (260, 'PA01.04.01.02', 'Control de vacaciones del personal', 'CVPR', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
 (261, 'PA01.04.01.03', 'Administración de remuneración del personal', 'ARPR', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
@@ -995,6 +1249,21 @@ INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, 
 (282, 'PM01.02.01', 'Participación ciudadana en el control social a través de auditores juveniles', 'PCAJ', 'Misional', 'PM01.02', 1, NULL, '2024-06-25 22:26:03', NULL),
 (283, 'PM01.02.02', 'Participación ciudadana en el control social a través de monitores ciudadanos de control', 'PCMC', 'Misional', 'PM01.02', 1, NULL, '2024-06-25 22:26:03', NULL),
 (284, 'PM01.02.03', 'Participación ciudadana en el control social a través de audiencias públicas', 'PCAP', 'Misional', 'PM01.02', 1, NULL, '2024-06-25 22:26:03', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `procesos_ouo`
+--
+
+CREATE TABLE `procesos_ouo` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `id_proceso` bigint(20) UNSIGNED NOT NULL,
+  `id_ouo` bigint(20) UNSIGNED NOT NULL,
+  `inactivate_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1046,20 +1315,6 @@ CREATE TABLE `programa_auditorias` (
 
 INSERT INTO `programa_auditorias` (`id`, `observacion`, `avance`, `version`, `periodo`, `presupuesto`, `fecha_aprobacion`, `fecha_publicacion`, `archivo_pdf`, `created_at`, `updated_at`) VALUES
 (1, 'Nuevo Programa 2024', '0.00', 0, '2024', 130000, '2024-06-05', '2024-06-05', '', '2024-06-05 19:38:32', NULL);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `propietarios`
---
-
-CREATE TABLE `propietarios` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `UOU` varchar(255) NOT NULL,
-  `estado` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1255,7 +1510,7 @@ CREATE TABLE `role_has_permissions` (
 --
 
 INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
-(1, 3);
+(1, 1);
 
 -- --------------------------------------------------------
 
@@ -1299,7 +1554,7 @@ CREATE TABLE `users` (
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
-  `password` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
   `remember_token` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -1310,14 +1565,76 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Juan Almeyda Requejo', 'jalmeyda@contraloria.gob.pe', '2023-08-30 15:54:20', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', 'MbDCjeSqUzT3iiAD1c7BrdCMVeixFqOwbrgd57LLeLSz7PEb9whusEsuWzeO', '2023-05-26 23:01:48', '2023-08-29 04:37:54'),
+(1, 'Juan Almeyda Requejo', 'jalmeyda@contraloria.gob.pe', '2023-08-30 15:54:20', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', '7enzMOmElIxFlw4IOcON2GRTjN983HKPg4ms8i2YPjae60wK7AU3kqDyUTOU', '2023-05-26 23:01:48', '2023-08-29 04:37:54'),
 (2, 'Manuel Perez Effus', 'manuelperez@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (3, 'Angel Arturo Bendezu Cardenas\r\n', 'abendezuc@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (4, 'Maria Isabel Hiyo Huapaya\r\n', 'mhiyo@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (5, 'Ana Elsa Gonzales Napaico\r\n', 'agonzalesn@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (6, 'Gatsby Loayza Parraga\r\n', 'gloayza@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (7, 'Gustavo Adolfo Villanueva Salvador\r\n', 'gvillanuevas@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
-(8, 'Elias Martin Tresierra Paz\r\n', 'etresierra@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38');
+(8, 'Elias Martin Tresierra Paz\r\n', 'etresierra@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
+(9, 'César Aguilar Surichaqui', 'despachocontralorcgr@contraloria.gob.pe', NULL, '', NULL, '2025-01-16 17:50:24', '2025-01-16 17:50:24'),
+(10, 'Giovanna Muñoz Silva (e)', 'gmunoz@contraloria.gob.pe', NULL, '', NULL, '2025-01-16 17:50:24', '2025-01-16 17:50:24'),
+(11, 'Amado Enco Tirado', 'aenco@contraloria.gob.pe', NULL, '', NULL, '2025-01-16 17:50:24', '2025-01-16 17:50:24'),
+(12, 'Hilda Jaramillo Velarde (e)', 'hjaramillo@contraloria.gob.pe', NULL, '', NULL, '2025-01-16 17:50:24', '2025-01-16 17:50:24'),
+(13, 'Ester Díaz Segura', 'ediazse@contraloria.gob.pe', NULL, '', NULL, '2025-01-16 17:50:24', '2025-01-16 17:50:24'),
+(14, 'Richard León Vargas', 'rleonva@contraloria.gob.pe', NULL, '', NULL, '2025-01-16 17:50:24', '2025-01-16 17:50:24'),
+(15, 'Luigino Pilotto Carreño', 'lpilotto@contraloria.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(16, 'Víctor Mejía Zuloeta', 'emejia@contraloria.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(17, 'Luis Ramírez Moscoso', 'luis.ramirez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(18, 'Giancarlo Ugaz Figueroa', 'giancarlo.ugaz@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(19, 'Magda Salgado Rubianes', 'magda.salgado@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(20, 'Solange Pérez Montero', 'solange.perez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(21, 'Carlos Jaime Rivero Morales', 'crivero@contraloria.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(22, 'Michell Sifuentes Sifuentes', 'michell.sifuentes@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(23, 'Frank Mauricio Morales', 'frank.morales@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(24, 'Karla Pérez Guzmán', 'karla.perez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(25, 'Vanessa Walde Ortega', 'vanessa.walde@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(26, 'María Luna Torres', 'maria.luna@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(27, 'Ganimedes Rosales Reyes', 'ganimedes.rosales@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(28, 'Areli Valencia Vargas', 'areli.valencia@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(29, 'Patricia Salazar Velarde', 'patricia.salazar@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(30, 'Marco Argandoña Dueñas', 'margandona@contraloria.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(31, 'Janes Rodríguez López', 'janes.rodriguez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(32, 'Luis Castillo Torrealva', 'luis.castillo@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(33, 'Edwars Cotrina Chávez', 'edwars.cotrina@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(34, 'Johnny Rubina Meza', 'johnny.rubina@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(35, 'Felix Li Padilla', 'felix.li@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(36, 'Juana Llacsahuanga Chávez', 'juana.llacsahuanga@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(37, 'Jorge Llamoctanta Trejo', 'jorge.llamoctanta@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(38, 'Moisés Vera Rodríguez', 'moises.vera@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(39, 'Tito Medina Sánchez', 'tito.medina@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(40, 'Fidel Hernández Vega', 'fidel.hernandez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(41, 'Flabio García Esquivel', 'flabio.garcia@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(42, 'Dante Yorges Avalos', 'dante.yorges@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(43, 'Francisco Ochoa Uriarte', 'francisco.ochoa@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(44, 'Iván Cieza Yaipén', 'ivan.cieza@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(45, 'Paco Toledo Yallico', 'paco.toledo@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(46, 'Gonzalo Pérez Wicht', 'gonzalo.perez@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(47, 'Luis Peralta Guzmán', 'luis.peralta@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(48, 'Oscar Mestanza Malaspina', 'oscar.mestanza@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(49, 'Eduardo Dionisio Astuhuamán', 'eduardo.dionisio@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(50, 'Alan Saldaña Bustamante', 'alan.saldana@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(51, 'Daniel Sedan Villacorta', 'daniel.sedan@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(52, 'Oswaldo Wetzell L.O.', 'oswaldo.wetzell@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(53, 'Guillermo Uribe Córdova', 'guillermo.uribe@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(54, 'Marco Bermúdez Torres', 'marco.bermudez@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(55, 'Luis Espinal Redondez', 'luis.espinal@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(56, 'Luis Toledo Zatta', 'luis.toledo@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(57, 'Victor Asin Chumpitaz', 'victor.asin@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(58, 'Renato Sandoval González', 'renato.sandoval@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(59, 'Carolina Díaz Maldonado', 'carolina.diaz@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(60, 'Aydeé Luna Lezama', 'aydee.luna@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(61, 'Patricia Salazar Velarde', 'patricia.salazar.nc@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(62, 'José Jaramillo Narváez', 'jose.jaramillo@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(63, 'Carlos Loyola Escajadillo', 'carlos.loyola@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(64, 'María Livaque Garay', 'maria.livaque@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(65, 'Wilfredo Cárdenas Cortez', 'wilfredo.cardenas@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(66, 'Gatsby Loayza Párraga', 'gatsby.loayza@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(67, 'Joao Pacheco Castro', 'joao.pacheco@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(68, 'Zusi Castro Grandez', 'zusi.castro@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(69, 'Mariela Farro Torres', 'mariela.farro@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
+(184, 'Iber Ari Gomez', 'igomez@contraloria.gob.pe', NULL, NULL, NULL, '2024-05-08 23:27:55', NULL);
 
 --
 -- Índices para tablas volcadas
@@ -1352,6 +1669,36 @@ ALTER TABLE `auditoria_procesos`
 ALTER TABLE `configuracion`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `configuracion_clave_unique` (`clave`);
+
+--
+-- Indices de la tabla `contexto_analisis`
+--
+ALTER TABLE `contexto_analisis`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `contexto_analisis_contexto_determinacion_id_foreign` (`contexto_determinacion_id`),
+  ADD KEY `contexto_analisis_internal_context_id_foreign` (`internal_context_id`),
+  ADD KEY `contexto_analisis_external_context_id_foreign` (`external_context_id`);
+
+--
+-- Indices de la tabla `contexto_determinacion`
+--
+ALTER TABLE `contexto_determinacion`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `determinacion_contexto_proceso_id_year_version_unique` (`proceso_id`,`year`,`version`);
+
+--
+-- Indices de la tabla `contexto_externo`
+--
+ALTER TABLE `contexto_externo`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `contexto_externo_contexto_determinacion_id_foreign` (`contexto_determinacion_id`);
+
+--
+-- Indices de la tabla `contexto_interno`
+--
+ALTER TABLE `contexto_interno`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `contexto_interno_contexto_determinacion_id_foreign` (`contexto_determinacion_id`);
 
 --
 -- Indices de la tabla `documentos`
@@ -1427,6 +1774,14 @@ ALTER TABLE `indicadores_historico`
   ADD KEY `indicadores_historico_indicador_id_foreign` (`indicador_id`);
 
 --
+-- Indices de la tabla `indicadores_proceso_ouo`
+--
+ALTER TABLE `indicadores_proceso_ouo`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `indicadores_proceso_ouo_id_proceso_ouo_foreign` (`id_proceso_ouo`),
+  ADD KEY `indicadores_proceso_ouo_id_indicador_foreign` (`id_indicador`);
+
+--
 -- Indices de la tabla `indicadores_seguimiento`
 --
 ALTER TABLE `indicadores_seguimiento`
@@ -1440,6 +1795,14 @@ ALTER TABLE `indicadores_seguimiento`
 ALTER TABLE `informe_auditoria`
   ADD PRIMARY KEY (`id`),
   ADD KEY `informe_auditoria_auditoria_id_foreign` (`auditoria_id`);
+
+--
+-- Indices de la tabla `inventario_procesos`
+--
+ALTER TABLE `inventario_procesos`
+  ADD PRIMARY KEY (`id_inventario`),
+  ADD KEY `inventario_procesos_id_proceso_foreign` (`id_proceso`),
+  ADD KEY `inventario_procesos_id_ouo_responsable_foreign` (`id_ouo_responsable`);
 
 --
 -- Indices de la tabla `migrations`
@@ -1460,6 +1823,15 @@ ALTER TABLE `model_has_permissions`
 ALTER TABLE `model_has_roles`
   ADD PRIMARY KEY (`role_id`,`model_id`,`model_type`),
   ADD KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`);
+
+--
+-- Indices de la tabla `ouo`
+--
+ALTER TABLE `ouo`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ouo_codigo_unique` (`codigo`),
+  ADD KEY `ouo_ouo_padre_foreign` (`ouo_padre`),
+  ADD KEY `ouo_subgerente_id_foreign` (`subgerente_id`);
 
 --
 -- Indices de la tabla `password_resets`
@@ -1503,6 +1875,14 @@ ALTER TABLE `procesos`
   ADD UNIQUE KEY `sigla` (`sigla`);
 
 --
+-- Indices de la tabla `procesos_ouo`
+--
+ALTER TABLE `procesos_ouo`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `procesos_ouo_id_proceso_foreign` (`id_proceso`),
+  ADD KEY `procesos_ouo_id_ouo_foreign` (`id_ouo`);
+
+--
 -- Indices de la tabla `proceso_user`
 --
 ALTER TABLE `proceso_user`
@@ -1514,12 +1894,6 @@ ALTER TABLE `proceso_user`
 -- Indices de la tabla `programa_auditorias`
 --
 ALTER TABLE `programa_auditorias`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `propietarios`
---
-ALTER TABLE `propietarios`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1627,6 +2001,30 @@ ALTER TABLE `configuracion`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT de la tabla `contexto_analisis`
+--
+ALTER TABLE `contexto_analisis`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `contexto_determinacion`
+--
+ALTER TABLE `contexto_determinacion`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `contexto_externo`
+--
+ALTER TABLE `contexto_externo`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `contexto_interno`
+--
+ALTER TABLE `contexto_interno`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `documentos`
 --
 ALTER TABLE `documentos`
@@ -1660,19 +2058,19 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT de la tabla `hallazgos`
 --
 ALTER TABLE `hallazgos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT de la tabla `hallazgos_acciones`
 --
 ALTER TABLE `hallazgos_acciones`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT de la tabla `hallazgos_causas`
 --
 ALTER TABLE `hallazgos_causas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `indicadores`
@@ -1687,6 +2085,12 @@ ALTER TABLE `indicadores_historico`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT de la tabla `indicadores_proceso_ouo`
+--
+ALTER TABLE `indicadores_proceso_ouo`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `indicadores_seguimiento`
 --
 ALTER TABLE `indicadores_seguimiento`
@@ -1699,10 +2103,22 @@ ALTER TABLE `informe_auditoria`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `inventario_procesos`
+--
+ALTER TABLE `inventario_procesos`
+  MODIFY `id_inventario` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
+
+--
+-- AUTO_INCREMENT de la tabla `ouo`
+--
+ALTER TABLE `ouo`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -1729,6 +2145,12 @@ ALTER TABLE `procesos`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=285;
 
 --
+-- AUTO_INCREMENT de la tabla `procesos_ouo`
+--
+ALTER TABLE `procesos_ouo`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `proceso_user`
 --
 ALTER TABLE `proceso_user`
@@ -1739,12 +2161,6 @@ ALTER TABLE `proceso_user`
 --
 ALTER TABLE `programa_auditorias`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT de la tabla `propietarios`
---
-ALTER TABLE `propietarios`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `requerimientos`
@@ -1798,7 +2214,7 @@ ALTER TABLE `tipos_documentos`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
 
 --
 -- Restricciones para tablas volcadas
@@ -1823,6 +2239,32 @@ ALTER TABLE `auditoria_equipo`
 ALTER TABLE `auditoria_procesos`
   ADD CONSTRAINT `auditoria_procesos_auditoria_id_foreign` FOREIGN KEY (`auditoria_id`) REFERENCES `auditorias` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `auditoria_procesos_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `contexto_analisis`
+--
+ALTER TABLE `contexto_analisis`
+  ADD CONSTRAINT `contexto_analisis_contexto_determinacion_id_foreign` FOREIGN KEY (`contexto_determinacion_id`) REFERENCES `contexto_determinacion` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `contexto_analisis_external_context_id_foreign` FOREIGN KEY (`external_context_id`) REFERENCES `contexto_externo` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `contexto_analisis_internal_context_id_foreign` FOREIGN KEY (`internal_context_id`) REFERENCES `contexto_interno` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `contexto_determinacion`
+--
+ALTER TABLE `contexto_determinacion`
+  ADD CONSTRAINT `determinacion_contexto_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `contexto_externo`
+--
+ALTER TABLE `contexto_externo`
+  ADD CONSTRAINT `contexto_externo_contexto_determinacion_id_foreign` FOREIGN KEY (`contexto_determinacion_id`) REFERENCES `contexto_determinacion` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `contexto_interno`
+--
+ALTER TABLE `contexto_interno`
+  ADD CONSTRAINT `contexto_interno_contexto_determinacion_id_foreign` FOREIGN KEY (`contexto_determinacion_id`) REFERENCES `contexto_determinacion` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `documentos`
@@ -1876,16 +2318,24 @@ ALTER TABLE `indicadores_historico`
   ADD CONSTRAINT `indicadores_historico_indicador_id_foreign` FOREIGN KEY (`indicador_id`) REFERENCES `indicadores` (`id`);
 
 --
--- Filtros para la tabla `indicadores_seguimiento`
+-- Filtros para la tabla `indicadores_proceso_ouo`
 --
-ALTER TABLE `indicadores_seguimiento`
-  ADD CONSTRAINT `indicadores_seguimiento_indicador_id_foreign` FOREIGN KEY (`indicador_id`) REFERENCES `indicadores` (`id`);
+ALTER TABLE `indicadores_proceso_ouo`
+  ADD CONSTRAINT `indicadores_proceso_ouo_id_indicador_foreign` FOREIGN KEY (`id_indicador`) REFERENCES `indicadores` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `indicadores_proceso_ouo_id_proceso_ouo_foreign` FOREIGN KEY (`id_proceso_ouo`) REFERENCES `procesos_ouo` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `informe_auditoria`
 --
 ALTER TABLE `informe_auditoria`
   ADD CONSTRAINT `informe_auditoria_auditoria_id_foreign` FOREIGN KEY (`auditoria_id`) REFERENCES `auditorias` (`id`);
+
+--
+-- Filtros para la tabla `inventario_procesos`
+--
+ALTER TABLE `inventario_procesos`
+  ADD CONSTRAINT `inventario_procesos_id_ouo_responsable_foreign` FOREIGN KEY (`id_ouo_responsable`) REFERENCES `ouo` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `inventario_procesos_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `model_has_permissions`
@@ -1898,6 +2348,20 @@ ALTER TABLE `model_has_permissions`
 --
 ALTER TABLE `model_has_roles`
   ADD CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `ouo`
+--
+ALTER TABLE `ouo`
+  ADD CONSTRAINT `ouo_ouo_padre_foreign` FOREIGN KEY (`ouo_padre`) REFERENCES `ouo` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `ouo_subgerente_id_foreign` FOREIGN KEY (`subgerente_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `procesos_ouo`
+--
+ALTER TABLE `procesos_ouo`
+  ADD CONSTRAINT `procesos_ouo_id_ouo_foreign` FOREIGN KEY (`id_ouo`) REFERENCES `ouo` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `procesos_ouo_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `proceso_user`
