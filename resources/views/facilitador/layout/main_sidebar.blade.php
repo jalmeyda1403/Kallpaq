@@ -37,7 +37,7 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="{{ route('usuario.mapear-procesos', auth()->user()->id) }}" class="nav-link">
+                            <a href="{{ route('procesos.mapa', auth()->user()->id) }}" class="nav-link">
                                 <i class="fas fa-sitemap"></i>
                                 <p> Mapa de Procesos</p>
                             </a>
@@ -45,9 +45,9 @@
                        
                         <li class="nav-item">
                           
-                            <a href="{{ route('usuario.listar-procesos', auth()->user()->id) }}" class="nav-link">
+                            <a href="{{ route('procesos.index')}}" class="nav-link">
                                 <i class="fas fa-clipboard-list"></i>
-                                <p> Listar Procesos</p>
+                                <p> Listar Procesos </p>
                             </a>
                         </li>
                         <li class="nav-item">

@@ -111,15 +111,6 @@ class UserController extends Controller
          
     }
 
-    public function mapearProcesos()
-    {
-   
-        $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('tipo_proceso')->get();
-       
-        return view('procesos.mapa.mapa', compact('procesos'));
-         
-    }
-
     public function guardarProcesos(Request $request, $id)
     {
         $user = User::findOrFail($id);

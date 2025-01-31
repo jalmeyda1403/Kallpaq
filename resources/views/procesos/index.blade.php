@@ -1,32 +1,36 @@
 @extends('facilitador.layout.master')
 @section('title', 'SIG')
 
+
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Listado de Procesos asignados a {{ $user->name }}</h3>
-                        
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                        <h3 class="card-title">Lista de Procesos</h3>
                     </div>
                     <div class="card-body">
-                        @if (count($procesosAsignados) > 0)
-                        <table class="table table-bordered">
+                        <a href="{{ route('procesos.create') }}" class="btn btn-primary mb-3">Añadir Proceso</a>
+                        <table id= "procesos" class="table table-bordered">
                             <thead>
                                 <tr>
                                     <th>Código del Proceso</th>
                                     <th>Nombre del Proceso</th>
                                     <th>Tipo del Proceso</th>
+                                    <th>Proceso Padre</th>
+                                    <th>Nivel Proceso</th>
                                     <th style="width: 20%">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($procesosAsignados as $proceso)
+                                @foreach ($procesos as $proceso)
                                     <tr>
                                         <td>{{ $proceso->cod_proceso }}</td>
                                         <td>{{ $proceso->nombre }}</td>
                                         <td>{{ $proceso->tipo_proceso }}</td>
+                                        <td>{{ $proceso->cod_proceso_padre }}</td>
+                                        <td>{{ $proceso->nivel }}</td>
                                
                                         <td>
                                             <a href="#" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Ver Riesgos">
@@ -44,20 +48,15 @@
                             </tbody>
                         </table>
                                
-                        @else
-                            <p>No tiene procesos asignados.</p>
-                        @endif
                     </div>
-                   
                 </div>
             </div>
         </div>
-   
-
-    
-</div>
-@stop
+    </div>
+@endsection
 @section('js')
-$('#requerimientos').DataTable();
+<script>
+$('#procesos').DataTable();
+</script>
 
 @endsection

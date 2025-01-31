@@ -61,6 +61,13 @@ class ProcesoController extends Controller
    
     return response()->json($procesos);
    }
-
+   public function mapaProcesos()
+   {
+  
+       $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('tipo_proceso')->get();
+      
+       return view('procesos.mapa', compact('procesos'));
+        
+   }
    
 }

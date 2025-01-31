@@ -42,13 +42,17 @@ Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::resource('smp', HallazgoController::class);
 Route::resource('acciones', AccionController::class);
+//Procesos
+Route::get('/buscarProcesos', [ProcesoController::class,'findProcesos']);
+Route::get('/listarProcesos', [ProcesoController::class,'listarProcesos'])->name('procesos.listar');; 
+Route::get('/mapaProcesos', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
+
 
 Route::get('/indicadores/{proceso_id?}/listar',  [IndicadorController::class, 'listarIndicadores'])->name('indicadores.listar');;
 Route::get('/indicadores/{id}/historico-datos',  [IndicadorController::class, 'showHistorico']);
 Route::get('/indicadores/{id}/datos',  [IndicadorController::class, 'showDatos']);
 Route::get('indicadores/{id}/frecuencia', [IndicadorController::class, 'generarFrecuencia'])->name('indicadores.frecuencia');
-Route::get('/buscarprocesos', [ProcesoController::class,'findProcesos']);
-Route::get('/listarprocesos', [ProcesoController::class,'listarProcesos'])->name('procesos.listar');;
+
 Route::get('/buscarobjetivos', [PlanificacionSIGController::class, 'findObjetivos']);
 Route::get('/indicadores/{id}/editdatos',[IndicadorController::class, 'editDatos'])->name('indicadores.editdatos');
 Route::put('/indicadores_seguimiento/{id}', [IndicadorController::class, 'updateDatos']);
@@ -115,9 +119,7 @@ Route::get('/contexto/', [ContextoDeterminacionController::class, 'index'])->nam
     Route::get('usuarios/asignar-procesos/{id}', [UserController::class, 'asignarProcesos'])->name('usuarios.asignar-procesos');
     Route::post('usuarios/asignar-procesos/{id}', [UserController::class,'guardarProcesos'])->name('usuarios.guardar-procesos');
 
-Route::group(['namespace' => 'Admin', 'middleware' => ['auth', 'role:facilitador']], function () {
-   
-    Route::get('usuario/ver-mapa', [UserController::class, 'mapearProcesos'])->name('usuario.mapear-procesos');
+    
     
     //Requerimientos
     Route::get('/requerimientos/listar', [RequerimientoController::class, 'index'])->name('requerimientos.index');
@@ -127,9 +129,5 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['auth', 'role:facilitador
     Route::get('/requerimientos/{id}/trazabilidad', [RequerimientoController::class, 'trazabilidad'])->name('requerimientos.trazabilidad');
     //Necesidades
     Route::post('/necesidades', [RequerimientoNecesidadController::class, 'store'])->name('necesidad.store');
-});
 
-Route::get('admin', function () {
-    return view('admin.admin');
-})->middleware('auth'); 
 

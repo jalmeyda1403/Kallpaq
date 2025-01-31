@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_ouo_responsable');
             $table->unsignedBigInteger('id_ouo_delegada');
             $table->string('version');
+            $table->string('documento_aprobacion');
             $table->date('fecha_inicio');
             $table->date('fecha_fin')->nullable();
             $table->timestamps();

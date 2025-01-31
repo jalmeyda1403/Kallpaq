@@ -13,6 +13,7 @@ class Proceso extends Model
         'sigla',
         'tipo_proceso',
         'cod_proceso_padre',
+        'nivel',
         'estado',
         'inactivate_at',
     ];

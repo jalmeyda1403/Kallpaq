@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-01-2025 a las 01:29:09
+-- Tiempo de generación: 01-02-2025 a las 00:02:49
 -- Versión del servidor: 10.4.27-MariaDB
 -- Versión de PHP: 8.2.0
 
@@ -578,22 +578,13 @@ INSERT INTO `indicadores` (`id`, `tipo_indicador`, `proceso_id`, `producto`, `cl
 
 CREATE TABLE `indicadores_historico` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `indicador_id` bigint(20) UNSIGNED NOT NULL,
+  `indicador_proceso_ouo_id` bigint(20) UNSIGNED NOT NULL,
   `año` year(4) NOT NULL,
   `meta` double(8,2) NOT NULL,
   `valor` double(8,2) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `indicadores_historico`
---
-
-INSERT INTO `indicadores_historico` (`id`, `indicador_id`, `año`, `meta`, `valor`, `created_at`, `updated_at`) VALUES
-(1, 1, 2021, 0.75, 1.00, '2023-05-26 23:01:48', NULL),
-(2, 1, 2022, 0.75, 0.75, '2023-05-26 23:01:48', NULL),
-(3, 1, 2023, 0.75, 0.67, '2023-05-26 23:01:48', NULL);
 
 -- --------------------------------------------------------
 
@@ -605,10 +596,8 @@ CREATE TABLE `indicadores_proceso_ouo` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_proceso_ouo` bigint(20) UNSIGNED NOT NULL,
   `id_indicador` bigint(20) UNSIGNED NOT NULL,
-  `meta` double(8,2) NOT NULL,
-  `year` char(255) NOT NULL,
-  `fecha_inicio` date NOT NULL,
-  `fecha_fin` date DEFAULT NULL,
+  `meta_programada` double(8,2) NOT NULL,
+  `year_programado` char(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -621,7 +610,7 @@ CREATE TABLE `indicadores_proceso_ouo` (
 
 CREATE TABLE `indicadores_seguimiento` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `indicador_id` bigint(20) UNSIGNED NOT NULL,
+  `indicador_proceso_ouo_id` bigint(20) UNSIGNED NOT NULL,
   `fecha` date NOT NULL,
   `meta` double(8,5) DEFAULT 0.00000,
   `valor` double(8,2) DEFAULT 0.00,
@@ -636,40 +625,6 @@ CREATE TABLE `indicadores_seguimiento` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `indicadores_seguimiento`
---
-
-INSERT INTO `indicadores_seguimiento` (`id`, `indicador_id`, `fecha`, `meta`, `valor`, `estado`, `var1`, `var2`, `var3`, `var4`, `var5`, `var6`, `evidencias`, `created_at`, `updated_at`) VALUES
-(266, 1, '2023-01-31', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(267, 1, '2023-02-28', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(268, 1, '2023-03-31', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(269, 1, '2023-04-30', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(270, 1, '2023-05-31', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(271, 1, '2023-06-30', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(272, 1, '2023-07-31', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(273, 1, '2023-08-31', 0.78000, 1.00, 'bueno', 3.00, 3.00, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-05 04:34:26'),
-(274, 1, '2023-09-30', 0.78000, 1.00, 'bueno', 12.00, 12.00, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-05 04:34:36'),
-(275, 1, '2023-10-31', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(276, 1, '2023-11-30', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(277, 1, '2023-12-31', 0.78000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(282, 3, '2023-01-31', 120.00000, 39.00, 'malo', 12.00, 13.00, 14.00, NULL, NULL, NULL, NULL, NULL, '2024-06-05 21:07:47'),
-(283, 3, '2023-02-28', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(284, 3, '2023-03-31', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(285, 3, '2023-04-30', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(286, 3, '2023-05-31', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(287, 3, '2023-06-30', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(288, 3, '2023-07-31', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(289, 3, '2023-08-31', 120.00000, 42.00, 'malo', 12.00, 14.00, 16.00, NULL, NULL, NULL, NULL, NULL, '2024-06-05 21:08:13'),
-(290, 3, '2023-09-30', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(291, 3, '2023-10-31', 120.00000, 360.00, 'bueno', 120.00, 120.00, 120.00, NULL, NULL, NULL, NULL, NULL, '2024-06-05 21:08:31'),
-(292, 3, '2023-11-30', 120.00000, 135.00, 'bueno', 45.00, 45.00, 45.00, NULL, NULL, NULL, NULL, NULL, '2024-06-05 21:19:27'),
-(293, 3, '2023-12-31', 120.00000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(294, 2, '2023-03-31', 0.22500, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(295, 2, '2023-06-30', 0.45000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(296, 2, '2023-09-30', 0.67500, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL),
-(297, 2, '2023-12-31', 0.90000, 0.00, '', 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -697,9 +652,12 @@ CREATE TABLE `inventario_procesos` (
   `id_proceso` bigint(20) UNSIGNED NOT NULL,
   `id_ouo_responsable` bigint(20) UNSIGNED NOT NULL,
   `id_ouo_delegada` bigint(20) UNSIGNED NOT NULL,
+  `documento_aprobacion` varchar(300) NOT NULL,
   `version` varchar(255) NOT NULL,
+  `estado` tinyint(4) NOT NULL,
   `fecha_inicio` date NOT NULL,
   `fecha_fin` date DEFAULT NULL,
+  `inactive_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -806,8 +764,9 @@ CREATE TABLE `model_has_roles` (
 --
 
 INSERT INTO `model_has_roles` (`model_id`, `model_type`, `role_id`) VALUES
+(1, 'App\\Models\\User', 1),
 (2, 'App\\Models\\User', 2),
-(1, 'App\\Models\\User', 3);
+(21, 'App\\Models\\User', 5);
 
 -- --------------------------------------------------------
 
@@ -821,9 +780,14 @@ CREATE TABLE `ouo` (
   `codigo` varchar(255) NOT NULL,
   `ouo_padre` bigint(20) UNSIGNED DEFAULT NULL,
   `subgerente_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `subgerente_condicion` enum('encargatura','designacion','suplencia') DEFAULT NULL,
   `nivel_jerarquico` int(11) NOT NULL,
+  `doc_vigencia_alta` varchar(255) DEFAULT NULL,
   `fecha_vigencia_inicio` date NOT NULL,
+  `doc_vigencia_baja` varchar(255) DEFAULT NULL,
   `fecha_vigencia_fin` date DEFAULT NULL,
+  `estado` tinyint(4) DEFAULT NULL,
+  `inactive_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -832,75 +796,101 @@ CREATE TABLE `ouo` (
 -- Volcado de datos para la tabla `ouo`
 --
 
-INSERT INTO `ouo` (`id`, `nombre`, `codigo`, `ouo_padre`, `subgerente_id`, `nivel_jerarquico`, `fecha_vigencia_inicio`, `fecha_vigencia_fin`, `created_at`, `updated_at`) VALUES
-(1, 'Despacho del Contralor', 'D100', NULL, 9, 1, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(2, 'Órgano de Auditoría Interna', 'D200', 1, 10, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(3, 'Procuraduría Pública', 'D900', 1, 11, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(4, 'Oficina de Gestión de la Potestad Administrativa', 'E200', 1, 12, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(5, 'Oficina de Integridad Institucional', 'A260', 1, 13, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(6, 'Tribunal Superior de Responsabilidades Administrativas', 'E300', 1, 14, 2, '2024-11-08', NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(7, 'Vicecontraloría de Gestión Estratégica, Integridad y Control', 'L110', 1, 15, 2, '2024-11-08', NULL, '2025-01-16 20:27:32', '2025-01-16 20:27:32'),
-(8, 'Gerencia de Prevención y Control Social', 'C601', 7, 16, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
-(9, 'Gerencia de Análisis de Información para el Control', 'C120', 7, 17, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
-(10, 'Gerencia de Recursos Estratégicos', 'D500', 7, 18, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
-(11, 'Escuela Nacional de Control', 'D400', 7, 19, 3, '2024-11-08', NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
-(12, 'Subgerencia de Prevención e Integridad', 'C370', 8, 20, 4, '2024-11-08', NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
-(13, 'Subgerencia de Auditoría de Desempeño', 'L200', 8, 21, 4, '2024-11-08', NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
-(14, 'Subgerencia de Participación Ciudadana y Control Social', 'C600', 8, 22, 4, '2024-11-08', NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
-(15, 'Subgerencia del Observatorio Anticorrupción', 'C602', 9, 23, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(16, 'Subgerencia de Gestión de Declaraciones Juradas', 'C122', 9, 24, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(17, 'Subgerencia de Fiscalización', 'L1540', 9, 25, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(18, 'Subgerencia de Contrataciones Estratégicas', 'D501', 10, 26, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(19, 'Subgerencia de Gestión de Inversiones', 'C322', 10, 27, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(20, 'Subdirección Académica', 'D401', 11, 19, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(21, 'Subdirección de Posgrado', 'D403', 11, 28, 4, '2024-11-08', NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
-(22, 'Vicecontraloría de Control Sectorial y Territorial', 'L100', 1, 30, 2, '2024-11-08', NULL, '2025-01-16 20:41:44', '2025-01-16 20:41:44'),
-(23, 'Gerencia de Control Político, Institucional y Económico', 'L301', 22, 31, 3, '2024-11-08', NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
-(24, 'Gerencia de Control de Servicios Públicos Básicos', 'L303', 22, 32, 3, '2024-11-08', NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
-(25, 'Gerencia de Control de Megaproyectos', 'L304', 22, 33, 3, '2024-11-08', NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
-(26, 'Subgerencia de Control del Sector Seguridad Interna y Externa', 'L340', 23, 34, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(27, 'Subgerencia de Control del Sector Justicia, Político y Electoral', 'L352', 23, 35, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(28, 'Subgerencia de Control del Sector Social y Cultura', 'L315', 23, 36, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(29, 'Subgerencia de Control del Sector Económico y Financiero', 'L320', 23, 37, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(30, 'Subgerencia de Control del Sector Productivo y Trabajo', 'L330', 23, 38, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(31, 'Subgerencia de Control del Sector Transportes y Comunicaciones', 'L331', 24, 39, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(32, 'Subgerencia de Control del Sector Vivienda, Construcción y Saneamiento', 'L336', 24, 40, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(33, 'Subgerencia de Control del Sector Agricultura y Ambiente', 'L332', 24, 32, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(34, 'Subgerencia de Control del Sector Educación', 'L351', 24, 41, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(35, 'Subgerencia de Control del Sector Salud', 'L316', 24, 42, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(36, 'Subgerencia de Control de Universidades', 'L353', 24, 43, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(37, 'Subgerencia de Control de Megaproyectos', 'L334', 25, 184, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(38, 'Subgerencia de Control de Asociaciones Público Privadas y Obras por Impuestos', 'C920', 25, 44, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(39, 'Subgerencia de Control Previo de Adicionales de Obra', 'L556', 25, 33, 4, '2024-11-08', NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
-(40, 'Secretaría General', 'D300', 1, 46, 2, '2024-11-08', NULL, '2025-01-16 21:01:05', '2025-01-16 21:01:05'),
-(41, 'Oficina de Seguridad y Defensa Nacional', 'D531', 40, 47, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(42, 'Gerencia de Administración', 'C200', 40, 48, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(43, 'Gerencia de Capital Humano', 'D550', 40, 50, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(44, 'Gerencia de Tecnologías de la Información', 'D600', 40, 53, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(45, 'Gerencia de Comunicación Corporativa', 'C401', 40, 57, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(46, 'Gerencia de Asesoría Jurídica y Normatividad en Control Gubernamental', 'D700', 40, 60, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(47, 'Gerencia de Modernización y Planeamiento', 'L527', 40, 63, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(48, 'Gerencia de Relaciones Institucionales', 'C381', 40, 67, 3, '2024-11-08', NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
-(69, 'Subgerencia de Abastecimiento', 'D530', 42, NULL, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(70, 'Subgerencia de Gestión Documentaria', 'D320', 42, 49, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(71, 'Subgerencia de Políticas y Desarrollo Humano', 'D517', 43, 50, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(72, 'Subgerencia de Personal y Compensaciones', 'D510', 43, 51, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(73, 'Subgerencia de Bienestar y Relaciones Laborales', 'D511', 43, 52, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(74, 'Subgerencia de Sistemas de Información', 'D610', 44, 54, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(75, 'Subgerencia de Operaciones y Plataforma Tecnológica', 'D602', 44, 55, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(76, 'Subgerencia de Gobierno Digital', 'D603', 44, 56, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(77, 'Subgerencia de Prensa', 'C360', 45, 58, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(78, 'Subgerencia de Imagen y Relaciones Corporativas', 'D310', 45, 59, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(79, 'Subgerencia de Comunicación y Medios Digitales', 'C402', 45, 58, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(80, 'Subgerencia de Asesoría Jurídica', 'D710', 46, 60, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(81, 'Subgerencia de Normatividad en Control Gubernamental', 'C312', 46, 61, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(82, 'Subgerencia de Aseguramiento de la Calidad', 'L157', 46, 62, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(83, 'Subgerencia de Planeamiento, Presupuesto y Programación de Inversiones', 'L520', 47, 64, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(84, 'Subgerencia de Seguimiento y Evaluación del SNC', 'L590', 47, 65, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(85, 'Subgerencia de Modernización', 'C321', 47, 66, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(86, 'Subgerencia de Coordinación Parlamentaria', 'C380', 48, 67, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(87, 'Subgerencia de Coordinación Institucional Nacional', 'C382', 48, 68, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
-(88, 'Subgerencia de Cooperación y Asuntos Internacionales', 'D800', 48, 69, 4, '2024-11-08', NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08');
+INSERT INTO `ouo` (`id`, `nombre`, `codigo`, `ouo_padre`, `subgerente_id`, `subgerente_condicion`, `nivel_jerarquico`, `doc_vigencia_alta`, `fecha_vigencia_inicio`, `doc_vigencia_baja`, `fecha_vigencia_fin`, `estado`, `inactive_at`, `created_at`, `updated_at`) VALUES
+(1, 'Despacho del Contralor', 'D100', NULL, 9, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(2, 'Órgano de Auditoría Interna', 'D200', 1, 10, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(3, 'Procuraduría Pública', 'D900', 1, 11, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(4, 'Oficina de Gestión de la Potestad Administrativa', 'E200', 1, 12, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(5, 'Oficina de Integridad Institucional', 'A260', 1, 13, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(6, 'Tribunal Superior de Responsabilidades Administrativas', 'E300', 1, 14, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(7, 'Vicecontraloría de Gestión Estratégica, Integridad y Control', 'L110', 1, 15, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:27:32', '2025-01-16 20:27:32'),
+(8, 'Gerencia de Prevención y Control Social', 'C601', 7, 16, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(9, 'Gerencia de Análisis de Información para el Control', 'C120', 7, 17, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(10, 'Gerencia de Recursos Estratégicos', 'D500', 7, 18, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(11, 'Escuela Nacional de Control', 'D400', 7, 19, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:29:29', '2025-01-16 20:29:29'),
+(12, 'Subgerencia de Prevención e Integridad', 'C370', 8, 20, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
+(13, 'Subgerencia de Auditoría de Desempeño', 'L200', 8, 21, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
+(14, 'Subgerencia de Participación Ciudadana y Control Social', 'C600', 8, 22, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:31:09', '2025-01-16 20:31:09'),
+(15, 'Subgerencia del Observatorio Anticorrupción', 'C602', 9, 23, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(16, 'Subgerencia de Gestión de Declaraciones Juradas', 'C122', 9, 24, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(17, 'Subgerencia de Fiscalización', 'L1540', 9, 25, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(18, 'Subgerencia de Contrataciones Estratégicas', 'D501', 10, 26, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(19, 'Subgerencia de Gestión de Inversiones', 'C322', 10, 27, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(20, 'Subdirección Académica', 'D401', 11, 19, NULL, 4, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(21, 'Subdirección de Posgrado', 'D403', 11, 28, NULL, 4, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:32:40', '2025-01-16 20:32:40'),
+(22, 'Vicecontraloría de Control Sectorial y Territorial', 'L100', 1, 30, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:41:44', '2025-01-16 20:41:44'),
+(23, 'Gerencia de Control Político, Institucional y Económico', 'L301', 22, 31, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
+(24, 'Gerencia de Control de Servicios Públicos Básicos', 'L303', 22, 32, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
+(25, 'Gerencia de Control de Megaproyectos', 'L304', 22, 33, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:44:34', '2025-01-16 20:44:34'),
+(26, 'Subgerencia de Control del Sector Seguridad Interna y Externa', 'L340', 23, 34, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(27, 'Subgerencia de Control del Sector Justicia, Político y Electoral', 'L352', 23, 35, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(28, 'Subgerencia de Control del Sector Social y Cultura', 'L315', 23, 36, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(29, 'Subgerencia de Control del Sector Económico y Financiero', 'L320', 23, 37, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(30, 'Subgerencia de Control del Sector Productivo y Trabajo', 'L330', 23, 38, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(31, 'Subgerencia de Control del Sector Transportes y Comunicaciones', 'L331', 24, 39, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(32, 'Subgerencia de Control del Sector Vivienda, Construcción y Saneamiento', 'L336', 24, 40, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(33, 'Subgerencia de Control del Sector Agricultura y Ambiente', 'L332', 24, 32, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(34, 'Subgerencia de Control del Sector Educación', 'L351', 24, 41, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(35, 'Subgerencia de Control del Sector Salud', 'L316', 24, 42, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(36, 'Subgerencia de Control de Universidades', 'L353', 24, 43, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(37, 'Subgerencia de Control de Megaproyectos', 'L334', 25, 184, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(38, 'Subgerencia de Control de Asociaciones Público Privadas y Obras por Impuestos', 'C920', 25, 44, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(39, 'Subgerencia de Control Previo de Adicionales de Obra', 'L556', 25, 33, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:48:12', '2025-01-16 20:48:12'),
+(40, 'Secretaría General', 'D300', 1, 46, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:01:05', '2025-01-16 21:01:05'),
+(41, 'Oficina de Seguridad y Defensa Nacional', 'D531', 40, 47, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(42, 'Gerencia de Administración', 'C200', 40, 48, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(43, 'Gerencia de Capital Humano', 'D550', 40, 50, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(44, 'Gerencia de Tecnologías de la Información', 'D600', 40, 53, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(45, 'Gerencia de Comunicación Corporativa', 'C401', 40, 57, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(46, 'Gerencia de Asesoría Jurídica y Normatividad en Control Gubernamental', 'D700', 40, 60, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(47, 'Gerencia de Modernización y Planeamiento', 'L527', 40, 63, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(48, 'Gerencia de Relaciones Institucionales', 'C381', 40, 67, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:03:07', '2025-01-16 21:03:07'),
+(69, 'Subgerencia de Abastecimiento', 'D530', 42, NULL, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(70, 'Subgerencia de Gestión Documentaria', 'D320', 42, 49, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(71, 'Subgerencia de Políticas y Desarrollo Humano', 'D517', 43, 50, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(72, 'Subgerencia de Personal y Compensaciones', 'D510', 43, 51, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(73, 'Subgerencia de Bienestar y Relaciones Laborales', 'D511', 43, 52, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(74, 'Subgerencia de Sistemas de Información', 'D610', 44, 54, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(75, 'Subgerencia de Operaciones y Plataforma Tecnológica', 'D602', 44, 55, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(76, 'Subgerencia de Gobierno Digital', 'D603', 44, 56, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(77, 'Subgerencia de Prensa', 'C360', 45, 58, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(78, 'Subgerencia de Imagen y Relaciones Corporativas', 'D310', 45, 59, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(79, 'Subgerencia de Comunicación y Medios Digitales', 'C402', 45, 58, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(80, 'Subgerencia de Asesoría Jurídica', 'D710', 46, 60, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(81, 'Subgerencia de Normatividad en Control Gubernamental', 'C312', 46, 61, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(82, 'Subgerencia de Aseguramiento de la Calidad', 'L157', 46, 62, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(83, 'Subgerencia de Planeamiento, Presupuesto y Programación de Inversiones', 'L520', 47, 64, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(84, 'Subgerencia de Seguimiento y Evaluación del SNC', 'L590', 47, 65, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(85, 'Subgerencia de Modernización', 'C321', 47, 66, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(86, 'Subgerencia de Coordinación Parlamentaria', 'C380', 48, 67, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(87, 'Subgerencia de Coordinación Institucional Nacional', 'C382', 48, 68, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(88, 'Subgerencia de Cooperación y Asuntos Internacionales', 'D800', 48, 69, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 21:07:08', '2025-01-16 21:07:08'),
+(114, 'Gerencia Regional de Control Lima Provincias', 'C823', 22, 185, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(115, 'Gerencia Regional de Control Ancash', 'L425', 22, 186, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(116, 'Gerencia Regional de Control de Ica', 'L445', 22, 187, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(117, 'Gerencia Regional de Control de Loreto', 'L440', 22, 188, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(118, 'Gerencia Regional de Control de Lima Metropolitana', 'L401', 22, 189, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(119, 'Gerencia Regional de Control del Callao', 'C824', 22, 190, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(120, 'Gerencia Regional de Control de Tumbes', 'L422', 22, 191, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(121, 'Gerencia Regional de Control de Piura', 'L420', 22, 192, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(122, 'Gerencia Regional de Control de Lambayeque', 'L430', 22, 193, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(123, 'Gerencia Regional de Control de La Libertad', 'L495', 22, 194, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(124, 'Gerencia Regional de Control de Cajamarca', 'L435', 22, 210, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(125, 'Gerencia Regional de Control de San Martín', 'L450', 22, 195, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(126, 'Gerencia Regional de Control de Amazonas', 'L452', 22, 196, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(127, 'Gerencia Regional de Control Junín', 'L460', 22, 197, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(128, 'Gerencia Regional de Control Huancavelica', 'L446', 22, 198, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(129, 'Gerencia Regional de Control Ayacucho', 'L490', 22, 199, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(130, 'Gerencia Regional de Control Ucayali', 'L466', 22, 200, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(131, 'Gerencia Regional de Control Huánuco', 'L465', 22, 209, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(132, 'Gerencia Regional de Control Pasco', 'L467', 22, 201, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(133, 'Gerencia Regional de Control Arequipa', 'L470', 22, 202, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(134, 'Gerencia Regional de Control Moquegua', 'L476', 22, 203, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(135, 'Gerencia Regional de Control Tacna', 'L475', 22, 204, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(136, 'Gerencia Regional de Control de Madre de Dios', 'L482', 22, 205, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(137, 'Gerencia Regional de Control Apurímac', 'L485', 22, 206, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(138, 'Gerencia Regional de Control Cusco', 'L480', 22, 207, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(139, 'Gerencia Regional de Control Puno', 'L455', 22, 208, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1007,6 +997,7 @@ CREATE TABLE `procesos` (
   `sigla` varchar(6) DEFAULT NULL,
   `tipo_proceso` enum('Misional','Estratégico','Apoyo') NOT NULL,
   `cod_proceso_padre` varchar(20) DEFAULT NULL,
+  `nivel` int(11) DEFAULT NULL,
   `estado` tinyint(1) NOT NULL DEFAULT 1,
   `inactivate_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
@@ -1017,238 +1008,238 @@ CREATE TABLE `procesos` (
 -- Volcado de datos para la tabla `procesos`
 --
 
-INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, `cod_proceso_padre`, `estado`, `inactivate_at`, `created_at`, `updated_at`) VALUES
-(1, 'PE01', 'Gestión Estratégica', NULL, 'Estratégico', NULL, 1, NULL, '2023-05-26 23:01:48', '2023-06-02 04:00:48'),
-(2, 'PE02', 'Desarrollo Institucional', NULL, 'Estratégico', NULL, 1, NULL, NULL, NULL),
-(3, 'PE03', 'Comunicación y Relaciones Interinstitucionales', NULL, 'Estratégico', NULL, 1, NULL, NULL, NULL),
-(4, 'PM01', 'Prevención y Detección de la Corrupción', NULL, 'Misional', NULL, 1, NULL, NULL, NULL),
-(5, 'PM02', 'Atención a las Entidades y Partes Interesadas', NULL, 'Misional', NULL, 1, NULL, NULL, NULL),
-(6, 'PM03', 'Realización de los Servicios de Control Simultáneo, Posterior y Relacionados', NULL, 'Misional', NULL, 1, NULL, NULL, NULL),
-(7, 'PM04', 'Gestión de Sanciones y Procesos Judiciales', NULL, 'Misional', NULL, 1, NULL, NULL, NULL),
-(8, 'PM05', 'Gestión de los Resultados del Control', NULL, 'Misional', NULL, 1, NULL, NULL, NULL),
-(9, 'PA01', 'Gestión del Capital Humano', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(10, 'PA02', 'Gestión de Activos Documentarios', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(11, 'PA03', 'Gestión de Abastecimiento', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(12, 'PA04', 'Gestión Financiera', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(13, 'PA05', 'Gestión de Tecnologías de la Información y Comunicaciones', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(14, 'PA06', 'Gestión Jurídico Legal', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(15, 'PA07', 'Gestión de la Seguridad', NULL, 'Apoyo', NULL, 1, NULL, NULL, NULL),
-(30, 'PE01.01', 'Planeamiento Estratégico', 'PEI', 'Estratégico', 'PE01', 1, NULL, '2023-08-09 17:21:22', NULL),
-(31, 'PE01.02', 'Gestión de Entidades Sujetad a Control', 'GESC', 'Estratégico', 'PE01', 1, NULL, '2023-08-09 17:21:22', NULL),
-(32, 'PE01.03', 'Planeamiento Operativo', 'POI', 'Estratégico', 'PE01', 1, NULL, '2023-08-09 17:21:22', NULL),
-(33, 'PE01.04', 'Control Institucional', NULL, 'Estratégico', 'PE01', 1, NULL, '2023-08-09 17:21:22', NULL),
-(34, 'PE02.01', 'Diseño Organizacional', 'DEO', 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(35, 'PE02.02', 'Gestión de la Modernización', NULL, 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(36, 'PE02.03', 'Gestión Normativa', 'GNOR', 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(37, 'PE02.04', 'Gestión de la Inversión', 'PROY', 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(38, 'PE02.05', 'Gestión del Conocimiento', NULL, 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(39, 'PE02.06', 'Gestión de la Continuidad del Negocio', NULL, 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(40, 'PE02.07', 'Gestión de la Integridad Institucional', NULL, 'Estratégico', 'PE02', 1, NULL, '2023-08-09 17:21:22', NULL),
-(41, 'PE03.01', 'Gestión de la Comunicación Institucional', NULL, 'Estratégico', 'PE03', 1, NULL, '2023-08-09 17:21:22', NULL),
-(42, 'PE03.02', 'Gestión de las Relaciones Interinstitucionales', NULL, 'Estratégico', 'PE03', 1, NULL, '2023-08-09 17:21:22', NULL),
-(56, 'PM01.01', 'Gestión de mecanismos de prevención y detección de la corrupción', NULL, 'Misional', 'PM01', 1, NULL, '2023-08-09 17:28:23', NULL),
-(57, 'PM01.02', 'Participación ciudadana', NULL, 'Misional', 'PM01', 1, NULL, '2023-08-09 17:28:23', NULL),
-(58, 'PM02.01', 'Atención de la demanda imprevisible de control', NULL, 'Misional', 'PM02', 1, NULL, '2023-08-09 17:28:23', NULL),
-(59, 'PM02.02', 'Atención de pedidos de información y solicitudes de opinión', NULL, 'Misional', 'PM02', 1, NULL, '2023-08-09 17:28:23', NULL),
-(60, 'PM02.03', 'Atención de quejas y reclamos', NULL, 'Misional', 'PM02', 1, NULL, '2023-08-09 17:28:23', NULL),
-(61, 'PM03.01', 'Programación de los servicios de control y de fiscalización', NULL, 'Misional', 'PM03', 1, NULL, '2023-08-09 17:28:23', NULL),
-(62, 'PM03.02', 'Realización de los servicios de control simultáneo', NULL, 'Misional', 'PM03', 1, NULL, '2023-08-09 17:28:23', NULL),
-(63, 'PM03.03', 'Realización de los servicios de control posterior', NULL, 'Misional', 'PM03', 1, NULL, '2023-08-09 17:28:23', NULL),
-(64, 'PM03.04', 'Realización de los servicios relacionados', NULL, 'Misional', 'PM03', 1, NULL, '2023-08-09 17:28:23', NULL),
-(65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', NULL, 'Misional', 'PM03', 1, NULL, '2023-08-09 17:28:23', NULL),
-(66, 'PM04.01', 'Gestión de sanciones administrativas', 'GSAD', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
-(67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', 'GPSA', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
-(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', '', 'Misional', 'PM04', 1, NULL, '2023-08-09 17:28:23', NULL),
-(69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', 'SEIR', 'Misional', 'PM05', 1, NULL, '2023-08-09 17:28:23', NULL),
-(70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', 'DBPM', 'Misional', 'PM05', 1, NULL, '2023-08-09 17:28:23', NULL),
-(71, 'PA01.01', 'Planificación del capital humano', 'PLCH', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
-(72, 'PA01.02', 'Incorporación del capital humano', 'INCH', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
-(73, 'PA01.03', 'Desarrollo del capital humano', 'DECH', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
-(74, 'PA01.04', 'Administración del capital humano', 'ADCH', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
-(75, 'PA01.05', 'Gestión del bienestar del capital humano', 'GBCH', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
-(76, 'PA01.06', 'Gestión del jefe y personal del OCI', 'GOCI', 'Apoyo', 'PA01', 1, NULL, '2023-08-09 18:30:44', NULL),
-(77, 'PA02.01', 'Planificación del activo documentario', 'PDAD', 'Apoyo', 'PA02', 1, NULL, '2023-08-09 18:30:44', NULL),
-(78, 'PA02.02', 'Recepción de documentos', 'RDGD', 'Apoyo', 'PA02', 1, NULL, '2023-08-09 18:30:44', NULL),
-(79, 'PA02.03', 'Clasificación, reclasificación y desclasificación de documentos secretos y reservados', 'CRDD', 'Apoyo', 'PA02', 1, NULL, '2023-08-09 18:30:44', NULL),
-(80, 'PA02.04', 'Distribución de documentos y valijas', 'MSJ', 'Apoyo', 'PA02', 1, NULL, '2023-08-09 18:30:44', NULL),
-(81, 'PA02.05', 'Archivo, custodia y conservación de documentos', 'ARCH', 'Apoyo', 'PA02', 1, NULL, '2023-08-09 18:30:44', NULL),
-(82, 'PA02.06', 'Autenticación de firmas y certificación de documentos', 'AFCD', 'Apoyo', 'PA02', 1, NULL, '2023-08-09 18:30:44', NULL),
-(83, 'PA03.01', 'Elaboración del plan anual de contrataciones', 'PNCO', 'Apoyo', 'PA03', 1, NULL, '2023-08-09 18:30:44', NULL),
-(84, 'PA03.02', 'Contratación de bienes y servicios', 'ACBS', 'Apoyo', 'PA03', 1, NULL, '2023-08-09 18:30:44', NULL),
-(85, 'PA03.03', 'Gestión de bienes patrimoniales', 'GBPA', 'Apoyo', 'PA03', 1, NULL, '2023-08-09 18:30:44', NULL),
-(86, 'PA03.04', 'Gestión de almacén', 'GALM', 'Apoyo', 'PA03', 1, NULL, '2023-08-09 18:30:44', NULL),
-(87, 'PA03.05', 'Administración de servicios generales', 'ADSG', 'Apoyo', 'PA03', 1, NULL, '2023-08-09 18:30:44', NULL),
-(88, 'PA03.06', 'Gestión de sociedades de auditoria', 'GSOA', 'Apoyo', 'PA03', 1, NULL, '2023-08-09 18:30:44', NULL),
-(89, 'PA04.01', 'Programación multianual, formulación y aprobación del presupuesto', NULL, 'Apoyo', 'PA04', 1, NULL, '2023-08-09 18:30:44', NULL),
-(90, 'PA04.02', 'Ejecución presupuestal', 'EJPR', 'Apoyo', 'PA04', 1, NULL, '2023-08-09 18:30:44', NULL),
-(91, 'PA04.03', 'Evaluación presupuestal', 'EVPR', 'Apoyo', 'PA04', 1, NULL, '2023-08-09 18:30:44', NULL),
-(92, 'PA04.04', 'Gestión contable', 'CONT', 'Apoyo', 'PA04', 1, NULL, '2023-08-09 18:30:44', NULL),
-(93, 'PA05.01', 'Planificación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, NULL, '2023-08-09 18:30:44', NULL),
-(94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, NULL, '2023-08-09 18:30:44', NULL),
-(95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, NULL, '2023-08-09 18:30:44', NULL),
-(96, 'PA06.01', 'Gestión y difusión de productos de interés legal', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
-(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', 'GPRJ', 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
-(98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
-(99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', NULL, 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
-(100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', 'ACCJ', 'Apoyo', 'PA06', 1, NULL, '2023-08-09 18:30:44', NULL),
-(101, 'PA07.01', 'Gestión de prevención de riesgos de desastres', NULL, 'Apoyo', 'PA07', 1, NULL, '2023-08-09 18:30:44', NULL),
-(102, 'PA07.02', 'Operación de la gestión de la seguridad', NULL, 'Apoyo', 'PA07', 1, NULL, '2023-08-09 18:30:44', NULL),
-(103, 'PA07.03', 'Fomento de una cultura de seguridad', NULL, 'Apoyo', 'PA07', 1, NULL, '2023-08-09 18:30:44', NULL),
-(104, 'PM06', 'Gestión Educativa', NULL, 'Misional', NULL, 1, NULL, '2023-09-27 15:13:56', NULL),
-(105, 'PE02.02.02', 'Administración de los Sistemas de Gestión', 'MODER', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:38:59', NULL),
-(106, 'PE02.02.03', 'Gestión de la Calidad', 'SGC', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:45:13', NULL),
-(107, 'PE02.02.04', 'Gestión de Riesgos', 'SGR', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:45:13', NULL),
-(108, 'PE02.02.05', 'Gestión del Control Interno', NULL, 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:47:23', NULL),
-(109, 'PE02.02.06', 'Gestión Antisoborno', 'SGAS', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:47:23', NULL),
-(110, 'PE02.02.07', 'Gestión de la Simplificación Administrativa', 'SIMP', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:51:57', NULL),
-(111, 'PE02.02.08', 'Aseguramiento de la Calidad', 'ACAL', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:51:57', NULL),
-(112, 'PE02.02.09', 'Gestión de la Seguridad de la Información', 'SGSI', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:51:57', NULL),
-(113, 'PE02.02.01', 'Gestión por Procesos', 'PROC', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:53:40', NULL),
-(114, 'PE02.02.10', 'Gestión de Compliance', 'SGCM', 'Estratégico', 'PE02.02', 1, NULL, '2024-06-19 14:53:40', NULL),
-(115, 'PE02.03.01', 'Gestión de Inciativas Legislativas', 'GNIL', 'Estratégico', 'PE02.03', 1, NULL, '2024-06-19 15:11:26', NULL),
-(116, 'PE02.03.02', 'Gestión de Documentos Normativos', 'GNDN', 'Estratégico', 'PE02.03', 1, NULL, '2024-06-19 15:11:26', NULL),
-(117, 'PE02.03.03', 'Gestión de documentos en el Alcance del SIG', 'NORM', 'Estratégico', 'PE02.03', 1, NULL, '2024-06-19 15:11:26', NULL),
-(118, 'PA05.03.01', 'Respaldo de información', 'REST', 'Apoyo', 'PA05.03', 1, NULL, '2024-06-25 17:18:37', NULL),
-(119, 'PA05.03.02', 'Atención de requeremientos de recursos informáticos', 'MDA', 'Apoyo', 'PA05.03', 1, NULL, '2024-06-25 17:34:32', NULL),
-(120, 'PA05.03.03', 'Seguimiento y control de los servicios de tecnologías de información y comunicaciones', 'SCST', 'Apoyo', 'PA05.03', 1, NULL, '2024-06-25 17:37:25', NULL),
-(121, 'PA05.03.04', 'Mantenimiento preventivo y correctivo de activos informáticos y de comunicaciones', 'MTNE', 'Apoyo', 'PA05.03', 1, NULL, '2024-06-25 17:38:13', NULL),
-(122, 'PA05.02.01', 'Desarrollo de arquitectura informática y de comunicaciones', 'DACO', 'Apoyo', 'PA05.02', 1, NULL, '2024-06-25 17:42:35', NULL),
-(123, 'PA05.02.02', 'Desarrollo de soluciones', 'DSO', 'Apoyo', 'PA05.02', 1, NULL, '2024-06-25 17:43:08', NULL),
-(125, 'PM03.02.01', 'Visita de Control', 'VICO', 'Misional', 'PM03.02', 1, NULL, '2024-06-25 18:43:12', NULL),
-(126, 'PM03.02.02', 'Orientación de oficio', 'OROF', 'Misional', 'PM03.02', 1, NULL, '2024-06-25 18:43:12', NULL),
-(127, 'PM03.02.03', 'Control Concurrente', 'COCO', 'Misional', 'PM03.02', 1, NULL, '2024-06-25 18:45:44', NULL),
-(128, 'PM03.02.04', 'Operativo de Control Simultaneo', 'OCOS', 'Misional', 'PM03.02', 1, NULL, '2024-06-25 18:45:44', NULL),
-(129, 'PM02.01.01', 'Realización de los servicios de control previo', NULL, 'Misional', 'PM02.01', 1, NULL, '2024-06-25 18:49:07', NULL),
-(130, 'PM02.01.01.01', 'Evaluación de prestaciones de adicionales de obra', 'EAOB', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 18:52:50', NULL),
-(131, 'PM02.01.01.02', 'Evaluación de recursos de apelación de prestaciones adicionales de obra', 'APAO', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 19:02:26', NULL),
-(132, 'PM02.01.01.03', 'Evaluación de prestaciones adicionales de supervisión de obra', 'EPAS', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 19:02:26', NULL),
-(133, 'PM02.01.01.04', 'Evaluación de recursos de apelación de prestaciones adicionales de supervisión de obra', 'APAS', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 19:02:26', NULL),
-(134, 'PM02.01.01.05', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de asociaciones público privadas y obras por impuestos', 'ESIP', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 19:02:26', NULL),
-(135, 'PM02.01.01.06', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de endeudamiento público interno y externo', 'ESIE', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 19:02:26', NULL),
-(136, 'PM02.01.01.07', 'Emisión de opinión previa a las compras con carácter de secreto militar o de orden interno', 'EOPM', 'Misional', 'PM02.01.01', 1, NULL, '2024-06-25 19:02:26', NULL),
-(137, 'PM02.02.01.01', 'Atención de solicitudes de acceso a la información pública', 'SAIP', 'Misional', 'PM02.02.01', 1, NULL, '2024-06-25 19:08:40', NULL),
-(138, 'PM02.02.01.02', 'Atención de requerimientos de información del congreso', 'ARIC', 'Misional', 'PM02.02.01', 1, NULL, '2024-06-25 19:08:40', NULL),
-(139, 'PM02.02.01.03', 'Atención de requerimientos de información de entidades', 'ARIE', 'Misional', 'PM02.02.01', 1, NULL, '2024-06-25 19:08:40', NULL),
-(140, 'PM02.02.02.01', 'Atención de consulta legal externa respecto a la interpretación y alcance de la normativa de servicios de control o servicios relacionados', 'ACLE', 'Misional', 'PM02.02.02', 1, NULL, '2024-06-25 19:08:40', NULL),
-(141, 'PM02.02.02.02', 'Atención de solicitudes de opinión sobre proyectos de ley y otras normas con rango de ley', 'ASOL', 'Misional', 'PM02.02.02', 1, NULL, '2024-06-25 19:08:40', NULL),
-(142, 'PM03.03.01', 'Auditoría de cumplimiento', 'ACUM', 'Misional', 'PM03.03', 1, NULL, '2024-06-25 19:12:46', NULL),
-(143, 'PM03.03.02', 'Auditoría de desempeño', 'ADES', 'Misional', 'PM03.03', 1, NULL, '2024-06-25 19:12:46', NULL),
-(144, 'PM03.03.03', 'Auditoría financiera', 'AFIN', 'Misional', 'PM03.03', 1, NULL, '2024-06-25 19:12:46', NULL),
-(145, 'PM03.03.04', 'Auditoría de la Cuenta General de la República', 'ACGR', 'Misional', 'PM03.03', 1, NULL, '2024-06-25 19:12:46', NULL),
-(146, 'PM03.03.05', 'Servicio de control específico a hechos con presunta irregularidad', 'SCEH', 'Misional', 'PM03.03', 1, NULL, '2024-06-25 19:12:46', NULL),
-(147, 'PM03.03.06', 'Acción de oficio posterior', 'AOPO', 'Misional', 'PM03.03', 1, NULL, '2024-06-25 19:12:46', NULL),
-(148, 'PE03.01.01', 'Diseño del plan de comunicación corporativa', 'CODP', 'Estratégico', 'PE03.01', 1, NULL, '2024-06-25 19:25:53', NULL),
-(149, 'PE03.01.02', 'Gestión de la comunicación interna', 'COGI', 'Estratégico', 'PE03.01', 1, NULL, '2024-06-25 19:25:53', NULL),
-(150, 'PE03.01.03', 'Organización y ejecución de eventos para la promoción de la imagen y desarrollo institucional', 'COEI', 'Estratégico', 'PE03.01', 1, NULL, '2024-06-25 19:25:53', NULL),
-(151, 'PE03.01.04', 'Gestión de la publicación institucional', 'COGP', 'Estratégico', 'PE03.01', 1, NULL, '2024-06-25 19:25:53', NULL),
-(152, 'PE03.01.05', 'Actualización de contenidos del portal de transparencia estándar de la contraloría general de la república', 'COPT', 'Estratégico', 'PE03.01', 1, NULL, '2024-06-25 19:25:53', NULL),
-(153, 'PE03.01.06', 'Gestión de prensa', 'COPR', 'Estratégico', 'PE03.01', 1, NULL, '2024-06-25 19:25:53', NULL),
-(154, 'PE03.02.01', 'Diseño de la estrategia de relacionamiento interinstitucional', 'GRDE', 'Estratégico', 'PE03.02', 1, NULL, '2024-06-25 19:25:53', NULL),
-(155, 'PE03.02.02', 'Atención de necesidades interinstitucionales de representación de autoridades y funcionarios de la cgr', 'GRRE', 'Estratégico', 'PE03.02', 1, NULL, '2024-06-25 19:25:53', NULL),
-(156, 'PE03.02.03', 'Gestión de la representación institucional en eventos internacionales', 'GRRI', 'Estratégico', 'PE03.02', 1, NULL, '2024-06-25 19:25:53', NULL),
-(157, 'PE03.02.04', 'Gestión de las necesidades institucionales de cooperación técnica y financiera', 'GRCT', 'Estratégico', 'PE03.02', 1, NULL, '2024-06-25 19:25:53', NULL),
-(158, 'PE03.02.05', 'Gestión de instrumentos de cooperación', 'GICO', 'Estratégico', 'PE03.02', 1, NULL, '2024-06-25 19:25:53', NULL),
-(159, 'PA04.02.01', 'Control de la disponibilidad de los créditos presupuestarios', 'PRCP', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(160, 'PA04.02.02', 'Gestión de la modificación presupuestal a nivel institucional', 'PRMP', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(161, 'PA04.02.03', 'Modificación presupuestal a nivel funcional programático', 'PRFP', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(162, 'PA04.02.04', 'Ejecución de ingresos', 'EDIN', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(163, 'PA04.02.05', 'Ejecución del gasto', 'EDGE', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(164, 'PA04.02.06', 'Gestión de viáticos', 'GVIA', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(165, 'PA04.02.07', 'Gestión del fondo de caja chica', 'GFCC', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(166, 'PA04.02.08', 'Gestión de anticipos', 'GANT', 'Apoyo', 'PA04.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(167, 'PA03.02.01', 'Formulación del requerimiento para la contratación de bienes y servicios', 'BSRC', 'Apoyo', 'PA03.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(168, 'PA03.02.02', 'Procesos de selección', 'BSPS', 'Apoyo', 'PA03.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(169, 'PA03.02.03', 'Contrataciones de bienes y servicios excluidas de la norma', 'BSEX', 'Apoyo', 'PA03.02', 1, NULL, '2024-06-25 19:39:57', NULL),
-(194, 'PA01.01.01', 'Diseño de estrategias, políticas y herramientas para la gestión del capital humano', 'DEPH', 'Apoyo', 'PA01.01', 1, NULL, '2024-06-25 20:04:19', NULL),
-(195, 'PA01.01.02', 'Planificación de recursos humanos', 'PLRH', 'Apoyo', 'PA01.01', 1, NULL, '2024-06-25 20:04:19', NULL),
-(196, 'PA01.01.03', 'Administración de puestos y perfiles', 'APPE', 'Apoyo', 'PA01.01', 1, NULL, '2024-06-25 20:04:19', NULL),
-(197, 'PA01.02.01', 'Reclutamiento y selección', 'REYS', 'Apoyo', 'PA01.02', 1, NULL, '2024-06-25 20:04:19', NULL),
-(198, 'PA01.02.02', 'Vinculación de personal', 'VIPE', 'Apoyo', 'PA01.02', 1, NULL, '2024-06-25 20:04:19', NULL),
-(199, 'PA01.02.03', 'Inducción de personal', 'INPE', 'Apoyo', 'PA01.02', 1, NULL, '2024-06-25 20:04:19', NULL),
-(200, 'PA01.02.04', 'Designación de personal en puestos de confianza', 'DPPC', 'Apoyo', 'PA01.02', 1, NULL, '2024-06-25 20:04:19', NULL),
-(201, 'PA01.03.01', 'Gestión de la capacitación', 'GCAP', 'Apoyo', 'PA01.03', 1, NULL, '2024-06-25 20:04:19', NULL),
-(202, 'PA01.03.02', 'Gestión del rendimiento', 'GREN', 'Apoyo', 'PA01.03', 1, NULL, '2024-06-25 20:04:19', NULL),
-(203, 'PA01.03.03', 'Gestión de incentivos', 'GINC', 'Apoyo', 'PA01.03', 1, NULL, '2024-06-25 20:04:19', NULL),
-(204, 'PA01.03.04', 'Progresión de la carrera', 'PCPE', 'Apoyo', 'PA01.03', 1, NULL, '2024-06-25 20:04:19', NULL),
-(205, 'PA01.03.05', 'Convocatoria interna', 'COIN', 'Apoyo', 'PA01.03', 1, NULL, '2024-06-25 20:04:19', NULL),
-(206, 'PA01.03.06', 'Traslado y encargo del personal', 'TREP', 'Apoyo', 'PA01.03', 1, NULL, '2024-06-25 20:04:19', NULL),
-(207, 'PA01.04.01', 'Gestión de las compensaciones', 'GCOM', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(208, 'PA01.04.02', 'Atención de solicitudes de personal', 'ASPE', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(209, 'PA01.04.03', 'Gestión de seguros', 'GSEG', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(210, 'PA01.04.04', 'Administración de información de personal', 'AIPE', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(211, 'PA01.04.05', 'Proceso disciplinario de personal', 'PADP', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(212, 'PA01.04.06', 'Desvinculación de personal', 'DEPE', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(213, 'PA01.04.07', 'Entrega y recepción de puesto de los servidores', 'ERPS', 'Apoyo', 'PA01.04', 1, NULL, '2024-06-25 20:04:19', NULL),
-(214, 'PA01.05.01', 'Seguridad y salud en el trabajo', 'SYST', 'Apoyo', 'PA01.05', 1, NULL, '2024-06-25 20:04:19', NULL),
-(215, 'PA01.05.02', 'Relaciones labores individuales y colectivas', 'RLIC', 'Apoyo', 'PA01.05', 1, NULL, '2024-06-25 20:04:19', NULL),
-(216, 'PA01.05.03', 'Cultura y clima organizacional', 'CCOR', 'Apoyo', 'PA01.05', 1, NULL, '2024-06-25 20:04:19', NULL),
-(217, 'PA01.05.04', 'Bienestar social', 'BSOC', 'Apoyo', 'PA01.05', 1, NULL, '2024-06-25 20:04:19', NULL),
-(218, 'PE02.04.01', 'Programación de las inversiones', 'PRIN', 'Estratégico', 'PE02.04', 1, NULL, '2024-06-25 20:09:53', NULL),
-(219, 'PE02.04.02', 'Formulación, evaluación, ejecución y cierre de proyectos', 'FECP', 'Estratégico', 'PE02.04', 1, NULL, '2024-06-25 20:09:53', NULL),
-(220, 'PE02.04.03', 'Elaboración, aprobación, registro, ejecución física y cierre de las IOARR', 'EARC', 'Estratégico', 'PE02.04', 1, NULL, '2024-06-25 20:09:53', NULL),
-(221, 'PE02.04.04', 'Gestión del seguimiento de las inversiones', 'GSI', 'Estratégico', 'PE02.04', 1, NULL, '2024-06-25 20:09:53', NULL),
-(222, 'PM02.03.01', 'Atención de reclamos del libro de reclamaciones', 'ARECL', 'Misional', 'PM02.03', 1, NULL, '2024-06-25 20:17:04', NULL),
-(223, 'PM02.03.02', 'Atención de quejas por defecto de tramitación', 'AQDT', 'Misional', 'PM02.03', 1, NULL, '2024-06-25 20:17:04', NULL),
-(224, 'PM04.01.01', 'Determinación de la existencia de infracción', 'DEIF', 'Misional', 'PM04.01', 1, NULL, '2024-06-25 21:03:13', NULL),
-(225, 'PM04.01.02', 'Determinación de la sanción', 'DESA', 'Misional', 'PM04.01', 1, NULL, '2024-06-25 21:03:13', NULL),
-(226, 'PM04.01.03', 'Gestión para el cumplimiento de sanciones', 'GCSA', 'Misional', 'PM04.01', 1, NULL, '2024-06-25 21:03:13', NULL),
-(227, 'PM04.03.01', 'Gestión a los procesos civiles resultantes de los servicios de control', 'GCSC', 'Misional', 'PM04.03', 1, NULL, '2024-06-25 21:03:13', NULL),
-(228, 'PM04.03.02', 'Gestión de procesos penales resultantes de los servicios de control', 'GPSC', 'Misional', 'PM04.03', 1, NULL, '2024-06-25 21:03:13', NULL),
-(229, 'PM05.01.01', 'Seguimiento y evaluación a la implementación de las recomendaciones de control posterior', 'SRCP', 'Misional', 'PM05.01', 1, NULL, '2024-06-25 21:10:34', NULL),
-(230, 'PM05.01.02', 'Seguimiento y evaluación a la implementación de acciones respecto a los resultados de los informes de control simultáneo', 'SRCS', 'Misional', 'PM05.01', 1, NULL, '2024-06-25 21:10:34', NULL),
-(231, 'PM05.01.03', 'Seguimiento y evaluación a la implementación de los pronunciamientos de control previo', 'SPCP', 'Misional', 'PM05.01', 1, NULL, '2024-06-25 21:10:34', NULL),
-(232, 'PM01.01.01.01', 'Gestión eventos de prevención de la corrupción', 'GEPC', 'Misional', 'PM01.01.01', 1, NULL, '2024-06-25 21:23:10', NULL),
-(233, 'PM01.01.01.02', 'Capacitación en temas de ética, integridad pública y lucha contra la corrupción', 'CEIN', 'Misional', 'PM01.01.01', 1, NULL, '2024-06-25 21:23:10', NULL),
-(234, 'PM01.01.01.03', 'Difusión de contenidos para la prevención y lucha contra la corrupción e inconducta funcional', 'DCPR', 'Misional', 'PM01.01.01', 1, NULL, '2024-06-25 21:23:10', NULL),
-(235, 'PM01.01.02.01', 'Gestión del registro de avance de obras públicas', 'GROP', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(236, 'PM01.01.02.02', 'Administración y verificación de las transferencias de gestión', 'AVTG', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(237, 'PM01.01.02.03', 'Administración y verificación de rendición de cuentas de titulares', 'ARCT', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(238, 'PM01.01.02.04', 'Recepción y verificación de declaraciones juradas', 'RVDJ', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(239, 'PM01.01.02.05', 'Verificación de la rendición de cuenta del programa de vaso de leche', 'VRVL', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(240, 'PM01.01.02.06', 'Recopilación de información', 'RINF', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(241, 'PM01.01.02.07', 'Gestión de la información de las donaciones de bienes provenientes del exterior', 'GDBE', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(242, 'PM01.01.02.08', 'Gestión del registro de información de funcionarios y servidores públicos que administren y manejen fondos públicos', 'GRFP', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(243, 'PM01.01.02.09', 'Gestión del registro para el control de contratos de consultoría en el estado', 'GRCE', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(244, 'PM01.01.02.10', 'Gestión para la presentación del balance semestral de los regidores municipales y los consejeros regionales sobre la utilización del monto destinado al fortalecimiento de la función de fiscalización', 'GPBS', 'Misional', 'PM01.01.02', 1, NULL, '2024-06-25 21:23:10', NULL),
-(245, 'PM01.01.04', 'Gestión del observatorio anticorrupción', 'GOAC', 'Misional', 'PM01.01', 1, NULL, '2024-06-25 21:26:59', NULL),
-(246, 'PM01.01.05', 'Administración y evaluación de la implementación del control interno en las entidades públicas', 'AECI', 'Misional', 'PM01.01', 1, NULL, '2024-06-25 21:26:59', NULL),
-(247, 'PM01.01.02', 'Aprovisionamiento de información específica de operaciones relacionadas a la gestión de recursos públicos', 'AIEG', 'Misional', 'PM01.01', 1, NULL, '2024-06-25 22:00:53', NULL),
-(248, 'PM01.01.03', 'Aprovisionamiento de información masiva de operaciones relacionadas a la gestión de recursos públicos', 'AIMG', 'Misional', 'PM01.01', 1, NULL, '2024-06-25 22:00:53', NULL),
-(249, 'PM03.04.01', 'Fiscalización de los funcionarios y servidores públicos', 'FIFP', 'Misional', 'PM03.04', 1, NULL, '2024-06-25 22:09:26', NULL),
-(250, 'PM03.04.02', 'Análisis y evaluación de la ejecución del gasto del programa vaso de leche', 'APVL', 'Misional', 'PM03.04', 1, NULL, '2024-06-25 22:09:26', NULL),
-(251, 'PM03.05.01', 'Supervisión técnica de los servicios de control', 'STSC', 'Misional', 'PM03.05', 1, NULL, '2024-06-25 22:11:46', NULL),
-(252, 'PM03.05.02', 'Revisión de oficio de informes de control', 'ROFI', 'Misional', 'PM03.05', 1, NULL, '2024-06-25 22:11:46', NULL),
-(253, 'PM03.05.03', 'Reformulación de informes de control', 'REIC', 'Misional', 'PM03.05', 1, NULL, '2024-06-25 22:11:46', NULL),
-(254, 'PA01.03.05.01', 'Recategorización de personal', 'RCPR', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(255, 'PA01.03.05.02', 'Convocatoria interna', 'CINT', 'Apoyo', 'PA01.03.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(256, 'PA01.03.06.01', 'Traslados del personal (rotación)', 'TPER', 'Apoyo', 'PA01.03.06', 1, NULL, '2024-06-25 22:20:25', NULL),
-(257, 'PA01.03.06.02', 'Encargo de jefatura del órgano o unidad órganica', 'ECPR', 'Apoyo', 'PA01.03.06', 1, NULL, '2024-06-25 22:20:25', NULL),
-(259, 'PA01.04.01.01', 'Control de asistencia del personal', 'CAPR', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
-(260, 'PA01.04.01.02', 'Control de vacaciones del personal', 'CVPR', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
-(261, 'PA01.04.01.03', 'Administración de remuneración del personal', 'ARPR', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
-(262, 'PA01.04.01.04', 'Administración de pensiones', 'ADPN', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
-(263, 'PA01.04.01.05', 'Evaluación de solicitudes de pensiones (de cesantía)', 'ESPC', 'Apoyo', 'PA01.04.01', 1, NULL, '2024-06-25 22:20:25', NULL),
-(264, 'PA01.04.02.01', 'Evaluación de licencias del personal', 'ELPR', 'Apoyo', 'PA01.04.02', 1, NULL, '2024-06-25 22:20:25', NULL),
-(265, 'PA01.04.02.02', 'Evaluación de horarios especiales del personal', 'EHPR', 'Apoyo', 'PA01.04.02', 1, NULL, '2024-06-25 22:20:25', NULL),
-(266, 'PA01.04.02.03', 'Emisión de certificados y constancias de trabajo del personal', 'ECTP', 'Apoyo', 'PA01.04.02', 1, NULL, '2024-06-25 22:20:25', NULL),
-(267, 'PA01.04.02.04', 'Emisión de cartas de presentación del personal', 'ECPP', 'Apoyo', 'PA01.04.02', 1, NULL, '2024-06-25 22:20:25', NULL),
-(268, 'PA01.04.03.01', 'Afiliación a seguros EPS', 'ASEP', 'Apoyo', 'PA01.04.03', 1, NULL, '2024-06-25 22:20:25', NULL),
-(269, 'PA01.04.03.02', 'Afiliación a seguros Es Salud', 'ASES', 'Apoyo', 'PA01.04.03', 1, NULL, '2024-06-25 22:20:25', NULL),
-(270, 'PA01.04.03.03', 'Desafiliación a seguros EPS', 'DSEP', 'Apoyo', 'PA01.04.03', 1, NULL, '2024-06-25 22:20:25', NULL),
-(271, 'PA01.04.03.04', 'Desafiliación a seguros Es Salud', 'DSES', 'Apoyo', 'PA01.04.03', 1, NULL, '2024-06-25 22:20:25', NULL),
-(272, 'PA01.04.03.05', 'Reembolso de seguros EPS', 'RSEP', 'Apoyo', 'PA01.04.03', 1, NULL, '2024-06-25 22:20:25', NULL),
-(273, 'PA01.04.03.06', 'Atención de solicitudes de subsidios (incluye canje CITT)', 'ASSC', 'Apoyo', 'PA01.04.03', 1, NULL, '2024-06-25 22:20:25', NULL),
-(274, 'PA01.04.04.01', 'Administración de legajos', 'ADLG', 'Apoyo', 'PA01.04.04', 1, NULL, '2024-06-25 22:20:25', NULL),
-(275, 'PA01.04.04.02', 'Verificación de autenticidad de documentos', 'VADN', 'Apoyo', 'PA01.04.04', 1, NULL, '2024-06-25 22:20:25', NULL),
-(276, 'PA01.04.05.01', 'Evaluación de denuncias de corrupción contra el personal de la CGR', 'DCGR', 'Apoyo', 'PA01.04.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(277, 'PA01.04.05.02', 'Evaluación de denuncias contra el gerente y personal del órgano de auditoría interna de la CGR', 'DOAI', 'Apoyo', 'PA01.04.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(278, 'PA01.04.05.03', 'Evaluación de denuncias contra los jefes y personal del OCI', 'DOCI', 'Apoyo', 'PA01.04.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(279, 'PA01.04.05.04', 'Gestión del procedimiento administrativo disciplinario', 'GPAD', 'Apoyo', 'PA01.04.05', 1, NULL, '2024-06-25 22:20:25', NULL),
-(280, 'PA01.04.06.01', 'Tramite documental para el cese de personal', 'TDCP', 'Apoyo', 'PA01.04.06', 1, NULL, '2024-06-25 22:20:25', NULL),
-(281, 'PA01.04.06.02', 'Generación y pago de la liquidación de beneficios sociales', 'GPLB', 'Apoyo', 'PA01.04.06', 1, NULL, '2024-06-25 22:20:25', NULL),
-(282, 'PM01.02.01', 'Participación ciudadana en el control social a través de auditores juveniles', 'PCAJ', 'Misional', 'PM01.02', 1, NULL, '2024-06-25 22:26:03', NULL),
-(283, 'PM01.02.02', 'Participación ciudadana en el control social a través de monitores ciudadanos de control', 'PCMC', 'Misional', 'PM01.02', 1, NULL, '2024-06-25 22:26:03', NULL),
-(284, 'PM01.02.03', 'Participación ciudadana en el control social a través de audiencias públicas', 'PCAP', 'Misional', 'PM01.02', 1, NULL, '2024-06-25 22:26:03', NULL);
+INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, `cod_proceso_padre`, `nivel`, `estado`, `inactivate_at`, `created_at`, `updated_at`) VALUES
+(1, 'PE01', 'Gestión Estratégica', NULL, 'Estratégico', NULL, 0, 1, NULL, '2023-05-26 23:01:48', '2023-06-02 04:00:48'),
+(2, 'PE02', 'Desarrollo Institucional', NULL, 'Estratégico', NULL, 0, 1, NULL, NULL, NULL),
+(3, 'PE03', 'Comunicación y Relaciones Interinstitucionales', NULL, 'Estratégico', NULL, 0, 1, NULL, NULL, NULL),
+(4, 'PM01', 'Prevención y Detección de la Corrupción', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
+(5, 'PM02', 'Atención a las Entidades y Partes Interesadas', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
+(6, 'PM03', 'Realización de los Servicios de Control Simultáneo, Posterior y Relacionados', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
+(7, 'PM04', 'Gestión de Sanciones y Procesos Judiciales', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
+(8, 'PM05', 'Gestión de los Resultados del Control', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
+(9, 'PA01', 'Gestión del Capital Humano', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(10, 'PA02', 'Gestión de Activos Documentarios', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(11, 'PA03', 'Gestión de Abastecimiento', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(12, 'PA04', 'Gestión Financiera', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(13, 'PA05', 'Gestión de Tecnologías de la Información y Comunicaciones', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(14, 'PA06', 'Gestión Jurídico Legal', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(15, 'PA07', 'Gestión de la Seguridad', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(30, 'PE01.01', 'Planeamiento Estratégico', 'PEI', 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(31, 'PE01.02', 'Gestión de Entidades Sujetad a Control', 'GESC', 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(32, 'PE01.03', 'Planeamiento Operativo', 'POI', 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(33, 'PE01.04', 'Control Institucional', NULL, 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(34, 'PE02.01', 'Diseño Organizacional', 'DEO', 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(35, 'PE02.02', 'Gestión de la Modernización', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(36, 'PE02.03', 'Gestión Normativa', 'GNOR', 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(37, 'PE02.04', 'Gestión de la Inversión', 'PROY', 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(38, 'PE02.05', 'Gestión del Conocimiento', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(39, 'PE02.06', 'Gestión de la Continuidad del Negocio', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(40, 'PE02.07', 'Gestión de la Integridad Institucional', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(41, 'PE03.01', 'Gestión de la Comunicación Institucional', NULL, 'Estratégico', 'PE03', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(42, 'PE03.02', 'Gestión de las Relaciones Interinstitucionales', NULL, 'Estratégico', 'PE03', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(56, 'PM01.01', 'Gestión de mecanismos de prevención y detección de la corrupción', NULL, 'Misional', 'PM01', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(57, 'PM01.02', 'Participación ciudadana', NULL, 'Misional', 'PM01', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(58, 'PM02.01', 'Atención de la demanda imprevisible de control', NULL, 'Misional', 'PM02', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(59, 'PM02.02', 'Atención de pedidos de información y solicitudes de opinión', NULL, 'Misional', 'PM02', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(60, 'PM02.03', 'Atención de quejas y reclamos', NULL, 'Misional', 'PM02', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(61, 'PM03.01', 'Programación de los servicios de control y de fiscalización', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(62, 'PM03.02', 'Realización de los servicios de control simultáneo', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(63, 'PM03.03', 'Realización de los servicios de control posterior', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(64, 'PM03.04', 'Realización de los servicios relacionados', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(66, 'PM04.01', 'Gestión de sanciones administrativas', 'GSAD', 'Misional', 'PM04', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', 'GPSA', 'Misional', 'PM04', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', '', 'Misional', 'PM04', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', 'SEIR', 'Misional', 'PM05', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', 'DBPM', 'Misional', 'PM05', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(71, 'PA01.01', 'Planificación del capital humano', 'PLCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(72, 'PA01.02', 'Incorporación del capital humano', 'INCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(73, 'PA01.03', 'Desarrollo del capital humano', 'DECH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(74, 'PA01.04', 'Administración del capital humano', 'ADCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(75, 'PA01.05', 'Gestión del bienestar del capital humano', 'GBCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(76, 'PA01.06', 'Gestión del jefe y personal del OCI', 'GOCI', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(77, 'PA02.01', 'Planificación del activo documentario', 'PDAD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(78, 'PA02.02', 'Recepción de documentos', 'RDGD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(79, 'PA02.03', 'Clasificación, reclasificación y desclasificación de documentos secretos y reservados', 'CRDD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(80, 'PA02.04', 'Distribución de documentos y valijas', 'MSJ', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(81, 'PA02.05', 'Archivo, custodia y conservación de documentos', 'ARCH', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(82, 'PA02.06', 'Autenticación de firmas y certificación de documentos', 'AFCD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(83, 'PA03.01', 'Elaboración del plan anual de contrataciones', 'PNCO', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(84, 'PA03.02', 'Contratación de bienes y servicios', 'ACBS', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(85, 'PA03.03', 'Gestión de bienes patrimoniales', 'GBPA', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(86, 'PA03.04', 'Gestión de almacén', 'GALM', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(87, 'PA03.05', 'Administración de servicios generales', 'ADSG', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(88, 'PA03.06', 'Gestión de sociedades de auditoria', 'GSOA', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(89, 'PA04.01', 'Programación multianual, formulación y aprobación del presupuesto', NULL, 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(90, 'PA04.02', 'Ejecución presupuestal', 'EJPR', 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(91, 'PA04.03', 'Evaluación presupuestal', 'EVPR', 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(92, 'PA04.04', 'Gestión contable', 'CONT', 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(93, 'PA05.01', 'Planificación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(96, 'PA06.01', 'Gestión y difusión de productos de interés legal', NULL, 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', 'GPRJ', 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', NULL, 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', NULL, 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', 'ACCJ', 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(101, 'PA07.01', 'Gestión de prevención de riesgos de desastres', NULL, 'Apoyo', 'PA07', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(102, 'PA07.02', 'Operación de la gestión de la seguridad', NULL, 'Apoyo', 'PA07', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(103, 'PA07.03', 'Fomento de una cultura de seguridad', NULL, 'Apoyo', 'PA07', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(104, 'PM06', 'Gestión Educativa', NULL, 'Misional', NULL, 0, 1, NULL, '2023-09-27 15:13:56', NULL),
+(105, 'PE02.02.02', 'Administración de los Sistemas de Gestión', 'MODER', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:38:59', NULL),
+(106, 'PE02.02.03', 'Gestión de la Calidad', 'SGC', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
+(107, 'PE02.02.04', 'Gestión de Riesgos', 'SGR', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
+(108, 'PE02.02.05', 'Gestión del Control Interno', NULL, 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:47:23', NULL),
+(109, 'PE02.02.06', 'Gestión Antisoborno', 'SGAS', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:47:23', NULL),
+(110, 'PE02.02.07', 'Gestión de la Simplificación Administrativa', 'SIMP', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
+(111, 'PE02.02.08', 'Aseguramiento de la Calidad', 'ACAL', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
+(112, 'PE02.02.09', 'Gestión de la Seguridad de la Información', 'SGSI', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
+(113, 'PE02.02.01', 'Gestión por Procesos', 'PROC', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:53:40', NULL),
+(114, 'PE02.02.10', 'Gestión de Compliance', 'SGCM', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:53:40', NULL),
+(115, 'PE02.03.01', 'Gestión de Inciativas Legislativas', 'GNIL', 'Estratégico', 'PE02.03', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
+(116, 'PE02.03.02', 'Gestión de Documentos Normativos', 'GNDN', 'Estratégico', 'PE02.03', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
+(117, 'PE02.03.03', 'Gestión de documentos en el Alcance del SIG', 'NORM', 'Estratégico', 'PE02.03', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
+(118, 'PA05.03.01', 'Respaldo de información', 'REST', 'Apoyo', 'PA05.03', 2, 1, NULL, '2024-06-25 17:18:37', NULL),
+(119, 'PA05.03.02', 'Atención de requeremientos de recursos informáticos', 'MDA', 'Apoyo', 'PA05.03', 2, 1, NULL, '2024-06-25 17:34:32', NULL),
+(120, 'PA05.03.03', 'Seguimiento y control de los servicios de tecnologías de información y comunicaciones', 'SCST', 'Apoyo', 'PA05.03', 2, 1, NULL, '2024-06-25 17:37:25', NULL),
+(121, 'PA05.03.04', 'Mantenimiento preventivo y correctivo de activos informáticos y de comunicaciones', 'MTNE', 'Apoyo', 'PA05.03', 2, 1, NULL, '2024-06-25 17:38:13', NULL),
+(122, 'PA05.02.01', 'Desarrollo de arquitectura informática y de comunicaciones', 'DACO', 'Apoyo', 'PA05.02', 2, 1, NULL, '2024-06-25 17:42:35', NULL),
+(123, 'PA05.02.02', 'Desarrollo de soluciones', 'DSO', 'Apoyo', 'PA05.02', 2, 1, NULL, '2024-06-25 17:43:08', NULL),
+(125, 'PM03.02.01', 'Visita de Control', 'VICO', 'Misional', 'PM03.02', 2, 1, NULL, '2024-06-25 18:43:12', NULL),
+(126, 'PM03.02.02', 'Orientación de oficio', 'OROF', 'Misional', 'PM03.02', 2, 1, NULL, '2024-06-25 18:43:12', NULL),
+(127, 'PM03.02.03', 'Control Concurrente', 'COCO', 'Misional', 'PM03.02', 2, 1, NULL, '2024-06-25 18:45:44', NULL),
+(128, 'PM03.02.04', 'Operativo de Control Simultaneo', 'OCOS', 'Misional', 'PM03.02', 2, 1, NULL, '2024-06-25 18:45:44', NULL),
+(129, 'PM02.01.01', 'Realización de los servicios de control previo', NULL, 'Misional', 'PM02.01', 2, 1, NULL, '2024-06-25 18:49:07', NULL),
+(130, 'PM02.01.01.01', 'Evaluación de prestaciones de adicionales de obra', 'EAOB', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 18:52:50', NULL),
+(131, 'PM02.01.01.02', 'Evaluación de recursos de apelación de prestaciones adicionales de obra', 'APAO', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+(132, 'PM02.01.01.03', 'Evaluación de prestaciones adicionales de supervisión de obra', 'EPAS', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+(133, 'PM02.01.01.04', 'Evaluación de recursos de apelación de prestaciones adicionales de supervisión de obra', 'APAS', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+(134, 'PM02.01.01.05', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de asociaciones público privadas y obras por impuestos', 'ESIP', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+(135, 'PM02.01.01.06', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de endeudamiento público interno y externo', 'ESIE', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+(136, 'PM02.01.01.07', 'Emisión de opinión previa a las compras con carácter de secreto militar o de orden interno', 'EOPM', 'Misional', 'PM02.01.01', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+(137, 'PM02.02.01.01', 'Atención de solicitudes de acceso a la información pública', 'SAIP', 'Misional', 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+(138, 'PM02.02.01.02', 'Atención de requerimientos de información del congreso', 'ARIC', 'Misional', 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+(139, 'PM02.02.01.03', 'Atención de requerimientos de información de entidades', 'ARIE', 'Misional', 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+(140, 'PM02.02.02.01', 'Atención de consulta legal externa respecto a la interpretación y alcance de la normativa de servicios de control o servicios relacionados', 'ACLE', 'Misional', 'PM02.02.02', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+(141, 'PM02.02.02.02', 'Atención de solicitudes de opinión sobre proyectos de ley y otras normas con rango de ley', 'ASOL', 'Misional', 'PM02.02.02', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+(142, 'PM03.03.01', 'Auditoría de cumplimiento', 'ACUM', 'Misional', 'PM03.03', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+(143, 'PM03.03.02', 'Auditoría de desempeño', 'ADES', 'Misional', 'PM03.03', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+(144, 'PM03.03.03', 'Auditoría financiera', 'AFIN', 'Misional', 'PM03.03', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+(145, 'PM03.03.04', 'Auditoría de la Cuenta General de la República', 'ACGR', 'Misional', 'PM03.03', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+(146, 'PM03.03.05', 'Servicio de control específico a hechos con presunta irregularidad', 'SCEH', 'Misional', 'PM03.03', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+(147, 'PM03.03.06', 'Acción de oficio posterior', 'AOPO', 'Misional', 'PM03.03', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+(148, 'PE03.01.01', 'Diseño del plan de comunicación corporativa', 'CODP', 'Estratégico', 'PE03.01', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(149, 'PE03.01.02', 'Gestión de la comunicación interna', 'COGI', 'Estratégico', 'PE03.01', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(150, 'PE03.01.03', 'Organización y ejecución de eventos para la promoción de la imagen y desarrollo institucional', 'COEI', 'Estratégico', 'PE03.01', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(151, 'PE03.01.04', 'Gestión de la publicación institucional', 'COGP', 'Estratégico', 'PE03.01', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(152, 'PE03.01.05', 'Actualización de contenidos del portal de transparencia estándar de la contraloría general de la república', 'COPT', 'Estratégico', 'PE03.01', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(153, 'PE03.01.06', 'Gestión de prensa', 'COPR', 'Estratégico', 'PE03.01', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(154, 'PE03.02.01', 'Diseño de la estrategia de relacionamiento interinstitucional', 'GRDE', 'Estratégico', 'PE03.02', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(155, 'PE03.02.02', 'Atención de necesidades interinstitucionales de representación de autoridades y funcionarios de la cgr', 'GRRE', 'Estratégico', 'PE03.02', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(156, 'PE03.02.03', 'Gestión de la representación institucional en eventos internacionales', 'GRRI', 'Estratégico', 'PE03.02', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(157, 'PE03.02.04', 'Gestión de las necesidades institucionales de cooperación técnica y financiera', 'GRCT', 'Estratégico', 'PE03.02', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(158, 'PE03.02.05', 'Gestión de instrumentos de cooperación', 'GICO', 'Estratégico', 'PE03.02', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+(159, 'PA04.02.01', 'Control de la disponibilidad de los créditos presupuestarios', 'PRCP', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(160, 'PA04.02.02', 'Gestión de la modificación presupuestal a nivel institucional', 'PRMP', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(161, 'PA04.02.03', 'Modificación presupuestal a nivel funcional programático', 'PRFP', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(162, 'PA04.02.04', 'Ejecución de ingresos', 'EDIN', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(163, 'PA04.02.05', 'Ejecución del gasto', 'EDGE', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(164, 'PA04.02.06', 'Gestión de viáticos', 'GVIA', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(165, 'PA04.02.07', 'Gestión del fondo de caja chica', 'GFCC', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(166, 'PA04.02.08', 'Gestión de anticipos', 'GANT', 'Apoyo', 'PA04.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(167, 'PA03.02.01', 'Formulación del requerimiento para la contratación de bienes y servicios', 'BSRC', 'Apoyo', 'PA03.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(168, 'PA03.02.02', 'Procesos de selección', 'BSPS', 'Apoyo', 'PA03.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(169, 'PA03.02.03', 'Contrataciones de bienes y servicios excluidas de la norma', 'BSEX', 'Apoyo', 'PA03.02', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+(194, 'PA01.01.01', 'Diseño de estrategias, políticas y herramientas para la gestión del capital humano', 'DEPH', 'Apoyo', 'PA01.01', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(195, 'PA01.01.02', 'Planificación de recursos humanos', 'PLRH', 'Apoyo', 'PA01.01', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(196, 'PA01.01.03', 'Administración de puestos y perfiles', 'APPE', 'Apoyo', 'PA01.01', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(197, 'PA01.02.01', 'Reclutamiento y selección', 'REYS', 'Apoyo', 'PA01.02', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(198, 'PA01.02.02', 'Vinculación de personal', 'VIPE', 'Apoyo', 'PA01.02', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(199, 'PA01.02.03', 'Inducción de personal', 'INPE', 'Apoyo', 'PA01.02', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(200, 'PA01.02.04', 'Designación de personal en puestos de confianza', 'DPPC', 'Apoyo', 'PA01.02', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(201, 'PA01.03.01', 'Gestión de la capacitación', 'GCAP', 'Apoyo', 'PA01.03', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(202, 'PA01.03.02', 'Gestión del rendimiento', 'GREN', 'Apoyo', 'PA01.03', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(203, 'PA01.03.03', 'Gestión de incentivos', 'GINC', 'Apoyo', 'PA01.03', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(204, 'PA01.03.04', 'Progresión de la carrera', 'PCPE', 'Apoyo', 'PA01.03', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(205, 'PA01.03.05', 'Convocatoria interna', 'COIN', 'Apoyo', 'PA01.03', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(206, 'PA01.03.06', 'Traslado y encargo del personal', 'TREP', 'Apoyo', 'PA01.03', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(207, 'PA01.04.01', 'Gestión de las compensaciones', 'GCOM', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(208, 'PA01.04.02', 'Atención de solicitudes de personal', 'ASPE', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(209, 'PA01.04.03', 'Gestión de seguros', 'GSEG', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(210, 'PA01.04.04', 'Administración de información de personal', 'AIPE', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(211, 'PA01.04.05', 'Proceso disciplinario de personal', 'PADP', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(212, 'PA01.04.06', 'Desvinculación de personal', 'DEPE', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(213, 'PA01.04.07', 'Entrega y recepción de puesto de los servidores', 'ERPS', 'Apoyo', 'PA01.04', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(214, 'PA01.05.01', 'Seguridad y salud en el trabajo', 'SYST', 'Apoyo', 'PA01.05', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(215, 'PA01.05.02', 'Relaciones labores individuales y colectivas', 'RLIC', 'Apoyo', 'PA01.05', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(216, 'PA01.05.03', 'Cultura y clima organizacional', 'CCOR', 'Apoyo', 'PA01.05', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(217, 'PA01.05.04', 'Bienestar social', 'BSOC', 'Apoyo', 'PA01.05', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+(218, 'PE02.04.01', 'Programación de las inversiones', 'PRIN', 'Estratégico', 'PE02.04', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+(219, 'PE02.04.02', 'Formulación, evaluación, ejecución y cierre de proyectos', 'FECP', 'Estratégico', 'PE02.04', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+(220, 'PE02.04.03', 'Elaboración, aprobación, registro, ejecución física y cierre de las IOARR', 'EARC', 'Estratégico', 'PE02.04', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+(221, 'PE02.04.04', 'Gestión del seguimiento de las inversiones', 'GSI', 'Estratégico', 'PE02.04', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+(222, 'PM02.03.01', 'Atención de reclamos del libro de reclamaciones', 'ARECL', 'Misional', 'PM02.03', 2, 1, NULL, '2024-06-25 20:17:04', NULL),
+(223, 'PM02.03.02', 'Atención de quejas por defecto de tramitación', 'AQDT', 'Misional', 'PM02.03', 2, 1, NULL, '2024-06-25 20:17:04', NULL),
+(224, 'PM04.01.01', 'Determinación de la existencia de infracción', 'DEIF', 'Misional', 'PM04.01', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+(225, 'PM04.01.02', 'Determinación de la sanción', 'DESA', 'Misional', 'PM04.01', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+(226, 'PM04.01.03', 'Gestión para el cumplimiento de sanciones', 'GCSA', 'Misional', 'PM04.01', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+(227, 'PM04.03.01', 'Gestión a los procesos civiles resultantes de los servicios de control', 'GCSC', 'Misional', 'PM04.03', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+(228, 'PM04.03.02', 'Gestión de procesos penales resultantes de los servicios de control', 'GPSC', 'Misional', 'PM04.03', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+(229, 'PM05.01.01', 'Seguimiento y evaluación a la implementación de las recomendaciones de control posterior', 'SRCP', 'Misional', 'PM05.01', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
+(230, 'PM05.01.02', 'Seguimiento y evaluación a la implementación de acciones respecto a los resultados de los informes de control simultáneo', 'SRCS', 'Misional', 'PM05.01', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
+(231, 'PM05.01.03', 'Seguimiento y evaluación a la implementación de los pronunciamientos de control previo', 'SPCP', 'Misional', 'PM05.01', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
+(232, 'PM01.01.01.01', 'Gestión eventos de prevención de la corrupción', 'GEPC', 'Misional', 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(233, 'PM01.01.01.02', 'Capacitación en temas de ética, integridad pública y lucha contra la corrupción', 'CEIN', 'Misional', 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(234, 'PM01.01.01.03', 'Difusión de contenidos para la prevención y lucha contra la corrupción e inconducta funcional', 'DCPR', 'Misional', 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(235, 'PM01.01.02.01', 'Gestión del registro de avance de obras públicas', 'GROP', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(236, 'PM01.01.02.02', 'Administración y verificación de las transferencias de gestión', 'AVTG', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(237, 'PM01.01.02.03', 'Administración y verificación de rendición de cuentas de titulares', 'ARCT', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(238, 'PM01.01.02.04', 'Recepción y verificación de declaraciones juradas', 'RVDJ', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(239, 'PM01.01.02.05', 'Verificación de la rendición de cuenta del programa de vaso de leche', 'VRVL', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(240, 'PM01.01.02.06', 'Recopilación de información', 'RINF', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(241, 'PM01.01.02.07', 'Gestión de la información de las donaciones de bienes provenientes del exterior', 'GDBE', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(242, 'PM01.01.02.08', 'Gestión del registro de información de funcionarios y servidores públicos que administren y manejen fondos públicos', 'GRFP', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(243, 'PM01.01.02.09', 'Gestión del registro para el control de contratos de consultoría en el estado', 'GRCE', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(244, 'PM01.01.02.10', 'Gestión para la presentación del balance semestral de los regidores municipales y los consejeros regionales sobre la utilización del monto destinado al fortalecimiento de la función de fiscalización', 'GPBS', 'Misional', 'PM01.01.02', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+(245, 'PM01.01.04', 'Gestión del observatorio anticorrupción', 'GOAC', 'Misional', 'PM01.01', 2, 1, NULL, '2024-06-25 21:26:59', NULL),
+(246, 'PM01.01.05', 'Administración y evaluación de la implementación del control interno en las entidades públicas', 'AECI', 'Misional', 'PM01.01', 2, 1, NULL, '2024-06-25 21:26:59', NULL),
+(247, 'PM01.01.02', 'Aprovisionamiento de información específica de operaciones relacionadas a la gestión de recursos públicos', 'AIEG', 'Misional', 'PM01.01', 2, 1, NULL, '2024-06-25 22:00:53', NULL),
+(248, 'PM01.01.03', 'Aprovisionamiento de información masiva de operaciones relacionadas a la gestión de recursos públicos', 'AIMG', 'Misional', 'PM01.01', 2, 1, NULL, '2024-06-25 22:00:53', NULL),
+(249, 'PM03.04.01', 'Fiscalización de los funcionarios y servidores públicos', 'FIFP', 'Misional', 'PM03.04', 2, 1, NULL, '2024-06-25 22:09:26', NULL),
+(250, 'PM03.04.02', 'Análisis y evaluación de la ejecución del gasto del programa vaso de leche', 'APVL', 'Misional', 'PM03.04', 2, 1, NULL, '2024-06-25 22:09:26', NULL),
+(251, 'PM03.05.01', 'Supervisión técnica de los servicios de control', 'STSC', 'Misional', 'PM03.05', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
+(252, 'PM03.05.02', 'Revisión de oficio de informes de control', 'ROFI', 'Misional', 'PM03.05', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
+(253, 'PM03.05.03', 'Reformulación de informes de control', 'REIC', 'Misional', 'PM03.05', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
+(254, 'PA01.03.05.01', 'Recategorización de personal', 'RCPR', 'Apoyo', 'PA01.03.05', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(255, 'PA01.03.05.02', 'Convocatoria interna', 'CINT', 'Apoyo', 'PA01.03.05', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(256, 'PA01.03.06.01', 'Traslados del personal (rotación)', 'TPER', 'Apoyo', 'PA01.03.06', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(257, 'PA01.03.06.02', 'Encargo de jefatura del órgano o unidad órganica', 'ECPR', 'Apoyo', 'PA01.03.06', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(259, 'PA01.04.01.01', 'Control de asistencia del personal', 'CAPR', 'Apoyo', 'PA01.04.01', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(260, 'PA01.04.01.02', 'Control de vacaciones del personal', 'CVPR', 'Apoyo', 'PA01.04.01', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(261, 'PA01.04.01.03', 'Administración de remuneración del personal', 'ARPR', 'Apoyo', 'PA01.04.01', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(262, 'PA01.04.01.04', 'Administración de pensiones', 'ADPN', 'Apoyo', 'PA01.04.01', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(263, 'PA01.04.01.05', 'Evaluación de solicitudes de pensiones (de cesantía)', 'ESPC', 'Apoyo', 'PA01.04.01', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(264, 'PA01.04.02.01', 'Evaluación de licencias del personal', 'ELPR', 'Apoyo', 'PA01.04.02', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(265, 'PA01.04.02.02', 'Evaluación de horarios especiales del personal', 'EHPR', 'Apoyo', 'PA01.04.02', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(266, 'PA01.04.02.03', 'Emisión de certificados y constancias de trabajo del personal', 'ECTP', 'Apoyo', 'PA01.04.02', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(267, 'PA01.04.02.04', 'Emisión de cartas de presentación del personal', 'ECPP', 'Apoyo', 'PA01.04.02', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(268, 'PA01.04.03.01', 'Afiliación a seguros EPS', 'ASEP', 'Apoyo', 'PA01.04.03', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(269, 'PA01.04.03.02', 'Afiliación a seguros Es Salud', 'ASES', 'Apoyo', 'PA01.04.03', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(270, 'PA01.04.03.03', 'Desafiliación a seguros EPS', 'DSEP', 'Apoyo', 'PA01.04.03', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(271, 'PA01.04.03.04', 'Desafiliación a seguros Es Salud', 'DSES', 'Apoyo', 'PA01.04.03', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(272, 'PA01.04.03.05', 'Reembolso de seguros EPS', 'RSEP', 'Apoyo', 'PA01.04.03', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(273, 'PA01.04.03.06', 'Atención de solicitudes de subsidios (incluye canje CITT)', 'ASSC', 'Apoyo', 'PA01.04.03', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(274, 'PA01.04.04.01', 'Administración de legajos', 'ADLG', 'Apoyo', 'PA01.04.04', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(275, 'PA01.04.04.02', 'Verificación de autenticidad de documentos', 'VADN', 'Apoyo', 'PA01.04.04', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(276, 'PA01.04.05.01', 'Evaluación de denuncias de corrupción contra el personal de la CGR', 'DCGR', 'Apoyo', 'PA01.04.05', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(277, 'PA01.04.05.02', 'Evaluación de denuncias contra el gerente y personal del órgano de auditoría interna de la CGR', 'DOAI', 'Apoyo', 'PA01.04.05', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(278, 'PA01.04.05.03', 'Evaluación de denuncias contra los jefes y personal del OCI', 'DOCI', 'Apoyo', 'PA01.04.05', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(279, 'PA01.04.05.04', 'Gestión del procedimiento administrativo disciplinario', 'GPAD', 'Apoyo', 'PA01.04.05', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(280, 'PA01.04.06.01', 'Tramite documental para el cese de personal', 'TDCP', 'Apoyo', 'PA01.04.06', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(281, 'PA01.04.06.02', 'Generación y pago de la liquidación de beneficios sociales', 'GPLB', 'Apoyo', 'PA01.04.06', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+(282, 'PM01.02.01', 'Participación ciudadana en el control social a través de auditores juveniles', 'PCAJ', 'Misional', 'PM01.02', 2, 1, NULL, '2024-06-25 22:26:03', NULL),
+(283, 'PM01.02.02', 'Participación ciudadana en el control social a través de monitores ciudadanos de control', 'PCMC', 'Misional', 'PM01.02', 2, 1, NULL, '2024-06-25 22:26:03', NULL),
+(284, 'PM01.02.03', 'Participación ciudadana en el control social a través de audiencias públicas', 'PCAP', 'Misional', 'PM01.02', 2, 1, NULL, '2024-06-25 22:26:03', NULL);
 
 -- --------------------------------------------------------
 
@@ -1260,10 +1251,23 @@ CREATE TABLE `procesos_ouo` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_proceso` bigint(20) UNSIGNED NOT NULL,
   `id_ouo` bigint(20) UNSIGNED NOT NULL,
+  `SGC` tinyint(4) NOT NULL,
+  `SGSI` tinyint(4) NOT NULL,
+  `SGAS` tinyint(4) NOT NULL,
+  `SGCM` tinyint(4) NOT NULL,
+  `SGCE` tinyint(4) NOT NULL,
   `inactivate_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `procesos_ouo`
+--
+
+INSERT INTO `procesos_ouo` (`id`, `id_proceso`, `id_ouo`, `SGC`, `SGSI`, `SGAS`, `SGCM`, `SGCE`, `inactivate_at`, `created_at`, `updated_at`) VALUES
+(1, 30, 83, 1, 0, 1, 1, 0, NULL, NULL, NULL),
+(2, 32, 83, 1, 0, 0, 1, 0, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1286,7 +1290,6 @@ CREATE TABLE `proceso_user` (
 INSERT INTO `proceso_user` (`id`, `user_id`, `proceso_id`, `created_at`, `updated_at`) VALUES
 (9, 1, 8, NULL, NULL),
 (12, 1, 9, NULL, NULL),
-(14, 1, 11, NULL, NULL),
 (26, 1, 35, NULL, NULL);
 
 -- --------------------------------------------------------
@@ -1585,7 +1588,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `re
 (18, 'Giancarlo Ugaz Figueroa', 'giancarlo.ugaz@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
 (19, 'Magda Salgado Rubianes', 'magda.salgado@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
 (20, 'Solange Pérez Montero', 'solange.perez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
-(21, 'Carlos Jaime Rivero Morales', 'crivero@contraloria.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
+(21, 'Carlos Jaime Rivero Morales', 'crivero@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
 (22, 'Michell Sifuentes Sifuentes', 'michell.sifuentes@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
 (23, 'Frank Mauricio Morales', 'frank.morales@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
 (24, 'Karla Pérez Guzmán', 'karla.perez@cgr.gob.pe', NULL, '482c811da5d5b4bc6d497ffa98491e38', NULL, '2025-01-16 20:04:06', '2025-01-16 20:04:06'),
@@ -1634,7 +1637,33 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `re
 (67, 'Joao Pacheco Castro', 'joao.pacheco@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
 (68, 'Zusi Castro Grandez', 'zusi.castro@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
 (69, 'Mariela Farro Torres', 'mariela.farro@cgr.gob.pe', NULL, '*A0F874BC7F54EE086FCE60A37CE7887D8B31086B', NULL, '2025-01-16 20:09:23', '2025-01-16 20:09:23'),
-(184, 'Iber Ari Gomez', 'igomez@contraloria.gob.pe', NULL, NULL, NULL, '2024-05-08 23:27:55', NULL);
+(184, 'Iber Ari Gomez', 'igomez@contraloria.gob.pe', NULL, NULL, NULL, '2024-05-08 23:27:55', NULL),
+(185, 'Ginna Gamarra Solano', 'ggamarra@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(186, 'Darío Valverde Cueva', 'dvalverde@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(187, 'David Quiroga Paiva', 'dquiroga@contraloria.gob.pem', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(188, 'María Guevara Ríos', 'mguevara@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(189, 'Raúl Ramírez Aguirre', 'rramirez@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(190, 'Hubert Salazar Velásquez', 'hsalazar@contraloria.gob.pem', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(191, 'Harrinson Godoy Barreto', 'hgodoy@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(192, 'William Boulanger Jimenez', 'wboulanger@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(193, 'Tomás Tello Benzaquen', 'ttello@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(194, 'Felipe Vegas Palomino', 'fvegas@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(195, 'Luis Díaz Salazar', 'ldiaz@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(196, 'Jorge Tafur Domínguez', 'jtafur@contraloria.gob.p', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(197, 'Jean Vásquez Neira', 'jvasquez@contraloria.gob.p', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(198, 'Roberto Hipólito Domínguez', 'rhipolito@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(199, 'Johannes García Guzmán', 'jgarcia@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(200, 'Julio Aliaga Silva', 'jaliaga@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(201, 'Edwin Gonzáles Boza', 'egonzales@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(202, 'Samuel Rivera Vásquez', 'srivera@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(203, 'César Justo Gómez', 'cjusto@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(204, 'Ander Cruz Torres', 'acruz@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(205, 'Frank Venero Torres', 'fvenero@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(206, 'Joél Rodríguez Paz', 'jrodriguez@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(207, 'Indira Yábar Gutiérrez', 'iyabar@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(208, 'Pedro de la Peña Álvarez', 'pdelapena@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
+(209, 'Gerald Flores Morán', 'gflores@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:41:24', '2025-01-20 05:00:00'),
+(210, 'Jonatan Montenegro Duarez', 'jmontenegro@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:42:39', '2025-01-20 05:00:00');
 
 --
 -- Índices para tablas volcadas
@@ -1771,23 +1800,22 @@ ALTER TABLE `indicadores`
 --
 ALTER TABLE `indicadores_historico`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `indicadores_historico_indicador_id_foreign` (`indicador_id`);
+  ADD KEY `indicadores_historico_indicador_id_foreign` (`indicador_proceso_ouo_id`);
 
 --
 -- Indices de la tabla `indicadores_proceso_ouo`
 --
 ALTER TABLE `indicadores_proceso_ouo`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `indicadores_proceso_ouo_id_proceso_ouo_foreign` (`id_proceso_ouo`),
-  ADD KEY `indicadores_proceso_ouo_id_indicador_foreign` (`id_indicador`);
+  ADD KEY `id_proceso_ouo` (`id_proceso_ouo`),
+  ADD KEY `id_indicador` (`id_indicador`);
 
 --
 -- Indices de la tabla `indicadores_seguimiento`
 --
 ALTER TABLE `indicadores_seguimiento`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `indicador_id` (`indicador_id`,`fecha`),
-  ADD KEY `indicadores_seguimiento_indicador_id_foreign` (`indicador_id`);
+  ADD KEY `indicador_proceso_ouo_id` (`indicador_proceso_ouo_id`);
 
 --
 -- Indices de la tabla `informe_auditoria`
@@ -1878,9 +1906,7 @@ ALTER TABLE `procesos`
 -- Indices de la tabla `procesos_ouo`
 --
 ALTER TABLE `procesos_ouo`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `procesos_ouo_id_proceso_foreign` (`id_proceso`),
-  ADD KEY `procesos_ouo_id_ouo_foreign` (`id_ouo`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `proceso_user`
@@ -2118,7 +2144,7 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `ouo`
 --
 ALTER TABLE `ouo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=140;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -2148,7 +2174,7 @@ ALTER TABLE `procesos`
 -- AUTO_INCREMENT de la tabla `procesos_ouo`
 --
 ALTER TABLE `procesos_ouo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `proceso_user`
@@ -2214,7 +2240,7 @@ ALTER TABLE `tipos_documentos`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=211;
 
 --
 -- Restricciones para tablas volcadas
@@ -2315,7 +2341,7 @@ ALTER TABLE `indicadores`
 -- Filtros para la tabla `indicadores_historico`
 --
 ALTER TABLE `indicadores_historico`
-  ADD CONSTRAINT `indicadores_historico_indicador_id_foreign` FOREIGN KEY (`indicador_id`) REFERENCES `indicadores` (`id`);
+  ADD CONSTRAINT `indicadores_historico_indicador_id_foreign` FOREIGN KEY (`indicador_proceso_ouo_id`) REFERENCES `indicadores_proceso_ouo` (`id`);
 
 --
 -- Filtros para la tabla `indicadores_proceso_ouo`
@@ -2323,6 +2349,12 @@ ALTER TABLE `indicadores_historico`
 ALTER TABLE `indicadores_proceso_ouo`
   ADD CONSTRAINT `indicadores_proceso_ouo_id_indicador_foreign` FOREIGN KEY (`id_indicador`) REFERENCES `indicadores` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `indicadores_proceso_ouo_id_proceso_ouo_foreign` FOREIGN KEY (`id_proceso_ouo`) REFERENCES `procesos_ouo` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `indicadores_seguimiento`
+--
+ALTER TABLE `indicadores_seguimiento`
+  ADD CONSTRAINT `indicadores_seguimiento_ibfk_1` FOREIGN KEY (`indicador_proceso_ouo_id`) REFERENCES `indicadores_proceso_ouo` (`id`);
 
 --
 -- Filtros para la tabla `informe_auditoria`
@@ -2360,8 +2392,7 @@ ALTER TABLE `ouo`
 -- Filtros para la tabla `procesos_ouo`
 --
 ALTER TABLE `procesos_ouo`
-  ADD CONSTRAINT `procesos_ouo_id_ouo_foreign` FOREIGN KEY (`id_ouo`) REFERENCES `ouo` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `procesos_ouo_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `procesos_ouo_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `proceso_user`
