@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-       @include('facilitador.layout.header')
+       @include('layout.header')
 </head>
 <body class="sidebar-mini layout-fixed" style="height: auto;">
 <div class="wrapper">
 
     <!-- Navbar -->
-    @include('facilitador.layout.main_header')
+    @include('layout.main_header')
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
-   @include('facilitador.layout.main_sidebar')
+   @include('layout.main_sidebar')
 
 
 
@@ -21,7 +21,7 @@
         <!-- /.content -->
         </div>
     <!-- /.content-wrapper -->
-    @include('facilitador.layout.footer')
+    @include('layout.footer')
 
     <!-- Control Sidebar -->
     <aside class="control-sidebar control-sidebar-dark">
@@ -30,6 +30,6 @@
     <!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
-@include('facilitador.layout.footer_scripts')
+@include('layout.footer_scripts')
 </body>
 </html>

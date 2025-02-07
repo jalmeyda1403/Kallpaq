@@ -45,9 +45,16 @@
                        
                         <li class="nav-item">
                           
-                            <a href="{{ route('procesos.listar')}}" class="nav-link">
+                            <a href="{{ route('procesos.index')}}" class="nav-link">
                                 <i class="fas fa-clipboard-list"></i>
-                                <p> Listar Procesos (Inventario)</p>
+                                <p> Listar Procesos </p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('indicadores.index') }}" class="nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <p>Listado de Indicadores</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -126,37 +133,7 @@
 
                     </ul>
                 </li>
-                <!-- Configuración Indicadores -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-chart-line"></i>
-                        <p>
-                            Gestión de Resultados
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('indicadores.index') }}" class="nav-link">
-                                <i class="fas fa-chart-bar"></i>
-                                <p>Listado de Indicadores</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <p>Acciones Pendientes</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-check-circle"></i>
-                                <p>Acciones Cerradas</p>
-                            </a>
-                        </li>
-
-                    </ul>
-                </li>
+              
 
                  <!-- Configuracion Contexto -->
                  <li class="nav-item">

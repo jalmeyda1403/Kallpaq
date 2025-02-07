@@ -39,4 +39,9 @@ class Proceso extends Model
         return $this->hasMany(Hallazgo::class, 'proceso_id', 'id');
     } 
 
+    public function ouos()
+    {
+        return $this->belongsToMany(OUO::class, 'procesos_ouo', 'id_proceso', 'id_ouo');
+    }
+  
 }

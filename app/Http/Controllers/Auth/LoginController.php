@@ -36,14 +36,10 @@ class LoginController extends Controller
             return redirect()->route('login'); // Redireccionar al login si no está autenticado
         } else {
             $user = Auth::user(); // Recuperar el usuario autenticado
+            return view('facilitador.home');
         }
 
-        // Realizar acciones según el rol del usuario
-        if ($user->role == 'admin') {
-            return redirect()->route('admin.home');
-        } elseif ($user->role == 'facilitador') {
-            return redirect()->route('facilitador.home');
-        }
+       
     }
 
 
@@ -57,17 +53,8 @@ class LoginController extends Controller
     {
         // Example: Redirect to different routes based on user role
         $role = Auth::user()->role; // assuming you have a role field in users table
+         return view('facilitador.home');
 
-        switch ($role) {
-            case 'admin':
-                return view('admin.home');
-
-            case 'facilitador':
-                return view('facilitador.home');
-
-            default:
-                return '/home';
-
-        }
+        
     }
 }

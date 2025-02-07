@@ -13,9 +13,9 @@
         @yield('title', config('adminlte.title', 'AdminLTE 3'))
         @yield('title_postfix', config('adminlte.title_postfix', ''))
     </title>
-
     {{-- Custom stylesheets (pre AdminLTE) --}}
     @yield('adminlte_css_pre')
+
 
     {{-- Base Stylesheets --}}
     @if (!config('adminlte.enabled_laravel_mix'))
@@ -32,7 +32,12 @@
             href="{{ asset('vendor/adminlte/dist/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
         <!--dropzone-->
         <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/plugins/dropzone/min/dropzone.min.css') }}">
-
+        
+        <!--Select2-->
+        <link rel="stylesheet" href="{{asset( 'vendor/adminlte/dist/plugins/select2/css/select2.min.css') }}">
+        <link rel="stylesheet" href="{{asset( 'vendor/adminlte/dist/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
+        
+        
         @if (config('adminlte.google_fonts.allowed', true))
             <link rel="stylesheet"
                 href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
@@ -52,7 +57,7 @@
             <livewire:styles />
         @endif
     @endif
-
+   
     {{-- Custom Stylesheets (post AdminLTE) --}}
     @yield('css')
 

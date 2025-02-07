@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layout.master')
 @section('title', 'SIG')
 @section('content')
    

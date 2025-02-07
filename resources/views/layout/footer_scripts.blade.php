@@ -26,7 +26,10 @@
    <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
     <!--Dropzone-->
    <script src="{{ asset('vendor/adminlte/dist/plugins/dropzone/min/dropzone.min.js') }}"></script>
-
+   
+   <!--Select2-->
+   <script src="{{ asset('vendor/adminlte/dist/plugins/select2/js/select2.min.js') }}"></script>
+    
     <!--Moment-->
     <script src="{{ asset('vendor/adminlte/dist/plugins/moment/moment.min.js') }}"></script>
 @else

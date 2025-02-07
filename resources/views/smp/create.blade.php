@@ -1,4 +1,4 @@
-@extends('facilitador.layout.master')
+@extends('layout.master')
 @section('title', 'SIG')
 @section('css')
 
@@ -229,7 +229,7 @@
 
         function loadProcesos() {
             $.ajax({
-                url: '/listarprocesos', // Reemplaza por la URL correcta para obtener los procesos
+                url: '/listarProcesos', // Reemplaza por la URL correcta para obtener los procesos
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {

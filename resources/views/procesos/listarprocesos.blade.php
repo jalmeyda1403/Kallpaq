@@ -1,4 +1,4 @@
-@extends('facilitador.layout.master')
+@extends('layout.master')
 @section('title', 'SIG')
 
 @section('content')
@@ -57,7 +57,4 @@
     
 </div>
 @stop
-@section('js')
-$('#requerimientos').DataTable();
 
-@endsection

@@ -77,16 +77,19 @@
                                             <td>{{ $indicador->meta }}</td>
                                            
                                             <td>
-                                                <a href="#" class="view-btn btn-success btn-sm"
+                                                <a href="#" class="view-btn btn-info btn-sm"
                                                     data-indicador-id="{{ $indicador->id }}" data-toggle="tooltip"
-                                                    title="Ver Ficha"><i class="fa fa-file"></i></a>
+                                                    title="Ver Datos"><i class="fa fa-eye"></i></a>
                                                 <a href="{{ route('indicadores.edit', $indicador->id) }}"
                                                     class="btn-warning btn-sm" data-toggle="tooltip"
                                                     title="Actualizar Indicador"><i class="fas fa-pencil-alt"></i></a>
                                                 <a href="{{ route('indicadores.formula', $indicador->id) }}"
                                                     class="btn-primary btn-sm" data-toggle="tooltip"
                                                     title="Establecer Formula"><i class="fas fa-calculator"></i></a>
-                                            
+                                                <a href="{{ route('indicadores.frecuencia', $indicador->id) }}"
+                                                    class="btn-danger btn-sm" data-toggle="tooltip"
+                                                    title="Generar Frecuencia"><i class="fa fa-magic"
+                                                        aria-hidden="true"></i></a>
                                                 <a href="#" class="btn-dark btn-sm" data-toggle="tooltip"
                                                     title="Aprobar"><i class="fa fa-check" aria-hidden="true"></i></a>
                                             </td>

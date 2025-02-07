@@ -44,9 +44,11 @@ Route::resource('smp', HallazgoController::class);
 Route::resource('acciones', AccionController::class);
 //Procesos
 Route::get('/buscarProcesos', [ProcesoController::class,'findProcesos']);
-Route::get('/listarProcesos', [ProcesoController::class,'listarProcesos'])->name('procesos.listar');; 
+Route::get('/listarProcesos', [ProcesoController::class,'listarProcesos'])->name('procesos.listar');
 Route::get('/mapaProcesos', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
-
+Route::get('/procesos/{proceso_id}/listarouo', [ProcesoController::class, 'listarOUO'])->name('procesos.listarOUO');
+Route::post('/asociar/{proceso_id}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
+Route::delete('/disociar/{proceso_id}/ouo/{ouo_id}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
 
 Route::get('/indicadores/{proceso_id?}/listar',  [IndicadorController::class, 'listarIndicadores'])->name('indicadores.listar');;
 Route::get('/indicadores/{id}/historico-datos',  [IndicadorController::class, 'showHistorico']);

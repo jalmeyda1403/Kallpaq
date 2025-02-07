@@ -1,4 +1,4 @@
-@extends('facilitador.layout.master')
+@extends('layout.master')
 @section('title', 'SIG')
 @section('css')
 
