@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-02-2025 a las 00:02:49
+-- Tiempo de generación: 07-02-2025 a las 23:55:48
 -- Versión del servidor: 10.4.27-MariaDB
 -- Versión de PHP: 8.2.0
 
@@ -306,6 +306,14 @@ CREATE TABLE `especialista_hallazgo` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `especialista_hallazgo`
+--
+
+INSERT INTO `especialista_hallazgo` (`id`, `especialista_id`, `hallazgo_id`, `fecha_asignacion`, `motivo_asignacion`, `created_at`, `updated_at`) VALUES
+(29, 3, 9, '2025-02-05 14:07:13', '15', '2025-02-05 14:07:13', NULL),
+(30, 4, 9, '2025-02-05 14:07:38', '15', '2025-02-05 14:07:38', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -568,7 +576,7 @@ CREATE TABLE `indicadores` (
 INSERT INTO `indicadores` (`id`, `tipo_indicador`, `proceso_id`, `producto`, `cliente`, `planificacion_sig_id`, `planificacion_sig_estado`, `estado`, `nombre`, `descripcion`, `formula`, `frecuencia`, `meta`, `tipo_agregacion`, `parametro_medida`, `sentido`, `var1`, `var2`, `var3`, `var4`, `var5`, `var6`, `created_at`, `updated_at`) VALUES
 (1, 'Producto', 35, 'Texto Único de Procedimientos Administrativos - TUPA', 'Órganos y unidades orgánicas que tienen a cargo algún procedimiento administrativo consignado en el TUPA, Ciudadanía, Entidades', 2, 1, 2, 'Porcentaje de Procedimientos del TUPA actualizados', 'Medir la actualización deel TUPA de la CGR', 'var1/var2', 'mensual', 0.78, 'no acumulada', 'porcentaje', 'ascendente', 'Cantidad de  Procedimientos Administrativos (PA) actualizados', 'Total de PA', NULL, NULL, NULL, NULL, '2023-05-26 23:01:48', '2024-06-04 04:59:22'),
 (2, 'Producto', 35, 'Nuevo', 'Manuelito', 2, 0, 2, 'Indicador prueba', 'Prueba', 'var1/var2', 'trimestral', 0.90, 'acumulada', 'tasa', 'ascendente', 'var1', 'var2', NULL, NULL, NULL, NULL, '2024-06-04 21:06:47', '2024-06-06 03:55:02'),
-(3, 'Producto', 8, 'Ejempñpo', 'Ejemplo', 3, 0, 2, 'Ejemploi', 'Ejempó', 'var1+var2+var3', 'mensual', 120.00, 'no acumulada', 'ratio', 'ascendente', 'v1', 'v2', 'v3', NULL, NULL, NULL, '2024-06-05 05:02:47', '2024-06-05 05:02:47');
+(3, 'Producto', 36, 'Ejempñpo', 'Ejemplo', 3, 0, 2, 'Ejemploi', 'Ejempó', 'var1+var2+var3', 'mensual', 120.00, 'no acumulada', 'ratio', 'ascendente', 'v1', 'v2', 'v3', NULL, NULL, NULL, '2024-06-05 05:02:47', '2024-06-05 05:02:47');
 
 -- --------------------------------------------------------
 
@@ -771,10 +779,10 @@ INSERT INTO `model_has_roles` (`model_id`, `model_type`, `role_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `ouo`
+-- Estructura de tabla para la tabla `ouos`
 --
 
-CREATE TABLE `ouo` (
+CREATE TABLE `ouos` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `nombre` varchar(255) NOT NULL,
   `codigo` varchar(255) NOT NULL,
@@ -793,14 +801,14 @@ CREATE TABLE `ouo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Volcado de datos para la tabla `ouo`
+-- Volcado de datos para la tabla `ouos`
 --
 
-INSERT INTO `ouo` (`id`, `nombre`, `codigo`, `ouo_padre`, `subgerente_id`, `subgerente_condicion`, `nivel_jerarquico`, `doc_vigencia_alta`, `fecha_vigencia_inicio`, `doc_vigencia_baja`, `fecha_vigencia_fin`, `estado`, `inactive_at`, `created_at`, `updated_at`) VALUES
+INSERT INTO `ouos` (`id`, `nombre`, `codigo`, `ouo_padre`, `subgerente_id`, `subgerente_condicion`, `nivel_jerarquico`, `doc_vigencia_alta`, `fecha_vigencia_inicio`, `doc_vigencia_baja`, `fecha_vigencia_fin`, `estado`, `inactive_at`, `created_at`, `updated_at`) VALUES
 (1, 'Despacho del Contralor', 'D100', NULL, 9, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
 (2, 'Órgano de Auditoría Interna', 'D200', 1, 10, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
 (3, 'Procuraduría Pública', 'D900', 1, 11, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
-(4, 'Oficina de Gestión de la Potestad Administrativa', 'E200', 1, 12, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
+(4, 'Oficina de Gestión de la Potestad Administrativa Sancionadora', 'E200', 1, 12, 'encargatura', 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
 (5, 'Oficina de Integridad Institucional', 'A260', 1, 13, NULL, 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
 (6, 'Tribunal Superior de Responsabilidades Administrativas', 'E300', 1, 14, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 17:58:13', '2025-01-16 17:58:13'),
 (7, 'Vicecontraloría de Gestión Estratégica, Integridad y Control', 'L110', 1, 15, NULL, 1, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-01-16 20:27:32', '2025-01-16 20:27:32'),
@@ -890,7 +898,12 @@ INSERT INTO `ouo` (`id`, `nombre`, `codigo`, `ouo_padre`, `subgerente_id`, `subg
 (136, 'Gerencia Regional de Control de Madre de Dios', 'L482', 22, 205, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
 (137, 'Gerencia Regional de Control Apurímac', 'L485', 22, 206, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
 (138, 'Gerencia Regional de Control Cusco', 'L480', 22, 207, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
-(139, 'Gerencia Regional de Control Puno', 'L455', 22, 208, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL);
+(139, 'Gerencia Regional de Control Puno', 'L455', 22, 208, NULL, 2, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, NULL, NULL),
+(140, 'Órgano Instructor', 'E210', 4, 211, 'encargatura', 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL),
+(142, 'Órgano Instructor Lambayeque', 'E211', 4, 212, 'encargatura', 3, 'R.C. N° 293-2024-CG', '2024-06-29', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL),
+(143, 'Órgano Sancionador', 'E220', 4, 213, 'encargatura', 3, NULL, '0000-00-00', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL),
+(144, 'Órgano Instructor Arequipa', 'E213', 4, 214, 'encargatura', 3, NULL, '0000-00-00', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL),
+(145, 'Órgano Instructor Junín', 'E212', 4, 215, 'encargatura', 3, NULL, '0000-00-00', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL);
 
 -- --------------------------------------------------------
 
@@ -1010,8 +1023,8 @@ CREATE TABLE `procesos` (
 
 INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, `cod_proceso_padre`, `nivel`, `estado`, `inactivate_at`, `created_at`, `updated_at`) VALUES
 (1, 'PE01', 'Gestión Estratégica', NULL, 'Estratégico', NULL, 0, 1, NULL, '2023-05-26 23:01:48', '2023-06-02 04:00:48'),
-(2, 'PE02', 'Desarrollo Institucional', NULL, 'Estratégico', NULL, 0, 1, NULL, NULL, NULL),
-(3, 'PE03', 'Comunicación y Relaciones Interinstitucionales', NULL, 'Estratégico', NULL, 0, 1, NULL, NULL, NULL),
+(2, 'PE02', 'Desarrollo Institucional', NULL, 'Estratégico', NULL, 0, 1, NULL, '2025-02-03 21:23:17', NULL),
+(3, 'PE03', 'Comunicación y Relaciones Interinstitucionales', NULL, 'Estratégico', NULL, 0, 1, NULL, '2025-02-03 21:23:41', NULL),
 (4, 'PM01', 'Prevención y Detección de la Corrupción', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
 (5, 'PM02', 'Atención a las Entidades y Partes Interesadas', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
 (6, 'PM03', 'Realización de los Servicios de Control Simultáneo, Posterior y Relacionados', NULL, 'Misional', NULL, 0, 1, NULL, NULL, NULL),
@@ -1020,72 +1033,72 @@ INSERT INTO `procesos` (`id`, `cod_proceso`, `nombre`, `sigla`, `tipo_proceso`, 
 (9, 'PA01', 'Gestión del Capital Humano', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
 (10, 'PA02', 'Gestión de Activos Documentarios', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
 (11, 'PA03', 'Gestión de Abastecimiento', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
-(12, 'PA04', 'Gestión Financiera', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
-(13, 'PA05', 'Gestión de Tecnologías de la Información y Comunicaciones', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
-(14, 'PA06', 'Gestión Jurídico Legal', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
-(15, 'PA07', 'Gestión de la Seguridad', NULL, 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
-(30, 'PE01.01', 'Planeamiento Estratégico', 'PEI', 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(31, 'PE01.02', 'Gestión de Entidades Sujetad a Control', 'GESC', 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(32, 'PE01.03', 'Planeamiento Operativo', 'POI', 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(33, 'PE01.04', 'Control Institucional', NULL, 'Estratégico', 'PE01', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(34, 'PE02.01', 'Diseño Organizacional', 'DEO', 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(35, 'PE02.02', 'Gestión de la Modernización', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(36, 'PE02.03', 'Gestión Normativa', 'GNOR', 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(37, 'PE02.04', 'Gestión de la Inversión', 'PROY', 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(38, 'PE02.05', 'Gestión del Conocimiento', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(39, 'PE02.06', 'Gestión de la Continuidad del Negocio', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(40, 'PE02.07', 'Gestión de la Integridad Institucional', NULL, 'Estratégico', 'PE02', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(41, 'PE03.01', 'Gestión de la Comunicación Institucional', NULL, 'Estratégico', 'PE03', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(42, 'PE03.02', 'Gestión de las Relaciones Interinstitucionales', NULL, 'Estratégico', 'PE03', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-(56, 'PM01.01', 'Gestión de mecanismos de prevención y detección de la corrupción', NULL, 'Misional', 'PM01', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(57, 'PM01.02', 'Participación ciudadana', NULL, 'Misional', 'PM01', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(58, 'PM02.01', 'Atención de la demanda imprevisible de control', NULL, 'Misional', 'PM02', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(59, 'PM02.02', 'Atención de pedidos de información y solicitudes de opinión', NULL, 'Misional', 'PM02', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(60, 'PM02.03', 'Atención de quejas y reclamos', NULL, 'Misional', 'PM02', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(61, 'PM03.01', 'Programación de los servicios de control y de fiscalización', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(62, 'PM03.02', 'Realización de los servicios de control simultáneo', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(63, 'PM03.03', 'Realización de los servicios de control posterior', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(64, 'PM03.04', 'Realización de los servicios relacionados', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', NULL, 'Misional', 'PM03', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(66, 'PM04.01', 'Gestión de sanciones administrativas', 'GSAD', 'Misional', 'PM04', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', 'GPSA', 'Misional', 'PM04', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', '', 'Misional', 'PM04', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', 'SEIR', 'Misional', 'PM05', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', 'DBPM', 'Misional', 'PM05', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-(71, 'PA01.01', 'Planificación del capital humano', 'PLCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(72, 'PA01.02', 'Incorporación del capital humano', 'INCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(73, 'PA01.03', 'Desarrollo del capital humano', 'DECH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(74, 'PA01.04', 'Administración del capital humano', 'ADCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(75, 'PA01.05', 'Gestión del bienestar del capital humano', 'GBCH', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(76, 'PA01.06', 'Gestión del jefe y personal del OCI', 'GOCI', 'Apoyo', 'PA01', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(77, 'PA02.01', 'Planificación del activo documentario', 'PDAD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(78, 'PA02.02', 'Recepción de documentos', 'RDGD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(79, 'PA02.03', 'Clasificación, reclasificación y desclasificación de documentos secretos y reservados', 'CRDD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(80, 'PA02.04', 'Distribución de documentos y valijas', 'MSJ', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(81, 'PA02.05', 'Archivo, custodia y conservación de documentos', 'ARCH', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(82, 'PA02.06', 'Autenticación de firmas y certificación de documentos', 'AFCD', 'Apoyo', 'PA02', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(83, 'PA03.01', 'Elaboración del plan anual de contrataciones', 'PNCO', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(84, 'PA03.02', 'Contratación de bienes y servicios', 'ACBS', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(85, 'PA03.03', 'Gestión de bienes patrimoniales', 'GBPA', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(86, 'PA03.04', 'Gestión de almacén', 'GALM', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(87, 'PA03.05', 'Administración de servicios generales', 'ADSG', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(88, 'PA03.06', 'Gestión de sociedades de auditoria', 'GSOA', 'Apoyo', 'PA03', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(89, 'PA04.01', 'Programación multianual, formulación y aprobación del presupuesto', NULL, 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(90, 'PA04.02', 'Ejecución presupuestal', 'EJPR', 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(91, 'PA04.03', 'Evaluación presupuestal', 'EVPR', 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(92, 'PA04.04', 'Gestión contable', 'CONT', 'Apoyo', 'PA04', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(93, 'PA05.01', 'Planificación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', 'PA05', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(96, 'PA06.01', 'Gestión y difusión de productos de interés legal', NULL, 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', 'GPRJ', 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', NULL, 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', NULL, 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', 'ACCJ', 'Apoyo', 'PA06', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(101, 'PA07.01', 'Gestión de prevención de riesgos de desastres', NULL, 'Apoyo', 'PA07', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(102, 'PA07.02', 'Operación de la gestión de la seguridad', NULL, 'Apoyo', 'PA07', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(103, 'PA07.03', 'Fomento de una cultura de seguridad', NULL, 'Apoyo', 'PA07', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-(104, 'PM06', 'Gestión Educativa', NULL, 'Misional', NULL, 0, 1, NULL, '2023-09-27 15:13:56', NULL),
+(12, 'PA04', 'Gestión Financiera', 'GFIN', 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(13, 'PA05', 'Gestión de Tecnologías de la Información y Comunicaciones', 'GTI', 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(14, 'PA06', 'Gestión Jurídico Legal', 'GJL', 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(15, 'PA07', 'Gestión de la Seguridad', 'GSG', 'Apoyo', NULL, 0, 1, NULL, NULL, NULL),
+(30, 'PE01.01', 'Planeamiento Estratégico', 'PEI', 'Estratégico', '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(31, 'PE01.02', 'Gestión de Entidades Sujetad a Control', 'GESC', 'Estratégico', '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(32, 'PE01.03', 'Planeamiento Operativo', 'POI', 'Estratégico', '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(33, 'PE01.04', 'Control Institucional', 'CIN', 'Estratégico', '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(34, 'PE02.01', 'Diseño Organizacional', 'DEO', 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(35, 'PE02.02', 'Gestión de la Modernización', 'MOD', 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(36, 'PE02.03', 'Gestión Normativa', 'GNOR', 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(37, 'PE02.04', 'Gestión de la Inversión', 'PROY', 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(38, 'PE02.05', 'Gestión del Conocimiento', 'GCON', 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(39, 'PE02.06', 'Gestión de la Continuidad del Negocio', 'GCNE', 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(40, 'PE02.07', 'Gestión de la Integridad Institucional', NULL, 'Estratégico', '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(41, 'PE03.01', 'Gestión de la Comunicación Institucional', NULL, 'Estratégico', '3', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(42, 'PE03.02', 'Gestión de las Relaciones Interinstitucionales', NULL, 'Estratégico', '3', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+(56, 'PM01.01', 'Gestión de mecanismos de prevención y detección de la corrupción', NULL, 'Misional', '4', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(57, 'PM01.02', 'Participación ciudadana', NULL, 'Misional', '4', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(58, 'PM02.01', 'Atención de la demanda imprevisible de control', NULL, 'Misional', '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(59, 'PM02.02', 'Atención de pedidos de información y solicitudes de opinión', NULL, 'Misional', '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(60, 'PM02.03', 'Atención de quejas y reclamos', NULL, 'Misional', '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(61, 'PM03.01', 'Programación de los servicios de control y de fiscalización', NULL, 'Misional', '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(62, 'PM03.02', 'Realización de los servicios de control simultáneo', NULL, 'Misional', '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(63, 'PM03.03', 'Realización de los servicios de control posterior', NULL, 'Misional', '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(64, 'PM03.04', 'Realización de los servicios relacionados', NULL, 'Misional', '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', NULL, 'Misional', '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(66, 'PM04.01', 'Gestión de sanciones administrativas', 'GSAD', 'Misional', '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', 'GPSA', 'Misional', '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', '', 'Misional', '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', 'SEIR', 'Misional', '8', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', 'DBPM', 'Misional', '8', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+(71, 'PA01.01', 'Planificación del capital humano', 'PLCH', 'Apoyo', '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(72, 'PA01.02', 'Incorporación del capital humano', 'INCH', 'Apoyo', '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(73, 'PA01.03', 'Desarrollo del capital humano', 'DECH', 'Apoyo', '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(74, 'PA01.04', 'Administración del capital humano', 'ADCH', 'Apoyo', '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(75, 'PA01.05', 'Gestión del bienestar del capital humano', 'GBCH', 'Apoyo', '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(76, 'PA01.06', 'Gestión del jefe y personal del OCI', 'GOCI', 'Apoyo', '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(77, 'PA02.01', 'Planificación del activo documentario', 'PDAD', 'Apoyo', '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(78, 'PA02.02', 'Recepción de documentos', 'RDGD', 'Apoyo', '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(79, 'PA02.03', 'Clasificación, reclasificación y desclasificación de documentos secretos y reservados', 'CRDD', 'Apoyo', '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(80, 'PA02.04', 'Distribución de documentos y valijas', 'MSJ', 'Apoyo', '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(81, 'PA02.05', 'Archivo, custodia y conservación de documentos', 'ARCH', 'Apoyo', '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(82, 'PA02.06', 'Autenticación de firmas y certificación de documentos', 'AFCD', 'Apoyo', '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(83, 'PA03.01', 'Elaboración del plan anual de contrataciones', 'PNCO', 'Apoyo', '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(84, 'PA03.02', 'Contratación de bienes y servicios', 'ACBS', 'Apoyo', '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(85, 'PA03.03', 'Gestión de bienes patrimoniales', 'GBPA', 'Apoyo', '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(86, 'PA03.04', 'Gestión de almacén', 'GALM', 'Apoyo', '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(87, 'PA03.05', 'Administración de servicios generales', 'ADSG', 'Apoyo', '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(88, 'PA03.06', 'Gestión de sociedades de auditoria', 'GSOA', 'Apoyo', '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(89, 'PA04.01', 'Programación multianual, formulación y aprobación del presupuesto', NULL, 'Apoyo', '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(90, 'PA04.02', 'Ejecución presupuestal', 'EJPR', 'Apoyo', '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(91, 'PA04.03', 'Evaluación presupuestal', 'EVPR', 'Apoyo', '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(92, 'PA04.04', 'Gestión contable', 'CONT', 'Apoyo', '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(93, 'PA05.01', 'Planificación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', NULL, 'Apoyo', '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(96, 'PA06.01', 'Gestión y difusión de productos de interés legal', NULL, 'Apoyo', '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', 'GPRJ', 'Apoyo', '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', NULL, 'Apoyo', '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', NULL, 'Apoyo', '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', 'ACCJ', 'Apoyo', '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(101, 'PA07.01', 'Gestión de prevención de riesgos de desastres', NULL, 'Apoyo', '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(102, 'PA07.02', 'Operación de la gestión de la seguridad', NULL, 'Apoyo', '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(103, 'PA07.03', 'Fomento de una cultura de seguridad', NULL, 'Apoyo', '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+(104, 'PM06', 'Gestión Educativa', 'GEDU', 'Misional', NULL, 0, 1, NULL, '2023-09-27 15:13:56', NULL),
 (105, 'PE02.02.02', 'Administración de los Sistemas de Gestión', 'MODER', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:38:59', NULL),
 (106, 'PE02.02.03', 'Gestión de la Calidad', 'SGC', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
 (107, 'PE02.02.04', 'Gestión de Riesgos', 'SGR', 'Estratégico', 'PE02.02', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
@@ -1251,11 +1264,11 @@ CREATE TABLE `procesos_ouo` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_proceso` bigint(20) UNSIGNED NOT NULL,
   `id_ouo` bigint(20) UNSIGNED NOT NULL,
-  `SGC` tinyint(4) NOT NULL,
-  `SGSI` tinyint(4) NOT NULL,
-  `SGAS` tinyint(4) NOT NULL,
-  `SGCM` tinyint(4) NOT NULL,
-  `SGCE` tinyint(4) NOT NULL,
+  `SGC` tinyint(4) DEFAULT 0,
+  `SGAS` tinyint(4) DEFAULT 0,
+  `SGCM` tinyint(4) DEFAULT 0,
+  `SGSI` tinyint(4) DEFAULT 0,
+  `SGCE` tinyint(4) DEFAULT 0,
   `inactivate_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -1265,9 +1278,254 @@ CREATE TABLE `procesos_ouo` (
 -- Volcado de datos para la tabla `procesos_ouo`
 --
 
-INSERT INTO `procesos_ouo` (`id`, `id_proceso`, `id_ouo`, `SGC`, `SGSI`, `SGAS`, `SGCM`, `SGCE`, `inactivate_at`, `created_at`, `updated_at`) VALUES
-(1, 30, 83, 1, 0, 1, 1, 0, NULL, NULL, NULL),
-(2, 32, 83, 1, 0, 0, 1, 0, NULL, NULL, NULL);
+INSERT INTO `procesos_ouo` (`id`, `id_proceso`, `id_ouo`, `SGC`, `SGAS`, `SGCM`, `SGSI`, `SGCE`, `inactivate_at`, `created_at`, `updated_at`) VALUES
+(1, 30, 83, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(2, 32, 83, 1, 0, 1, 0, 0, NULL, NULL, NULL),
+(3, 105, 85, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(4, 106, 85, 1, 0, 0, 0, 0, NULL, NULL, NULL),
+(5, 107, 85, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(6, 114, 85, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(7, 113, 85, 1, 0, 1, 0, 0, NULL, NULL, NULL),
+(8, 109, 5, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(9, 117, 85, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(10, 110, 85, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(12, 218, 83, 0, 1, 0, 0, 0, NULL, NULL, NULL),
+(13, 219, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(14, 219, 19, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(15, 220, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(16, 220, 19, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(17, 221, 83, 0, 1, 0, 0, 0, NULL, NULL, NULL),
+(18, 158, 88, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(19, 222, 45, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(20, 111, 82, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(21, 40, 5, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(22, 130, 39, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(23, 131, 22, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(24, 132, 39, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(25, 133, 22, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(26, 134, 38, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(27, 135, 29, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(28, 136, 26, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(29, 145, 29, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(30, 125, 115, 1, 0, 1, 0, 0, NULL, NULL, NULL),
+(31, 125, 114, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(32, 125, 116, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(33, 125, 117, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(34, 125, 118, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(35, 125, 119, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(36, 125, 120, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(37, 125, 121, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(38, 125, 122, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(39, 125, 123, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(40, 125, 124, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(41, 125, 125, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(42, 125, 126, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(43, 125, 127, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(44, 125, 128, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(45, 125, 129, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(46, 125, 130, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(47, 125, 131, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(48, 125, 132, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(49, 125, 133, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(50, 125, 134, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(51, 125, 135, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(52, 125, 136, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(53, 125, 137, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(54, 125, 138, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(55, 125, 139, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(56, 126, 25, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(57, 128, 34, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(58, 127, 37, 0, 1, 0, 0, 0, NULL, NULL, NULL),
+(59, 127, 38, 0, 1, 0, 0, 0, NULL, NULL, NULL),
+(60, 127, 35, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(61, 127, 114, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(62, 127, 115, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(63, 127, 116, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(64, 127, 117, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(65, 127, 118, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(66, 127, 119, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(67, 127, 120, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(68, 127, 121, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(69, 127, 122, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(70, 127, 123, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(71, 127, 124, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(72, 127, 125, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(73, 127, 126, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(74, 127, 127, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(75, 127, 128, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(76, 127, 129, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(77, 127, 130, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(78, 127, 131, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(79, 127, 132, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(80, 127, 133, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(81, 127, 134, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(82, 127, 135, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(83, 127, 136, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(84, 127, 137, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(85, 127, 138, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(86, 127, 139, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(87, 142, 38, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(88, 142, 114, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(89, 142, 115, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(90, 142, 116, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(91, 142, 117, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(92, 142, 118, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(93, 142, 119, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(94, 142, 120, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(95, 142, 121, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(96, 142, 122, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(97, 142, 123, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(98, 142, 124, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(99, 142, 125, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(100, 142, 126, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(101, 142, 127, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(102, 142, 128, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(103, 142, 129, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(104, 142, 130, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(105, 142, 131, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(106, 142, 132, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(107, 142, 133, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(108, 142, 134, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(109, 142, 135, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(110, 142, 136, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(111, 142, 137, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(112, 142, 138, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(113, 142, 139, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(114, 142, 26, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(115, 142, 27, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(116, 142, 28, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(117, 142, 29, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(118, 142, 30, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(119, 142, 31, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(120, 142, 32, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(121, 142, 33, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(122, 142, 34, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(123, 142, 35, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(124, 142, 36, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(125, 142, 37, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(127, 142, 39, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(128, 125, 26, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(129, 125, 27, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(130, 125, 28, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(131, 125, 29, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(132, 125, 30, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(133, 125, 31, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(134, 125, 32, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(135, 125, 33, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(136, 125, 34, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(137, 125, 35, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(138, 125, 36, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(139, 125, 37, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(140, 125, 38, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(141, 125, 39, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(142, 127, 26, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(143, 127, 27, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(144, 127, 28, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(145, 127, 29, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(146, 127, 30, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(147, 127, 31, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(148, 127, 32, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(149, 127, 33, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(150, 127, 34, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(151, 127, 36, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(152, 127, 39, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(153, 146, 122, 1, 0, 1, 0, 0, NULL, NULL, NULL),
+(154, 146, 26, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(155, 146, 27, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(156, 146, 28, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(157, 146, 29, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(158, 146, 30, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(159, 146, 31, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(160, 146, 32, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(161, 146, 33, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(162, 146, 34, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(163, 146, 35, 0, 1, 0, 0, 0, NULL, NULL, NULL),
+(164, 146, 36, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(165, 146, 37, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(166, 146, 38, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(167, 146, 39, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(168, 146, 114, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(169, 146, 115, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(170, 146, 116, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(171, 146, 117, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(172, 146, 118, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(173, 146, 119, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(174, 146, 120, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(175, 146, 121, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(176, 146, 123, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(177, 146, 124, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(178, 146, 125, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(179, 146, 126, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(180, 146, 127, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(181, 146, 128, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(182, 146, 129, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(183, 146, 130, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(184, 146, 131, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(185, 146, 132, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(186, 146, 133, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(187, 146, 134, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(188, 146, 135, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(189, 146, 136, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(190, 146, 137, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(191, 146, 138, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(192, 146, 139, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(193, 143, 13, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(194, 137, 45, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(195, 138, 86, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(196, 139, 87, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(197, 246, 12, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(198, 237, 12, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(199, 236, 12, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(200, 238, 16, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(201, 249, 17, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(202, 283, 14, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(203, 284, 14, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(204, 97, 3, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(205, 276, 5, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(206, 118, 75, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(207, 119, 44, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(208, 121, 44, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(209, 81, 70, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(210, 80, 70, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(211, 78, 70, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(212, 148, 45, 0, 0, 1, 0, 0, NULL, NULL, NULL),
+(213, 151, 45, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(214, 153, 45, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(215, 149, 45, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(216, 150, 45, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(217, 152, 45, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(218, 197, 71, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(219, 205, 71, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(220, 202, 71, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(221, 199, 71, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(222, 201, 71, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(223, 198, 43, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(224, 210, 43, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(225, 213, 43, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(226, 200, 43, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(227, 203, 43, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(228, 257, 43, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(229, 211, 43, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(230, 76, 22, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(231, 85, 69, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(232, 86, 69, 1, 1, 0, 0, 0, NULL, NULL, NULL),
+(233, 87, 69, 1, 0, 0, 0, 0, NULL, NULL, NULL),
+(234, 84, 69, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(235, 162, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(236, 163, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(237, 164, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(238, 165, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(239, 166, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(240, 92, 42, 0, 1, 1, 0, 0, NULL, NULL, NULL),
+(241, 159, 83, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(242, 160, 83, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(243, 224, 140, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(244, 224, 142, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(245, 224, 144, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(246, 224, 145, 0, 0, 0, 0, 0, NULL, NULL, NULL),
+(247, 225, 143, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(248, 225, 6, 1, 1, 1, 0, 0, NULL, NULL, NULL),
+(252, 9, 43, 0, 0, 0, 0, 0, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1568,7 +1826,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Juan Almeyda Requejo', 'jalmeyda@contraloria.gob.pe', '2023-08-30 15:54:20', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', '7enzMOmElIxFlw4IOcON2GRTjN983HKPg4ms8i2YPjae60wK7AU3kqDyUTOU', '2023-05-26 23:01:48', '2023-08-29 04:37:54'),
+(1, 'Juan Almeyda Requejo', 'jalmeyda@contraloria.gob.pe', '2023-08-30 15:54:20', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', 'M2oTpdLknl9JGVPYyDcDwZ7ndF4ebClbfGE5KzVLpKUYg39I3TL01FmWB1oM', '2023-05-26 23:01:48', '2023-08-29 04:37:54'),
 (2, 'Manuel Perez Effus', 'manuelperez@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (3, 'Angel Arturo Bendezu Cardenas\r\n', 'abendezuc@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
 (4, 'Maria Isabel Hiyo Huapaya\r\n', 'mhiyo@contraloria.gob.pe', '2023-08-25 19:29:29', '$2a$12$UaFP2VL90DuMIzK4uhCpAOfKV4GEzhNe.IMh7iI3EI0huFVEEpN5y', NULL, '2023-08-26 00:28:38', '2023-08-26 00:28:38'),
@@ -1663,7 +1921,12 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `re
 (207, 'Indira Yábar Gutiérrez', 'iyabar@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
 (208, 'Pedro de la Peña Álvarez', 'pdelapena@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:01:38', '2025-01-20 22:01:38'),
 (209, 'Gerald Flores Morán', 'gflores@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:41:24', '2025-01-20 05:00:00'),
-(210, 'Jonatan Montenegro Duarez', 'jmontenegro@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:42:39', '2025-01-20 05:00:00');
+(210, 'Jonatan Montenegro Duarez', 'jmontenegro@contraloria.gob.pe', NULL, NULL, NULL, '2025-01-20 22:42:39', '2025-01-20 05:00:00'),
+(211, 'NAVARRO DE LA CRUZ KELLY ROXANA', 'knavarro@contraloria.gob.pe', NULL, 'password', NULL, '2025-02-04 19:29:58', NULL),
+(212, 'LOPEZ RENGIFO HILTON', 'hlopezr@contraloria.gob.pe', NULL, 'password', NULL, '2025-02-04 19:33:56', NULL),
+(213, 'Maria Violeta Santin Alfageme ', 'vsantin@contraloria.gob.pe', NULL, 'password', NULL, '2025-02-04 21:04:36', NULL),
+(214, 'Nicolas Efrain Carbajarl Torres', 'ncarbajal@contraloria.gob.pe', NULL, 'password', NULL, '2025-02-04 21:07:25', NULL),
+(215, 'Alex Herbet León Oscano', 'hleon@contraloria.gob.pe', NULL, 'password', NULL, '2025-02-04 21:09:19', NULL);
 
 --
 -- Índices para tablas volcadas
@@ -1853,9 +2116,9 @@ ALTER TABLE `model_has_roles`
   ADD KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`);
 
 --
--- Indices de la tabla `ouo`
+-- Indices de la tabla `ouos`
 --
-ALTER TABLE `ouo`
+ALTER TABLE `ouos`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `ouo_codigo_unique` (`codigo`),
   ADD KEY `ouo_ouo_padre_foreign` (`ouo_padre`),
@@ -1906,7 +2169,9 @@ ALTER TABLE `procesos`
 -- Indices de la tabla `procesos_ouo`
 --
 ALTER TABLE `procesos_ouo`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `u_proceso_ouo` (`id_proceso`,`id_ouo`),
+  ADD KEY `procesos_ouo_ibfk_2` (`id_ouo`);
 
 --
 -- Indices de la tabla `proceso_user`
@@ -2066,7 +2331,7 @@ ALTER TABLE `especialistas`
 -- AUTO_INCREMENT de la tabla `especialista_hallazgo`
 --
 ALTER TABLE `especialista_hallazgo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT de la tabla `factores`
@@ -2141,10 +2406,10 @@ ALTER TABLE `migrations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
--- AUTO_INCREMENT de la tabla `ouo`
+-- AUTO_INCREMENT de la tabla `ouos`
 --
-ALTER TABLE `ouo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=140;
+ALTER TABLE `ouos`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=146;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -2168,13 +2433,13 @@ ALTER TABLE `planificacion_sig`
 -- AUTO_INCREMENT de la tabla `procesos`
 --
 ALTER TABLE `procesos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=285;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=288;
 
 --
 -- AUTO_INCREMENT de la tabla `procesos_ouo`
 --
 ALTER TABLE `procesos_ouo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=253;
 
 --
 -- AUTO_INCREMENT de la tabla `proceso_user`
@@ -2240,7 +2505,7 @@ ALTER TABLE `tipos_documentos`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=211;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=216;
 
 --
 -- Restricciones para tablas volcadas
@@ -2366,7 +2631,7 @@ ALTER TABLE `informe_auditoria`
 -- Filtros para la tabla `inventario_procesos`
 --
 ALTER TABLE `inventario_procesos`
-  ADD CONSTRAINT `inventario_procesos_id_ouo_responsable_foreign` FOREIGN KEY (`id_ouo_responsable`) REFERENCES `ouo` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `inventario_procesos_id_ouo_responsable_foreign` FOREIGN KEY (`id_ouo_responsable`) REFERENCES `ouos` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `inventario_procesos_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE;
 
 --
@@ -2382,17 +2647,18 @@ ALTER TABLE `model_has_roles`
   ADD CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
 
 --
--- Filtros para la tabla `ouo`
+-- Filtros para la tabla `ouos`
 --
-ALTER TABLE `ouo`
-  ADD CONSTRAINT `ouo_ouo_padre_foreign` FOREIGN KEY (`ouo_padre`) REFERENCES `ouo` (`id`) ON DELETE CASCADE,
+ALTER TABLE `ouos`
+  ADD CONSTRAINT `ouo_ouo_padre_foreign` FOREIGN KEY (`ouo_padre`) REFERENCES `ouos` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `ouo_subgerente_id_foreign` FOREIGN KEY (`subgerente_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `procesos_ouo`
 --
 ALTER TABLE `procesos_ouo`
-  ADD CONSTRAINT `procesos_ouo_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `procesos_ouo_ibfk_1` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`),
+  ADD CONSTRAINT `procesos_ouo_ibfk_2` FOREIGN KEY (`id_ouo`) REFERENCES `ouos` (`id`);
 
 --
 -- Filtros para la tabla `proceso_user`
