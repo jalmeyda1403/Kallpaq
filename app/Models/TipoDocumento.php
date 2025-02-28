@@ -34,9 +34,6 @@ class TipoDocumento extends Model
             $this->attributes['inactive_at'] = $this->estado ? null : $value;
         }
     
-        // Relación con los tipos de documentos de requerimientos
-        public function requerimientoTipoDocumentos()
-        {
-            return $this->hasMany(RequerimientoTipoDocumento::class);
-        }
+       
+       
 }

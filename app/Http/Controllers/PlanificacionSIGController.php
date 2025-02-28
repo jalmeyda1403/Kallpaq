@@ -6,11 +6,11 @@ use Illuminate\Http\Request;
 
 class PlanificacionSIGController extends Controller
 {
-    public function findObjetivos(Request $request)
+    public function findObjetivosSIG(Request $request)
     {
     $query = $request->input('query');
 
-    $objetivos = PlanificacionSIG::where('nombre_objetivo', 'LIKE', "%{$query}%")->get();
+    $objetivos = PlanificacionSIG::select('id', 'objetivo_nombre_sig')->get();
 
     return response()->json($objetivos);
     }

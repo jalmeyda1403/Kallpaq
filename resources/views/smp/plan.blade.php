@@ -167,7 +167,7 @@
                                         <input type="hidden" name="proceso_id" id="proceso_id"
                                             value="{{ $hallazgo->proceso_id }}" required disabled>
                                         <input type="text" class="form-control" id="proceso_nombre" name="proceso_nombre"
-                                            value="{{ $hallazgo->proceso->nombre }}" required readonly>
+                                            value="{{ $hallazgo->proceso->proceso_nombre }}" required readonly>
                                         <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#"><i
                                                 class="fas fa-search"></i></a>
                                     </div>

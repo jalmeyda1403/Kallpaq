@@ -20,7 +20,7 @@
                             
                             <div class="form-group">
                                 <label for="nombre">Nombre del Proceso</label>
-                                <input type="text" name="nombre" id="nombre" class="form-control" value="{{ $proceso->nombre }}">
+                                <input type="text" name="nombre" id="nombre" class="form-control" value="{{ $proceso->proceso_nombre }}">
                             </div>
                             
                             <div class="form-group">

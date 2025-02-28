@@ -160,12 +160,45 @@
                         </li>
                     </ul>
                 </li>
+
+                    <!-- Configuracion Obligaciones -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-clipboard-check"></i>
+                            <p>
+                               Gestiónar Obligaciones
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <p>Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <p> Listado de Obligaciones</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-flag-checkered"></i>
+                                    <p> Acciones Identificadas</p>
+                                </a>
+                            </li>
+                           
+                        </ul>
+                    </li>
                 <!-- Configuracion Riesgos -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-exclamation-triangle"></i>
                         <p>
-                            Gestión de Riesgos
+                            Gestionar Riesgos
                             <i class="right fas fa-angle-left"></i>
                         </p>
                     </a>
@@ -198,7 +231,7 @@
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-users"></i>
                         <p>
-                            Gestión de Usuarios
+                            Gestionar Usuarios
                             <i class="fas fa-angle-left right"></i>
                         </p>
                     </a>

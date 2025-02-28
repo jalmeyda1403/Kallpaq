@@ -13,7 +13,7 @@
                     <div class="card-header bg-primary">
                         <div class="row">
                             <div class="col-6 text-left">
-                                <span class="text-medium">Proceso:</span> {{ $requerimiento->proceso->nombre }}
+                                <span class="text-medium">Proceso:</span> {{ $requerimiento->proceso->proceso_nombre }}
                             <p>
                                 <span class="text-medium">Requerimiento N°</span> <span class="text-medium">{{ str_pad($requerimiento->id, 4, '0', STR_PAD_LEFT) }}</span>
                             </div>

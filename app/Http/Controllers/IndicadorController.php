@@ -30,63 +30,80 @@ class IndicadorController extends Controller
     }
 
 
-    public function listarIndicadores($proceso_id = null)
+    public function listar($proceso_id = null)
     {
         $proceso = Proceso::with('subprocesos.indicadores')->findOrFail($proceso_id);
         $indicadores = $proceso->indicadores;
-        
-        // Obtener los indicadores de los procesos hijos
-        foreach ($proceso->subprocesos as $hijo) {
-            $indicadores = $indicadores->merge($hijo->indicadores);
-        }
-       
+
+        // Función recursiva para obtener indicadores de subprocesos, nietos, etc.
+        $indicadores = $this->obtenerIndicadoresRecursivos($proceso, $indicadores);
+
         return view('indicadores.index', compact('proceso', 'indicadores'));
+    }
+    private function obtenerIndicadoresRecursivos($proceso, &$indicadores)
+    {
+        foreach ($proceso->subprocesos as $subproceso) {
+            // Fusionar los indicadores del subproceso a la colección de indicadores
+            $indicadores = $indicadores->merge($subproceso->indicadores);
+    
+            // Recursión para obtener indicadores de los subprocesos de los hijos (nietos, bisnietos...)
+            $indicadores = $this->obtenerIndicadoresRecursivos($subproceso, $indicadores);
+        }
+        return $indicadores;
     }
 
     public function create($proceso_id = null)
     {
+
         $frecuencias = Config::get('opciones.frecuencias');
         $tiposIndicador = Config::get('opciones.tipos_indicador');
         $tiposAgregacion = Config::get('opciones.tipos_agregacion');
         $parametroMedida = Config::get('opciones.parametro_medida');
         $sentido = Config::get('opciones.sentido');
-
-        return view('indicadores.create', compact('proceso_id', 'frecuencias', 'tiposIndicador', 'tiposAgregacion', 'parametroMedida', 'sentido'));
+        $proceso = Proceso::find($proceso_id);
+        return view('indicadores.form', compact('proceso', 'frecuencias', 'tiposIndicador', 'tiposAgregacion', 'parametroMedida', 'sentido'));
     }
 
     public function store(Request $request)
     {
         // Validación y almacenamiento de los datos
         Indicador::create($request->all());
-        return redirect()->route('indicadores.index')->with('success', 'Indicador creado exitosamente.');
+        return redirect()->back()->with('success', 'Indicador creado exitosamente.');
     }
 
     public function edit($id)
     {
         $indicador = Indicador::findOrFail($id);
+        $proceso_id = $indicador->proceso_id;
         $frecuencias = Config::get('opciones.frecuencias');
         $tiposIndicador = Config::get('opciones.tipos_indicador');
         $tiposAgregacion = Config::get('opciones.tipos_agregacion');
         $parametroMedida = Config::get('opciones.parametro_medida');
         $sentido = Config::get('opciones.sentido');
+        $proceso = Proceso::find($proceso_id);
 
 
         // Código para cargar los datos necesarios para la edición
 
-        return view('indicadores.edit', compact('indicador', 'frecuencias', 'tiposIndicador', 'tiposAgregacion', 'parametroMedida', 'sentido'));
+        return view('indicadores.form', compact('proceso', 'indicador', 'frecuencias', 'tiposIndicador', 'tiposAgregacion', 'parametroMedida', 'sentido'));
     }
 
     public function update(Request $request, $id)
     {
-        // Validación y actualización de los datos
 
+        // Validación y actualización de los datos
         $data = $request->except(['proceso_nombre', 'indicador_id']);
         $indicador = Indicador::findOrFail($id);
+
+        // Obtener el proceso_id del indicador (que ya está asociado)
+        $proceso_id = $indicador->proceso_id;
+
         // Actualizar el indicador con los datos filtrados
         $indicador->update($data);
 
-        $indicador->update($request->all());
-        return redirect()->route('indicadores.index')->with('success', 'Indicador actualizado exitosamente.');
+        // Redirigir a la vista de lista de indicadores
+        return redirect()->route('indicadores.listar', ['proceso_id' => $proceso_id])
+            ->with('success', 'Indicador actualizado exitosamente.');
     }
 
     public function destroy($id)
@@ -100,15 +117,13 @@ class IndicadorController extends Controller
         $periodo_actual = Config::get('opciones.periodo.actual');
 
 
-        try {
 
-            DB::statement("CALL generar_frecuencias(?, ?)", [$id, $periodo_actual]);
 
-            return redirect()->route('indicadores.index')->with('success', 'Procedimiento almacenado ejecutado correctamente.');
-        } catch (\Exception $e) {
+        DB::statement("CALL generar_frecuencias(?, ?)", [$id, $periodo_actual]);
 
-            return redirect()->route('indicadores.index')->with('error', 'Hubo un error al ejecutar el procedimiento almacenado.');
-        }
+        return redirect()->route('indicadores.index')->with('success', 'Procedimiento almacenado ejecutado correctamente.');
+
+
     }
 
     public function limpiar_frecuencia($frecuencia, $id)

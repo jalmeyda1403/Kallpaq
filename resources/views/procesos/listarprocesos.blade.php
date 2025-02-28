@@ -18,15 +18,15 @@
                                     <th>Código del Proceso</th>
                                     <th>Nombre del Proceso</th>
                                     <th>Tipo del Proceso</th>
-                                    <th style="width: 20%">Acciones</th>
+                                    <th style="width: 30%">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($procesosAsignados as $proceso)
                                     <tr>
                                         <td>{{ $proceso->cod_proceso }}</td>
-                                        <td>{{ $proceso->nombre }}</td>
-                                        <td>{{ $proceso->tipo_proceso }}</td>
+                                        <td>{{ $proceso->proceso_nombre }}</td>
+                                        <td>{{ $proceso->proceso_tipo }}</td>
                                
                                         <td>
                                             <a href="#" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Ver Riesgos">

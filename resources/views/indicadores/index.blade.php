@@ -40,42 +40,49 @@
                     <div class="card-header ui-sortable-handle">
                         <h3 class="card-title">Lista de indicadores</h3>
                         <div class="card-tools">
-                            <a href="{{ route('indicadores.create') }}" class="btn btn-primary" data-toggle="tooltip"
-                                title="Nuevo Indicador">Nuevo Indicador</a>
+                            <a href="{{ route('indicadores.create', ['proceso_id' => $proceso->id]) }}"
+                                class="btn btn-primary" data-toggle="tooltip" title="Nuevo Indicador">
+                                Nuevo Indicador
+                            </a>
                         </div>
                     </div>
+
+
                     <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th style="display: none;">Id</th>
-                                    <th>Proceso</th>
-                                    <th>Indicador</th>
-                                    <th>Descripción</th>
-                                    <th>Fórmula</th>
-                                    <th>Frecuencia</th>
-                                    <th>Meta</th>
-                                
-                                    <th style="width:12%">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $item = 1;
-                                @endphp
-                           
+
+                        <!-- Listado de indicadores -->
+                        <div class="row">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th style="display: none;">Id</th>
+                                        <th>Proceso</th>
+                                        <th>Indicador</th>
+                                        <th>Descripción</th>
+                                        <th>Fórmula</th>
+                                        <th>Frecuencia</th>
+                                        <th>Meta</th>
+
+                                        <th style="width:12%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $item = 1;
+                                    @endphp
+
                                     @foreach ($indicadores as $indicador)
                                         <tr class="clickable-row">
                                             <td>{{ $item++ }}</td>
                                             <td style="display: none;">{{ $indicador->id }}</td>
-                                            <td>{{ $indicador->proceso->nombre }}</td>
+                                            <td>{{ $indicador->proceso->proceso_nombre }}</td>
                                             <td>{{ $indicador->nombre }}</td>
                                             <td>{{ $indicador->descripcion }}</td>
                                             <td>{{ $indicador->formula }}</td>
                                             <td>{{ $indicador->frecuencia }}</td>
                                             <td>{{ $indicador->meta }}</td>
-                                           
+
                                             <td>
                                                 <a href="#" class="view-btn btn-success btn-sm"
                                                     data-indicador-id="{{ $indicador->id }}" data-toggle="tooltip"
@@ -86,15 +93,16 @@
                                                 <a href="{{ route('indicadores.formula', $indicador->id) }}"
                                                     class="btn-primary btn-sm" data-toggle="tooltip"
                                                     title="Establecer Formula"><i class="fas fa-calculator"></i></a>
-                                            
+
                                                 <a href="#" class="btn-dark btn-sm" data-toggle="tooltip"
                                                     title="Aprobar"><i class="fa fa-check" aria-hidden="true"></i></a>
                                             </td>
                                         </tr>
-                                    @endforeach                                    
-                       
-                            </tbody>
-                        </table>
+                                    @endforeach
+
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -185,8 +193,7 @@
         </div>
 
         <!-- Modal Indicador Seguimiento -->
-        <div class="modal fade" id="ModalIndicadores" tabindex="-1" aria-labelledby="editModalLabel"
-            aria-hidden="true">
+        <div class="modal fade" id="ModalIndicadores" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form id="editDataForm" action="#" method="POST">
@@ -311,9 +318,9 @@
                     type: 'GET',
                     success: function(data) {
                         $('#indicador-data-table tbody').empty();
-                      
+
                         // Agregar datos históricos a la tabla
-                        data.forEach(function(item,i) {
+                        data.forEach(function(item, i) {
                             var estadoIcon = '';
 
                             if (item.estado === 'bueno') {
@@ -328,7 +335,7 @@
                             }
 
                             var row = '<tr>' +
-                                '<td>' + (i +1)+ '</td>' +
+                                '<td>' + (i + 1) + '</td>' +
                                 '<td>' + item.fecha + '</td>' +
                                 '<td>' + item.meta.toFixed(2) + '</td>' +
                                 '<td>' + item.valor.toFixed(2) + '</td>' +
@@ -490,7 +497,7 @@
 
                 // Change opacity of the selected row
                 $(this).find('td:not(:last-child)').css('opacity',
-                0.8); // Set opacity to 0.7 (adjust as needed)
+                    0.8); // Set opacity to 0.7 (adjust as needed)
             });
 
 
@@ -508,7 +515,7 @@
                 // Ocultar el mensaje de éxito después de 5 segundos
                 setTimeout(function() {
                     successAlert.style.display = 'none';
-                }, 5000); // 5000 milisegundos = 5 segundos
+                }, 2000); // 5000 milisegundos = 5 segundos
             }
 
 
@@ -516,7 +523,7 @@
                 // Ocultar el mensaje de éxito después de 5 segundos
                 setTimeout(function() {
                     errorAlert.style.display = 'none';
-                }, 5000); // 5000 milisegundos = 5 segundos
+                }, 2000); // 5000 milisegundos = 5 segundos
             }
         });
 

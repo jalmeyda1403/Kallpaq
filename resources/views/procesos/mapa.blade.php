@@ -91,11 +91,11 @@
     <div class="card-body">
     <div class="row justify-content-center">
     @foreach ($procesos as $proceso)
-        @if ($proceso->tipo_proceso ==="Estratégico")
+        @if ($proceso->proceso_tipo ==="Estratégico")
         <div class="col-lg-2 col-md-2 col-sm-4 col-6">
             <div class="small-box bg-gray-dark">
                 <div class="inner">
-                <h6>{{$proceso->nombre}}</h6>                
+                <h6>{{$proceso->proceso_nombre}}</h6>                
                 </div>
                 <a href="#" class="small-box-footer" style="position:absolute;">{{$proceso->cod_proceso}} <i class="fas fa-arrow-circle-right"></i></a>
             </div>
@@ -119,11 +119,11 @@
         <div class="card-body">
         <div class="row justify-content-center">
          @foreach ($procesos as $proceso)
-            @if ($proceso->tipo_proceso ==="Misional")
+            @if ($proceso->proceso_tipo ==="Misional")
             <div class="col-lg-2 col-md-2 col-sm-4 col-6" >
             <div class="small-box bg-danger" style="top: 10px;margin-top: 10px;">
                 <div class="inner">
-                <h6>{{$proceso->nombre}}</h6>
+                <h6>{{$proceso->proceso_nombre}}</h6>
                 
                 </div>
                 <a href="#" class="small-box-footer" style="position:absolute;">{{$proceso->cod_proceso}} <i class="fas fa-arrow-circle-right"></i></a>
@@ -148,11 +148,11 @@
         <div class="card-body">
         <div class="row justify-content-center">
         @foreach ($procesos as $proceso)
-            @if ($proceso->tipo_proceso ==="Apoyo")
+            @if ($proceso->proceso_tipo ==="Apoyo")
             <div class="col-lg-2 col-md-2 col-sm-4 col-6" style="top: 10px;margin-top: 10px;">
                 <div class="small-box bg-warning" style="top: 10px;">
                     <div class="inner">
-                    <h6>{{$proceso->nombre}}</h6>             
+                    <h6>{{$proceso->proceso_nombre}}</h6>             
                     </div>
                     <a href="#" class="small-box-footer" style="position:absolute;">{{$proceso->cod_proceso}} <i class="fas fa-arrow-circle-right"></i></a>
                 </div>

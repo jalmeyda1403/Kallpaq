@@ -208,7 +208,7 @@
                                 Proceso
                             </td>
                             <td>
-                                {{ $hallazgo->proceso->nombre }}
+                                {{ $hallazgo->proceso->proceso_nombre }}
                             </td>
                         </tr>
                         <tr>

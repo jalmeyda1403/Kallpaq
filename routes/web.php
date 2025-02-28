@@ -1,9 +1,11 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\IndicadorController;
 use App\Http\Controllers\PlanificacionSIGController;
+use App\Http\Controllers\PlanificacionPEIController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
@@ -14,6 +16,10 @@ use App\Http\Controllers\HallazgoController;
 use App\Http\Controllers\AccionController;
 use App\Http\Controllers\CausaController;
 use App\Http\Controllers\ContextoDeterminacionController;
+use App\Http\Controllers\ObligacionController;
+use App\Http\Controllers\AreaComplianceController;
+use App\Http\Controllers\RiesgoController;
+
 
 
 
@@ -42,20 +48,28 @@ Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::resource('smp', HallazgoController::class);
 Route::resource('acciones', AccionController::class);
+Route::resource('obligaciones', ObligacionController::class);
+
 //Procesos
-Route::get('/buscarProcesos', [ProcesoController::class,'findProcesos']);
-Route::get('/listarProcesos', [ProcesoController::class,'listarProcesos'])->name('procesos.listar');
+Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProcesos'])->name('procesos.buscar');
+
+Route::get('/listarProcesos', [ProcesoController::class,'listar'])->name('procesos.listar');
 Route::get('/mapaProcesos', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
 Route::get('/procesos/{proceso_id}/listarouo', [ProcesoController::class, 'listarOUO'])->name('procesos.listarOUO');
 Route::post('/asociar/{proceso_id}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
 Route::delete('/disociar/{proceso_id}/ouo/{ouo_id}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
 
-Route::get('/indicadores/{proceso_id?}/listar',  [IndicadorController::class, 'listarIndicadores'])->name('indicadores.listar');;
+Route::get('/indicadores/{proceso_id?}/listar',  [IndicadorController::class, 'listar'])->name('indicadores.listar');
+Route::get('indicadores/{proceso_id?}/create/', [IndicadorController::class, 'create'])->name('indicadores.create');
 Route::get('/indicadores/{id}/historico-datos',  [IndicadorController::class, 'showHistorico']);
 Route::get('/indicadores/{id}/datos',  [IndicadorController::class, 'showDatos']);
 Route::get('indicadores/{id}/frecuencia', [IndicadorController::class, 'generarFrecuencia'])->name('indicadores.frecuencia');
 
-Route::get('/buscarobjetivos', [PlanificacionSIGController::class, 'findObjetivos']);
+Route::get('/buscarobjetivosSIG', [PlanificacionSIGController::class, 'findObjetivosSIG'])->name('objetivoSIG.buscar');
+Route::get('/buscarobjetivosPEI', [PlanificacionPEIController::class, 'findObjetivosPEI'])->name('objetivoPEI.buscar');
+Route::get('/buscarareacompliance', [AreaComplianceController::class, 'findAreaCompliance'])->name('areaCompliance.buscar');;
+
+//Indicadores
 Route::get('/indicadores/{id}/editdatos',[IndicadorController::class, 'editDatos'])->name('indicadores.editdatos');
 Route::put('/indicadores_seguimiento/{id}', [IndicadorController::class, 'updateDatos']);
 Route::get('/indicadores/formula/{id}', [IndicadorController::class, 'formula'])->name('indicadores.formula');
@@ -67,6 +81,17 @@ Route::post('/programa/{programa}/showHistory', [ProgramaAuditoriaController::cl
 Route::get('usuarios/listar-procesos/{id}', [UserController::class, 'listarProcesos'])->name('usuario.listar-procesos');
 Route::get('usuarios/especialistas', [UserController::class,'showEspecialistas'])->name('especialistas.show');
 Route::post('/smp/asignar-especialista/{hallazgoId}', [HallazgoController::class,'asignarEspecialista'])->name('smp.asignarEspecialista');
+
+//Obligaciones
+
+Route::get('obligaciones', [ObligacionController::class, 'index'])->name('obligaciones.index');
+Route::get('obligaciones/{proceso_id?}/listar',  [ObligacionController::class, 'listar'])->name('obligaciones.listar');
+Route::get('obligaciones/{obligacion_id}/listariesgos', [ObligacionController::class, 'listariesgos'])->name('obligaciones.listariesgos');
+//Riesgos
+Route::post('riesgos', [RiesgoController::class, 'store'])->name('riesgos.store');
+Route::post('riesgos/{id}', [RiesgoController::class, 'show'])->name('riesgos.show');
+
+
 
 //hallazgos
 Route::get('/smp/class/{clasificacion?}', [HallazgoController::class, 'index'])->name('smp.index');
@@ -129,6 +154,7 @@ Route::get('/contexto/', [ContextoDeterminacionController::class, 'index'])->nam
     Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
     Route::get('/requerimientos/{requerimiento}', [RequerimientoController::class, 'show'])->name('requerimientos.show');
     Route::get('/requerimientos/{id}/trazabilidad', [RequerimientoController::class, 'trazabilidad'])->name('requerimientos.trazabilidad');
+  
     //Necesidades
     Route::post('/necesidades', [RequerimientoNecesidadController::class, 'store'])->name('necesidad.store');
 

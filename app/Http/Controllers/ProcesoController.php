@@ -60,18 +60,58 @@ class ProcesoController extends Controller
         return redirect()->route('procesos.index')->with('success', 'Proceso eliminado correctamente');
     }
 
-    public function findProcesos(Request $request)
+    public function findProcesos($proceso_id = null)
     {
-        $query = $request->input('query');
-        $user = User::find(auth()->user()->id);
-        // $procesos = Proceso::where('nombre', 'LIKE', "%{$query}%")->get();
-        $procesos = $user->procesos;
-        return response()->json($procesos);
+        $resultado = [];
+
+        if ($proceso_id) {
+            // Si se pasa un proceso_id, obtener ese proceso específico con sus hijos y nietos
+            $procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
+                ->with('subprocesos.subprocesos')
+                ->where('id', $proceso_id)
+                ->first();
+
+            if ($procesos) {
+                $resultado = $this->getFlatProcessList($procesos);
+            }
+        } else {
+            // Si no se pasa un proceso_id, devolver todos los procesos
+            $procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
+            ->orderBy('cod_proceso')->get();
+
+
+            foreach ($procesos as $proceso) {
+                $resultado = array_merge($resultado, $this->getFlatProcessList($proceso));
+            }
+
+        }     
+
+        return response()->json($resultado);
     }
 
-    public function listarProcesos()
+    private function getFlatProcessList($proceso)
     {
-       
+        $resultado = [
+            [
+                'id' => $proceso->id,
+                'proceso_nombre' => $proceso->cod_proceso . ' - ' . $proceso->proceso_nombre
+            ]
+        ];
+
+        foreach ($proceso->subprocesos as $subproceso) {
+            $resultado = array_merge($resultado, $this->getFlatProcessList($subproceso));
+        }
+
+        usort($resultado, function($a, $b) {
+            return strcmp($a['proceso_nombre'], $b['proceso_nombre']);
+        });
+
+        return $resultado;
+    }
+
+    public function listar()
+    {
+
         $procesos = Proceso::all();
 
         return response()->json($procesos);
@@ -79,7 +119,7 @@ class ProcesoController extends Controller
     public function mapaProcesos()
     {
 
-        $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('tipo_proceso')->get();
+        $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
 
         return view('procesos.mapa', compact('procesos'));
 
@@ -94,37 +134,37 @@ class ProcesoController extends Controller
         // Puedes devolver una vista o redirigir según lo necesites
         $ouos = $proceso->ouos;  // Obtén las OUO asociadas al proceso
         $allouos = OUO::all();
-        return view('procesos.asociarOUO', compact('proceso', 'ouos','allouos'));
+        return view('procesos.asociarOUO', compact('proceso', 'ouos', 'allouos'));
     }
 
     public function asociarOUO(Request $request, $proceso_id)
     {
         $ouo_ids = $request->input('ouos');  // Obtener el ID de la OUO seleccionada
-       
+
         $proceso = Proceso::findOrFail($proceso_id);
-        
+
         // Asociar la OUO al proceso
         if ($ouo_ids) {
             $proceso->ouos()->attach($ouo_ids);  // Asociar todas las OUOs seleccionadas
         }
-    
-         // Redirigir a la vista de asociación
+
+        // Redirigir a la vista de asociación
         return redirect()->route('procesos.listarOUO', ['proceso_id' => $proceso_id])
-                     ->with('success', 'OUOs asociadas correctamente.');
+            ->with('success', 'OUOs asociadas correctamente.');
     }
     public function disociarOUO($proceso_id, $ouo_id)
-{
-    // Encuentra el proceso por ID
-    $proceso = Proceso::findOrFail($proceso_id);
-    
-    // Desvincular la OUO del proceso
-    $proceso->ouos()->detach($ouo_id);
-    
-    // Obtener las OUOs asociadas actualizadas
-    $ouos = $proceso->ouos;
+    {
+        // Encuentra el proceso por ID
+        $proceso = Proceso::findOrFail($proceso_id);
 
-    // Redirigir con un mensaje de éxito
-    return redirect()->route('procesos.listarOUO', ['proceso_id' => $proceso_id])
-                     ->with('success', 'OUO eliminada correctamente.');
-}
+        // Desvincular la OUO del proceso
+        $proceso->ouos()->detach($ouo_id);
+
+        // Obtener las OUOs asociadas actualizadas
+        $ouos = $proceso->ouos;
+
+        // Redirigir con un mensaje de éxito
+        return redirect()->route('procesos.listarOUO', ['proceso_id' => $proceso_id])
+            ->with('success', 'OUO eliminada correctamente.');
+    }
 }

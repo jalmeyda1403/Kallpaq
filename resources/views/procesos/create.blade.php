@@ -32,7 +32,7 @@
                                 <select name="cod_proceso_padre" id="cod_proceso_padre" class="form-control">
                                     <option value="">Seleccionar</option>
                                     @foreach($procesos as $proceso)
-                                        <option value="{{ $proceso->id }}">{{ $proceso->nombre }}</option>
+                                        <option value="{{ $proceso->id }}">{{ $proceso->proceso_nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>

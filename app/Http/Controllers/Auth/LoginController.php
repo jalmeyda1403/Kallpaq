@@ -36,7 +36,7 @@ class LoginController extends Controller
             return redirect()->route('login'); // Redireccionar al login si no está autenticado
         } else {
             $user = Auth::user(); // Recuperar el usuario autenticado
-            return view('facilitador.home');
+            return view('welcome');
         }
 
        
@@ -53,7 +53,7 @@ class LoginController extends Controller
     {
         // Example: Redirect to different routes based on user role
         $role = Auth::user()->role; // assuming you have a role field in users table
-         return view('facilitador.home');
+         return view('welcome');
 
         
     }

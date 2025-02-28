@@ -69,7 +69,7 @@
                                         <tr class="clickable-row">
                                             <td>{{ $item++ }}</td>
                                             <td style="display: none;">{{ $indicador->id }}</td>
-                                            <td>{{ $indicador->proceso->nombre }}</td>
+                                            <td>{{ $indicador->proceso->proceso_nombre }}</td>
                                             <td>{{ $indicador->nombre }}</td>
                                             <td>{{ $indicador->descripcion }}</td>
                                             <td>{{ $indicador->formula }}</td>

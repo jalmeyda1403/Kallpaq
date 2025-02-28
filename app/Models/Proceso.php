@@ -6,15 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 
 class Proceso extends Model
-{
+{   protected $table = 'procesos';
+
     protected $fillable = [
+        'id',
         'cod_proceso',
-        'nombre',
-        'sigla',
-        'tipo_proceso',
+        'proceso_nombre',
+        'proceso_sigla',
+        'proceso_tipo',
         'cod_proceso_padre',
-        'nivel',
-        'estado',
+        'proceso_nivel',
+        'proeso_estado',
         'inactivate_at',
     ];
 
@@ -43,5 +45,9 @@ class Proceso extends Model
     {
         return $this->belongsToMany(OUO::class, 'procesos_ouo', 'id_proceso', 'id_ouo');
     }
+    public function obligaciones()
+    {
+        return $this->hasMany(Obligacion::class, 'proceso_id', 'id');
+    } 
   
 }

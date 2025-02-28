@@ -44,7 +44,7 @@
                                 @foreach ($requerimientos as $requerimiento)
                                 <tr>
                                     <td>{{ $requerimiento->id }}</td>
-                                    <td>{{ $requerimiento->proceso->nombre }}</td>
+                                    <td>{{ $requerimiento->proceso->proceso_nombre }}</td>
                                     <td>{{ $requerimiento->complejidad }}</td>
                                     <td>{{ $requerimiento->estado }}</td>
                                     <td>{{ $requerimiento->fecha_creacion }}</td>

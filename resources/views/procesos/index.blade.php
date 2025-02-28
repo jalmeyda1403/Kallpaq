@@ -30,7 +30,7 @@
                                 @foreach ($procesos_padre as $procesoPadre)
                                     <option value="{{ $procesoPadre->id }}"
                                         {{ request('proceso_padre_id') == $procesoPadre->id ? 'selected' : '' }}>
-                                        {{ $procesoPadre->nombre }}
+                                        {{ $procesoPadre->proceso_nombre }}
                                     </option>
                                 @endforeach
                             </select>
@@ -59,28 +59,36 @@
                     @foreach ($procesos as $proceso)
                         <tr>
                             <td>{{ $proceso->cod_proceso }}</td>
-                            <td>{{ $proceso->nombre }}</td>
-                            <td>{{ $proceso->tipo_proceso }}</td>
+                            <td>{{ $proceso->proceso_nombre }}</td>
+                            <td>{{ $proceso->proceso_tipo }}</td>
                             <td>{{ $proceso->procesoPadre ? $proceso->procesoPadre->cod_proceso : 'N/A' }}
                             </td>
-                            <td>{{ $proceso->nivel }}</td>
+                            <td>{{ $proceso->proceso_nivel }}</td>
                             <td>{{ $proceso->ouos->count() }}</td>
 
                             <td>
+                                <a href="{{ route('procesos.listarOUO', ['proceso_id' => $proceso->id]) }}"
+                                    class="btn btn-success btn-sm" data-toggle="tooltip" title="Asociar Proceso">
+                                    <i class="fas fa-link"></i>
+                                </a>
+                                <a href="{{ route('obligaciones.listar', ['proceso_id' => $proceso->id])  }}" 
+                                    class="btn btn-dark btn-sm" data-toggle="tooltip" title="Ver Obligaciones">
+                                    <i class="fas fa-list"></i>
+                                </a>
                                 <a href="#" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Ver Riesgos">
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </a>
                                 <a href="#" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Ver Hallazgos">
                                     <i class="fas fa-fire"></i>
                                 </a>
-                                <a href="{{ route('procesos.listarOUO', ['proceso_id' => $proceso->id]) }}"
-                                    class="btn btn-success btn-sm" data-toggle="tooltip" title="Asociar Proceso">
-                                    <i class="fas fa-link"></i>
-                                </a>
+                                
+                               
                                 <a href="{{ route('indicadores.listar', ['proceso_id' => $proceso->id]) }}"
                                     class="btn btn-info btn-sm" data-toggle="tooltip" title="Ver Indicadores">
                                     <i class="fas fa-chart-bar"></i>
                                 </a>
+                                
+                                
                             </td>
                         </tr>
                     @endforeach

@@ -402,7 +402,7 @@ class HallazgoController extends Controller
         $hallazgos = $proceso->hallazgos()->filterByClasificacion($clasificacionArray)->get();
 
         $breadcrumb = [];
-        $breadcrumb['nombre'] = "Procesos " . $proceso->nombre . " - Listado de SMP";
+        $breadcrumb['nombre'] = "Procesos " . $proceso->proceso_nombre . " - Listado de SMP";
         $breadcrumb['codigo'] = $clasificacion;
 
         return view('smp.index', compact('hallazgos', 'breadcrumb'));

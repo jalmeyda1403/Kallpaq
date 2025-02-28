@@ -125,7 +125,7 @@
                                     @foreach ($hallazgos as $hallazgo)
                                         <tr>
                                             <td>{{ $item++ }}</td>
-                                            <td>{{ $hallazgo->proceso->nombre }}</td>
+                                            <td>{{ $hallazgo->proceso->proceso_nombre }}</td>
                                             <td>{{ $hallazgo->smp_cod }}</td>
                                             <td>{{ $hallazgo->resumen }}</td>
                                             <td>{{ $hallazgo->clasificacion }}</td>
