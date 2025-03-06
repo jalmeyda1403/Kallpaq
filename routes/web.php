@@ -89,8 +89,9 @@ Route::get('obligaciones/{proceso_id?}/listar',  [ObligacionController::class, '
 Route::get('obligaciones/{obligacion_id}/listariesgos', [ObligacionController::class, 'listariesgos'])->name('obligaciones.listariesgos');
 //Riesgos
 Route::post('riesgos', [RiesgoController::class, 'store'])->name('riesgos.store');
-Route::post('riesgos/{id}', [RiesgoController::class, 'show'])->name('riesgos.show');
-
+Route::get('riesgos/{riesgo}', [RiesgoController::class, 'show'])->name('riesgos.show');
+Route::post('riesgos/update/{riesgo}', [RiesgoController::class, 'update'])->name('riesgos.update');
+Route::delete('/riesgos/eliminar/{riesgo}', [RiesgoController::class, 'destroy'])->name('riesgos.destroy');
 
 
 //hallazgos

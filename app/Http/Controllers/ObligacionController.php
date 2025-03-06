@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Helpers\SemaforoHelper;
 use App\Models\Obligacion;
 use App\Models\Riesgo;
 use App\Models\AreaCompliance;
@@ -13,7 +13,7 @@ class ObligacionController extends Controller
 
     public function index()
     {
-         $obligaciones = Obligacion::with('proceso', 'areaCompliance', 'riesgos')->get();
+        $obligaciones = Obligacion::with('proceso', 'areaCompliance', 'riesgos')->get();
         return view('obligaciones.index', compact('obligaciones'));
     }
 
@@ -21,9 +21,9 @@ class ObligacionController extends Controller
     {
         $proceso = Proceso::with('subprocesos.obligaciones')->findOrFail($proceso_id);
         $obligaciones = $proceso->obligaciones->sortBy('id');
-                // Función recursiva para obtener indicadores de subprocesos, nietos, etc.
+        // Función recursiva para obtener indicadores de subprocesos, nietos, etc.
         $obligaciones = $this->obtenerObligacionesRecursivos($proceso, $obligaciones);
-     
+
         foreach ($obligaciones as $obligacion) {
             switch ($obligacion->estado_obligacion) {
                 case 'pendiente':
@@ -46,7 +46,7 @@ class ObligacionController extends Controller
                     $obligacion->estadoClass = ''; // Si no hay estado, no asigna clase
             }
         }
-    
+
 
         return view('obligaciones.index', compact('proceso', 'obligaciones'));
     }
@@ -56,11 +56,11 @@ class ObligacionController extends Controller
         foreach ($proceso->subprocesos as $subproceso) {
             // Fusionar los indicadores del subproceso a la colección de indicadores
             $obligaciones = $obligaciones->merge($subproceso->obligaciones);
-    
+
             // Recursión para obtener indicadores de los subprocesos de los hijos (nietos, bisnietos...)
             $obligaciones = $this->obtenerObligacionesRecursivos($subproceso, $obligaciones);
 
-            
+
         }
         return $obligaciones;
     }
@@ -74,14 +74,14 @@ class ObligacionController extends Controller
         return view('obligaciones.create', compact('procesos', 'areas_compliance'));
     }
 
-   
+
     public function store(Request $request)
     {
-          
+
         try {
             // Intentar crear la obligación con los datos proporcionados
             $obligacion = Obligacion::create($request->all());
-    
+
             // Verificar si la creación fue exitosa
             if ($obligacion) {
                 // Redirigir a la lista de obligaciones con un mensaje de éxito
@@ -92,17 +92,17 @@ class ObligacionController extends Controller
             }
         } catch (\Exception $e) {
             // Si ocurre una excepción, capturar el error y devolver un mensaje
-            return redirect()->back()->with('error', 'Error al crear la obligación: ' );
+            return redirect()->back()->with('error', 'Error al crear la obligación: ');
         }
     }
-    
+
 
 
     public function show($id)
     {
 
         $obligacion = Obligacion::with('proceso', 'area_compliance')->findOrFail($id);
-       
+
         return response()->json([
             'proceso_id' => $obligacion->proceso->id,
             'proceso_nombre' => $obligacion->proceso->proceso_nombre,
@@ -113,19 +113,19 @@ class ObligacionController extends Controller
             'obligacion_controles' => $obligacion->obligacion_controles,
             'consecuencia_incumplimiento' => $obligacion->consecuencia_incumplimiento,
             'documento_deroga' => $obligacion->documento_deroga,
-            'estado_obligacion'=> $obligacion->estado_obligacion
+            'estado_obligacion' => $obligacion->estado_obligacion
         ]);
     }
 
 
-    
+
 
 
     public function update(Request $request, $id)
     {
         $obligacion = Obligacion::findOrFail($id);
-       
-        
+
+
         // Actualizar la obligación con los nuevos datos
         $obligacion->update($request->only([
             'proceso_id',
@@ -143,19 +143,31 @@ class ObligacionController extends Controller
     }
 
 
-    public function destroy(Obligacion $obligacion)
+    public function destroy($id)
     {
-        $obligacion->delete();
+        try {
+            // Buscar la obligación por ID
+            $obligacion = Obligacion::findOrFail($id);
 
-        return redirect()->route('obligaciones.index')->with('success', 'Obligación eliminada con éxito');
+            // Eliminar la obligación
+            $obligacion->delete();
+
+            return response()->json(['success' => 'Obligación eliminada correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al eliminar la obligación.'], 500);
+        }
     }
 
     public function listariesgos($id)
     {
-        
+
         $obligacion = Obligacion::findOrFail($id);
         $riesgos = $obligacion->riesgos()->with('factor')->get();
-       
+        // Agregar la clase de color a cada riesgo
+        $riesgos = $riesgos->map(function ($riesgo) {
+            $riesgo->semaforo = SemaforoHelper::getSemaforoColor($riesgo->riesgo_valoracion);
+            return $riesgo;
+        });
         return response()->json($riesgos);
     }
 

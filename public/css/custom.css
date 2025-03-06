@@ -1,0 +1,14 @@
+.valoracion-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.badge-success { background-color: #28a745 !important; }
+.badge-warning { background-color: #ffc107 !important; }
+.badge-orange { background-color: #ff9800 !important; }
+.badge-danger { background-color: #dc3545 !important; }
+.badge-secondary { background-color: #6c757d !important; }

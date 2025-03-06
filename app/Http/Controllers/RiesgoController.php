@@ -33,9 +33,9 @@ class RiesgoController extends Controller
     }
 
     // Mostrar un riesgo específico
-    public function show(Riesgo $id)
+    public function show(Riesgo $riesgo)
     {
-        $riesgo = Riesgo::firstOrFail($id);
+    
         return response()->json($riesgo);
     }
 
@@ -48,17 +48,9 @@ class RiesgoController extends Controller
     // Actualizar un riesgo existente en la base de datos
     public function update(Request $request, Riesgo $riesgo)
     {
-        $request->validate([
-            'codigo' => 'required|unique:riesgos,codigo,' . $riesgo->id,
-            'nombre' => 'required',
-            'tipo' => 'required',
-            'valor' => 'required|numeric',
-            'valoracion' => 'required|numeric',
-        ]);
+       $riesgo->update($request->all());
 
-        $riesgo->update($request->all());
-
-        return redirect()->route('riesgos.index')->with('success', 'Riesgo actualizado exitosamente.');
+       return response()->json($riesgo);
     }
 
     // Eliminar un riesgo de la base de datos
@@ -66,6 +58,6 @@ class RiesgoController extends Controller
     {
         $riesgo->delete();
 
-        return redirect()->route('riesgos.index')->with('success', 'Riesgo eliminado exitosamente.');
+        return response()->json($riesgo);
     }
 }

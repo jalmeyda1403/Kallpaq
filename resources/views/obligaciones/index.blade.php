@@ -16,8 +16,9 @@
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Home</a></li>
-                <li class="breadcrumb-item"><a href="#">Gestión de Obligaciones</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('procesos.index') }}">Procesos</a></li>
+                <li class="breadcrumb-item"><a href="#">{{ $proceso->proceso_nombre }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Listado Obligaciones</li>
             </ol>
         </nav>
@@ -116,7 +117,7 @@
     </div>
 
 
-    <!-- Modal para agregar nueva obligación -->
+    <!-- Modal para agregar o editar obligación -->
     <div class="modal fade" id="addObligacionModal" tabindex="-1" role="dialog" aria-labelledby="addObligacionModalLabel"
         aria-hidden="true" data-backdrop="static" data-keyboard="false">
 
@@ -128,10 +129,10 @@
                         <span aria-hidden="true" style="color: white">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('obligaciones.store') }}" method="POST" id="obligacionForm">
+                <form id="obligacionForm"method="POST">
                     @csrf
                     <input type="hidden" name="_method" id="method" value="POST">
-
+                    <input type="hidden" name="obligacion_id" id="obligacion_id">
                     <div class="modal-body">
                         <div class="row">
                             <div class="col -md-6">
@@ -226,11 +227,12 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Obligación</button>
-                    
+                        <button type="submit" class="btn btn-primary" id="btnSubmitObligacion">Guardar
+                            Obligación</button>
+
                     </div>
 
-                  
+
                 </form>
             </div>
         </div>
@@ -247,10 +249,10 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                       <!-- Spinner que será visible durante la carga -->
-                <div id="loading-spinner" style="display: none; text-align: center;">
-                    <i class="fa fa-spinner fa-spin" style="font-size: 50px;"></i> Cargando...
-                </div>
+                    <!-- Spinner que será visible durante la carga -->
+                    <div id="loading-spinner" style="display: none; text-align: center;">
+                        <i class="fa fa-spinner fa-spin" style="font-size: 50px;"></i> Cargando...
+                    </div>
 
                     <table class="table table-hover table-sm table-riesgos">
                         <thead>
@@ -258,7 +260,7 @@
                                 <th>Código</th>
                                 <th>Tipo</th>
                                 <th style="width: 300%" class="align-top">Nombre Riesgo</th>
-                           
+
                                 <th>Factor</th>
                                 <th>Probabilidad</th>
                                 <th>Impacto</th>
@@ -274,16 +276,12 @@
 
                     <div class="text-right">
                         <!-- Botón para mostrar el formulario de agregar nuevo riesgo -->
-                        <a href class="btn btn bg-navy" type="button" data-toggle="collapse"
-                            data-target="#formNuevoRiesgo" aria-expanded="false" aria-controls="formNuevoRiesgo">
+                        <a href class="btn btn bg-navy" type="button" id="nuevoRiesgoBtn">
                             <i class="fas fa-plus-circle"></i> Nuevo Riesgo
                         </a>
-
-                       
-                        
                     </div>
                     <!-- Tarejte para agregar un nuevo riesgo -->
-                    <div class="collapse mt-3" id="formNuevoRiesgo">
+                    <div class="collapse mt-3" id="formRiesgo">
                         <div class="card card-navy">
                             <div class="card-header">
                                 <h3 class="card-title">Registrar nuevo riesgo</h3>
@@ -291,6 +289,7 @@
                             <div class="card-body">
                                 <form id="formAddRiesgo" method="POST">
                                     @csrf
+                                    <input type="hidden" id="riesgo_id" name="riesgo_id">
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="form-group">
@@ -349,8 +348,10 @@
                             </div>
                             <div class="card-footer">
 
-                                <button type="submit" class="btn btn-primary">Agregar Riesgo</button>
+                                <button type="submit" class="btn btn-primary" id="btnSubmitRiesgo">Agregar
+                                    Riesgo</button>
                                 </form>
+
 
                             </div>
                         </div>
@@ -365,127 +366,248 @@
 
 @endsection
 @section('js')
-<script>
-$(document).ready(function() {
-    const $obligacionesTable = $('#obligaciones');
-    const $formAddRiesgo = $('#formAddRiesgo');
-    const $verRiesgosModal = $('#verRiesgosModal');
-    const $loadingSpinner = $('#loading-spinner');
-    const $listaRiesgos = $('#listaRiesgos');
-    const $tableRiesgos = $('.table-riesgos');
-    const $successAlert = $('#success-alert');
-    const $errorAlert = $('#error-alert');
+    <script>
+        $(document).ready(function() {
+            const $obligacionesTable = $('#obligaciones');
+            const $formAddRiesgo = $('#formAddRiesgo');
+            const $verRiesgosModal = $('#verRiesgosModal');
+            const $loadingSpinner = $('#loading-spinner');
+            const $listaRiesgos = $('#listaRiesgos');
+            const $tableRiesgos = $('.table-riesgos');
+            const $successAlert = $('#success-alert');
+            const $errorAlert = $('#error-alert');
+            let ObligacionId = null;
 
-    // Inicializar DataTable
-    $obligacionesTable.DataTable();
+            // Inicializar DataTable
+            $obligacionesTable.DataTable();
 
-    // Delegar el clic en las filas para manejar selección
-    $(document).on('click', '.clickable-row', function() {
-        // Remover clase "selected" de todas las filas
-        $('.clickable-row').removeClass('selected');
+            // Delegar el clic en las filas para manejar selección
+            $(document).on('click', '.clickable-row', function() {
+                // Remover clase "selected" de todas las filas
+                $('.clickable-row').removeClass('selected');
 
-        // Añadir la clase "selected" a la fila clickeada
-        $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
+                // Añadir la clase "selected" a la fila clickeada
+                $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
 
-        // Obtener el ID de la fila seleccionada (de la celda oculta)
-        const id = $(this).find('td:eq(1)').text();
+                // Obtener el ID de la fila seleccionada (de la celda oculta)
+                const id = $(this).find('td:eq(1)').text().trim();
 
-        // Realizar la solicitud AJAX
-        $.get('{{ route('obligaciones.show', ':id') }}'.replace(':id', id), function(data) {
-            // Llenar los campos del formulario con los datos obtenidos
-            Object.keys(data).forEach(key => {
-                $(`#${key}`).val(data[key]);
+                // Habilitar el botón de eliminar y almacenar el ID en un atributo de datos
+                $('#deleteObligacionBtn').prop('disabled', false).data('id', id);
             });
-        });
-    });
 
-    // Editar obligación
-    $(document).on('click', '.editObligacionBtn', function() {
-        const id = $(this).data('id');
-        const editUrl = '{{ route('obligaciones.update', ':id') }}'.replace(':id', id);
-        $formAddRiesgo.attr('action', editUrl);
-        $('#method').val('PUT');
-        $('input[name="_token"]').val('{{ csrf_token() }}');
-    });
+            // Editar obligación
+            $(document).on('click', '.editObligacionBtn', function() {
+                $loadingSpinner.show();
+                const _obligacionId = $(this).data('id');
+                const _url_obligaciones = `{{ route('obligaciones.show', ':id') }}`.replace(':id',
+                    _obligacionId);
+                const _url = `{{ route('obligaciones.update', ':id') }}`.replace(':id', _obligacionId);
 
-    $(document).on('click', '.editRiesgoBtn', function() {
-        const riesgoId = $(this).data('id');  // Obtener el ID del riesgo
-        const url = `{{ route('riesgos.show', ':id') }}`.replace(':id', riesgoId);
+                $.ajax({
+                    url: _url_obligaciones,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        // Llenar los campos con los datos de la obligación
+                        $('#obligacion_id').val(_obligacionId);
+                        $('#proceso_id').val(data.proceso_id);
+                        $('#proceso_nombre').val(data.proceso_nombre);
+                        $('#area_compliance_id').val(data.area_compliance_id);
+                        $('#area_compliance_nombre').val(data.area_compliance_nombre);
+                        $('#documento_tecnico_normativo').val(data.documento_tecnico_normativo);
+                        $('#obligacion_principal').val(data.obligacion_principal);
+                        $('#obligacion_controles').val(data.obligacion_controles);
+                        $('#consecuencia_incumplimiento').val(data.consecuencia_incumplimiento);
+                        $('#documento_deroga').val(data.documento_deroga);
+                        $('#estado_obligacion').val(data.estado_obligacion);
 
-        // Realizar la solicitud para obtener los datos del riesgo
-        $.get(url, function(data) {
-            // Llenar los campos del formulario con los datos del riesgo
-            $('#riesgo_nombre').val(data.riesgo_nombre);
-            $('#riesgo_tipo').val(data.riesgo_tipo);
-            $('#factor_id').val(data.factor_id);
-            $('#impacto').val(data.impacto);
-            $('#probabilidad').val(data.probabilidad);
+                        // Cambiar la acción y método del formulario
+                        $('#obligacionForm').attr('action', _url);
+                        $('#method').val('PUT'); // Cambiar método a PUT
+                        $('#btnSubmitObligacion').text('Actualizar Obligación');
 
-            // Cambiar el botón de agregar a guardar
-            $('#btnGuardarRiesgo').show();
-            $('#btnAgregarRiesgo').hide();
+                        // Ocultar spinner y abrir el modal
+                        $loadingSpinner.hide();
+                        $('#addObligacionModal').modal('show');
+                    },
+                    error: function(xhr, status, error) {
 
-            // Guardar el ID del riesgo en el formulario para usarlo al hacer la actualización
-            $('#formAddRiesgo').attr('data-id', riesgoId);
-        });
-    });
+                        alert('Ocurrió un error al cargar la obligación.');
+                        $loadingSpinner.hide();
+                    }
+                });
+            });
+            $(document).on('click', '#deleteObligacionBtn', function(e) {
+                e.preventDefault();
 
-    // Agregar nueva obligación
-    $('#addObligacionBtn').click(function() {
-        $formAddRiesgo.attr('action', '{{ route('obligaciones.store') }}');
-        $('#method').val('POST');
-        $formAddRiesgo.find('input, textarea, select').val('');
-        $('input[name="_token"]').val('{{ csrf_token() }}');
-        $('#estado_obligacion').val('vigente');
-    });
+                // Obtener el ID almacenado en el botón
+                const obligacionId = $(this).data('id');
 
-    // Configuración global de AJAX
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
+                if (!obligacionId) {
+                    alert('Por favor, selecciona una obligación antes de eliminar.');
+                    return;
+                }
 
-    // Evento para abrir el modal y cargar los riesgos
-    $(document).on('click', '.verRiesgosBtn', function() {
-        const obligacionId = $(this).data('id');
-        $('#formNuevoRiesgo').collapse('hide');
-        $formAddRiesgo[0].reset();
-        $verRiesgosModal.modal('show');
-        obtenerRiesgos(obligacionId);
-    });
+                if (!confirm(
+                        '¿Estás seguro de que deseas eliminar esta obligación? Esta acción no se puede deshacer.'
+                    )) {
+                    return;
+                }
 
-    // Obtener riesgos
-    function obtenerRiesgos(obligacionId) {
-        $loadingSpinner.show();
-        $tableRiesgos.hide();
+                $.ajax({
+                    url: `{{ route('obligaciones.destroy', ':id') }}`.replace(':id', obligacionId),
+                    method: 'DELETE',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        alert(response.success);
+                        location.reload(); // Recargar la tabla para reflejar los cambios
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON.error || 'Error al eliminar la obligación.');
+                    }
+                });
+            });
 
-        const urlObligacionesRiesgos = `{{ route('obligaciones.listariesgos', ['obligacion_id' => ':obligacion_id']) }}`.replace(':obligacion_id', obligacionId);
+            $(document).on('click', '.editRiesgoBtn', function() {
+                event.preventDefault();
+                const riesgoId = $(this).data('id'); // Obtener el ID del riesgo
+                const url = `{{ route('riesgos.show', ':id') }}`.replace(':id', riesgoId);
 
-        $.ajax({
-            url: urlObligacionesRiesgos,
-            method: 'GET',
-            success: function(response) {
-                $loadingSpinner.hide();
-                $tableRiesgos.show();
-                actualizarTablaRiesgos(response);
-            },
-            error: function(error) {
-                console.error('Error al obtener los riesgos:', error);
-                $loadingSpinner.hide();
-                $tableRiesgos.show();
-               
+                // Realizar la solicitud para obtener los datos del riesgo
+                $.get(url, function(data) {
+                    // Llenar los campos del formulario con los datos del riesgo
+                    $('#riesgo_id').val(riesgoId);
+                    $('#riesgo_nombre').val(data.riesgo_nombre);
+                    $('#riesgo_tipo').val(data.riesgo_tipo);
+                    $('#factor_id').val(data.factor_id);
+                    $('#impacto').val(data.impacto);
+                    $('#probabilidad').val(data.probabilidad);
+
+                    // Cambiar la acción del formulario a la ruta de actualización
+                    const updateUrl = `{{ route('riesgos.update', ':id') }}`.replace(
+                        ':id',
+                        riesgoId);
+                    $('#formAddRiesgo').attr('action', updateUrl);
+                    $('#formAddRiesgo').attr('method', 'POST');
+
+                    // Cambiar el texto del botón
+                    $('#btnSubmitRiesgo').text('Guardar Riesgo');
+
+                    // Mostrar el formulario
+                    $('#formRiesgo').collapse('show');
+                });
+            });
+            $(document).on('click', '.deleteRiesgoBtn', function() {
+                event.preventDefault();
+                const riesgoId = $(this).data('id');
+
+                const obligacionId = $('.clickable-row.selected .verRiesgosBtn').data('id');
+                const url = `{{ route('riesgos.destroy', ':id') }}`.replace(':id', riesgoId);
+
+                if (confirm(
+                        '¿Estás seguro de que deseas eliminar este riesgo? Esta acción no se puede deshacer.'
+                    )) {
+                    $.ajax({
+                        url: url,
+                        method: 'DELETE',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            obtenerRiesgos(obligacionId); // Recargar la tabla
+                        },
+                        error: function(xhr) {
+                            alert(xhr.responseJSON.error ||
+                                'Error al eliminar el riesgo.');
+                        }
+                    });
+                }
+            });
+            $(document).on('click', '#nuevoRiesgoBtn', function() {
+                event.preventDefault();
+                // Mostrar el formulario
+                // Resetear todos los campos del formulario
+                $('#formAddRiesgo').trigger('reset');
+                $('#riesgo_id').val(''); // Eliminar el ID (es un nuevo registro)
+
+                // Cambiar la acción del formulario a la ruta de creación
+                const createUrl = `{{ route('riesgos.store') }}`;
+                $('#formAddRiesgo').attr('action', createUrl);
+                $('#formAddRiesgo').attr('method', 'POST');
+
+                // Cambiar el texto del botón
+                $('#btnSubmitRiesgo').text('Agregar Riesgo');
+                $('#formRiesgo').collapse('show');
+
+
+            });
+            // Agregar nueva obligación
+            $('#addObligacionBtn').click(function() {
+                $('#obligacionForm')[0].reset();
+                $('#obligacion_id').val('');
+
+                // Cambiar la acción y método del formulario
+                const createUrl = `{{ route('obligaciones.store') }}`;
+                $('#obligacionForm').attr('action', createUrl);
+                $('#method').val('POST'); // Método POST para crear
+                $('#btnSubmitObligacion').text('Guardar Obligación');
+
+                // Abrir el modal
+                $('#addObligacionModal').modal('show');
+            });
+
+            // Configuración global de AJAX
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Evento para abrir el modal y cargar los riesgos
+            $(document).on('click', '.verRiesgosBtn', function() {
+                const obligacionId = $(this).data('id');
+                $('#formNuevoRiesgo').collapse('hide');
+                $verRiesgosModal.modal('show');
+                obtenerRiesgos(obligacionId);
+            });
+
+            // Obtener riesgos
+            function obtenerRiesgos(obligacionId) {
+                $loadingSpinner.show();
+                $tableRiesgos.hide();
+
+                const urlObligacionesRiesgos =
+                    `{{ route('obligaciones.listariesgos', ['obligacion_id' => ':obligacion_id']) }}`
+                    .replace(
+                        ':obligacion_id', obligacionId);
+
+                $.ajax({
+                    url: urlObligacionesRiesgos,
+                    method: 'GET',
+                    success: function(response) {
+                        $loadingSpinner.hide();
+                        $tableRiesgos.show();
+                        actualizarTablaRiesgos(response);
+                    },
+                    error: function(error) {
+                        console.error('Error al obtener los riesgos:', error);
+                        $loadingSpinner.hide();
+                        $tableRiesgos.show();
+
+                    }
+                });
             }
-        });
-    }
 
-    // Actualizar la tabla de riesgos
-    function actualizarTablaRiesgos(riesgos) {
-        $listaRiesgos.empty(); // Limpiar la lista de riesgos
+            // Actualizar la tabla de riesgos
+            function actualizarTablaRiesgos(riesgos) {
+                $listaRiesgos.empty(); // Limpiar la lista de riesgos
 
-        if (riesgos.length > 0) {
-            riesgos.forEach(function(riesgo) {
-                $listaRiesgos.append(`
+                if (riesgos.length > 0) {
+                    riesgos.forEach(function(riesgo) {
+                    $listaRiesgos.append(`
                     <tr>
                         <td>${riesgo.codigo || "S/C"}</td>
                         <td>${riesgo.riesgo_tipo}</td>
@@ -493,55 +615,64 @@ $(document).ready(function() {
                         <td style="text-align:center">${riesgo.factor ? riesgo.factor.nombre : 'No asignado'}</td>
                         <td style="text-align:center">${riesgo.probabilidad}</td>
                         <td style="text-align:center">${riesgo.impacto}</td>
-                        <td style="text-align:center">${riesgo.riesgo_valoracion}</td>
+                        <td style="text-align:center">
+                        <span class="valoracion-circle badge-${riesgo.semaforo}"></span>
+                        ${riesgo.riesgo_valoracion}
+                        </td>
                         <td><a href="#" class="btn btn-warning btn-sm editRiesgoBtn" data-id="${riesgo.id}" data-target="#formNuevoRiesgo">      
-                        <i class="fas fa-pencil-alt" aria-hidden="true"></i></a></td>
+                        <i class="fas fa-pencil-alt" aria-hidden="true"></i></a>
+                        <a href="#" class="btn btn-danger btn-sm deleteRiesgoBtn" data-id="${riesgo.id}">
+                         <i class="fas fa-trash-alt"></i></td>
                     </tr>
                 `);
+                    });
+                } else {
+                    $listaRiesgos.append(
+                        '<tr><td colspan="7">No hay riesgos asociados a esta obligación.</td></tr>');
+                }
+            }
+
+
+
+            // Evento para manejar el envío del formulario riesgo
+            $formAddRiesgo.submit(function(e) {
+                e.preventDefault(); // Prevenir el envío tradicional del formulario
+                const _url = $formAddRiesgo.attr('action');
+                const _method = $formAddRiesgo.attr('method');
+                const formData = {
+                    obligacion_id: $('.clickable-row.selected .verRiesgosBtn').data('id'),
+                    riesgo_nombre: $('#riesgo_nombre').val(),
+                    factor_id: $('#factor_id').val(),
+                    riesgo_tipo: $('#riesgo_tipo').val(),
+                    impacto: $('#impacto').val(),
+                    probabilidad: $('#probabilidad').val(),
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                };
+
+                // Realizar la solicitud AJAX para enviar los datos
+                $.ajax({
+                    url: _url,
+                    method: _method,
+                    data: formData,
+                    success: function(response) {
+                        $('#formRiesgo').collapse('hide');
+                        obtenerRiesgos(formData.obligacion_id);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error al agregar el riesgo:', error);
+                        alert('Ocurrió un error al agregar el riesgo.');
+                    }
+                });
             });
-        } else {
-            $listaRiesgos.append('<tr><td colspan="7">No hay riesgos asociados a esta obligación.</td></tr>');
-        }
-    }
 
-    // Evento para manejar el envío del formulario de nuevo riesgo
-    $formAddRiesgo.submit(function(e) {
-        e.preventDefault(); // Prevenir el envío tradicional del formulario
+            // Alertas de éxito y error
+            if ($successAlert.length) {
+                setTimeout(() => $successAlert.fadeOut(), 2000);
+            }
 
-        const formData = {
-            obligacion_id: $('.clickable-row.selected .verRiesgosBtn').data('id'),
-            riesgo_nombre: $('#riesgo_nombre').val(),
-            factor_id: $('#factor_id').val(),
-            riesgo_tipo: $('#riesgo_tipo').val(),
-            impacto: $('#impacto').val(),
-            probabilidad: $('#probabilidad').val(),
-            _token: $('meta[name="csrf-token"]').attr('content')
-        };
-
-        // Realizar la solicitud AJAX para enviar los datos
-        $.ajax({
-            url: "{{ route('riesgos.store') }}",
-            method: 'POST',
-            data: formData,
-            success: function(response) {
-                $formAddRiesgo[0].reset();
-                obtenerRiesgos(formData.obligacion_id);
-            },
-            error: function(xhr, status, error) {
-                console.error('Error al agregar el riesgo:', error);
-                alert('Ocurrió un error al agregar el riesgo.');
+            if ($errorAlert.length) {
+                setTimeout(() => $errorAlert.fadeOut(), 2000);
             }
         });
-    });
-
-    // Alertas de éxito y error
-    if ($successAlert.length) {
-        setTimeout(() => $successAlert.fadeOut(), 2000);
-    }
-
-    if ($errorAlert.length) {
-        setTimeout(() => $errorAlert.fadeOut(), 2000);
-    }
-});
-</script>
+    </script>
 @stop
