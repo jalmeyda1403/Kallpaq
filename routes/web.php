@@ -49,6 +49,7 @@ Route::resource('programa', ProgramaAuditoriaController::class);
 Route::resource('smp', HallazgoController::class);
 Route::resource('acciones', AccionController::class);
 Route::resource('obligaciones', ObligacionController::class);
+Route::resource('riesgos', RiesgoController::class);
 
 //Procesos
 Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProcesos'])->name('procesos.buscar');
@@ -92,7 +93,7 @@ Route::post('riesgos', [RiesgoController::class, 'store'])->name('riesgos.store'
 Route::get('riesgos/{riesgo}', [RiesgoController::class, 'show'])->name('riesgos.show');
 Route::post('riesgos/update/{riesgo}', [RiesgoController::class, 'update'])->name('riesgos.update');
 Route::delete('/riesgos/eliminar/{riesgo}', [RiesgoController::class, 'destroy'])->name('riesgos.destroy');
-
+Route::get('riesgos/{proceso_id?}/listar', [RiesgoController::class, 'listar'])->name('riesgos.listar');
 
 //hallazgos
 Route::get('/smp/class/{clasificacion?}', [HallazgoController::class, 'index'])->name('smp.index');

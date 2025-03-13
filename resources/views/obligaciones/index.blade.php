@@ -69,7 +69,8 @@
                                         <th class="align-top">Obligación Principal</th>
                                         <th class="align-top" style="width: 25%">Controles Identificados</th>
                                         <th class="align-top">Consecuencia del Incumplimiento</th>
-                                        <th class="align-top" style="width: 7%">Estado</th>
+                                    
+                                        <th class="align-top" style="width: 7%">Estado</th>                         
                                         <th class="align-top"style="width:7%">Acciones</th>
                                     </tr>
                                 </thead>
@@ -86,6 +87,7 @@
 
                                             <td>{!! nl2br(e($obligacion->obligacion_controles)) !!}</td>
                                             <td>{{ $obligacion->consecuencia_incumplimiento }}</td>
+                                        
                                             <td><span class="badge {{ $obligacion->estadoClass }}">
                                                     {{ ucfirst($obligacion->estado_obligacion) }}
                                                 </span>

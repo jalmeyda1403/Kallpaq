@@ -16,6 +16,7 @@ class Riesgo extends Model
         'riesgo_nombre',
         'riesgo_tipo',
         'factor_id',
+        'controles',
         'probabilidad',
         'impacto',
         'riesgo_valor',
@@ -45,6 +46,12 @@ class Riesgo extends Model
     {
         return $this->belongsTo(Factor::class);
     }
+
+    public function proceso()
+    {
+        return $this->belongsTo(Proceso::class, 'proceso_id');
+    }
+
 
     // Método para asignar la valoración del riesgo
     public function calcularRiesgoValoracion()

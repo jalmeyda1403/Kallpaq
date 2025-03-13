@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Obligacion extends Model
 {
     use HasFactory;
- 
+
     // Especificamos el nombre de la tabla en caso de que no siga la convención predeterminada
     protected $table = 'obligaciones';
 
@@ -50,10 +50,10 @@ class Obligacion extends Model
         return $this->belongsToMany(Riesgo::class, 'obligacion_riesgo');
     }
 
-   
+
     public function asociarRiesgo(Riesgo $riesgo)
     {
-     $this->riesgos()->attach($riesgo->id);
+        $this->riesgos()->attach($riesgo->id);
     }
 
     /**
@@ -66,6 +66,10 @@ class Obligacion extends Model
     {
         $this->update(['estado' => $estado]);
     }
+    public function cantidadRiesgos()
+    {
+        return $this->riesgos()->count();  // Devuelve la cantidad de riesgos asociados
+    }
 
-    
+
 }

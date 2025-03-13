@@ -29,7 +29,7 @@
                                 <option value="">Selecciona un Proceso Padre</option>
                                 @foreach ($procesos_padre as $procesoPadre)
                                     <option value="{{ $procesoPadre->id }}"
-                                        {{ request('proceso_padre_id') == $procesoPadre->id ? 'selected' : '' }}>
+                                        {{ request('proceso_padre_id') == $procesoPadre->id ? 'selected' : '' }}>{{ $procesoPadre->cod_proceso}}.
                                         {{ $procesoPadre->proceso_nombre }}
                                     </option>
                                 @endforeach
@@ -75,7 +75,8 @@
                                     class="btn btn-dark btn-sm" data-toggle="tooltip" title="Ver Obligaciones">
                                     <i class="fas fa-list"></i>
                                 </a>
-                                <a href="#" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Ver Riesgos">
+                               <a href="{{ route('riesgos.listar', ['proceso_id' => $proceso->id]) }}"
+                                class="btn btn-warning btn-sm" data-toggle="tooltip" title="Ver Riesgos">
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </a>
                                 <a href="#" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Ver Hallazgos">

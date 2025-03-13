@@ -11,21 +11,20 @@ class ProcesoController extends Controller
     public function index(Request $request)
     {
 
-        $query = Proceso::query();
+         $query = Proceso::query();
 
-        // $procesos = Proceso::all();
-        //  return view('procesos.index', compact('procesos'));}
-
-        // Si se selecciona un proceso padre, filtramos los procesos por ese proceso padre
+        // Filtrar si se selecciona un proceso padre
         if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
             $query->where('cod_proceso_padre', $request->proceso_padre_id);
+        } else {
+            // Filtrar procesos de nivel 0 o nivel 1
+            $query->whereIn('proceso_nivel', [0, 1]);
         }
+    
         $procesos = $query->get();
-        // Obtener procesos de primer nivel (sin proceso padre)
-        $procesos_padre = Proceso::whereNull('cod_proceso_padre')->get();
-
+        $procesos_padre = Proceso::where('proceso_nivel', 0)->get(); // Solo procesos de nivel 0 como padres
+    
         return view('procesos.index', compact('procesos', 'procesos_padre'));
-
     }
 
     public function create()

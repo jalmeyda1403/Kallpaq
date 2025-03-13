@@ -49,5 +49,10 @@ class Proceso extends Model
     {
         return $this->hasMany(Obligacion::class, 'proceso_id', 'id');
     } 
+
+    public function riesgos()
+    {
+        return $this->hasMany(Riesgo::class, 'proceso_id', 'id');
+    } 
   
 }
