@@ -11,8 +11,8 @@ class OUO extends Model
     protected $table = 'ouos';  // Define el nombre de la tabla
 
     protected $fillable = [
-        'nombre',
-        'codigo',
+        'ouo_nombre',
+        'ouo_codigo',
         'ouo_padre',
         'subgerente_id',
         'subgerente_condicion',

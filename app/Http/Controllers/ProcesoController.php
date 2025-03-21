@@ -130,26 +130,32 @@ class ProcesoController extends Controller
         $proceso = Proceso::findOrFail($proceso_id);
 
         // Aquí agregarías la lógica necesaria para asociar procesos
-        // Puedes devolver una vista o redirigir según lo necesites
-        $ouos = $proceso->ouos;  // Obtén las OUO asociadas al proceso
-        $allouos = OUO::all();
-        return view('procesos.asociarOUO', compact('proceso', 'ouos', 'allouos'));
+      
+        $ouos = $proceso->ouos->map(function($ouo) use ($proceso_id) {
+            // Añadir el proceso_id a cada OUO para usarlo en el frontend
+            $ouo->proceso_id = $proceso_id;
+            return $ouo;
+        }); // Obtén las OUO asociadas al proceso
+
+        return response()->json($ouos);
     }
 
     public function asociarOUO(Request $request, $proceso_id)
     {
-        $ouo_ids = $request->input('ouos');  // Obtener el ID de la OUO seleccionada
+        $ouo_id = $request->input('ouo_id');  // Obtener el ID de la OUO seleccionada
 
         $proceso = Proceso::findOrFail($proceso_id);
+        
+        
+        $proceso->ouos()->attach($ouo_id);  
 
-        // Asociar la OUO al proceso
-        if ($ouo_ids) {
-            $proceso->ouos()->attach($ouo_ids);  // Asociar todas las OUOs seleccionadas
-        }
+        $ouos = $proceso->ouos;
 
         // Redirigir a la vista de asociación
-        return redirect()->route('procesos.listarOUO', ['proceso_id' => $proceso_id])
-            ->with('success', 'OUOs asociadas correctamente.');
+        return response()->json([
+            'message' => 'OUO asociada correctamente.',
+            'ouos' => $ouos
+        ]);
     }
     public function disociarOUO($proceso_id, $ouo_id)
     {
@@ -163,7 +169,9 @@ class ProcesoController extends Controller
         $ouos = $proceso->ouos;
 
         // Redirigir con un mensaje de éxito
-        return redirect()->route('procesos.listarOUO', ['proceso_id' => $proceso_id])
-            ->with('success', 'OUO eliminada correctamente.');
+        return response()->json([
+            'message' => 'OUO eliminada correctamente.',
+            'ouos' => $ouos
+        ]);
     }
 }

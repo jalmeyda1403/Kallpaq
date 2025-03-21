@@ -19,6 +19,7 @@ use App\Http\Controllers\ContextoDeterminacionController;
 use App\Http\Controllers\ObligacionController;
 use App\Http\Controllers\AreaComplianceController;
 use App\Http\Controllers\RiesgoController;
+use App\Http\Controllers\OUOController;
 
 
 
@@ -50,7 +51,7 @@ Route::resource('smp', HallazgoController::class);
 Route::resource('acciones', AccionController::class);
 Route::resource('obligaciones', ObligacionController::class);
 Route::resource('riesgos', RiesgoController::class);
-
+Route::resource('ouos', OUOController::class);
 //Procesos
 Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProcesos'])->name('procesos.buscar');
 
@@ -119,6 +120,9 @@ Route::get('analisis/{id}/edit', [CausaController::class, 'edit'])->name('analis
 Route::put('analisis/{id}', [CausaController::class, 'update'])->name('analisis.update');
 Route::delete('analisis/{id}', [CausaController::class, 'destroy'])->name('analisis.destroy');
 });
+
+//OUO
+Route::get('/listarOUO', [OUOController::class,'listar'])->name('ouos.listar');
 
 //COntexto
 

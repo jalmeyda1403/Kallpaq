@@ -440,6 +440,7 @@
                     }
                 });
             });
+            //Eliminar Obligacion
             $(document).on('click', '#deleteObligacionBtn', function(e) {
                 e.preventDefault();
 
@@ -472,7 +473,7 @@
                     }
                 });
             });
-
+            //editar Riesgo
             $(document).on('click', '.editRiesgoBtn', function() {
                 event.preventDefault();
                 const riesgoId = $(this).data('id'); // Obtener el ID del riesgo
@@ -502,6 +503,8 @@
                     $('#formRiesgo').collapse('show');
                 });
             });
+
+            //Eliminar Riesgo
             $(document).on('click', '.deleteRiesgoBtn', function() {
                 event.preventDefault();
                 const riesgoId = $(this).data('id');
@@ -528,6 +531,7 @@
                     });
                 }
             });
+            // Agregar Riesgo
             $(document).on('click', '#nuevoRiesgoBtn', function() {
                 event.preventDefault();
                 // Mostrar el formulario
