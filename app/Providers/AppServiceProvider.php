@@ -9,6 +9,7 @@ use App\Observers\AccionObserver;
 use App\Models\Hallazgo;
 use App\Observers\HallazgoObserver;
 
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -27,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
         Accion::observe(AccionObserver::class);
         Hallazgo::observe(HallazgoObserver::class);
+
     }
 }

@@ -51,18 +51,9 @@
     {{-- Extra Configured Plugins Stylesheets --}}
     @include('adminlte::plugins', ['type' => 'css'])
 
-    {{-- Livewire Styles --}}
-    @if (config('adminlte.livewire'))
-        @if (app()->version() >= 7)
-            @livewireStyles
-        @else
-            <livewire:styles />
-        @endif
-    @endif
+  
 
-    {{-- Custom Stylesheets (post AdminLTE) --}}
-    @yield('css')
-
-    {{-- Favicon --}}
+     {{-- Favicon --}}
 
     <link rel="shortcut icon" href="{{ asset('images/kallpaq_ico.png') }}" />
+  

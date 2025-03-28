@@ -7,6 +7,8 @@
             background-color: #ECECEC;
             /* Light gray background for selected row */
         }
+
+        
     </style>
 
 
@@ -67,10 +69,9 @@
                                         <th style="width: 12%" class="align-top">Proceso</th>
                                         <th class="align-top">Documento Técnico</th>
                                         <th class="align-top">Obligación Principal</th>
-                                        <th class="align-top" style="width: 25%">Controles Identificados</th>
+
                                         <th class="align-top">Consecuencia del Incumplimiento</th>
-                                    
-                                        <th class="align-top" style="width: 7%">Estado</th>                         
+                                        <th class="align-top" style="width: 7%">Estado</th>
                                         <th class="align-top"style="width:7%">Acciones</th>
                                     </tr>
                                 </thead>
@@ -85,9 +86,9 @@
                                             <td>{{ $obligacion->documento_tecnico_normativo }}</td>
                                             <td>{{ $obligacion->obligacion_principal }}</td>
 
-                                            <td>{!! nl2br(e($obligacion->obligacion_controles)) !!}</td>
+
                                             <td>{{ $obligacion->consecuencia_incumplimiento }}</td>
-                                        
+
                                             <td><span class="badge {{ $obligacion->estadoClass }}">
                                                     {{ ucfirst($obligacion->estado_obligacion) }}
                                                 </span>
@@ -140,7 +141,7 @@
                             <div class="col -md-6">
                                 <!-- Campos del formulario -->
                                 <div class="form-group">
-                                    <label for="proceso_id"> Proceso</label>
+                                    <label for="proceso_id"><h6>Seleccione Proceso<span>*</span></h6></label>
                                     <div class="input-group">
                                         <!-- Campo oculto para el ID del proceso -->
                                         <input type="hidden" name="proceso_id" id="proceso_id" required>
@@ -161,7 +162,7 @@
                             </div>
                             <div class="col -md-6">
                                 <div class="form-group">
-                                    <label for="area_compliance_id">Area Compliance</label>
+                                    <label for="area_compliance_id">Area de Compliance</label>
                                     <div class="input-group">
                                         <!-- Campo oculto para el ID del proceso -->
                                         <input type="hidden" name="area_compliance_id" id="area_compliance_id" required>
@@ -177,7 +178,7 @@
                                 </div>
 
                                 <x-modal-busqueda :ruta="route('areaCompliance.buscar')" campo-id="area_compliance_id"
-                                    campo-nombre="area_compliance_nombre" modal-titulo="Area Compliance"
+                                    campo-nombre="area_compliance_nombre" modal-titulo="Area de Compliance"
                                     modal-id="acModal">
                                 </x-modal-busqueda>
                             </div>
@@ -191,7 +192,7 @@
                             </div>
                             <div class="col -md-6">
                                 <div class="form-group">
-                                    <label for="obligacion_principal">Obligación Principal</label>
+                                    <label for="obligacion_principal"> Principal Obligación</label>
                                     <textarea class="form-control" id="obligacion_principal" rows=5 name="obligacion_principal" required></textarea>
                                 </div>
                             </div>
@@ -386,7 +387,8 @@
             // Delegar el clic en las filas para manejar selección
             $(document).on('click', '.clickable-row', function() {
                 // Remover clase "selected" de todas las filas
-                $('.clickable-row').removeClass('selected');
+                $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
+
 
                 // Añadir la clase "selected" a la fila clickeada
                 $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
@@ -613,7 +615,7 @@
 
                 if (riesgos.length > 0) {
                     riesgos.forEach(function(riesgo) {
-                    $listaRiesgos.append(`
+                        $listaRiesgos.append(`
                     <tr>
                         <td>${riesgo.codigo || "S/C"}</td>
                         <td>${riesgo.riesgo_tipo}</td>
@@ -680,5 +682,7 @@
                 setTimeout(() => $errorAlert.fadeOut(), 2000);
             }
         });
+
+
     </script>
 @stop

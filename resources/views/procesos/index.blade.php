@@ -1,6 +1,6 @@
 @extends('layout.master')
 @section('title', 'SIG')
-@section('css')
+@push('style')
     <style type="text/css">
         /* Cambiar el color de fondo y el borde de los elementos seleccionados */
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
@@ -21,55 +21,64 @@
         .select2-checkbox {
             margin-right: 10px;
         }
+
+        .selected {
+            background-color: #ECECEC;
+            /* Light gray background for selected row */
+        }
     </style>
-@endsection
+@endpush
 @section('content')
     <div class="container-fluid">
 
         <div class="card">
             <div class="card-header">
-                <div class="row">
+                <div class="row align-items-center">
                     <!-- Título de la lista de procesos -->
-                    <div class="col-md-10">
-                        <h3 class="card-title">Lista de Procesos</h3>
+                    <div class="col-md-6">
+                        <h3 class="card-title mb-0">Lista de Procesos</h3>
                     </div>
 
-                    <!-- Botón para añadir un nuevo proceso -->
-                    <div class="col-md-2">
-                        <a href="{{ route('procesos.create') }}" class="btn btn-primary mb-3">Añadir Proceso</a>
+                    <!-- Botones Nuevo y Editar -->
+                    <div class="col-md-6 text-md-right">
+                        <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#procesoModal"
+                            wire:click="clearForm" id="openModalButton">
+                            <i class="fas fa-plus"></i> Nuevo
+                        </button>
+                        <a href="#" class="btn btn-warning btn-sm" title="Editar Proceso" id="btnEditar"
+                            data-id="">
+                            <i class="fas fa-pencil-alt"></i> Editar
+                        </a>
                     </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <form method="GET" action="{{ route('procesos.index') }}">
-                    <div class="row align-items-center">
+                <!-- Botón para añadir un nuevo proceso -->
+                <div class="card-body">
+                    <form method="GET" action="{{ route('procesos.index') }}">
                         <!-- Etiqueta y Select para Filtrar por Proceso Padre -->
-                        <div class="form-group col-md-12">
-                            <label for="proceso_padre_id" class="mr-2">Filtrar por Proceso Padre</label>
-                            <select name="proceso_padre_id" id="proceso_padre_id"
-                                class="form-control d-inline-block w-auto">
+                        <div class="input-group">
+                            <select name="proceso_padre_id" id="proceso_padre_id" class="form-control">
                                 <option value="">Selecciona un Proceso Padre</option>
                                 @foreach ($procesos_padre as $procesoPadre)
                                     <option value="{{ $procesoPadre->id }}"
                                         {{ request('proceso_padre_id') == $procesoPadre->id ? 'selected' : '' }}>
-                                        {{ $procesoPadre->cod_proceso }}.
-                                        {{ $procesoPadre->proceso_nombre }}
+                                        {{ $procesoPadre->cod_proceso }}. {{ $procesoPadre->proceso_nombre }}
                                     </option>
                                 @endforeach
                             </select>
-                            <button type="submit" class="btn btn-primary">Filtrar</button>
+                            <button type="submit" class="btn btn-primary btn-sm "><i class="fas fa-search"></i>
+                                Filtrar</button>
                         </div>
-
-
-                    </div>
+                </div>
                 </form>
+            </div>
 
+            <div class="card-body">
 
-
-                <table id= "procesos" class="table table-bordered">
+                <table class="table table-hover" id= "procesos">
                     <thead>
                         <tr>
                             <th>Código del Proceso</th>
+                            <th style="display: none;">Id</th>
                             <th>Nombre del Proceso</th>
                             <th>Tipo del Proceso</th>
                             <th>Proceso Padre</th>
@@ -80,8 +89,9 @@
                     </thead>
                     <tbody>
                         @foreach ($procesos as $proceso)
-                            <tr>
+                            <tr class="clickable-row">
                                 <td>{{ $proceso->cod_proceso }}</td>
+                                <td style="display: none;">{{ $proceso->id }}</td>
                                 <td>{{ $proceso->proceso_nombre }}</td>
                                 <td>{{ $proceso->proceso_tipo }}</td>
                                 <td>{{ $proceso->procesoPadre ? $proceso->procesoPadre->cod_proceso : 'N/A' }}
@@ -101,7 +111,8 @@
                                         <i class="fas fa-list"></i>
                                     </a>
                                     <a href="{{ route('riesgos.listar', ['proceso_id' => $proceso->id]) }}"
-                                        class="btn bg-orange color-palette btn-sm" data-toggle="tooltip" title="Ver Riesgos">
+                                        class="btn bg-orange color-palette btn-sm" data-toggle="tooltip"
+                                        title="Ver Riesgos">
                                         <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                     </a>
                                     <a href="#" class="btn btn-danger btn-sm" data-toggle="tooltip"
@@ -125,8 +136,10 @@
             </div>
         </div>
     </div>
-    <!-- Modal para asociar/disociar OUOs -->
+    <!-- Componente Modal Procesos -->
+    <livewire:proceso-modal /> <!-- Este es el componente Livewire -->
 
+    <!-- Modal para asociar/disociar OUOs -->
     <div class="modal fade" id="ModalOUO" tabindex="-1" role="dialog" aria-labelledby="verModalLabel" aria-hidden="true"
         data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="margin-top: -12%">
@@ -162,16 +175,10 @@
                                     data-target="#ouooModal"><i class="fas fa-search"></i></a>
                             </div>
                         </div>
-                        <x-modal-busqueda 
-                        :ruta="route('ouos.listar')" 
-                        campo-id="ouo_id" 
-                        campo-nombre="ouo_nombre"
-                        modal-titulo="OUO" 
-                        modal-id="ouooModal" 
-                        :modalBgcolor="'#001f3f'" 
-                        :modalTxtcolor="'#FFFFFF'">
-                         </x-modal-busqueda>
-                    
+                        <x-modal-busqueda :ruta="route('ouos.listar')" campo-id="ouo_id" campo-nombre="ouo_nombre"
+                            modal-titulo="OUO" modal-id="ouooModal" :modalBgcolor="'#001f3f'" :modalTxtcolor="'#FFFFFF'">
+                        </x-modal-busqueda>
+
                         <button type="submit" class="btn btn-success" style="border-radius: 25px; padding: 10px 20px; ">
                             <i class="fas fa-link"></i> Asociar </i>
                         </button>
@@ -201,7 +208,7 @@
 
 
 @endsection
-@section('js')
+@push('scripts')  
     <script>
         let procesoId = null;
         const $loadingSpinner = $('#loading-spinner');
@@ -211,6 +218,21 @@
         const $formAddOUO = $('#formAddOUO');
         $('#procesos').DataTable();
 
+        // Delegar el clic en las filas para manejar selección
+        $(document).on('click', '.clickable-row', function() {
+            // Remover clase "selected" de todas las filas
+            $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
+
+
+            // Añadir la clase "selected" a la fila clickeada
+            $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
+
+            // Obtener el ID de la fila seleccionada (de la celda oculta)
+            const id = $(this).find('td:eq(1)').text().trim();
+
+            // Habilitar el botón de eliminar y almacenar el ID en un atributo de datos
+            $('#btnEditar').prop('disabled', false).data('id', id);
+        });
         //al momento de cargar el modal
         $(document).on('click', '.verOUOBtn', function() {
             procesoId = $(this).data('id');
@@ -326,6 +348,8 @@
                 }
             });
         });
+        // Escuchar cuando el modal se muestra y emitir el evento para refrescar el componente Livewire
+             
     </script>
 
-@endsection
+@endpush
