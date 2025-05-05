@@ -70,7 +70,9 @@
                     listaItems.innerHTML = ''; // Limpiar la lista antes de agregar nuevos ítems
                     data.forEach(item => {
                         const row = document.createElement('tr');
-                        const nombre = item[campoNombre] || ''; // Si no se encuentra, asigna vacío
+                        const values = Object.values(item);
+                        const nombre = values[1] || ''; // Accede al segundo valor del objeto
+                    
 
                         row.innerHTML = `
                     <td class="text-center"><input class="form-check-input" type="radio" name="${tipo}" value="${item.id}" data-nombre="${nombre}"></td>

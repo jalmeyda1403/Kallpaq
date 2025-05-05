@@ -58,8 +58,11 @@ Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProc
 Route::get('/listarProcesos', [ProcesoController::class,'listar'])->name('procesos.listar');
 Route::get('/mapaProcesos', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
 Route::get('/procesos/{proceso_id}/listarouo', [ProcesoController::class, 'listarOUO'])->name('procesos.listarOUO');
-Route::post('/asociar/{proceso_id}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
-Route::delete('/disociar/{proceso_id}/ouo/{ouo_id}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
+Route::post('/procesos-asociar/{proceso_id}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
+Route::delete('/procesos-disociar/{proceso_id}/ouo/{ouo_id}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
+Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.index');
+Route::put('/proceso/update/{id}', [ProcesoController::class, 'update'])->name('proceso.update');
+Route::delete('/proceso/delete/{id}', [ProcesoController::class, 'destroy'])->name('proceso.eliminar');
 
 Route::get('/indicadores/{proceso_id?}/listar',  [IndicadorController::class, 'listar'])->name('indicadores.listar');
 Route::get('indicadores/{proceso_id?}/create/', [IndicadorController::class, 'create'])->name('indicadores.create');
@@ -67,6 +70,7 @@ Route::get('/indicadores/{id}/historico-datos',  [IndicadorController::class, 's
 Route::get('/indicadores/{id}/datos',  [IndicadorController::class, 'showDatos']);
 Route::get('indicadores/{id}/frecuencia', [IndicadorController::class, 'generarFrecuencia'])->name('indicadores.frecuencia');
 
+//Objetivos
 Route::get('/buscarobjetivosSIG', [PlanificacionSIGController::class, 'findObjetivosSIG'])->name('objetivoSIG.buscar');
 Route::get('/buscarobjetivosPEI', [PlanificacionPEIController::class, 'findObjetivosPEI'])->name('objetivoPEI.buscar');
 Route::get('/buscarareacompliance', [AreaComplianceController::class, 'findAreaCompliance'])->name('areaCompliance.buscar');;

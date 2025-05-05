@@ -9,102 +9,121 @@ use Illuminate\Support\Facades\Log;
 class ProcesoModal extends Component
 {
 
-    public $proceso_id, $cod_proceso, $nombre, $objetivo, $tipo_proceso, $nivel_proceso, $estado, $cod_proceso_padre,$proceso_nombre;
-    public $modalTitle, $actionRoute;
-    public $isMacroproceso = false;
+    public $proceso_id, $cod_proceso, $proceso_tipo, $proceso_estado, $cod_proceso_padre, $proceso_nombre_padre;
+    public $modalTitle, $actionRoute, $btnName, $method;
+    public $isMacroproceso = true;
     public $charCountNombre = 0;
     public $charCountObjetivo = 0;
-    protected $listeners = ['refreshComponent' => '$refresh', 'syncData' => 'syncData'];
+    public $charCountSigla = 0;
 
-    public function updatedNombre($value)
+    public $proceso_nombre = "";
+    public $proceso_sigla = "";
+
+    public $proceso_objetivo = "";
+    public $proceso_nivel = "0";
+
+    public $id;
+  
+    protected $listeners = [
+        'verProceso' => 'verProceso',  // Evento de edición
+        'nuevoProceso' => 'nuevoProceso' // Evento de creación de nuevo proceso
+    ];
+    protected $rules = [
+        'cod_proceso' => 'required|max:13',
+        'proceso_sigla' => 'required|max:5',
+        'proceso_nombre' => 'required|max:200',
+        'proceso_objetivo' => 'required|max:1000',
+        'proceso_tipo' => 'required',
+        'proceso_nivel' => 'required',
+        'proceso_estado' => 'required',
+    ];
+
+    protected $messages = [
+        'cod_proceso.required' => 'El código de proceso es obligatorio.',
+        'proceso_sigla.required' => 'La sigla es obligatoria.',
+        'proceso_nombre.required' => 'El nombre del proceso es obligatorio.',
+        'proceso_objetivo.required' => 'El objetivo es obligatorio.',
+        'proceso_tipo.required' => 'El tipo de proceso es obligatorio.',
+        'proceso_nivel.required' => 'El nivel de proceso es obligatorio.',
+        'proceso_estado.required' => 'El estado es obligatorio.',
+    ];
+
+    public function updatedProcesoNombre()
     {
+        $this->charCountNombre = strlen($this->proceso_nombre);
+    }
+    public function updatedProcesoObjetivo()
+    {
+        $this->charCountObjetivo = strlen($this->proceso_objetivo);
+    }
+    public function updatedProcesoSigla()
+    {
+        $this->sigla = strtoupper($this->proceso_sigla);
+        $this->charCountSigla = strlen($this->proceso_sigla);
+    }
+    public function updatedProcesoNivel($value)
+    {
+        $this->isMacroproceso = $value == 0;
+    }
 
-        // Actualiza el contador de caracteres de 'nombre'
-        $this->charCountNombre = mb_strlen($value);
+    public function verProceso($id)
+    {
        
-    }
+        $this->modalTitle = 'Editar Proceso';      
+        $this->btnName = "Actualizar";
+        $this->method = "PUT";
+        
+        $proceso = Proceso::find($id);
 
-    // Método para actualizar el contador de caracteres cuando 'objetivo' cambie
-    public function updatedObjetivo($value)
-    {
-        // Actualiza el contador de caracteres de 'objetivo'
-        $this->charCountObjetivo = mb_strlen($value);
-    }
-    public function updatedNivelProceso()
-    {
-        // Si el valor de nivel_proceso es '0' (Macroproceso), deshabilitamos los campos
-        $this->isMacroproceso = $this->nivel_proceso == 0;
-        if ($this->isMacroproceso) {
-            $this->proceso_nombre = '';
-        }
-    
-    }
-    // Método que inicializa el componente, ya sea para editar o crear un proceso
-    public function mount($proceso = null)
-    {
         if ($proceso) {
-            $this->modalTitle = 'Editar Proceso';
-            $this->actionRoute = route('procesos.update', $proceso->id);
-            $this->proceso_id = $proceso->id;
+            $this->actionRoute = route('proceso.update', $id);
             $this->cod_proceso = $proceso->cod_proceso;
-            $this->nombre = $proceso->nombre;
-            $this->objetivo = $proceso->objetivo;
-            $this->tipo_proceso = $proceso->tipo_proceso;
-            $this->nivel_proceso = $proceso->nivel_proceso;
-            $this->estado = $proceso->estado;
-        } else {
-            $this->modalTitle = 'Crear Proceso';
-            $this->actionRoute = route('procesos.store');
-        }
-    }
-
-    public function save()
-    {
-
-        try {
-            if ($this->proceso_id) {
-                // Editar un proceso existente
-                $proceso = Proceso::find($this->proceso_id);
-                $proceso->update([
-                    'cod_proceso' => $this->cod_proceso,
-                    'nombre' => $this->nombre,
-                    'objetivo' => $this->objetivo,
-                    'tipo_proceso' => $this->tipo_proceso,
-                    'nivel_proceso' => $this->nivel_proceso,
-                    'estado' => $this->estado,
-                ]);
+            $this->proceso_sigla = $proceso->proceso_sigla;
+            $this->proceso_nombre = $proceso->proceso_nombre;
+            $this->proceso_objetivo = $proceso->proceso_objetivo;
+            $this->proceso_tipo = $proceso->proceso_tipo;
+            $this->proceso_nivel = $proceso->proceso_nivel;
+            $this->proceso_estado = $proceso->proceso_estado;
+            $this->cod_proceso_padre = $proceso->cod_proceso_padre;
+          
+            // Verificar si el proceso tiene un padre
+            if ($this->cod_proceso_padre && $proceso->procesoPadre) {
+                $this->proceso_nombre_padre = $proceso->procesoPadre->proceso_nombre;
             } else {
-                // Crear un nuevo proceso
-                Proceso::create([
-                    'cod_proceso' => $this->cod_proceso,
-                    'nombre' => $this->nombre,
-                    'objetivo' => $this->objetivo,
-                    'tipo_proceso' => $this->tipo_proceso,
-                    'nivel_proceso' => $this->nivel_proceso,
-                    'estado' => $this->estado,
-                ]);
+                $this->proceso_nombre_padre = ''; // Dejar vacío si no tiene padre
             }
 
-            $this->dispatchBrowserEvent('close-modal');
-        } catch (\Exception $e) {
-            // Log error or handle exception
-            session()->flash('error', 'Hubo un problema al guardar el proceso: ' . $e->getMessage());
+            // Establecer el título y la ruta de acción para la edición
+            
         }
-    }
-    public function closeModal()
-    {
-        $this->emit('closeModal');  // Emitimos un evento para cerrar el modal desde JavaScript
-    }
-    public function syncData()
-    {
-        // Sincronizar datos cuando el modal se abre
+      
     }
 
-    public function clearForm()
+    // Método que inicializa el componente, ya sea para editar o crear un proceso
+    public function mount()
     {
-        $this->reset(['cod_proceso', 'nombre', 'objetivo']); // Limpia el formulario
-        $this->emit('openModal'); // Abre el modal
+        $this->modalTitle = 'Crear Proceso';
+        $this->btnName= 'Guardar';
+        $this->nivel_proceso = '0';
+        $this->isMacroproceso = true;
+        $this->cod_proceso = "";
+        $this->proceso_nombre = "";
+        $this->cod_proceso_padre = "";
+        $this->proceso_nombre_padre= "";
+        $this->proceso_objetivo = "";
+        $this->proceso_sigla = "";
+        $this->actionRoute = route('procesos.store');
+        $this->method = "POST";
+
     }
+    public function nuevoProceso()
+    {
+        // Restablece los valores a los configurados en mount
+        
+        $this->mount();
+        $this->btnName= 'Guardar';
+    }
+
     public function render()
     {
         return view('livewire.proceso-modal');

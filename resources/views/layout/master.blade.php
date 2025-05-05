@@ -38,9 +38,10 @@
       
     
     </div>
-    @include('layout.footer')
+   
+    @include('layout.footer')  
     @livewireScripts
-    @stack('scripts')
+    @stack('scripts') 
 
 </body>
 

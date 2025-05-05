@@ -11,12 +11,13 @@ class Proceso extends Model
     protected $fillable = [
         'id',
         'cod_proceso',
-        'proceso_nombre',
         'proceso_sigla',
+        'proceso_nombre',
+        'proceso_objetivo',      
         'proceso_tipo',
         'cod_proceso_padre',
         'proceso_nivel',
-        'proeso_estado',
+        'proceso_estado',
         'inactivate_at',
     ];
 

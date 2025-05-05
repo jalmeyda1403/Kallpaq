@@ -1,18 +1,13 @@
 @extends('layout.master')
 @section('title', 'SIG')
-@section('css')
-
+@push('styles')
     <style>
         .selected {
             background-color: #ECECEC;
             /* Light gray background for selected row */
         }
-
-        
     </style>
-
-
-@endsection
+@endpush
 
 @section('content')
     <div class="container-fluid">
@@ -141,7 +136,9 @@
                             <div class="col -md-6">
                                 <!-- Campos del formulario -->
                                 <div class="form-group">
-                                    <label for="proceso_id"><h6>Seleccione Proceso<span>*</span></h6></label>
+                                    <label for="proceso_id">
+                                        <h6>Seleccione Proceso<span>*</span></h6>
+                                    </label>
                                     <div class="input-group">
                                         <!-- Campo oculto para el ID del proceso -->
                                         <input type="hidden" name="proceso_id" id="proceso_id" required>
@@ -368,7 +365,7 @@
 
 
 @endsection
-@section('js')
+@push('scripts')
     <script>
         $(document).ready(function() {
             const $obligacionesTable = $('#obligaciones');
@@ -388,7 +385,6 @@
             $(document).on('click', '.clickable-row', function() {
                 // Remover clase "selected" de todas las filas
                 $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
-
 
                 // Añadir la clase "selected" a la fila clickeada
                 $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
@@ -682,7 +678,5 @@
                 setTimeout(() => $errorAlert.fadeOut(), 2000);
             }
         });
-
-
     </script>
-@stop
+@endpush

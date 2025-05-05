@@ -11,7 +11,7 @@ class ProcesoController extends Controller
     public function index(Request $request)
     {
 
-         $query = Proceso::query();
+        $query = Proceso::query();
 
         // Filtrar si se selecciona un proceso padre
         if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
@@ -20,10 +20,10 @@ class ProcesoController extends Controller
             // Filtrar procesos de nivel 0 o nivel 1
             $query->whereIn('proceso_nivel', [0, 1]);
         }
-    
+
         $procesos = $query->get();
         $procesos_padre = Proceso::where('proceso_nivel', 0)->get(); // Solo procesos de nivel 0 como padres
-    
+
         return view('procesos.index', compact('procesos', 'procesos_padre'));
     }
 
@@ -45,18 +45,19 @@ class ProcesoController extends Controller
         return view('procesos.edit', compact('proceso', 'procesosPadre'));
     }
 
-    public function update(Request $request, Proceso $proceso)
+    public function update(Request $request, $id)
     {
-        // return dd ($request);
+        $proceso = Proceso::findOrFail($id);
         $proceso->update($request->all());
 
         return redirect()->route('procesos.index')->with('success', 'Proceso actualizado correctamente');
     }
 
-    public function destroy(Proceso $proceso)
+    public function destroy($id)
     {
+        $proceso = Proceso::findOrFail($id);
         $proceso->delete();
-        return redirect()->route('procesos.index')->with('success', 'Proceso eliminado correctamente');
+        return response()->json(['success' => true, 'message' => 'Proceso eliminado exitosamente.']);
     }
 
     public function findProcesos($proceso_id = null)
@@ -76,14 +77,14 @@ class ProcesoController extends Controller
         } else {
             // Si no se pasa un proceso_id, devolver todos los procesos
             $procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
-            ->orderBy('cod_proceso')->get();
+                ->orderBy('cod_proceso')->get();
 
 
             foreach ($procesos as $proceso) {
                 $resultado = array_merge($resultado, $this->getFlatProcessList($proceso));
             }
 
-        }     
+        }
 
         return response()->json($resultado);
     }
@@ -101,7 +102,7 @@ class ProcesoController extends Controller
             $resultado = array_merge($resultado, $this->getFlatProcessList($subproceso));
         }
 
-        usort($resultado, function($a, $b) {
+        usort($resultado, function ($a, $b) {
             return strcmp($a['proceso_nombre'], $b['proceso_nombre']);
         });
 
@@ -130,8 +131,8 @@ class ProcesoController extends Controller
         $proceso = Proceso::findOrFail($proceso_id);
 
         // Aquí agregarías la lógica necesaria para asociar procesos
-      
-        $ouos = $proceso->ouos->map(function($ouo) use ($proceso_id) {
+
+        $ouos = $proceso->ouos->map(function ($ouo) use ($proceso_id) {
             // Añadir el proceso_id a cada OUO para usarlo en el frontend
             $ouo->proceso_id = $proceso_id;
             return $ouo;
@@ -145,9 +146,9 @@ class ProcesoController extends Controller
         $ouo_id = $request->input('ouo_id');  // Obtener el ID de la OUO seleccionada
 
         $proceso = Proceso::findOrFail($proceso_id);
-        
-        
-        $proceso->ouos()->attach($ouo_id);  
+
+
+        $proceso->ouos()->attach($ouo_id);
 
         $ouos = $proceso->ouos;
 
