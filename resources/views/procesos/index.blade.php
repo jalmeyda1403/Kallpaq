@@ -37,8 +37,8 @@
                             <i class="fas fa-plus"></i> Nuevo
                         </a>
 
-                        <button class="btn btn-primary btn-sm" id="btnEditar"
-                            onclick="Livewire.dispatchTo('proceso-modal','verProceso', { id: 31 })"
+                        <button class="btn btn-primary btn-sm" id="btnEditar" disabled
+                            onclick="Livewire.dispatchTo('proceso-modal','verProceso', { id: $(this).data('id') })"
                             data-target="#procesoModal" data-toggle="modal">
                             <i class="fas fa-pencil-alt"></i> Editar
                         </button>
@@ -59,8 +59,7 @@
                             <select name="proceso_padre_id" id="proceso_padre_id" class="form-control">
                                 <option value="">Selecciona un Proceso Padre</option>
                                 @foreach ($procesos_padre as $procesoPadre)
-                                    <option value="{{ $procesoPadre->id }}"
-                                        {{ request('proceso_padre_id') == $procesoPadre->id ? 'selected' : '' }}>
+                                    <option value="{{ $procesoPadre->id }}" {{ request('proceso_padre_id') == $procesoPadre->id ? 'selected' : '' }}>
                                         {{ $procesoPadre->cod_proceso }}. {{ $procesoPadre->proceso_nombre }}
                                     </option>
                                 @endforeach
@@ -75,7 +74,7 @@
 
             <div class="card-body">
 
-                <table class="table table-hover" id= "procesos">
+                <table class="table table-hover" id="procesos">
                     <thead>
                         <tr>
                             <th>Cod Proceso</th>
@@ -113,12 +112,10 @@
                                         <i class="fas fa-list"></i>
                                     </a>
                                     <a href="{{ route('riesgos.listar', ['proceso_id' => $proceso->id]) }}"
-                                        class="btn bg-orange color-palette btn-sm" data-toggle="tooltip"
-                                        title="Ver Riesgos">
+                                        class="btn bg-orange color-palette btn-sm" data-toggle="tooltip" title="Ver Riesgos">
                                         <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                     </a>
-                                    <a href="#" class="btn btn-danger btn-sm" data-toggle="tooltip"
-                                        title="Ver Hallazgos">
+                                    <a href="#" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Ver Hallazgos">
                                         <i class="fas fa-fire"></i>
                                     </a>
 
@@ -167,8 +164,8 @@
                                 <input type="hidden" name="ouo_id" id="ouo_id" required>
 
                                 <!-- Campo de texto para el nombre del proceso -->
-                                <input type="text" class="form-control" id="ouo_nombre" name="ouo_nombre" required
-                                    disabled placeholder="Seleccione el Órgano o Undiad Orgánica a Asociar">
+                                <input type="text" class="form-control" id="ouo_nombre" name="ouo_nombre" required disabled
+                                    placeholder="Seleccione el Órgano o Undiad Orgánica a Asociar">
 
                                 <!-- Botón para abrir el modal -->
                                 <a href="#" class="btn bg-navy color-palette" data-toggle="modal"
@@ -210,8 +207,9 @@
 @endsection
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let procesoId = null;
+        let procesoId = null;
+        document.addEventListener('DOMContentLoaded', function () {
+
             const $loadingSpinner = $('#loading-spinner');
             const $tableOUOs = $('.table-ouos');
             const $listaOUOs = $('#listaOUOs');
@@ -222,24 +220,32 @@
             // Delegar el clic en las filas para manejar selección
 
 
-            $(document).on('click', '.clickable-row', function() {
+            $(document).on('click', '.clickable-row', function () {
+                var editButton = $('#btnEditar');
+                var deleteButton = $('#btnEliminar');
+
+
                 $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
                 $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
-
                 procesoId = $(this).data('id');
                 console.log(procesoId); // Asegurarse de que estamos capturando el ID
-                $('#btnEditar').prop('disabled', false).data('id', procesoId);
-                $('#btnEliminar').prop('disabled', false).data('id', procesoId);
+                // Establecer el atributo data-id
+                editButton.prop('disabled', false).data('id', procesoId);
+                deleteButton.prop('disabled', false).data('id', procesoId);
+
+                // Adjuntar el evento click
+                editButton.on('click', function () {
+                    var id = $(this).data('id'); // Obtener el ID del botón
+                    Livewire.dispatchTo('proceso-modal', 'verProceso', { id: id });
+                });
+               
             });
 
             //al momento de cargar el modal
-            $(document).on('click', '.verOUOBtn', function() {
-                procesoId = $(this).data('id');
+            $(document).on('click', '.verOUOBtn', function () {
                 $verModal.modal('show');
                 obtenerOUO(procesoId);
             });
-
-
 
             function obtenerOUO(procesoId) {
                 $loadingSpinner.show();
@@ -247,18 +253,18 @@
 
                 const url =
                     `{{ route('procesos.listarOUO', ['proceso_id' => ':proceso_id']) }}`
-                    .replace(
-                        ':proceso_id', procesoId);
+                        .replace(
+                            ':proceso_id', procesoId);
 
                 $.ajax({
                     url: url,
                     method: 'GET',
-                    success: function(response) {
+                    success: function (response) {
                         $loadingSpinner.hide();
                         $tableOUOs.show();
                         actualizarTablaOUOs(response);
                     },
-                    error: function(error) {
+                    error: function (error) {
                         console.error('Error al obtener las OUO:', error);
                         $loadingSpinner.hide();
                         $tableOUOs.show();
@@ -272,15 +278,15 @@
                 $listaOUOs.empty(); // Limpiar la lista de OUOS
 
                 if (ouos.length > 0) {
-                    ouos.forEach(function(ouo) {
+                    ouos.forEach(function (ouo) {
                         $listaOUOs.append(`
-                    <tr data-proceso-id="${ouo.proceso_id}"> <!-- Aquí se pasa el proceso_id -->
-                        <td>${ouo.ouo_codigo || "S/C"}</td>
-                        <td>${ouo.ouo_nombre}</td>  
-                        <td><a href="#" class="btn btn-danger btn-sm deleteOUOBtn" data-id="${ouo.id}"  data-proceso-id="${ouo.proceso_id}">
-                         <i class="fas fa-trash-alt"></i></td>
-                    </tr>
-                `);
+                            <tr data-proceso-id="${ouo.proceso_id}"> <!-- Aquí se pasa el proceso_id -->
+                                <td>${ouo.ouo_codigo || "S/C"}</td>
+                                <td>${ouo.ouo_nombre}</td>  
+                                <td><a href="#" class="btn btn-danger btn-sm deleteOUOBtn" data-id="${ouo.id}"  data-proceso-id="${ouo.proceso_id}">
+                                 <i class="fas fa-trash-alt"></i></td>
+                            </tr>
+                        `);
                     });
                 } else {
                     $listaOUOs.append(
@@ -288,27 +294,26 @@
                 }
             }
             //Disociar OUO
-            $(document).on('click', '.deleteOUOBtn', function() {
+            $(document).on('click', '.deleteOUOBtn', function () {
                 event.preventDefault();
                 const ouoId = $(this).data('id');
-                const procesoId = $(this).data('proceso-id');
                 const url =
                     `{{ route('procesos.disociarOUO', ['proceso_id' => '__PROCESO_ID__', 'ouo_id' => '__OUO_ID__']) }}`
-                    .replace('__PROCESO_ID__', procesoId)
-                    .replace('__OUO_ID__', ouoId);
+                        .replace('__PROCESO_ID__', procesoId)
+                        .replace('__OUO_ID__', ouoId);
                 if (confirm(
-                        '¿Estás seguro de que deseas disociar esta OUO? Esta acción no se puede deshacer.'
-                    )) {
+                    '¿Estás seguro de que deseas disociar esta OUO? Esta acción no se puede deshacer.'
+                )) {
                     $.ajax({
                         url: url,
                         method: 'DELETE',
                         data: {
                             _token: $('meta[name="csrf-token"]').attr('content')
                         },
-                        success: function(response) {
+                        success: function (response) {
                             obtenerOUO(procesoId); // Recargar la tabla
                         },
-                        error: function(xhr) {
+                        error: function (xhr) {
                             alert(xhr.responseJSON.error ||
                                 'Error al disociar la OUO.');
                         }
@@ -316,7 +321,7 @@
                 }
             });
             //Asociar OUO
-            $formAddOUO.submit(function(e) {
+            $formAddOUO.submit(function (e) {
                 e.preventDefault(); // Prevenir el envío tradicional del formulario
 
                 const _url = `{{ route('procesos.asociarOUO', ':proceso_id') }}`.replace(
@@ -336,14 +341,14 @@
                     url: _url, // La URL donde se enviarán los datos
                     method: 'POST', // El método HTTP (POST)
                     data: formData, // Los datos que se enviarán
-                    success: function(response) {
+                    success: function (response) {
                         $('#ouooModal').modal('hide'); // Cerrar el modal de búsqueda
                         $formAddOUO[0]
                             .reset(); // Limpiar los campos del formulario (si es necesario)
                         obtenerOUO(procesoId);
 
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         // En caso de error, puedes mostrar un mensaje
                         console.error('Error al asociar la OUO:', error);
                         alert('Ocurrió un error al asociar la OUO.');
@@ -352,27 +357,7 @@
             });
             // Escuchar cuando el modal se muestra y emitir el evento para refrescar el componente Livewire
         });
-        document.addEventListener("DOMContentLoaded", function() {
-            // Seleccionamos todas las filas
-            const rows = document.querySelectorAll('.clickable-row');
-            const editButton = document.getElementById('btnEditar');
-
-            rows.forEach(row => {
-                row.addEventListener('click', function() {
-                    // Obtenemos el id de la fila seleccionada
-                    const procesoId = this.getAttribute('data-id');
-                    console.log(procesoId);
-
-                    // Habilitamos el botón "Editar" y le pasamos el id del proceso
-                    editButton.disabled = false;
-                    editButton.setAttribute('data-id', procesoId);
-                    editButton.setAttribute('onclick',
-                        `Livewire.dispatchTo('proceso-modal', 'verProceso', { id: ${procesoId} })`
-                    );
-
-                });
-            });
-        });
+      
 
         function confirmarEliminacion(id) {
             if (confirm('¿Estás seguro de que deseas eliminar este proceso?')) {
@@ -383,7 +368,7 @@
                     data: {
                         _token: '{{ csrf_token() }}', // Asegúrate de incluir el token CSRF
                     },
-                    success: function(response) {
+                    success: function (response) {
                         // Manejar la respuesta exitosa, por ejemplo, recargar la página o actualizar la vista
                         alert('Proceso eliminado exitosamente.');
                         location.reload();
