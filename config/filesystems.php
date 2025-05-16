@@ -39,9 +39,15 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
-          
+
+        ],
+        'documentos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/procesos/documentos'), // carpeta procesos dentro de storage/app
+            'url' => env('APP_URL') . '/storage/procesos/documentos',
+            'visibility' => 'private',
         ],
 
         's3' => [

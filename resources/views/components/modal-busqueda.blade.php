@@ -1,5 +1,5 @@
 <div class="modal fade" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}Label"
-    aria-hidden="true">
+    aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-md-down" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background-color: {{ $modalBgcolor }}; color: {{ $modalTxtcolor }};">

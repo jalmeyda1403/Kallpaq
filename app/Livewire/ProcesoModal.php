@@ -22,8 +22,7 @@ class ProcesoModal extends Component
     public $proceso_objetivo = "";
     public $proceso_nivel = "0";
 
-    public $id;
-  
+      
     protected $listeners = [
         'verProceso' => 'verProceso',  // Evento de edición
         'nuevoProceso' => 'nuevoProceso' // Evento de creación de nuevo proceso
@@ -68,7 +67,6 @@ class ProcesoModal extends Component
 
     public function verProceso($id)
     {
-       
         $this->modalTitle = 'Editar Proceso';      
         $this->btnName = "Actualizar";
         $this->method = "PUT";
@@ -121,7 +119,7 @@ class ProcesoModal extends Component
         // Restablece los valores a los configurados en mount
         
         $this->mount();
-        $this->btnName= 'Guardar';
+       
     }
 
     public function render()

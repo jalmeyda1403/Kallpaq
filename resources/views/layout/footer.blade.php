@@ -4,7 +4,7 @@
        <script src="{{ asset('vendor/adminlte/dist/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
 
-      
+
 
        <!--Datatables-->
        <script src="{{ asset('vendor/adminlte/dist/plugins/datatables/jquery.dataTables.min.js') }}"></script>
@@ -35,6 +35,11 @@
 
        <!--Moment-->
        <script src="{{ asset('vendor/adminlte/dist/plugins/moment/moment.min.js') }}"></script>
+
+       <!-- Incluir el archivo JS de lightGallery -->
+       <script src="{{ asset('vendor/adminlte/dist/plugins/lightgallery/js/lightgallery.min.js') }}"></script>
+      
+     
    @else
        <script src="{{ mix(config('adminlte.laravel_mix_js_path', 'js/app.js')) }}"></script>
    @endif

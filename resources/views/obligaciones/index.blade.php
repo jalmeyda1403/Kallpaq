@@ -6,6 +6,12 @@
             background-color: #ECECEC;
             /* Light gray background for selected row */
         }
+        .table-obligaciones {
+            font-size: 12px;
+        }
+        .table-riesgos {
+            font-size: 12px;
+        }
     </style>
 @endpush
 
@@ -56,7 +62,7 @@
                     <div class="card-body">
                         <!-- Listado de obligaciones -->
                         <div class="row">
-                            <table class="table table-hover table-sm" id="obligaciones">
+                            <table class="table table-hover table-sm table-obligaciones" id="obligaciones">
                                 <thead>
                                     <tr>
                                         <th class="align-top">Item</th>
@@ -240,7 +246,7 @@
     <!-- Modal para mostrar los riesgos de la obligacion -->
     <div class="modal fade" id="verRiesgosModal" tabindex="-1" role="dialog" aria-labelledby="verRiesgosModalLabel"
         aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-danger">
                     <h5 class="modal-title" id="verRiesgosModalLabel">Riesgos Asociados</h5>
@@ -259,8 +265,7 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Tipo</th>
-                                <th style="width: 300%" class="align-top">Nombre Riesgo</th>
-
+                                <th style="width: 30%" class="align-top">Nombre Riesgo</th>
                                 <th>Factor</th>
                                 <th>Probabilidad</th>
                                 <th>Impacto</th>

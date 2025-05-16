@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Inventario;
 use Illuminate\Http\Request;
 use App\Models\Proceso;
 use App\Models\OUO;
@@ -12,17 +13,47 @@ class ProcesoController extends Controller
     {
 
         $query = Proceso::query();
+     
+
 
         // Filtrar si se selecciona un proceso padre
-        if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
-            $query->where('cod_proceso_padre', $request->proceso_padre_id);
+        if (($request->has('proceso_padre_id') && $request->proceso_padre_id != '') or ($request->has('buscar_proceso') && $request->buscar_proceso != '')) {
+            // Filtrar si se selecciona un proceso padre
+            if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
+                $query->where('cod_proceso_padre', $request->proceso_padre_id);
+            }
+    
+            // Buscar por nombre de proceso si se proporciona
+            if ($request->has('buscar_proceso') && $request->buscar_proceso != '') {
+                $query->where('proceso_nombre', 'LIKE', "%{$request->buscar_proceso}%");
+            }
+    
+            // En caso de que alguno de los dos esté presente, filtrar también por niveles 0 y 1
+            $query->whereIn('proceso_nivel', [0, 1, 2]);
         } else {
-            // Filtrar procesos de nivel 0 o nivel 1
-            $query->whereIn('proceso_nivel', [0, 1]);
+            // Si no se proporciona ningún filtro, solo filtrar por nivel 0
+            $query->whereIn('proceso_nivel', [0]);
         }
 
+       
         $procesos = $query->get();
-        $procesos_padre = Proceso::where('proceso_nivel', 0)->get(); // Solo procesos de nivel 0 como padres
+        // Filtrar procesos de nivel 0 como padres
+        $procesos_padre = Proceso::where('proceso_nivel', 0)
+            ->orderBy('cod_proceso')->get();
+
+        return view('procesos.index', compact('procesos', 'procesos_padre'));
+    }
+
+
+    public function subprocesos($proceso_id)
+    {
+
+        $proceso = Proceso::findOrFail($proceso_id);
+        $procesos = $proceso->subprocesos;
+
+        // Filtrar procesos de nivel 0 como padres
+        $procesos_padre = Proceso::where('proceso_nivel', 0)
+            ->orderBy('cod_proceso')->get();
 
         return view('procesos.index', compact('procesos', 'procesos_padre'));
     }
@@ -118,10 +149,9 @@ class ProcesoController extends Controller
     }
     public function mapaProcesos()
     {
-
+        $inventarios = Inventario::all();
         $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
-
-        return view('procesos.mapa', compact('procesos'));
+        return view('procesos.mapa', compact('inventarios','procesos'));
 
     }
 
@@ -141,38 +171,5 @@ class ProcesoController extends Controller
         return response()->json($ouos);
     }
 
-    public function asociarOUO(Request $request, $proceso_id)
-    {
-        $ouo_id = $request->input('ouo_id');  // Obtener el ID de la OUO seleccionada
-
-        $proceso = Proceso::findOrFail($proceso_id);
-
-
-        $proceso->ouos()->attach($ouo_id);
-
-        $ouos = $proceso->ouos;
-
-        // Redirigir a la vista de asociación
-        return response()->json([
-            'message' => 'OUO asociada correctamente.',
-            'ouos' => $ouos
-        ]);
-    }
-    public function disociarOUO($proceso_id, $ouo_id)
-    {
-        // Encuentra el proceso por ID
-        $proceso = Proceso::findOrFail($proceso_id);
-
-        // Desvincular la OUO del proceso
-        $proceso->ouos()->detach($ouo_id);
-
-        // Obtener las OUOs asociadas actualizadas
-        $ouos = $proceso->ouos;
-
-        // Redirigir con un mensaje de éxito
-        return response()->json([
-            'message' => 'OUO eliminada correctamente.',
-            'ouos' => $ouos
-        ]);
-    }
+    
 }

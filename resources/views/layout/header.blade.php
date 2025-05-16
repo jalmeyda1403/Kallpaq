@@ -19,11 +19,12 @@
 
     {{-- Base Stylesheets --}}
     @if (!config('adminlte.enabled_laravel_mix'))
-        <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+
         <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/plugins/fontawesome-free/css/all.min.css') }}">
         <link rel="stylesheet"
             href="{{ asset('vendor/adminlte/dist/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
         <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
         <!--datatables-->
         <link rel="stylesheet"
             href="{{ asset('vendor/adminlte/dist/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -44,6 +45,9 @@
             <link rel="stylesheet"
                 href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
         @endif
+        <!-- Incluir el archivo CSS de lightGallery -->
+        <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/plugins/lightgallery/css/lightgallery.min.css')}}">
+
     @else
         <link rel="stylesheet" href="{{ mix(config('adminlte.laravel_mix_css_path', 'css/app.css')) }}">
     @endif
@@ -51,9 +55,8 @@
     {{-- Extra Configured Plugins Stylesheets --}}
     @include('adminlte::plugins', ['type' => 'css'])
 
-  
 
-     {{-- Favicon --}}
+
+    {{-- Favicon --}}
 
     <link rel="shortcut icon" href="{{ asset('images/kallpaq_ico.png') }}" />
-  

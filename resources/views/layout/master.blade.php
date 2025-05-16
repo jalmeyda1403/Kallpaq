@@ -2,9 +2,10 @@
 <html>
 
 <head>
-    @include('layout.header') 
-    @livewireStyles  
+    @include('layout.header')
+    @livewireStyles
     @stack('styles')
+   
 </head>
 
 <body class="sidebar-mini layout-fixed" style="height: auto;">
@@ -29,19 +30,18 @@
 
         <!-- Footer -->
         <footer class="main-footer">
-            <strong>Copyright © 2024 Contraloria.gob.pe</a>.</strong>
-            Derechos reservados.
+            <strong>¡Mejorando Juntos!</strong>
             <div class="float-right d-none d-sm-inline-block">
-                <b>Version</b> 1.0
+                <b>Version  1.0 </b>
             </div>
         </footer>
-      
-    
+
+
     </div>
-   
-    @include('layout.footer')  
+
+    @include('layout.footer')
     @livewireScripts
-    @stack('scripts') 
+    @stack('scripts')
 
 </body>
 

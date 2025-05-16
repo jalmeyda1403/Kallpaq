@@ -11,8 +11,8 @@ class OUO extends Model
     protected $table = 'ouos';  // Define el nombre de la tabla
 
     protected $fillable = [
-        'ouo_nombre',
         'ouo_codigo',
+        'ouo_nombre',       
         'ouo_padre',
         'subgerente_id',
         'subgerente_condicion',
@@ -28,7 +28,8 @@ class OUO extends Model
     // Relación con proceso (muchos a muchos)
     public function procesos()
     {
-        return $this->belongsToMany(Proceso::class, 'procesos_ouo', 'id_ouo', 'id_proceso');
+        return $this->belongsToMany(Proceso::class, 'procesos_ouo', 'id_ouo', 'id_proceso')
+        ->withPivot('responsable', 'delegada');
     }
 
     // Relación con ouo_padre (uno a muchos)

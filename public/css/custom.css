@@ -7,8 +7,86 @@
     vertical-align: middle;
 }
 
-.badge-success { background-color: #28a745 !important; }
-.badge-warning { background-color: #ffc107 !important; }
-.badge-orange { background-color: #ff9800 !important; }
-.badge-danger { background-color: #dc3545 !important; }
-.badge-secondary { background-color: #6c757d !important; }
+.badge-success {
+    background-color: #28a745 !important;
+}
+
+.badge-warning {
+    background-color: #ffc107 !important;
+}
+
+.badge-orange {
+    background-color: #ff9800 !important;
+}
+
+.badge-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge-secondary {
+    background-color: #6c757d !important;
+}
+
+[class*=sidebar-dark] .user-panel {
+    border-bottom: 1px solid #92a4b6;
+}
+
+.nav-sidebar .nav-link {
+    font-size: 13px;
+}
+
+.user-panel {
+    font-size: 14px;
+}
+
+.user-panel .info {
+    display: inline-block;
+    padding: 5px 5px 5px 15px;
+}
+
+.table-header {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px;
+    background: #d60000;
+    border-left: #848383 1px solid;
+    border-bottom: 1px solid #fff;
+    color: #FFFFFF;
+}
+
+.table tr {
+
+    display: table-row;
+    vertical-align: inherit;
+    unicode-bidi: isolate;
+    border-color: inherit;
+}
+
+.card-title  {
+    font: bold 15px 'Segoe UI', Helvetica, Arial, sans-serif !important;
+    margin-bottom: 15px;
+    margin-top: 20px !important;
+    color: #666 !important;
+}
+.page-item.active .page-link {
+    z-index: 3;
+    color: rgb(255, 255, 255);
+    background-color: rgb(51, 54, 57);
+    border-color: rgb(51, 54, 57);
+}
+.form-control {
+    border-radius: 5px;
+    width: 100%;
+    font-size: small;
+}
+.dataTables_length , .pagination, .dataTables_filter {
+    font-size: 13px;
+}
+.form-control:focus,
+select:focus,
+textarea:focus {
+    border-color: #2861a7;
+    /* Color verde */
+    box-shadow: 0 0 5px rgba(40, 120, 167, 0.5);
+    /* Efecto de sombra suave */
+}

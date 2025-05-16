@@ -20,7 +20,9 @@ use App\Http\Controllers\ObligacionController;
 use App\Http\Controllers\AreaComplianceController;
 use App\Http\Controllers\RiesgoController;
 use App\Http\Controllers\OUOController;
-
+use App\Http\Controllers\DiagramaContextoController;
+use App\Http\Controllers\SipocController;
+Use App\Http\Controllers\DocumentoController;
 
 
 
@@ -52,23 +54,33 @@ Route::resource('acciones', AccionController::class);
 Route::resource('obligaciones', ObligacionController::class);
 Route::resource('riesgos', RiesgoController::class);
 Route::resource('ouos', OUOController::class);
+Route::resource('documentos', DocumentoController::class);
 //Procesos
 Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProcesos'])->name('procesos.buscar');
 
 Route::get('/listarProcesos', [ProcesoController::class,'listar'])->name('procesos.listar');
-Route::get('/mapaProcesos', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
+Route::get('/procesos-mapa', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
 Route::get('/procesos/{proceso_id}/listarouo', [ProcesoController::class, 'listarOUO'])->name('procesos.listarOUO');
 Route::post('/procesos-asociar/{proceso_id}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
 Route::delete('/procesos-disociar/{proceso_id}/ouo/{ouo_id}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
 Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.index');
 Route::put('/proceso/update/{id}', [ProcesoController::class, 'update'])->name('proceso.update');
 Route::delete('/proceso/delete/{id}', [ProcesoController::class, 'destroy'])->name('proceso.eliminar');
+Route::get('/proceso/{proceso_id}/subprocesos', [ProcesoController::class,'subprocesos'])->name('procesos.subprocesos');
+Route::get('/buscar-documento', [DocumentoController::class, 'buscar'])->name('documento.buscar');
 
 Route::get('/indicadores/{proceso_id?}/listar',  [IndicadorController::class, 'listar'])->name('indicadores.listar');
 Route::get('indicadores/{proceso_id?}/create/', [IndicadorController::class, 'create'])->name('indicadores.create');
 Route::get('/indicadores/{id}/historico-datos',  [IndicadorController::class, 'showHistorico']);
 Route::get('/indicadores/{id}/datos',  [IndicadorController::class, 'showDatos']);
 Route::get('indicadores/{id}/frecuencia', [IndicadorController::class, 'generarFrecuencia'])->name('indicadores.frecuencia');
+
+//Matriz de Caracterización
+
+
+Route::resource('caracterizacion', DiagramaContextoController::class);
+Route::get('mcar/{proceso_id}', [DiagramaContextoController::class, 'index'])->name('caracterizacion.index');
+Route::get('/salida/{salida_id}/requisitos', [SipocController::class, 'getRequisitos']);
 
 //Objetivos
 Route::get('/buscarobjetivosSIG', [PlanificacionSIGController::class, 'findObjetivosSIG'])->name('objetivoSIG.buscar');
@@ -132,8 +144,10 @@ Route::get('/listarOUO', [OUOController::class,'listar'])->name('ouos.listar');
 
 Route::get('/contexto/', [ContextoDeterminacionController::class, 'index'])->name('contexto.index');
 
-
-
+//Documentos
+Route::put('/documento/update/{id}', [DocumentoController::class, 'update'])->name('documento.update');
+Route::delete('/documento/delete/{id}', [DocumentoController::class, 'destroy'])->name('documento.eliminar');
+Route::get('/documentos/descargar/{id}', [DocumentoController::class, 'descargarArchivo'])->name('documentos.descargar');
 
     Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
     Route::post('admin/usuarios', [UserController::class, 'store'])->name('usuarios.store');
