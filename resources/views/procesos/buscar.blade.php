@@ -29,6 +29,7 @@
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-top: 5px;
+            font-size: 12x;
         }
 
         .dropdown-menu {
@@ -37,12 +38,14 @@
             padding: 0;
             border-radius: 5px;
             width: 100%;
+            font-size: 12x;
         }
 
         .dropdown-item {
             padding: 8px 15px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-size: 12x;
         }
 
         .dropdown-item:hover {
@@ -55,7 +58,7 @@
             border-color: #ced4da;
             color: #495057;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 12x;
             font-weight: 600;
             padding: 5px 15px;
         }
@@ -123,8 +126,8 @@
                             <th style="width:18%">Proceso</th>
                             <th style="width:15%">Código Documento</th>
                             <th>Nombre Documento</th>
-                            <th style="width:15%">Tipo de Documento</th>
-                            <th class="text-center" style="width:10%">Fuente
+                            <th class=" text-nowrap">Tipo de Documento</th>
+                            <th class="text-center text-nowrap">Fuente
                                 <i class="fas fa-filter  fa-xs" style="cursor: pointer; margin-left: 5px;"
                                     id="filterIcon"></i>
                                 <div class="dropdown" id="filterFuenteDropdown" style="display:none;">
@@ -139,6 +142,7 @@
                                 </div>
                             </th>
                             <th>Versión</th>
+                            <th>Vigencia</th>
                             <th class="text-center">Enlace</th>
                             <th></th>
                         </tr>
@@ -151,38 +155,37 @@
                                 <td>{{ $documento->nombre }}</td>
                                 <td>{{ $documento->tipo_documento->nombre }}</td>
                                 <td class="text-center">{{ $documento->fuente }}</td>
-                                <td class="text-center">{{ $documento->version }}</td>
+                                <td class="text-center">{{ str_pad($documento->ultimaVersion->version ?? '0', 2, '0', STR_PAD_LEFT) }}</td>
+                                <td class="text-center text-nowrap" >{{ $documento->ultimaVersion->fecha_publicacion ?? ''}}</td>
                                 <td class="text-center">
-                                  
-
                                     @php
-                                        $esArchivoLocal = !str_starts_with($documento->enlace, 'http');
+                                        $enlace = $documento->ultimaVersion->archivo_path ?? null;
+                                        $esArchivoLocal = !str_starts_with($enlace, 'http');
                                     @endphp
-
+                                
                                     @if ($esArchivoLocal)
-                                        {{-- Mostrar botón para descargar archivo desde tu servidor --}}
-                                        <a href="#" data-url="{{ route('documentos.descargar', $documento->id) }}" target="_blank"
-                                            class="view-pdf px-2" >
+                                        <a href="#" data-url="{{ route('documentos.mostrar', $documento->id) }}" target="_blank" class="view-pdf px-2">
                                             <i class="fas fa-file-pdf fa-lg text-danger"></i>
                                         </a>
                                     @else
-                                        {{-- Mostrar enlace externo --}}
-                                        <a href="#" class="view-pdf px-2" data-url="{{ $documento->enlace }}">
+                                        <a href="{{ $enlace }}" target="_blank" class="view-pdf px-2">
                                             <i class="fas fa-file-pdf fa-lg text-danger"></i>
                                         </a>
                                     @endif
+                                </td>
 
                                 <td class="text-center">
                                     <div class="d-flex align-items-center">
 
-                                        <a href="#" class="px-1 btnEditarDocumento" data-toggle="modal" data-id= {{ $documento->id }}
+                                        <a href="#" class="px-1 btnEditarDocumento" data-toggle="modal"
+                                            data-id={{ $documento->id }}
                                             onclick="Livewire.dispatchTo('documento-modal','verDocumento', { id: 1 })"
                                             data-target="#documentoModal">
                                             <i class="fas fa-pencil-alt text-dark"></i>
                                         </a>
-                                            <a href="#" class="px-3">
-                                                <i class="fas fa-trash-alt text-danger"></i>
-                                            </a>
+                                        <a href="#" class="px-3">
+                                            <i class="fas fa-trash-alt text-danger"></i>
+                                        </a>
 
                                     </div>
                                 </td>
@@ -305,7 +308,7 @@
         $(document).on('click', '.clickable-row', function() {
             $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
             $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
-     
+
         });
 
 

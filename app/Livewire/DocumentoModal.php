@@ -4,20 +4,24 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Documento;
-Use App\Models\TipoDocumento;
+use App\Models\TipoDocumento;
 use Livewire\WithFileUploads;
 
 class DocumentoModal extends Component
 {
     use WithFileUploads;
 
-    public $documento_id, $modalTitle, $actionRoute, $btnName, $method, $archivo,$tiposDocumento;
+    public $documento_id, $modalTitle, $actionRoute, $btnName, $method, $archivo, $tiposDocumento;
+    public $archivo_version, $fecha_aprobacion, $fecha_publicacion;
 
-    public $cod_documento, $tipo_documento_id, $proceso_id, $proceso_nombre, $version, $nombre, $fuente, $enlace, $estado;
+    public $versiones = []; // para cargar versiones relacionadas
+
+    public $cod_documento, $tipo_documento_id, $proceso_id, $proceso_nombre, $version, $nombre, $fuente, $estado;
 
     protected $listeners = [
         'verDocumento' => 'verDocumento',   // Evento para cargar documento en edición
-        'nuevoDocumento' => 'nuevoDocumento' // Evento para crear nuevo documento
+        'nuevoDocumento' => 'nuevoDocumento',
+        'recargarVersiones' => 'recargarVersiones',// Evento para crear nuevo documento
     ];
 
     public function mount($procesoId = null)
@@ -32,12 +36,10 @@ class DocumentoModal extends Component
         $this->cod_documento = "";
         $this->tipo_documento_id = null;
         $this->proceso_id = $procesoId;
-        $this->version = "";
         $this->nombre = "";
         $this->fuente = "";
-        $this->enlace = "";
         $this->estado = "";
-       
+
     }
 
     public function nuevoDocumento()
@@ -50,9 +52,9 @@ class DocumentoModal extends Component
         $this->modalTitle = 'Editar Documento';
         $this->btnName = 'Actualizar';
         $this->method = "PUT";
-
-        $documento = Documento::find($id);
-
+      
+        $documento = Documento::find(id: $id);
+        if (!$documento) return;
         if ($documento) {
             $this->documento_id = $documento->id;
             $this->actionRoute = route('documentos.update', $id);
@@ -60,14 +62,22 @@ class DocumentoModal extends Component
             $this->tipo_documento_id = $documento->tipo_documento_id;
             $this->proceso_id = $documento->proceso_id;
             $this->proceso_nombre = $documento->proceso->proceso_nombre;
-            $this->version = $documento->version;
             $this->nombre = $documento->nombre;
             $this->fuente = $documento->fuente;
-            $this->enlace = $documento->enlace;
-            $this->estado = $documento->estado;                  
+            $this->estado = $documento->estado;
+           
+
+            // Calcular siguiente versión incremental
+            $lastVersion = collect($this->versiones)->max('version');
+            $this->version = is_null($lastVersion) ? 0 : $lastVersion + 1;
+            $this->obtenerVersiones();
         }
     }
+    public function obtenerVersiones(){
 
+        $documento = Documento::find($this->documento_id);
+        $this->versiones = $documento->versiones->sortBy('version')->values()->all();
+    }
     public function render()
     {
         return view('livewire.documento-modal');

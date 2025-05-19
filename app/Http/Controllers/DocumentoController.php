@@ -71,11 +71,9 @@ class DocumentoController extends Controller
         $data = $request->only([
             'cod_documento',
             'proceso_id',
-            'tipo_documento_id',
-            'version',
+            'tipo_documento_id',        
             'nombre',
-            'fuente',
-            'enlace',
+            'fuente',          
             'estado',
         ]);
         $proceso = Proceso::find($request->proceso_id);
@@ -120,7 +118,7 @@ class DocumentoController extends Controller
         $documento = Documento::findOrFail($id);
 
         // Obtener la ruta relativa guardada en BD, ejemplo: "PR001/manual.pdf"
-        $path = $documento->enlace;
+        $path = $documento->ultimaVersion->archivo_path;
 
         // Validar que el archivo exista en el disco privado
         if (!Storage::disk('documentos')->exists($path)) {
@@ -136,7 +134,7 @@ class DocumentoController extends Controller
     public function mostrarArchivoInline($id)
     {
         $documento = Documento::findOrFail($id);
-        $path = $documento->enlace;
+        $path = $documento->$documento->ultimaVersion->archivo_path;
 
         if (!Storage::disk('documentos')->exists($path)) {
             abort(404);
