@@ -13,7 +13,7 @@ class DocumentoVersionModal extends Component
 {
     use WithFileUploads;
 
-    public $id, $documento_id, $archivo_path, $version, $control_cambios,  $fecha_aprobacion, $fecha_publicacion;
+    public $id, $documento_id, $archivo_path, $version, $control_cambios, $fecha_aprobacion, $fecha_publicacion;
     public $modalTitle, $btnName, $method, $actionRoute;
     public $archivo;
     public $documento_version;
@@ -21,6 +21,7 @@ class DocumentoVersionModal extends Component
     protected $listeners = [
         'mostrarVersion' => 'mostrarVersion',
         'nuevaVersion' => 'nuevaVersion',
+        'eliminarVersion' => 'eliminarVersion',
     ];
 
     public function mostrarVersion($id)
@@ -112,7 +113,7 @@ class DocumentoVersionModal extends Component
 
         $this->dispatch('versionActualizada', [], 'documento-modal');
     }
-
+   
 
 
     public function render()

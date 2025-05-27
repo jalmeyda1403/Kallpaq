@@ -1,5 +1,4 @@
 
-@endpush
 <div wire:ignore.self class="modal fade" id="procesoModal" tabindex="-1" role="dialog" aria-labelledby="procesoModalLabel"
     data-backdrop="static" data-keyboard="false">
 
@@ -195,50 +194,3 @@
         </div>
     </div>
 </div>
-@push('styles')
-    <style>
-        /* Estilos específicos para el modal */
-        .card-footer small {
-            font-size: 0.875rem;
-            color: #888;
-        }
-
-        .form-control {
-            border-radius: 5px;
-            width: 100%;
-            font-size: small;
-        }
-
-        textarea::placeholder {
-            color: #d5f6d9;
-        }
-
-     
-        .color-palette {
-            color: white;
-            /* Color del texto dentro del botón */
-        }
-     
-
-        .required-field::after {
-            content: ' (*)';
-            color: red;
-
-        }
-
-        .loading-spinner {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-
-        }
-
-        .loading-spinner.show {
-            display: block;
-        }
-
-        
-    </style>

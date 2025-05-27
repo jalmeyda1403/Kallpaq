@@ -27,22 +27,24 @@
                             <div class="form-group small">
                                 <label for="proceso_id">Proceso ID</label>
                                 <!-- Campo oculto para el ID del proceso -->
-                                <input type="hidden" id="proceso_id" name="proceso_id" value={{ $proceso_id }}>
+                                <input type="hidden" id="proceso_id" name="proceso_id" wire:model="proceso_id"
+                                    value="{{ $proceso_id }}">
                                 <div class="input-group">
                                     <!-- Campo de texto para el nombre del proceso -->
                                     <input type="text" class="form-control" id="proceso_nombre" name="proceso_nombre"
                                         wire:model.live="proceso_nombre" readonly>
                                     <!-- Botón para abrir el modal -->
                                     <button type="button" class="btn btn-dark" data-toggle="modal"
-                                        data-target="#procesoModal">
+                                        onclick="Livewire.dispatchTo('busqueda-procesos-modal', 'cargarModal')"
+                                        data-target="#busquedaModal">
                                         <i class="fas fa-search"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <x-modal-busqueda :ruta="route('procesos.buscar')" campo-id="proceso_id" campo-nombre="proceso_nombre"
-                            modal-titulo="Proceso" modal-id="procesoModal" :modalBgcolor="'#001f3f'" :modalTxtcolor="'#FFFFFF'">>
-                        </x-modal-busqueda>
+
+
+
                         <div class="col-md-6 mb-1">
                             <div class="form-group small">
                                 <label for="tipo_documento_id">Tipo Documento</label>
@@ -91,12 +93,12 @@
                     <div class="mb-2">
                         <div class="form-group small">
                             <label for="nombre" class="required-field">Nombre</label>
-                            <textarea rows="3" id="nombre" name="nombre" wire:model="nombre"
-                                class="form-control">
+                            <textarea rows="3" id="nombre" name="nombre" wire:model="nombre" class="form-control">
+                            </textarea>
                             @error('nombre')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
-                            </textarea>
+
                         </div>
                     </div>
 
@@ -113,8 +115,9 @@
                             @enderror
                         </div>
                     </div>
+
                     <div class="modal-footer justify-content-center w-100">
-                        <button type="submit" class="btn bg-dark btn-sm">Grabar</button>
+                        <button type="submit" class="btn bg-dark btn-sm">{{ $btnName }}</button>
 
                         <a href="#" class="px-1 btn btn-primary btn-sm" data-toggle="modal"
                             data-id={{ $documento_id }}
@@ -124,6 +127,7 @@
                         </a>
                     </div>
                 </form>
+
                 {{-- Listado de versiones --}}
                 <div class="row">
                     <table class="table table-bordered table-hover table-versiones table-sms">
@@ -147,94 +151,47 @@
                                     <td>{{ $ver->fecha_publicacion }}</td>
                                     <td>{{ $ver->control_cambios }}</td>
                                     <td>
-                                        <a href="#"
-                                            data-url="{{ route('documentos.mostrar', $ver->documento_id) }}"
-                                            target="_blank" class="view-pdf px-2">
+                                        <a href="#" class="px-1 btnVerDocumento" data-toggle="modal"
+                                            onclick="Livewire.dispatchTo('pdf-modal','openPdfModal', { path: '{{ optional($ver)->archivo_path ?? '' }}' })"
+                                            data-target="#pdfModal">
                                             <i class="fas fa-file-pdf fa-lg text-danger"></i>
                                         </a>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex align-items-center">
 
-                                            <a href="#" class="px-1 btnEditarDocumento" data-toggle="modal"
-                                                data-id={{$ver->documento_id }}
+                                            <a href="#" class="px-1 btnEditarVersion" data-toggle="modal"
+                                                data-id="{{ $ver->documento_id }}"
                                                 onclick="Livewire.dispatchTo('documento-version-modal', 'mostrarVersion', { id: {{ $ver->id }} })"
                                                 data-target="#versionesModal">
                                                 <i class="fas fa-pencil-alt text-dark"></i>
                                             </a>
-                                            <a href="#" class="px-3">
+                                            <a href="#" class="px-3 btnEliminarVersion"
+                                                wire:click="eliminarVersion({{ $ver->id }})">
                                                 <i class="fas fa-trash-alt text-danger"></i>
                                             </a>
-
                                         </div>
                                     </td>
-
-
                                 </tr>
                             @endforeach
                             @if (count($versiones) == 0)
                                 <tr>
-                                    <td colspan="4" class="text-center">No hay versiones aún</td>
+                                    <td colspan="6" class="text-center">No hay versiones aún</td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
-                    @livewire('documento-version-modal')
                 </div>
             </div>
         </div>
     </div>
+    @livewire('documento-version-modal')
+    @livewire('busqueda-procesos-modal')
+
 </div>
+
 @push('styles')
     <style>
-        /* Estilos específicos para el modal */
-        .card-footer small {
-            font-size: 0.875rem;
-            color: #888;
-        }
-
-        .form-control {
-            border-radius: 5px;
-            width: 100%;
-            font-size: small;
-        }
-
-        textarea::placeholder {
-            color: #d5f6d9;
-        }
-
-        .color-palette {
-            color: white;
-            /* Color del texto dentro del botón */
-        }
-
-
-        .required-field::after {
-            content: ' (*)';
-            color: red;
-
-        }
-
-        .loading-spinner {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-
-        }
-
-        .loading-spinner.show {
-            display: block;
-        }
-
-        .modal-header {
-            font-size: 10px;
-            padding: 10px;
-
-        }
-
         .table-versiones {
             font-size: 12px;
         }
@@ -242,11 +199,31 @@
 @endpush
 @push('scripts')
     <script>
-    Livewire.on('versionActualizada', () => {
-        // Aquí usas la API de Bootstrap para cerrar el modal secundario     
-        @this.call('obtenerVersiones');
-        $('#versionesModal').modal('hide');
-    });
-</script>
+        Livewire.on('versionActualizada', () => {
+            $('#versionesModal').modal('hide');
+            @this.call('obtenerVersiones');
+        });
+        Livewire.on('limpiar-versiones', () => {
+            $('.table-versiones tbody').empty();
+        });
 
+        $('#versionesModal').on('hidden.bs.modal', function() {
+            if ($('.modal.show').length > 0) {
+                $('body').addClass('modal-open');
+            }
+        });
+        $('#pdfModal').on('hidden.bs.modal', function() {
+            if ($('.modal.show').length > 0) {
+                $('body').addClass('modal-open');
+            }
+        });
+        
+        // Sincronizar cuando el modal de proceso se cierra
+        $('#procesoModal').on('hidden.bs.modal', function() 
+      
+            const procesoInput = document.getElementById('proceso_id')
+            @this.call('actualizarProceso', procesoInput.value)
+        });
+
+</script>
 @endpush

@@ -28052,7 +28052,7 @@ body.text-sm .input-group-text {
 .bg-orange > .card-header .btn-tool:hover,
 .bg-gradient-orange > .card-header .btn-tool:hover,
 .card-orange:not(.card-outline) > .card-header .btn-tool:hover {
-  color: #1f2d3d;
+  color: #fff;
 }
 
 .card.bg-orange .bootstrap-datetimepicker-widget .table td,
@@ -46195,7 +46195,7 @@ blockquote.quote-gray-dark h6 {
 
 .bg-orange,
 .bg-orange > a {
-  color: #1f2d3d !important;
+  color: #fff !important;
 }
 
 .bg-orange.btn:hover {

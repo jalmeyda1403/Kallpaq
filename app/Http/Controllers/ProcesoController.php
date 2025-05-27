@@ -58,6 +58,25 @@ class ProcesoController extends Controller
         return view('procesos.index', compact('procesos', 'procesos_padre'));
     }
 
+    public function procesos_nivel($proceso_id)
+    {
+
+
+        $proceso = Proceso::findOrFail($proceso_id);
+        $procesos = $proceso->subprocesos;
+
+        // Filtrar procesos de nivel 0 como padres
+        $proceso_padre = $proceso;
+
+        if ($procesos->count() > 0) 
+        {
+            return view('procesos.subprocesos', compact('procesos', 'proceso_padre'));
+        }else{
+            return redirect()->back()->with('error', 'No hay subprocesos para este proceso');
+        }
+      
+    }
+
     public function create()
     {
         $procesos = Proceso::all();

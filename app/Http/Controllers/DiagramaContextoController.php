@@ -35,7 +35,7 @@ class DiagramaContextoController extends Controller
         // Join procesos   
         $procesos = collect([$proceso])->merge($subprocesos);
         
-        return view('caracterizacion.index', compact('diagrama', 'documentos', 'salidas', 'sipocs', 'procesos', 'proceso', 'proceso_id'));
+        return view('procesos.caracterizacion', compact('diagrama', 'documentos', 'salidas', 'sipocs', 'procesos', 'proceso', 'proceso_id'));
     }
 
     public function store(Request $request)
@@ -59,7 +59,7 @@ class DiagramaContextoController extends Controller
             'vigencia' => $validated['vigencia'],
         ]);
 
-        return redirect()->route('caracterizacion.index')->with('success', 'Diagrama de contexto actualizado');
+        return redirect()->route('procesos.caracterizacion')->with('success', 'Diagrama de contexto actualizado');
     }
 
     public function show()
@@ -91,6 +91,6 @@ class DiagramaContextoController extends Controller
         $diagrama->vigencia = $validated['vigencia'];
         $diagrama->save();
 
-        return redirect()->route('caracterizacion.index')->with('success', 'Diagrama de contexto actualizado');
+        return redirect()->route('procesos.caracterizacion')->with('success', 'Diagrama de contexto actualizado');
     }
 }

@@ -39,20 +39,24 @@ class DocumentoController extends Controller
     }
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'cod_documento' => 'required|string|max:255',
-            'tipo_documento_id' => 'nullable|integer|exists:tipo_documentos,id',
-            'proceso_id' => 'nullable|integer|exists:procesos,id',
-            'version' => 'required|integer|min:1',
-            'nombre' => 'nullable|string|max:255',
-            'fuente' => 'required|in:interno,externo',
-            'enlace' => 'nullable|string',
-            'estado' => 'required|boolean',
-        ]);
+       
+        try {
+            // Intentar crear la obligación con los datos proporcionados
+            $documento = Documento::create($request->all());
 
-        Documento::create($validated);
+            // Verificar si la creación fue exitosa
+            if ($documento) {
+                // Redirigir a la lista de obligaciones con un mensaje de éxito
+                return redirect()->back()->with('success', 'Obligación creada con éxito');
+            } else {
+                // Si por alguna razón la creación falla, retornar un error
+                return redirect()->back()->with('error', 'Hubo un problema al crear la obligación. Inténtelo nuevamente.');
+            }
+        } catch (\Exception $e) {
+            // Si ocurre una excepción, capturar el error y devolver un mensaje
+            return redirect()->back()->with('error', 'Error al crear la obligación: ');
+        }
 
-        return redirect()->route('procesos.buscar')->with('success', 'Documento creado correctamente.');
     }
 
     public function edit($id)
@@ -71,9 +75,9 @@ class DocumentoController extends Controller
         $data = $request->only([
             'cod_documento',
             'proceso_id',
-            'tipo_documento_id',        
+            'tipo_documento_id',
             'nombre',
-            'fuente',          
+            'fuente',
             'estado',
         ]);
         $proceso = Proceso::find($request->proceso_id);
@@ -131,23 +135,21 @@ class DocumentoController extends Controller
         return Storage::disk('documentos')->download($path);
     }
 
-    public function mostrarArchivoInline($id)
+    public function mostrarArchivo($path)
     {
-        $documento = Documento::findOrFail($id);
-        $path = $documento->$documento->ultimaVersion->archivo_path;
+        $url = urldecode($path);
 
-        if (!Storage::disk('documentos')->exists($path)) {
+        if (!Storage::disk('documentos')->exists($url)) {
             abort(404);
         }
-
-        $filePath = Storage::disk('documentos')->path($path);
-        $mimeType = mime_content_type($filePath);
-        $headers = [
+    
+        $path = Storage::disk('documentos')->path($url);
+        $mimeType = mime_content_type($path);
+    
+        return response()->file($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
-        ];
-
-        return response()->file($filePath, $headers);
+        ]);
     }
 
 

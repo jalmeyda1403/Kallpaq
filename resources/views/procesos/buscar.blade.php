@@ -92,7 +92,6 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('procesos.index') }}">Procesos</a></li>
-
             </ol>
         </nav>
         <div class="card">
@@ -100,26 +99,39 @@
                 <form action="{{ route('documento.buscar') }}" method="GET">
                     <div class="d-flex justify-content-between align-items-center">
                         <!-- Título de la lista de procesos -->
-                        <div class="col-md-6 text-md-left">
-                            <h4 class="card-title mb-0">Documentación del Proceso</h4>
+                        <div class="col-md-5 text-md-left">
+                            <h4 class="card-title">Documentación del Proceso</h4>
+                           
                         </div>
-                        <input type="text" name="buscar_documento" id="buscar_documento" class="form-control me-2"
-                            placeholder="Buscar por nombre documento" style="margin-right: 5px">
-                        <div class="input-group">
-                            <input type="text" name="buscar_proceso" id="buscar_proceso" class="form-control me-2"
-                                placeholder="Buscar por Proceso">
+                        <div class="col-md-7 text-md-right">                            
+                          
+                            <div class="input-group">
+                                <input type="text" name="buscar_documento" id="buscar_documento" class="form-control form-control-sm me-2"
+                                placeholder="Buscar por nombre documento" style="margin-right: 5px">
+                                <input type="text" name="buscar_proceso" id="buscar_proceso" class="form-control form-control-sm me-2"
+                                    placeholder="Buscar por Proceso">
 
-                            <!-- Botón de Filtrar -->
-                            <button type="submit" class="btn bg-black btn-sm">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
+                                <!-- Botón de Filtrar -->
+                                <button type="submit" class="btn bg-black btn-sm">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                                <a href="#" class="btn-primary btn-sm" data-toggle="modal"
+                                onclick="Livewire.dispatchTo('documento-modal','nuevoDocumento')"
+                                data-target="#documentoModal">
+                                    <i class="fas fa-plus-circle"></i> Agregar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
-
-
             <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 text-md-right">
+                       
+                    </div>
+                </div>
+
                 <table class="table table-bordered table-hover table-sm table-procesos" id="documentosTable">
                     <thead class="table-header">
                         <tr>
@@ -142,7 +154,7 @@
                                 </div>
                             </th>
                             <th>Versión</th>
-                            <th>Vigencia</th>
+                            <th class="text-center text-nowrap">Actualización</th>
                             <th class="text-center">Enlace</th>
                             <th></th>
                         </tr>
@@ -155,30 +167,26 @@
                                 <td>{{ $documento->nombre }}</td>
                                 <td>{{ $documento->tipo_documento->nombre }}</td>
                                 <td class="text-center">{{ $documento->fuente }}</td>
-                                <td class="text-center">{{ str_pad($documento->ultimaVersion->version ?? '0', 2, '0', STR_PAD_LEFT) }}</td>
-                                <td class="text-center text-nowrap" >{{ $documento->ultimaVersion->fecha_publicacion ?? ''}}</td>
                                 <td class="text-center">
-                                    @php
-                                        $enlace = $documento->ultimaVersion->archivo_path ?? null;
-                                        $esArchivoLocal = !str_starts_with($enlace, 'http');
-                                    @endphp
-                                
-                                    @if ($esArchivoLocal)
-                                        <a href="#" data-url="{{ route('documentos.mostrar', $documento->id) }}" target="_blank" class="view-pdf px-2">
-                                            <i class="fas fa-file-pdf fa-lg text-danger"></i>
-                                        </a>
-                                    @else
-                                        <a href="{{ $enlace }}" target="_blank" class="view-pdf px-2">
-                                            <i class="fas fa-file-pdf fa-lg text-danger"></i>
-                                        </a>
-                                    @endif
+                                    {{ str_pad($documento->ultimaVersion->version ?? '0', 2, '0', STR_PAD_LEFT) }}
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    {{ $documento->ultimaVersion->fecha_publicacion ?? '' }}
+                                </td>
+                                <td class="text-center">
+                                    <a href="#" class="px-1 btnVerDocumento" data-toggle="modal"
+                                        onclick="Livewire.dispatchTo('pdf-modal','openPdfModal', { path: '{{ optional($documento->ultimaVersion)->archivo_path ?? '' }}' })"
+                                        data-target="#pdfModal">
+                                        <i class="fas fa-file-pdf fa-lg text-danger"></i>
+                                    </a>
+
                                 </td>
 
                                 <td class="text-center">
                                     <div class="d-flex align-items-center">
 
                                         <a href="#" class="px-1 btnEditarDocumento" data-toggle="modal"
-                                            data-id={{ $documento->id }}
+                                            data-id="{{ $documento->id }}"
                                             onclick="Livewire.dispatchTo('documento-modal','verDocumento', { id: 1 })"
                                             data-target="#documentoModal">
                                             <i class="fas fa-pencil-alt text-dark"></i>
@@ -195,32 +203,11 @@
                     </tbody>
                 </table>
             </div>
-
         </div>
-    </div>
 
-    <div class="modal fade" id="pdfModal" tabindex="-1" aria-labelledby="pdfModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title" id="pdfModalLabel">Documento PDF</h5>
-                    <!-- Botón de cerrar con data-dismiss para cerrar el modal -->
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Iframe para mostrar el PDF -->
-                    <iframe id="pdfViewer" src="" width="100%" height="600px" style="border:none;"></iframe>
-                </div>
-            </div>
-        </div>
     </div>
     @livewire('documento-modal')
-
-
-
-
+    @livewire('pdf-modal')
 @endsection
 @push('scripts')
     <script>
@@ -286,22 +273,6 @@
             });
         });
 
-        // Cuando se hace clic en el enlace de PDF
-        document.querySelectorAll('.view-pdf').forEach(function(link) {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                var pdfUrl = this.getAttribute(
-                    'data-url'); // Obtener la URL del PDF desde el atributo data-url
-
-                // Configurar el iframe con el enlace del PDF
-                var iframe = document.getElementById('pdfViewer');
-                iframe.src = pdfUrl; // Establecer la URL en el iframe
-
-                // Mostrar el modal
-                var modal = new bootstrap.Modal(document.getElementById('pdfModal'));
-                modal.show();
-            });
-        });
 
         // Delegar el clic en las filas para manejar selección
 

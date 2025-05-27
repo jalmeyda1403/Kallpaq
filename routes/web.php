@@ -69,8 +69,10 @@ Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.ind
 Route::put('/proceso/update/{id}', [ProcesoController::class, 'update'])->name('proceso.update');
 Route::delete('/proceso/delete/{id}', [ProcesoController::class, 'destroy'])->name('proceso.eliminar');
 Route::get('/proceso/{proceso_id}/subprocesos', [ProcesoController::class, 'subprocesos'])->name('procesos.subprocesos');
-Route::get('/buscar-documento', [DocumentoController::class, 'buscar'])->name('documento.buscar');
+Route::get('//proceso/{proceso_id}/nivel', [ProcesoController::class, 'procesos_nivel'])->name('procesos.nivel');
 
+
+// Indicadores
 Route::get('/indicadores/{proceso_id?}/listar', [IndicadorController::class, 'listar'])->name('indicadores.listar');
 Route::get('indicadores/{proceso_id?}/create/', [IndicadorController::class, 'create'])->name('indicadores.create');
 Route::get('/indicadores/{id}/historico-datos', [IndicadorController::class, 'showHistorico']);
@@ -151,10 +153,12 @@ Route::get('/contexto/', [ContextoDeterminacionController::class, 'index'])->nam
 Route::put('/documento/update/{id}', [DocumentoController::class, 'update'])->name('documento.update');
 Route::delete('/documento/delete/{id}', [DocumentoController::class, 'destroy'])->name('documento.eliminar');
 Route::get('/documentos/descargar/{id}', [DocumentoController::class, 'descargarArchivo'])->name('documentos.descargar');
-Route::get('/documentos/mostrar/{id}', [DocumentoController::class, 'mostrarArchivoInline'])->name('documentos.mostrar');
+Route::get('/documentos/mostrar/{path}', [DocumentoController::class, 'mostrarArchivo'])
+->where('path', '.*') 
+->name('documentos.mostrar');
 Route::put('/documento/version/update/{id}', [DocumentoVersionController::class, 'update'])->name('documento.version.update');
 
-
+Route::get('/buscar-documento', [DocumentoController::class, 'buscar'])->name('documento.buscar');
 
 
 //Pemisos asignados al Usuario

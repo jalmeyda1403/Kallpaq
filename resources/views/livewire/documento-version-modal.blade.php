@@ -39,7 +39,7 @@
                         <label for="archivo_path">Enlace (puede ser URL externa o ruta del archivo subido)</label>
                         <input type="text" id="archivo_path" name="archivo_path" wire:model.live="archivo_path"
                             class="form-control" placeholder="Ingresa enlace o deja vacío si subes archivo"
-                            @if ($archivo || ($archivo_path && Str::startsWith($archivo_path, asset('storage')))) disabled @endif>
+                            @if ($archivo || ($archivo_path && Str::startsWith($archivo_path, asset('storage')))) disabled @endif required>
                         @error('enlace')
                             <small class="text-danger">{{ $message }}</small>
                         @enderror
@@ -64,13 +64,11 @@
                     <div class="form-group small">
                         <label for="control_cambios">Control de cambios</label>
                         <textarea rows="3" id="control_cambios" name="control_cambios" wire:model.live="control_cambios"
-                            class="form-control" required>
-                         @error('control_cambios')
+                            class="form-control" required></textarea>
+                        @error('control_cambios')
                             <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                    </textarea>
+                        @enderror
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary btn-sm" id="btnGuardar">{{ $btnName }}</button>
@@ -79,14 +77,15 @@
             </form>
         </div>
     </div>
-    @push('scripts')
-        <script>
-            $('#closeSearchModal').on('click', function() {
-                $('#versionesModal').modal('hide');
-            });
-            $('#btncloseModal').on('click', function() {
-                $('#versionesModal').modal('hide');
-            });
-           
-        </script>
-    @endpush
+</div>
+@push('scripts')
+    <script>
+        $('#closeSearchModal').on('click', function() {
+            $('#versionesModal').modal('hide');
+        });
+        $('#btncloseModal').on('click', function() {
+            $('#versionesModal').modal('hide');
+        });
+      
+    </script>
+@endpush

@@ -109,6 +109,9 @@
             color: #b3000c;
             /* Cambiar color del enlace cuando se pasa el mouse */
         }
+        .table-requisitos{
+            font-size: 13px;
+        }
     </style>
 @endpush
 
@@ -225,7 +228,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <!-- Coloca Versión y Vigencia en una columna -->
                             <div class="d-flex flex-column">
-                                <small>Última actualización: {{ $proceso->updated_at->format('d-m-Y') }}</small>
+                                <small>Última actualización: {{ $proceso->updated_at}}</small>
                             </div>
 
                             <a href="#" class="btn bg-navy color-palette ms-auto" data-toggle="modal"
@@ -317,9 +320,10 @@
                                         @foreach ($documentos as $documento)
                                             @if ($documento->fuente == 'interno')
                                                 <li>
-                                                    <a href="{{ $documento->enlace }}">{{ $documento->cod_documento }} -
-                                                        {{ $documento->nombre }} * version:
-                                                        {{ $documento->version }}</a><br>
+                                                    <a href="{{ $documento->enlace }}">
+                                                        {{ $documento->cod_documento }} - {{ $documento->nombre }}<label  class="required-field" class="weight-normal">.</label>                                                
+                                                         v {{ str_pad(optional($documento->ultimaVersion)->version ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                                      </a>
                                                 </li>
                                             @endif
                                         @endforeach
@@ -394,7 +398,7 @@
         aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-info">
+                <div class="modal-header bg-danger">
                     <h5 class="modal-title" id="requisitosModalLabel">Requisitos</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -405,12 +409,12 @@
 
 
                     <!-- Tabla para mostrar los requisitos -->
-                    <table class="table table-striped">
-                        <thead>
+                    <table class="table table-bordered table-hover table-sm table-requisitos" id="procesos">
+                        <thead class="thead-light">
                             <tr>
                                 <th>Id</th>
                                 <th>Requisito</th>
-                                <th style="width: 20%">Fecha</th>
+                                <th class="text-nowrap">Fecha</th>
                             </tr>
                         </thead>
                         <tbody id="modal-body">
@@ -465,9 +469,8 @@
                                     '</td>';
 
                                 requisitosHtml +=
-                                    '<td data-toggle="tooltip" data-placement="top" title="Documento: ' +
-                                    requisito.documento + '">' + requisito
-                                    .fecha_requisito +
+                                    '<td class="text-nowrap" data-toggle="tooltip" data-placement="top" title="Documento: ' +
+                                    requisito.documento + '">' + requisito.fecha_requisito +
                                     '</td>';
                                 requisitosHtml += '</tr>';
                             });
