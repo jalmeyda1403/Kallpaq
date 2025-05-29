@@ -83,7 +83,7 @@ Route::get('indicadores/{id}/frecuencia', [IndicadorController::class, 'generarF
 
 
 Route::resource('caracterizacion', DiagramaContextoController::class);
-Route::get('mcar/{proceso_id}', [DiagramaContextoController::class, 'index'])->name('caracterizacion.index');
+Route::get('caracterizacion/{proceso_id?}/mcar', [DiagramaContextoController::class, 'index'])->name('procesos.caracterizacion');
 Route::get('/salida/{salida_id}/requisitos', [SipocController::class, 'getRequisitos']);
 
 //Objetivos
@@ -157,9 +157,8 @@ Route::get('/documentos/mostrar/{path}', [DocumentoController::class, 'mostrarAr
 ->where('path', '.*') 
 ->name('documentos.mostrar');
 Route::put('/documento/version/update/{id}', [DocumentoVersionController::class, 'update'])->name('documento.version.update');
-
 Route::get('/buscar-documento', [DocumentoController::class, 'buscar'])->name('documento.buscar');
-
+Route::get('/documentos/{proceso_id}/validar', [DocumentoController::class, 'validarEnlaces'])->name('documentos.validar.enlaces');
 
 //Pemisos asignados al Usuario
 Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');

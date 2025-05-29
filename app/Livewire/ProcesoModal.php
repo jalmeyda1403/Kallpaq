@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 class ProcesoModal extends Component
 {
 
-    public $proceso_id, $cod_proceso, $proceso_tipo, $proceso_estado, $cod_proceso_padre, $proceso_nombre_padre;
+    public $proceso_id, $cod_proceso, $proceso_tipo, $proceso_estado, $cod_proceso_padre, $proceso_nombre_padre,  $planificacion_pei_id, $planificacion_pei_nombre;
     public $modalTitle, $actionRoute, $btnName, $method;
     public $isMacroproceso = true;
     public $charCountNombre = 0;
@@ -83,6 +83,9 @@ class ProcesoModal extends Component
             $this->proceso_nivel = $proceso->proceso_nivel;
             $this->proceso_estado = $proceso->proceso_estado;
             $this->cod_proceso_padre = $proceso->cod_proceso_padre;
+            $this->planificacion_pei_id = $proceso->planificacion_pei_id;
+            $this->planificacion_pei_nombre = $proceso->planificacion_pei->planificacion_pei_nombre;
+
           
             // Verificar si el proceso tiene un padre
             if ($this->cod_proceso_padre && $proceso->procesoPadre) {

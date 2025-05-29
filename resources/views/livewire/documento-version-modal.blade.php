@@ -86,6 +86,10 @@
         $('#btncloseModal').on('click', function() {
             $('#versionesModal').modal('hide');
         });
+
+        $('#btnGuardar').on('click', function() {
+            $('#versionesModal').modal('hide');
+        });
       
     </script>
 @endpush

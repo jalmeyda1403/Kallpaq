@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Documento;
 use App\Models\Proceso;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class DocumentoController extends Controller
 {
@@ -39,7 +40,7 @@ class DocumentoController extends Controller
     }
     public function store(Request $request)
     {
-       
+
         try {
             // Intentar crear la obligación con los datos proporcionados
             $documento = Documento::create($request->all());
@@ -142,14 +143,50 @@ class DocumentoController extends Controller
         if (!Storage::disk('documentos')->exists($url)) {
             abort(404);
         }
-    
+
         $path = Storage::disk('documentos')->path($url);
         $mimeType = mime_content_type($path);
-    
+
         return response()->file($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
         ]);
+    }
+
+    public function validarEnlaces($proceso_id)
+    {
+        $documentos = Documento::where('proceso_id', $proceso_id)->get();
+        $contador = 0;
+
+        foreach ($documentos as $documento) {
+            $version = $documento->ultimaVersion;
+            $url = optional($version)->archivo_path;
+
+            if ($version && $url && (str_starts_with($url, 'http://') || str_starts_with($url, 'https://'))) {
+                $version->enlace_valido = $this->urlEsValida($url) ? 1 : 0;
+                $version->save();
+                $contador++;
+            }
+        }
+
+        return redirect()->back()->with('status', "Validación completada. Enlaces revisados: $contador");
+    }
+
+    private function urlEsValida($url)
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_NOBODY, true); // Solo cabeceras
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // ⚠️ Ignora errores SSL
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // ⚠️ Ignora verificación de host
+
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $httpCode >= 200 && $httpCode < 400;
     }
 
 

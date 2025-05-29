@@ -9,7 +9,7 @@ class PlanificacionPEI extends Model
 {
     protected $table = 'planificacion_pei';
     protected $fillable = [
-        'id', 'cod_objetivo', 'objetivo_nombre'
+        'id', 'planificacion_pei_cod', 'planificacion_pei_nombre'
     ];
 
     public function indicadores()
@@ -18,7 +18,7 @@ class PlanificacionPEI extends Model
     }
     public function procesos()
     {
-        return $this->hasMany(Proceso::class, 'objetivo_pei', 'id');
+        return $this->hasMany(Proceso::class, 'planificacion_pei_id', 'id');
     }  
 }
 	

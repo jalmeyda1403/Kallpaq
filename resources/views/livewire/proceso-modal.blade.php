@@ -1,4 +1,3 @@
-
 <div wire:ignore.self class="modal fade" id="procesoModal" tabindex="-1" role="dialog" aria-labelledby="procesoModalLabel"
     data-backdrop="static" data-keyboard="false">
 
@@ -23,7 +22,7 @@
                     @csrf
                     <input type="hidden" name="_method" value="{{ $method }}">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group small">
 
                                 <label for="codigoProceso" class="required-field">Código de Proceso</label>
@@ -35,7 +34,32 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-8">
+                            <div class="form-group small">
+                                <label for="Objetivo"> Objetivo Estratégico</label>
+                                <!-- Campo oculto para el ID del proceso -->
+                                <input type="hidden" wire:model.live="planificacion_pei_id" name="planificacion_pei_id"
+                                    id="planificacion_pei_id" required disabled>
+                                <div class="input-group">
+                                    <!-- Campo de texto para el nombre del proceso -->
+                                    <input type="text" class="form-control" id="planificacion_pei_nombre"
+                                        name="objetivo_pei_nombre" wire:model.live="planificacion_pei_nombre" readonly>
+                                    <!-- Botón para abrir el modal -->
+                                    <button type="button" class ="btn btn-dark" data-toggle="modal"
+                                        data-target="#objetivoPEIModal">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <x-modal-busqueda :ruta="route('objetivoPEI.buscar')" campo-id="planificacion_pei_id" campo-nombre="planificacion_pei_nombre"
+                        modal-titulo="Objetivo" modal-id="objetivoPEIModal" :modalBgcolor="'#001f3f'" :modalTxtcolor="'#FFFFFF'">>
+                    </x-modal-busqueda>
+
+                    <div class="row">
+                 
+                        <div class="col-md-4">
                             <div class="form-group small">
                                 <div class="d-flex justify-content-between">
                                     <div class="text-start">
@@ -60,36 +84,36 @@
 
                             </div>
                         </div>
-                    </div>
+                        <div class="col-md-8">
+                            <div class="form-group small">
+                                <div class="d-flex justify-content-between">
+                                    <div class="text-start">
+                                        <label for="nombre" class="required-field">Nombre</label>
+                                    </div>
+                                    <div class="text-end">
+                                        <small id="charCountNombre"
+                                            class="form-text text-muted">{{ $charCountNombre }}/200</small>
+                                    </div>
+                                </div>
 
-                    <div class="form-group small">
-                        <div class="d-flex justify-content-between">
-                            <div class="text-start">
-                                <label for="nombre" class="required-field">Nombre</label>
+                                <textarea wire:model.live="proceso_nombre" name="proceso_nombre" id="proceso_nombre" class="form-control"
+                                    value="{{ $proceso_nombre }}" rows="2" maxlength="200"
+                                    placeholder="Escribe el nombre del proceso en no más de 200 caracteres." required></textarea>
+
+                                <div class="d-flex justify-content-between">
+                                    <div class="text-start">
+                                        @error('proceso_nombre')
+                                            <span class="form-text text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                </div>
+
+
                             </div>
-                            <div class="text-end">
-                                <small id="charCountNombre"
-                                    class="form-text text-muted">{{ $charCountNombre }}/200</small>
-                            </div>
+
                         </div>
-
-                        <textarea wire:model.live="proceso_nombre" name="proceso_nombre" id="proceso_nombre" class="form-control"
-                            value="{{ $proceso_nombre }}" rows="2" maxlength="200"
-                            placeholder="Escribe el nombre del proceso en no más de 200 caracteres." required></textarea>
-
-                        <div class="d-flex justify-content-between">
-                            <div class="text-start">
-                                @error('proceso_nombre')
-                                    <span class="form-text text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                        </div>
-
-
                     </div>
-
-
                     <div class="form-group small">
                         <div class="d-flex justify-content-between">
                             <div class="text-start">
@@ -100,7 +124,7 @@
                                     class="form-text text-muted">{{ $charCountObjetivo }}/500</small>
                             </div>
                         </div>
-                      
+
                         <div>
                             <textarea wire:model.live="proceso_objetivo" name="proceso_objetivo" id="proceso_objetivo"
                                 value="{{ $proceso_objetivo }}" class="form-control" rows="4" maxlength="500"
@@ -112,7 +136,7 @@
                                         <span class="form-text text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
-                              
+
                             </div>
                         </div>
 
@@ -159,8 +183,8 @@
                             <input type="text" class="form-control" id="proceso_nombre_padre"
                                 name="proceso_nombre_padre" wire:model.live="proceso_nombre_padre" readonly>
                             <!-- Botón para abrir el modal -->
-                            <button type="button" class ="btn btn-primary" data-toggle="modal" data-target="#procesopadreModal"
-                                {{ $isMacroproceso == 1 ? 'disabled' : '' }}>
+                            <button type="button" class ="btn btn-dark" data-toggle="modal"
+                                data-target="#procesopadreModal" {{ $isMacroproceso == 1 ? 'disabled' : '' }}>
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -186,7 +210,7 @@
                     </div>
 
                     <div class="modal-footer justify-content-center w-100">
-                        <button type="submit" class="btn bg-info">{{ $btnName }}</button>
+                        <button type="submit" class="btn bg-dark">{{ $btnName }}</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     </div>
                 </form>

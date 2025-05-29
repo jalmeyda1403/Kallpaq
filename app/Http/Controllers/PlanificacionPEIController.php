@@ -10,7 +10,7 @@ class PlanificacionPEIController extends Controller
     {
     $query = $request->input('query');
 
-    $objetivos = PlanificacionPEI::where('objetivo_nombre_pei', 'LIKE', "%{$query}%")->get();
+    $objetivos = PlanificacionPEI::select('id','planificacion_pei_nombre')->where('planificacion_pei_nombre', 'LIKE', "%{$query}%")->get();
 
     return response()->json($objetivos);
     }

@@ -156,6 +156,10 @@
                                                 <i class="fas fa-file-pdf"></i> Documentación
                                             </a>
                                             <a class="dropdown-item"
+                                                href="{{ route('documentos.validar.enlaces', ['proceso_id' => $proceso->id]) }}">
+                                                <i class="fa fa-exclamation-circle"></i> Enlaces
+                                            </a>
+                                            <a class="dropdown-item"
                                                 href="{{ route('indicadores.listar', ['proceso_id' => $proceso->id]) }}">
                                                 <i class="fas fa-chart-bar"></i> Indicadores
                                             </a>

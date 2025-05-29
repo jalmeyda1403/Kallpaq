@@ -10,7 +10,7 @@ class PlanificacionSIGController extends Controller
     {
     $query = $request->input('query');
 
-    $objetivos = PlanificacionSIG::select('id', 'objetivo_nombre_sig')->get();
+    $objetivos = PlanificacionSIG::select('id', 'objetivo_sig_nombre')->get();
 
     return response()->json($objetivos);
     }

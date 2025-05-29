@@ -96,6 +96,7 @@ class DocumentoVersionModal extends Component
             $path = $this->archivo->storeAs($carpeta, $nombreArchivo, 'documentos');
 
             $data['archivo_path'] = $path;
+            $data['enlace_valido'] = 1;
         }
 
         if ($this->actionRoute === "Insertar") {

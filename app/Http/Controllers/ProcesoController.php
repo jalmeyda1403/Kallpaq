@@ -97,10 +97,12 @@ class ProcesoController extends Controller
 
     public function update(Request $request, $id)
     {
+     
         $proceso = Proceso::findOrFail($id);
         $proceso->update($request->all());
 
-        return redirect()->route('procesos.index')->with('success', 'Proceso actualizado correctamente');
+        return redirect()->back()->with('success', 'Proceso actualizado correctamente');
+
     }
 
     public function destroy($id)

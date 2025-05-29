@@ -219,8 +219,7 @@
         });
         
         // Sincronizar cuando el modal de proceso se cierra
-        $('#procesoModal').on('hidden.bs.modal', function() 
-      
+        $('#procesoModal').on('hidden.bs.modal', function() {      
             const procesoInput = document.getElementById('proceso_id')
             @this.call('actualizarProceso', procesoInput.value)
         });

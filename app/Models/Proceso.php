@@ -19,6 +19,7 @@ class Proceso extends Model
         'cod_proceso_padre',
         'proceso_nivel',
         'proceso_estado',
+        'planificacion_pei_id',
         'inactivate_at',
     ];
 
@@ -59,7 +60,7 @@ class Proceso extends Model
     }
     public function planificacion_pei()
     {
-        return $this->belongsTo(PlanificacionPEI::class, 'objetivo_pei');
+        return $this->belongsTo(PlanificacionPEI::class, 'planificacion_pei_id');
     }
     public function sipoc()
     {

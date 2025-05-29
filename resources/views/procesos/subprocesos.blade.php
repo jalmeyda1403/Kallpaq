@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="small-box-footer">
 
-                                    <a href="{{ route('caracterizacion.index', $proceso->id) }}"
+                                    <a href="{{ route('procesos.caracterizacion', $proceso->id) }}"
                                         style="color: white; text-align: left; padding: 0 10px;">
                                         <i class="fas fa-file-alt"></i>
                                     </a>

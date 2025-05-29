@@ -101,23 +101,24 @@
                         <!-- Título de la lista de procesos -->
                         <div class="col-md-5 text-md-left">
                             <h4 class="card-title">Documentación del Proceso</h4>
-                           
+
                         </div>
-                        <div class="col-md-7 text-md-right">                            
-                          
+                        <div class="col-md-7 text-md-right">
+
                             <div class="input-group">
-                                <input type="text" name="buscar_documento" id="buscar_documento" class="form-control form-control-sm me-2"
-                                placeholder="Buscar por nombre documento" style="margin-right: 5px">
-                                <input type="text" name="buscar_proceso" id="buscar_proceso" class="form-control form-control-sm me-2"
-                                    placeholder="Buscar por Proceso">
+                                <input type="text" name="buscar_documento" id="buscar_documento"
+                                    class="form-control form-control-sm me-2" placeholder="Buscar por nombre documento"
+                                    style="margin-right: 5px">
+                                <input type="text" name="buscar_proceso" id="buscar_proceso"
+                                    class="form-control form-control-sm me-2" placeholder="Buscar por Proceso">
 
                                 <!-- Botón de Filtrar -->
                                 <button type="submit" class="btn bg-black btn-sm">
                                     <i class="fas fa-search"></i> Buscar
                                 </button>
                                 <a href="#" class="btn-primary btn-sm" data-toggle="modal"
-                                onclick="Livewire.dispatchTo('documento-modal','nuevoDocumento')"
-                                data-target="#documentoModal">
+                                    onclick="Livewire.dispatchTo('documento-modal','nuevoDocumento')"
+                                    data-target="#documentoModal">
                                     <i class="fas fa-plus-circle"></i> Agregar
                                 </a>
                             </div>
@@ -128,7 +129,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 text-md-right">
-                       
+
                     </div>
                 </div>
 
@@ -156,6 +157,7 @@
                             <th>Versión</th>
                             <th class="text-center text-nowrap">Actualización</th>
                             <th class="text-center">Enlace</th>
+                            <th class="text-center">Alerta</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -181,7 +183,13 @@
                                     </a>
 
                                 </td>
-
+                                <td class="text-center">
+                                    @if (optional($documento->ultimaVersion)->enlace_valido === 1)
+                                        <i class="fas fa-check-circle text-success" title="Enlace válido"></i>
+                                    @else
+                                        <i class="fas fa-exclamation-circle text-warning" title="Enlace no válido"></i>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <div class="d-flex align-items-center">
 
