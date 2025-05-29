@@ -14,6 +14,22 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+
+-- Volcando estructura de base de datos para kallpaq
+CREATE DATABASE IF NOT EXISTS `kallpaq` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+USE `kallpaq`;
+
+-- Volcando estructura para tabla kallpaq.areas_compliance
+CREATE TABLE IF NOT EXISTS `areas_compliance` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `area_compliance_nombre` varchar(255) NOT NULL,
+  `area_compliance_descripcion` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `areas_compliance_area_compliance_nombre_unique` (`area_compliance_nombre`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.areas_compliance: ~15 rows (aproximadamente)
 REPLACE INTO `areas_compliance` (`id`, `area_compliance_nombre`, `area_compliance_descripcion`, `created_at`, `updated_at`) VALUES
 	(1, 'Regulatorio sectorial', 'Normativas o compromisos relacionadas a los sectores de los cuales la CGR realiza control y vigilancia de la gestión fiscal', '2025-02-24 20:02:05', NULL),
@@ -32,11 +48,75 @@ REPLACE INTO `areas_compliance` (`id`, `area_compliance_nombre`, `area_complianc
 	(14, 'Control Gubernamental', 'Normativas de la CGR como ente de "control", para la supervisión, vigilancia, verificación de los actos y resultados de la gestión pública, en atención al grado de eficiencia, eficacia, transparencia y economía en el uso y destino de los recursos y bienes del Estado', '2025-02-24 20:02:05', NULL),
 	(15, 'Control Social', 'Normativas o lineamientos relacionados al derecho y deber que tienen todos y todos los ciudadanos, individual o colectivamente, a vigilar y fiscalizar la gestión pública con el fin de acompañar el cumplimiento de los fines del Estado', '2025-02-24 20:02:05', NULL);
 
+-- Volcando estructura para tabla kallpaq.auditorias
+CREATE TABLE IF NOT EXISTS `auditorias` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `auditoria_cod` varchar(255) NOT NULL,
+  `objetivo` varchar(255) NOT NULL,
+  `criterios_auditoria` varchar(255) NOT NULL,
+  `alcance_auditoria` varchar(255) NOT NULL,
+  `tipo_auditoria` enum('INT','EXT') NOT NULL,
+  `sistema_iso` varchar(255) NOT NULL,
+  `costo_programado` double NOT NULL,
+  `costo_ejecutado` double NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `programa_auditoria_id` bigint(20) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `auditorias_programa_auditoria_id_foreign` (`programa_auditoria_id`),
+  CONSTRAINT `auditorias_programa_auditoria_id_foreign` FOREIGN KEY (`programa_auditoria_id`) REFERENCES `programa_auditorias` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.auditorias: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.auditoria_equipo
+CREATE TABLE IF NOT EXISTS `auditoria_equipo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `auditoria_id` bigint(20) unsigned NOT NULL,
+  `personal_id` bigint(20) unsigned NOT NULL,
+  `rol` varchar(255) NOT NULL,
+  `equipo` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `auditoria_equipo_auditoria_id_foreign` (`auditoria_id`),
+  KEY `auditoria_equipo_personal_id_foreign` (`personal_id`),
+  CONSTRAINT `auditoria_equipo_auditoria_id_foreign` FOREIGN KEY (`auditoria_id`) REFERENCES `auditorias` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `auditoria_equipo_personal_id_foreign` FOREIGN KEY (`personal_id`) REFERENCES `personal` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.auditoria_equipo: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.auditoria_procesos
+CREATE TABLE IF NOT EXISTS `auditoria_procesos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `auditoria_id` bigint(20) unsigned NOT NULL,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `auditoria_procesos_auditoria_id_foreign` (`auditoria_id`),
+  KEY `auditoria_procesos_proceso_id_foreign` (`proceso_id`),
+  CONSTRAINT `auditoria_procesos_auditoria_id_foreign` FOREIGN KEY (`auditoria_id`) REFERENCES `auditorias` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `auditoria_procesos_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.auditoria_procesos: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.configuracion
+CREATE TABLE IF NOT EXISTS `configuracion` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `clave` varchar(255) NOT NULL,
+  `valor` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `configuracion_clave_unique` (`clave`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.configuracion: ~3 rows (aproximadamente)
 REPLACE INTO `configuracion` (`id`, `clave`, `valor`, `created_at`, `updated_at`) VALUES
@@ -44,34 +124,168 @@ REPLACE INTO `configuracion` (`id`, `clave`, `valor`, `created_at`, `updated_at`
 	(2, 'fecha_inicio_bloqueo', '01/02/2023', '2023-08-19 02:28:31', NULL),
 	(3, 'fecha_fin_bloqueo', '31/07/2023', '2023-08-19 02:27:59', NULL);
 
+-- Volcando estructura para tabla kallpaq.contexto_analisis
+CREATE TABLE IF NOT EXISTS `contexto_analisis` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `contexto_determinacion_id` bigint(20) unsigned NOT NULL,
+  `internal_context_id` bigint(20) unsigned NOT NULL,
+  `external_context_id` bigint(20) unsigned NOT NULL,
+  `analisis` text NOT NULL,
+  `nivel` enum('Muy Alto','Alto','Medio','Bajo') NOT NULL,
+  `valoracion` int(10) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `contexto_analisis_contexto_determinacion_id_foreign` (`contexto_determinacion_id`),
+  KEY `contexto_analisis_internal_context_id_foreign` (`internal_context_id`),
+  KEY `contexto_analisis_external_context_id_foreign` (`external_context_id`),
+  CONSTRAINT `contexto_analisis_contexto_determinacion_id_foreign` FOREIGN KEY (`contexto_determinacion_id`) REFERENCES `contexto_determinacion` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `contexto_analisis_external_context_id_foreign` FOREIGN KEY (`external_context_id`) REFERENCES `contexto_externo` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `contexto_analisis_internal_context_id_foreign` FOREIGN KEY (`internal_context_id`) REFERENCES `contexto_interno` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.contexto_analisis: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.contexto_determinacion
+CREATE TABLE IF NOT EXISTS `contexto_determinacion` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `year` year(4) NOT NULL,
+  `version` int(10) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `determinacion_contexto_proceso_id_year_version_unique` (`proceso_id`,`year`,`version`),
+  CONSTRAINT `determinacion_contexto_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.contexto_determinacion: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.contexto_externo
+CREATE TABLE IF NOT EXISTS `contexto_externo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `contexto_determinacion_id` bigint(20) unsigned NOT NULL,
+  `perspective_type` enum('legal','politico','institucional','tecnologia','social','economico') NOT NULL,
+  `amenazas` text NOT NULL,
+  `oportunidades` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `contexto_externo_contexto_determinacion_id_foreign` (`contexto_determinacion_id`),
+  CONSTRAINT `contexto_externo_contexto_determinacion_id_foreign` FOREIGN KEY (`contexto_determinacion_id`) REFERENCES `contexto_determinacion` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.contexto_externo: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.contexto_interno
+CREATE TABLE IF NOT EXISTS `contexto_interno` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `contexto_determinacion_id` bigint(20) unsigned NOT NULL,
+  `perspective_type` enum('normativa','infraestructura','tecnologia','organizacion','personal','cultura_organizacional') NOT NULL,
+  `fortalezas` text NOT NULL,
+  `debilidades` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `contexto_interno_contexto_determinacion_id_foreign` (`contexto_determinacion_id`),
+  CONSTRAINT `contexto_interno_contexto_determinacion_id_foreign` FOREIGN KEY (`contexto_determinacion_id`) REFERENCES `contexto_determinacion` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.contexto_interno: ~0 rows (aproximadamente)
 
--- Volcando datos para la tabla kallpaq.diagrama_contexto: ~2 rows (aproximadamente)
+-- Volcando estructura para tabla kallpaq.diagrama_contexto
+CREATE TABLE IF NOT EXISTS `diagrama_contexto` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `archivo` varchar(255) NOT NULL,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `version` varchar(255) NOT NULL,
+  `vigencia` date NOT NULL,
+  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'inactivo',
+  `inactive_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `diagrama_proceso` (`proceso_id`),
+  CONSTRAINT `diagrama_proceso` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Volcando datos para la tabla kallpaq.diagrama_contexto: ~3 rows (aproximadamente)
 REPLACE INTO `diagrama_contexto` (`id`, `archivo`, `proceso_id`, `version`, `vigencia`, `estado`, `inactive_at`, `created_at`, `updated_at`) VALUES
 	(1, 'diagramas/RlCWzSZx9Bq0seahOq10GZBlqnB3RvGZ8hSh71Yt.png', 71, 'Version 2', '2025-05-12', 'activo', '2025-05-08 23:11:34', '2025-05-08 23:19:02', '2025-05-08 23:19:02'),
-	(2, 'diagramas/DX9yVqBDAvnwtZcjBzFx3sh1L1ZZCyiChpnpT2eY.png', 62, 'Version 1', '2025-05-09', 'activo', '2025-05-09 16:58:40', '2025-05-09 16:55:04', '2025-05-09 16:55:04');
+	(2, 'diagramas/DX9yVqBDAvnwtZcjBzFx3sh1L1ZZCyiChpnpT2eY.png', 62, 'Version 1', '2025-05-09', 'activo', '2025-05-09 16:58:40', '2025-05-09 16:55:04', '2025-05-09 16:55:04'),
+	(5, 'diagramas/E5nAfpWIKdfEG7DgHiW7NSD1b0Qw2WSV8CYeKqDA.jpg', 30, '04', '2025-01-31', 'activo', '2025-05-28 16:50:53', '2025-05-28 16:03:32', '2025-05-28 16:03:32');
 
--- Volcando datos para la tabla kallpaq.documentos: ~6 rows (aproximadamente)
+-- Volcando estructura para tabla kallpaq.documentos
+CREATE TABLE IF NOT EXISTS `documentos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `cod_documento` varchar(255) NOT NULL,
+  `tipo_documento_id` bigint(20) unsigned DEFAULT NULL,
+  `proceso_id` bigint(20) unsigned DEFAULT NULL,
+  `nombre` varchar(255) DEFAULT NULL,
+  `fuente` enum('interno','externo') NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `vigencia_at` date DEFAULT NULL,
+  `inactivate_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `documentos_cod_documento_unique` (`cod_documento`),
+  KEY `documentos_proceso_id_foreign` (`proceso_id`),
+  KEY `documentos_tipo_documento_id_foreign` (`tipo_documento_id`),
+  CONSTRAINT `documentos_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `documentos_tipo_documento_id_foreign` FOREIGN KEY (`tipo_documento_id`) REFERENCES `tipo_documentos` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Volcando datos para la tabla kallpaq.documentos: ~8 rows (aproximadamente)
 REPLACE INTO `documentos` (`id`, `cod_documento`, `tipo_documento_id`, `proceso_id`, `nombre`, `fuente`, `estado`, `vigencia_at`, `inactivate_at`, `created_at`, `updated_at`) VALUES
 	(1, 'PR-GSCS-07', 4, 125, 'Procedimiento "Visita de Control"', 'interno', 1, '2024-12-02', NULL, '2025-05-09 22:56:50', '2025-05-19 15:43:18'),
-	(2, 'Directiva n.° 007-2022-CG/DOC', 11, 125, 'Directiva Notificaciones electrónicas en el Sistema Nacional de Control', 'interno', 1, '2022-05-09', NULL, '2025-05-09 23:17:20', '2025-05-16 21:46:45'),
-	(3, 'Directiva n.° 013-2022-CG/NORM', 11, 125, 'Servicio de Control Simultáneo', 'interno', 1, '2025-05-09', NULL, '2025-05-09 23:19:59', '2025-05-16 19:27:46'),
-	(4, 'RC n.°  245-2023-CG', 10, 125, 'Normas Generales de Control Gubernamental', 'externo', 1, '2023-06-27', NULL, '2025-05-09 23:25:23', NULL),
+	(2, 'Directiva n.° 007-2022-CG/DOC', 11, 30, 'Directiva Notificaciones electrónicas en el Sistema Nacional de Control', 'interno', 1, '2022-05-09', NULL, '2025-05-09 23:17:20', '2025-05-16 21:46:45'),
+	(3, 'Directiva n.° 013-2022-CG/NORM', 11, 30, 'Servicio de Control Simultáneo', 'interno', 1, '2025-05-09', NULL, '2025-05-09 23:19:59', '2025-05-16 19:27:46'),
+	(4, 'RC n.°  245-2023-CG', 10, 30, 'Normas Generales de Control Gubernamental', 'externo', 1, '2023-06-27', NULL, '2025-05-09 23:25:23', NULL),
 	(5, 'PR-GSCS-06', 4, 127, 'Procedimiento "Control Concurrente"', 'interno', 1, '2024-12-03', NULL, '2025-05-13 01:06:25', NULL),
-	(6, 'Directiva Nº 002-2025-CG/GMPL', 11, 127, 'Directiva Interna que establece Disposiciones Complementarias a la Ley N° 31358, Ley que establece medidas para la expansión del Control Concurrente', 'interno', 1, '2025-04-24', NULL, '2025-05-13 01:06:26', '2025-05-19 14:39:28');
+	(6, 'Directiva Nº 002-2025-CG/GMPL', 11, 127, 'Directiva Interna que establece Disposiciones Complementarias a la Ley N° 31358, Ley que establece medidas para la expansión del Control Concurrente', 'interno', 1, '2025-04-24', NULL, '2025-05-13 01:06:26', '2025-05-19 14:39:28'),
+	(7, 'PR-GSCS-08', 4, 128, 'Procedimiento Operativo Control Simultaneo', 'interno', 1, NULL, NULL, '2025-05-20 21:44:11', '2025-05-20 21:44:11'),
+	(8, 'PR-PEI-01', 4, 30, 'Procedimiento “Elaboración, seguimiento y evaluación del Plan Estratégico Institucional”', 'interno', 1, NULL, NULL, '2025-05-28 21:10:26', '2025-05-28 21:10:26');
 
--- Volcando datos para la tabla kallpaq.documento_versions: ~4 rows (aproximadamente)
-REPLACE INTO `documento_versions` (`id`, `documento_id`, `version`, `control_cambios`, `archivo_path`, `fecha_aprobacion`, `fecha_publicacion`, `created_at`, `updated_at`) VALUES
-	(4, 1, 1, 'documento incial', 'PM03.02.01/Procedimiento/PM03.02.01-v01.pdf', '2025-05-13', '2025-05-19', '2025-05-19 22:59:54', '2025-05-19 23:00:21'),
-	(5, 1, 2, 'Se modifico la actividad 6 y 7', 'PM03.02.01/Procedimiento/PM03.02.01-v02.pdf', '2025-05-08', '2025-05-19', '2025-05-19 23:03:21', '2025-05-19 23:03:45'),
-	(6, 1, 3, 'Prueba 3', 'PM03.02.01/Procedimiento/PR-GSCS-07-v03pdf', '2025-05-07', '2025-05-19', '2025-05-19 23:06:03', '2025-05-19 23:06:03'),
-	(7, 1, 4, 'prueba sass', 'PM03.02.01/Procedimiento/PR-GSCS-07-v04.pdf', '2025-05-15', '2025-05-19', '2025-05-19 23:10:45', '2025-05-19 23:11:40');
+-- Volcando estructura para tabla kallpaq.documento_versions
+CREATE TABLE IF NOT EXISTS `documento_versions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `documento_id` bigint(20) unsigned NOT NULL,
+  `version` int(11) NOT NULL,
+  `control_cambios` varchar(250) NOT NULL DEFAULT '',
+  `archivo_path` varchar(255) NOT NULL,
+  `enlace_valido` int(1) DEFAULT NULL,
+  `fecha_aprobacion` date NOT NULL,
+  `fecha_publicacion` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `documento_versiones_documento_id_foreign` (`documento_id`),
+  CONSTRAINT `documento_versiones_documento_id_foreign` FOREIGN KEY (`documento_id`) REFERENCES `documentos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Volcando datos para la tabla kallpaq.documento_versions: ~5 rows (aproximadamente)
+REPLACE INTO `documento_versions` (`id`, `documento_id`, `version`, `control_cambios`, `archivo_path`, `enlace_valido`, `fecha_aprobacion`, `fecha_publicacion`, `created_at`, `updated_at`) VALUES
+	(25, 2, 1, 'Version del Peruano', 'https://cdn.www.gob.pe/uploads/document/file/2907982/Resoluci%C3%B3n%20de%20Contralor%C3%ADa%20N%C2%B0102-2022-CG.pdf.pdf?v=1647275017', 1, '2022-03-11', '2025-05-28', '2025-05-20 19:23:36', '2025-05-28 23:25:12'),
+	(26, 3, 1, 'publicada en la web contraloria', 'https://cdn.www.gob.pe/uploads/document/file/3839885/3656507-directiva-n-013-2022-cg-norm-directiva-de-servicio-de-control-simultaneo.pdf?v=1708034518', 1, '2023-12-21', '2025-05-20', '2025-05-20 20:06:31', '2025-05-28 23:25:13'),
+	(27, 8, 4, 'Version 05', 'PE01.01/Procedimiento/PR-PEI-01-v01.pdf', 1, '2025-01-30', '2025-05-28', '2025-05-28 21:11:56', '2025-05-28 21:20:23'),
+	(31, 4, 1, 'version inicial', 'https://cdn.www.gob.pe/uploads/document/file/2907982/Resoluci%C3%B3n%20de%20Contralor%C3%ADa%20N%C2%B0102-2022-CG.pdf.pdf?v=1647275017', 1, '2025-05-28', '2025-05-28', '2025-05-28 23:26:38', '2025-05-28 23:27:36'),
+	(33, 1, 1, 'version 01', 'PM03.02.01/Procedimiento/PR-GSCS-07-v01.pdf', 1, '2025-05-13', '2025-05-28', '2025-05-28 23:53:48', '2025-05-28 23:53:48');
+
+-- Volcando estructura para tabla kallpaq.especialistas
+CREATE TABLE IF NOT EXISTS `especialistas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `nombres` varchar(255) NOT NULL,
+  `apellido_paterno` varchar(255) NOT NULL,
+  `apellido_materno` varchar(255) NOT NULL,
+  `cargo` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `especialistas_user_id_foreign` (`user_id`),
+  CONSTRAINT `especialistas_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.especialistas: ~3 rows (aproximadamente)
 REPLACE INTO `especialistas` (`id`, `user_id`, `nombres`, `apellido_paterno`, `apellido_materno`, `cargo`, `created_at`, `updated_at`) VALUES
@@ -80,10 +294,39 @@ REPLACE INTO `especialistas` (`id`, `user_id`, `nombres`, `apellido_paterno`, `a
 	(3, 3, 'Angel Arturo', 'Bendezú', 'Cardenas', 'Especialista Riesgos', '2024-06-05 19:38:32', NULL),
 	(4, 4, 'Maria Isabel', 'Hiyo', 'Huapaya', 'Especialista SIG', '2024-06-05 19:38:32', NULL);
 
+-- Volcando estructura para tabla kallpaq.especialista_hallazgo
+CREATE TABLE IF NOT EXISTS `especialista_hallazgo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `especialista_id` bigint(20) unsigned NOT NULL,
+  `hallazgo_id` bigint(20) unsigned NOT NULL,
+  `fecha_asignacion` timestamp NULL DEFAULT NULL,
+  `motivo_asignacion` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `especialista_hallazgo_especialista_id_foreign` (`especialista_id`),
+  KEY `especialista_hallazgo_hallazgo_id_foreign` (`hallazgo_id`),
+  CONSTRAINT `especialista_hallazgo_especialista_id_foreign` FOREIGN KEY (`especialista_id`) REFERENCES `especialistas` (`id`),
+  CONSTRAINT `especialista_hallazgo_hallazgo_id_foreign` FOREIGN KEY (`hallazgo_id`) REFERENCES `hallazgos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.especialista_hallazgo: ~2 rows (aproximadamente)
 REPLACE INTO `especialista_hallazgo` (`id`, `especialista_id`, `hallazgo_id`, `fecha_asignacion`, `motivo_asignacion`, `created_at`, `updated_at`) VALUES
 	(29, 3, 9, '2025-02-05 14:07:13', '15', '2025-02-05 14:07:13', NULL),
 	(30, 4, 9, '2025-02-05 14:07:38', '15', '2025-02-05 14:07:38', NULL);
+
+-- Volcando estructura para tabla kallpaq.factores
+CREATE TABLE IF NOT EXISTS `factores` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `valor` int(11) NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `inactivate_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.factores: ~7 rows (aproximadamente)
 REPLACE INTO `factores` (`id`, `nombre`, `valor`, `estado`, `created_at`, `updated_at`, `inactivate_at`, `deleted_at`) VALUES
@@ -95,7 +338,126 @@ REPLACE INTO `factores` (`id`, `nombre`, `valor`, `estado`, `created_at`, `updat
 	(6, 'Ambiental', 2, 1, NULL, NULL, NULL, NULL),
 	(7, 'Seguridad', 4, 1, NULL, NULL, NULL, NULL);
 
+-- Volcando estructura para tabla kallpaq.failed_jobs
+CREATE TABLE IF NOT EXISTS `failed_jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.failed_jobs: ~0 rows (aproximadamente)
+
+-- Volcando estructura para procedimiento kallpaq.generar_frecuencias
+DELIMITER //
+CREATE PROCEDURE `generar_frecuencias`(IN `p_indicador_id` INT, IN `p_periodo_actual` YEAR)
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_indicador_id INT;
+    DECLARE v_frecuencia VARCHAR(255);
+    DECLARE v_fecha_actual DATE;
+    DECLARE v_contador INT;
+    DECLARE v_intervalo INT;
+    DEClARE v_repeat INT;
+    DECLARE v_meta DECIMAL(10,5);
+    DECLARE v_tipo_agregacion 
+  VARCHAR(255);
+  DECLARE v_meta_por_intervalo 
+  DECIMAL(10,5);
+  DECLARE v_meta_acumulada 
+  DECIMAL(10,5);
+
+    DECLARE cur CURSOR FOR
+        SELECT id, frecuencia, meta, tipo_agregacion FROM indicadores WHERE id = p_indicador_id AND estado = 2;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO v_indicador_id, v_frecuencia, v_meta, v_tipo_agregacion;
+
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET v_fecha_actual =LAST_DAY( DATE_FORMAT(CONCAT(p_periodo_actual-1, '-12-30'), '%Y-%m-%d'));
+        SET v_contador = 1;
+
+        CASE v_frecuencia
+            WHEN 'mensual' THEN SET v_intervalo = 1; SET v_repeat = 12;
+            WHEN 'trimestral' THEN SET v_intervalo = 3; SET v_repeat = 4;
+            WHEN 'semestral' THEN SET v_intervalo = 6; SET v_repeat = 2;
+            ELSE SET v_intervalo = 0; SET v_repeat = 0;
+        END CASE;
+DELETE from indicadores_seguimiento  WHERE indicador_id = p_indicador_id AND year(fecha) = p_periodo_actual;
+
+IF v_tipo_agregacion = 'acumulada' THEN
+      SET v_meta_por_intervalo = v_meta / v_repeat;
+      SET v_meta_acumulada =  v_meta / v_repeat;
+
+      WHILE v_contador <= v_repeat DO
+        SET v_fecha_actual = LAST_DAY(DATE_ADD(v_fecha_actual, INTERVAL v_intervalo MONTH));
+        REPLACE INTO indicadores_seguimiento (indicador_id, fecha, meta)
+        VALUES (v_indicador_id, v_fecha_actual, v_meta_acumulada);
+
+        SET v_meta_acumulada = v_meta_acumulada + v_meta_por_intervalo;
+        SET v_contador = v_contador + 1;
+      END WHILE;
+    ELSE
+      WHILE v_contador <= v_repeat DO
+        SET v_fecha_actual = LAST_DAY(DATE_ADD(v_fecha_actual, INTERVAL v_intervalo MONTH));
+        REPLACE INTO indicadores_seguimiento (indicador_id, fecha, meta)
+        VALUES (v_indicador_id, v_fecha_actual, v_meta);
+
+        SET v_contador = v_contador + 1;
+      END WHILE;
+    END IF;
+
+    UPDATE indicadores SET estado = 2 WHERE id = v_indicador_id;
+  END LOOP;
+
+  CLOSE cur;
+END//
+DELIMITER ;
+
+-- Volcando estructura para tabla kallpaq.hallazgos
+CREATE TABLE IF NOT EXISTS `hallazgos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `smp_cod` varchar(18) NOT NULL,
+  `informe_id` varchar(350) DEFAULT NULL,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `resumen` varchar(300) NOT NULL,
+  `descripcion` text NOT NULL,
+  `evidencia` text DEFAULT NULL,
+  `criterio` text DEFAULT NULL,
+  `clasificacion` enum('NCM','Ncme','Obs','Odm') NOT NULL,
+  `origen` enum('IN','EX','SN','RI','GR','CL','HA','ACAL','HOF','OT') NOT NULL,
+  `estado` enum('Abierto','Aprobado','En implementación','Pendiente','Cerrado') NOT NULL,
+  `sig` enum('SGC','SGAS','SGCM','SGSI') NOT NULL,
+  `auditor` varchar(250) NOT NULL,
+  `auditor_tipo` enum('auditor interno','auditor externo','colaborador') NOT NULL,
+  `fecha_solicitud` date NOT NULL,
+  `fecha_aprobacion` date DEFAULT NULL,
+  `fecha_cierre_acciones` date DEFAULT NULL,
+  `avance` decimal(10,2) DEFAULT NULL,
+  `fecha_planificacion_evaluacion` date DEFAULT NULL,
+  `evaluacion` varchar(255) DEFAULT NULL,
+  `fecha_evaluacion` date DEFAULT NULL,
+  `fecha_cierre_hallazgo` date DEFAULT NULL,
+  `estado_final` enum('Sin Efacia','Con Eficacia') DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `hallazgos_proceso_cod_foreign` (`proceso_id`),
+  CONSTRAINT `hallazgos_proceso_cod_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.hallazgos: ~36 rows (aproximadamente)
 REPLACE INTO `hallazgos` (`id`, `smp_cod`, `informe_id`, `proceso_id`, `resumen`, `descripcion`, `evidencia`, `criterio`, `clasificacion`, `origen`, `estado`, `sig`, `auditor`, `auditor_tipo`, `fecha_solicitud`, `fecha_aprobacion`, `fecha_cierre_acciones`, `avance`, `fecha_planificacion_evaluacion`, `evaluacion`, `fecha_evaluacion`, `fecha_cierre_hallazgo`, `estado_final`, `created_at`, `updated_at`) VALUES
@@ -136,6 +498,30 @@ REPLACE INTO `hallazgos` (`id`, `smp_cod`, `informe_id`, `proceso_id`, `resumen`
 	(35, 'Odm-PCAP-IN-001', '03-2024(I)', 284, 'Se sugiere actualizar la Matriz de Identificación de Principales Obligaciones Compliance', 'Se evidenció en la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18) del proceso, no se encuentra identificada la Directiva N° 006-2024-CG/GPCS aprobada mediante Resolución de Contraloría N° 204-2024-CG', 'Matriz de Identificación de Principales Obligaciones Compliance', 'Norma ISO 37301, requisito 4.5. Obligaciones de compliance.', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-25', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-28 00:02:13', '2024-06-28 00:02:13'),
 	(36, 'Odm-GPRJ-IN-002', '03-2024(I)', 97, 'Evaluar la incorporación de controles en la Matriz Integral de Riesgos y Oportunidades.', 'De acuerdo a lo revisado en la Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 con fecha 02/04/2024 , se recomienda considerar elementos con los que ya cuenta el proceso auditado y que no se mencionan en su F02(PR-MODER-04)04 , según se cita:\r\n-Incluir como control actual el Sistema de Gestión de la Procuraduría (SGP ) , en el cual se puede ver el estatus de los casos llevados por la Procuraduría.\r\n- Incluir como control actual el uso de Memorandos para anticipar o comunicar los plazos de presentación de escritos.\r\n-Hacer referencia a los procedimientos recientemente implementados , como parte de los controles actuales ; como por ejemplo el PR-GP-JUD-01 VE.00 Gestión de los Procesos Civiles Resultantes de los Servicios de Control (Aprobación 22/04) , y el PR-GP-JUD-02 Gestión de los Procesos Penales Resultantes de los Servicios de Control', 'Matriz Integral de Riesgos y Oportunidades F02(PR-MODER-04)04 con fecha 02/04/2024', 'Norma ISO 37301, requisito 6.1. Acciones para abordar riesgos y oportunidades)', 'Odm', 'IN', 'Abierto', 'SGCM', 'Maria Claudia Campos García', 'auditor externo', '2024-05-24', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-06-28 00:05:03', '2024-06-28 00:05:03');
 
+-- Volcando estructura para tabla kallpaq.hallazgos_acciones
+CREATE TABLE IF NOT EXISTS `hallazgos_acciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `hallazgo_id` bigint(20) unsigned NOT NULL,
+  `accion_cod` varchar(20) NOT NULL,
+  `accion` text NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `responsable_id` varchar(255) DEFAULT NULL,
+  `responsable_correo` varchar(255) NOT NULL,
+  `comentario` text DEFAULT NULL,
+  `fecha_fin_reprogramada` date DEFAULT NULL,
+  `fecha_cancelada` date DEFAULT NULL,
+  `fecha_fin_real` date DEFAULT NULL,
+  `ruta_evidencia` text DEFAULT NULL,
+  `estado` enum('Programada','Pendiente','En implementación','Cancelada','Completada','Cerrada') NOT NULL DEFAULT 'Programada',
+  `es_correctiva` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `hallazgos_acciones_hallazgo_id_foreign` (`hallazgo_id`),
+  CONSTRAINT `hallazgos_acciones_hallazgo_id_foreign` FOREIGN KEY (`hallazgo_id`) REFERENCES `hallazgos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.hallazgos_acciones: ~25 rows (aproximadamente)
 REPLACE INTO `hallazgos_acciones` (`id`, `hallazgo_id`, `accion_cod`, `accion`, `fecha_inicio`, `fecha_fin`, `responsable_id`, `responsable_correo`, `comentario`, `fecha_fin_reprogramada`, `fecha_cancelada`, `fecha_fin_real`, `ruta_evidencia`, `estado`, `es_correctiva`, `created_at`, `updated_at`) VALUES
 	(12, 1, 'SMP-RH-IN-0044-001', 'Verificación del perfil del Oficial de Compliance.', '2024-06-13', '2024-06-17', 'Daniel Sedan Villacorta', 'dsedan@contraloria.gob.pe', 'Nuevo registro', NULL, NULL, NULL, NULL, 'Completada', 0, '2024-06-26 20:57:03', '2024-07-04 01:04:10'),
@@ -167,6 +553,30 @@ REPLACE INTO `hallazgos_acciones` (`id`, `hallazgo_id`, `accion_cod`, `accion`, 
 	(38, 8, 'SMP-NORM-IN-003-001', 'Respaldo y restauración de la información´-Aprobar el documento Determinación de Contexto de los procesos, F01(PR-MODER-04)02,´-Aprobar la Matriz de Identificación de Principales Obligaciones Compliance F4(PR-MODER-18)00,', '2024-06-06', '2024-06-10', 'Juan Manuel Almeyda Requejo', 'jalmeyda@contraloria.gob.pe', NULL, NULL, NULL, NULL, NULL, '', 1, '2024-07-01 17:17:44', '2024-07-02 01:42:58'),
 	(39, 8, 'SMP-NORM-IN-003-002', 'Difusión de la cápsula del conocimiento del procedimiento "Gestión de documentos normativos en el alcance del SIG", así como la aplicación del procedimiento del procedimiento "Gestión de documentos normativos en el alcance del SIG" (PR-NORM-06).', '2024-06-06', '2024-06-06', 'Juan Manuel Almeyda Requejo', 'jalmeyda1403@gmail.com', NULL, NULL, NULL, NULL, NULL, '', 0, '2024-07-01 17:20:09', '2024-07-02 01:42:58');
 
+-- Volcando estructura para tabla kallpaq.hallazgos_causas
+CREATE TABLE IF NOT EXISTS `hallazgos_causas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `hallazgo_id` bigint(20) unsigned NOT NULL,
+  `metodo` enum('ishikawa','cinco_porques') NOT NULL,
+  `por_que_1` text DEFAULT NULL,
+  `por_que_2` text DEFAULT NULL,
+  `por_que_3` text DEFAULT NULL,
+  `por_que_4` text DEFAULT NULL,
+  `por_que_5` text DEFAULT NULL,
+  `mano_obra` text DEFAULT NULL,
+  `metodologias` text DEFAULT NULL,
+  `materiales` text DEFAULT NULL,
+  `maquinas` text DEFAULT NULL,
+  `medicion` text DEFAULT NULL,
+  `medio_ambiente` text DEFAULT NULL,
+  `resultado` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `hallazgos_causas_hallazgo_id_foreign` (`hallazgo_id`),
+  CONSTRAINT `hallazgos_causas_hallazgo_id_foreign` FOREIGN KEY (`hallazgo_id`) REFERENCES `hallazgos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.hallazgos_causas: ~7 rows (aproximadamente)
 REPLACE INTO `hallazgos_causas` (`id`, `hallazgo_id`, `metodo`, `por_que_1`, `por_que_2`, `por_que_3`, `por_que_4`, `por_que_5`, `mano_obra`, `metodologias`, `materiales`, `maquinas`, `medicion`, `medio_ambiente`, `resultado`, `created_at`, `updated_at`) VALUES
 	(6, 1, 'ishikawa', '¿Porque no se evidenció el legajo del puesto del Oficial de Compliance?\r\nNo se tiene designado al profesional que realizará las labores de la función de compliance de la CGR.', NULL, NULL, NULL, NULL, 'Falta de designación de personal para la función de compliance de la CGR.', NULL, NULL, NULL, NULL, NULL, 'No se tiene designado al profesional que realizará las labores de la función de compliance de la CGR.', '2024-06-26 20:55:18', '2024-06-26 21:34:42'),
@@ -178,28 +588,168 @@ REPLACE INTO `hallazgos_causas` (`id`, `hallazgo_id`, `metodo`, `por_que_1`, `po
 	(12, 9, 'cinco_porques', '¿Por qué el personal de la Gerencia Regional de Control de Ancash, en el desarrollo de la auditoría no logró acceder a los documentos del SGCM Determinación del contexto, MIRO, MCAR y MIPOC)?\r\nC1: Porque no fueron enviados los documentos aprobados (Determinación del contexto y la MIRO) al personal de Visita de Control.\r\nC2: Porque el personal no tuvo la orientación adecuada para afrontar la auditoría.\r\nC3: Por falta de coordinación para la realización de la auditoría interna.\r\nC4: Porque el personal desconocía las políticas y objetivos del SGCM.\r\nC5: Porque el personal no tuvo clara la ruta de acceso a los documentos publicados en la intranet (MCAR y MIPOC)', '¿Por qué no fueron enviados los documentos (Determinación del contexto y MIRO) al personal de visita de control?\r\nC1.2: Por que la Vicecontraloría de Control Sectorial y Territorial estuvo a cargo de 9 procesos que simultáneamente se estaba implementando para el Sistema de Gestión Compliance, en el cual se brindó prioridad a la aprobación de los documentos correspondientes y no al envío de la información al personal.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Se brindó prioridad a la aprobación de los documentos correspondientes y no al envío de la información al personal.', '2024-06-27 16:20:26', '2024-06-27 16:20:26'),
 	(13, 8, 'cinco_porques', '¿Por qué no se tienen aprobados, codificados , migrado al formato vigente y usado los documentos vigentes en los diferentes casos?\r\nDesconocimiento por parte de las Unidades Orgánicas de la aplicación del procedimiento PR-MODER-06 "Gestión de Documentos del SIG", que contempla el control documental de los documentos del SIG de la CGR.', '¿Por qué hay desconocimiento por parte de las Unidades Orgánicas de la aplicación del procedimiento PR-MODER-06 "Gestión de Documentos del SIG"?\r\nFalta de capacitación a los facilitadores de las UO en relación a la aplicación del del procedimiento PR-MODER-06 "Gestión de Documentos del SIG.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Desconocimiento y limitada capacitación en  la aplicación del procedimiento PR-MODER-06 "Gestión de Documentos del SIG",', '2024-07-01 17:19:12', '2024-07-01 17:19:12');
 
+-- Volcando estructura para tabla kallpaq.indicadores
+CREATE TABLE IF NOT EXISTS `indicadores` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `planificacion_pei_id` bigint(255) DEFAULT NULL,
+  `planificacion_sig_id` bigint(255) DEFAULT NULL,
+  `nombre` text NOT NULL,
+  `descripcion` text NOT NULL,
+  `fuente` text NOT NULL,
+  `tipo_indicador` enum('Producto','Servicio','Resultado','Calidad') NOT NULL,
+  `sgc` tinyint(1) NOT NULL,
+  `sgas` tinyint(1) NOT NULL,
+  `sgcm` tinyint(1) NOT NULL,
+  `sgsi` tinyint(1) NOT NULL,
+  `sgce` tinyint(1) NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `formula` varchar(255) NOT NULL,
+  `frecuencia` enum('mensual','trimestral','semestral','anual') NOT NULL,
+  `meta` double(8,2) NOT NULL,
+  `tipo_agregacion` enum('acumulada','no acumulada') NOT NULL,
+  `parametro_medida` enum('ratio','porcentaje','numero','indice','tasa','promedio') NOT NULL,
+  `sentido` enum('ascendente','lineal','descendente') NOT NULL,
+  `var1` varchar(255) DEFAULT NULL,
+  `var2` varchar(255) DEFAULT NULL,
+  `var3` varchar(255) DEFAULT NULL,
+  `var4` varchar(255) DEFAULT NULL,
+  `var5` varchar(255) DEFAULT NULL,
+  `var6` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `indicadores_proceso_cod_foreign` (`proceso_id`),
+  CONSTRAINT `indicadores_proceso_cod_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.indicadores: ~3 rows (aproximadamente)
 REPLACE INTO `indicadores` (`id`, `proceso_id`, `planificacion_pei_id`, `planificacion_sig_id`, `nombre`, `descripcion`, `fuente`, `tipo_indicador`, `sgc`, `sgas`, `sgcm`, `sgsi`, `sgce`, `estado`, `formula`, `frecuencia`, `meta`, `tipo_agregacion`, `parametro_medida`, `sentido`, `var1`, `var2`, `var3`, `var4`, `var5`, `var6`, `created_at`, `updated_at`) VALUES
 	(1, 110, 1, 2, 'Porcentaje de Procedimientos del TUPA actualizados', 'Medir la actualización del TUPA de la CGR', 'Información del tupa', 'Producto', 0, 1, 1, 0, 0, 1, 'var1/var2', 'mensual', 0.80, 'no acumulada', 'porcentaje', 'ascendente', 'Cantidad de  Procedimientos Administrativos (PA) actualizados', 'Total de PA', NULL, NULL, NULL, NULL, '2023-05-26 23:01:48', '2025-02-18 19:03:11'),
 	(2, 35, 2, 2, 'Indicador prueba1', 'Prueba1', 'Nuevo1', 'Producto', 0, 0, 0, 0, 0, 1, 'var1/var2', 'trimestral', 0.90, 'acumulada', 'tasa', 'ascendente', 'var1', 'var2', NULL, NULL, NULL, NULL, '2024-06-04 21:06:47', '2025-02-19 14:24:17'),
 	(3, 36, 3, 3, 'Ejemploi', 'Ejempó', 'Ejempñpo', 'Producto', 0, 0, 0, 0, 0, 1, 'var1+var2+var3', 'mensual', 120.00, 'no acumulada', 'ratio', 'ascendente', 'v1', 'v2', 'v3', NULL, NULL, NULL, '2024-06-05 05:02:47', '2024-06-05 05:02:47');
 
+-- Volcando estructura para tabla kallpaq.indicadores_historico
+CREATE TABLE IF NOT EXISTS `indicadores_historico` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `indicador_proceso_ouo_id` bigint(20) unsigned NOT NULL,
+  `año` year(4) NOT NULL,
+  `meta` double(8,2) NOT NULL,
+  `valor` double(8,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `indicadores_historico_indicador_id_foreign` (`indicador_proceso_ouo_id`),
+  CONSTRAINT `indicadores_historico_indicador_id_foreign` FOREIGN KEY (`indicador_proceso_ouo_id`) REFERENCES `indicadores_proceso_ouo` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.indicadores_historico: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.indicadores_proceso_ouo
+CREATE TABLE IF NOT EXISTS `indicadores_proceso_ouo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id_proceso_ouo` bigint(20) unsigned NOT NULL,
+  `id_indicador` bigint(20) unsigned NOT NULL,
+  `meta_programada` double(8,2) NOT NULL,
+  `year_programado` char(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_proceso_ouo` (`id_proceso_ouo`),
+  KEY `id_indicador` (`id_indicador`),
+  CONSTRAINT `indicadores_proceso_ouo_id_indicador_foreign` FOREIGN KEY (`id_indicador`) REFERENCES `indicadores` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `indicadores_proceso_ouo_id_proceso_ouo_foreign` FOREIGN KEY (`id_proceso_ouo`) REFERENCES `procesos_ouo` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.indicadores_proceso_ouo: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.indicadores_seguimiento
+CREATE TABLE IF NOT EXISTS `indicadores_seguimiento` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `indicador_proceso_ouo_id` bigint(20) unsigned NOT NULL,
+  `fecha` date NOT NULL,
+  `meta` double(8,5) DEFAULT 0.00000,
+  `valor` double(8,2) DEFAULT 0.00,
+  `estado` varchar(100) NOT NULL,
+  `var1` double(8,2) DEFAULT 0.00,
+  `var2` double(8,2) DEFAULT 0.00,
+  `var3` double(8,2) DEFAULT 0.00,
+  `var4` double(8,2) DEFAULT 0.00,
+  `var5` double(8,2) DEFAULT 0.00,
+  `var6` double(8,2) DEFAULT 0.00,
+  `evidencias` longtext DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `indicador_proceso_ouo_id` (`indicador_proceso_ouo_id`),
+  CONSTRAINT `indicadores_seguimiento_ibfk_1` FOREIGN KEY (`indicador_proceso_ouo_id`) REFERENCES `indicadores_proceso_ouo` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=298 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.indicadores_seguimiento: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.informe_auditoria
+CREATE TABLE IF NOT EXISTS `informe_auditoria` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `auditoria_id` bigint(20) unsigned NOT NULL,
+  `fecha_emision` date NOT NULL,
+  `informe_pdf` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `informe_auditoria_auditoria_id_foreign` (`auditoria_id`),
+  CONSTRAINT `informe_auditoria_auditoria_id_foreign` FOREIGN KEY (`auditoria_id`) REFERENCES `auditorias` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.informe_auditoria: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.inventarios
+CREATE TABLE IF NOT EXISTS `inventarios` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `descripcion` text NOT NULL,
+  `documento_aprueba` text NOT NULL,
+  `vigencia` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `enlace` text NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.inventarios: ~2 rows (aproximadamente)
 REPLACE INTO `inventarios` (`id`, `nombre`, `descripcion`, `documento_aprueba`, `vigencia`, `enlace`, `estado`, `created_at`, `updated_at`) VALUES
 	(1, 'Mapa de Procesos, la Gobernanza de Procesos y el Inventario de procesos de la Contraloría General de la República 2021.', 'version inicial', 'Resolución de Contraloría N° 279-2021-CG ', '2021-12-06 17:44:07', 'http://webserverapp.contraloria.gob.pe/Inicio/Bienestar_Docs/RC_279-2021-CG.pdf', 0, NULL, NULL),
 	(2, 'Mapa de Procesos de la Contraloría General de la República 2021 v2', 'PM01 "Prevención de la corrupción", el cual pasa a denominarse PM01 "Prevención y detección de la corrupción".', 'Resolución de Contraloría N° 255-2022-CG', '2025-05-13 17:45:30', 'http://webserverapp.contraloria.gob.pe/Calidad/Documentos/RC-255-2022-CG_Modifica_Mapa_de_Procesos.pdf', 1, NULL, NULL);
 
+-- Volcando estructura para tabla kallpaq.inventario_procesos
+CREATE TABLE IF NOT EXISTS `inventario_procesos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id_inventario` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `id_proceso` bigint(20) unsigned NOT NULL,
+  `id_ouo_responsable` bigint(20) unsigned NOT NULL,
+  `id_ouo_delegada` bigint(20) unsigned NOT NULL,
+  `estado` tinyint(4) NOT NULL,
+  `inactive_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `inventario_procesos_id_proceso_foreign` (`id_proceso`),
+  KEY `inventario_procesos_id_ouo_responsable_foreign` (`id_ouo_responsable`),
+  CONSTRAINT `inventario_procesos_id_ouo_responsable_foreign` FOREIGN KEY (`id_ouo_responsable`) REFERENCES `ouos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `inventario_procesos_id_proceso_foreign` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.inventario_procesos: ~0 rows (aproximadamente)
 
--- Volcando datos para la tabla kallpaq.migrations: ~47 rows (aproximadamente)
+-- Volcando estructura para tabla kallpaq.migrations
+CREATE TABLE IF NOT EXISTS `migrations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Volcando datos para la tabla kallpaq.migrations: ~46 rows (aproximadamente)
 REPLACE INTO `migrations` (`id`, `migration`, `batch`) VALUES
 	(45, '2014_10_12_000000_create_users_table', 1),
 	(46, '2014_10_12_100000_create_password_reset_tokens_table', 1),
@@ -254,6 +804,16 @@ REPLACE INTO `migrations` (`id`, `migration`, `batch`) VALUES
 	(110, '2025_05_13_114418_create_inventario_table', 31),
 	(111, '2025_05_19_095638_create_documento_versiones_table', 32);
 
+-- Volcando estructura para tabla kallpaq.model_has_permissions
+CREATE TABLE IF NOT EXISTS `model_has_permissions` (
+  `permission_id` bigint(20) unsigned NOT NULL,
+  `model_type` varchar(255) NOT NULL,
+  `model_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`permission_id`,`model_id`,`model_type`),
+  KEY `model_has_permissions_model_id_model_type_index` (`model_id`,`model_type`),
+  CONSTRAINT `model_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.model_has_permissions: ~6 rows (aproximadamente)
 REPLACE INTO `model_has_permissions` (`permission_id`, `model_type`, `model_id`) VALUES
 	(1, 'App\\Models\\User', 1),
@@ -263,11 +823,41 @@ REPLACE INTO `model_has_permissions` (`permission_id`, `model_type`, `model_id`)
 	(3, 'App\\Models\\User', 2),
 	(4, 'App\\Models\\User', 1);
 
+-- Volcando estructura para tabla kallpaq.model_has_roles
+CREATE TABLE IF NOT EXISTS `model_has_roles` (
+  `model_id` bigint(20) unsigned NOT NULL,
+  `model_type` varchar(255) NOT NULL,
+  `role_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`role_id`,`model_id`,`model_type`),
+  KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`),
+  CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.model_has_roles: ~2 rows (aproximadamente)
 REPLACE INTO `model_has_roles` (`model_id`, `model_type`, `role_id`) VALUES
 	(1, 'App\\Models\\User', 1),
 	(2, 'App\\Models\\User', 2),
 	(21, 'App\\Models\\User', 5);
+
+-- Volcando estructura para tabla kallpaq.obligaciones
+CREATE TABLE IF NOT EXISTS `obligaciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `area_compliance_id` bigint(20) unsigned NOT NULL,
+  `documento_tecnico_normativo` text NOT NULL,
+  `obligacion_principal` text NOT NULL,
+  `obligacion_controles` text NOT NULL,
+  `consecuencia_incumplimiento` text NOT NULL,
+  `documento_deroga` text DEFAULT NULL,
+  `estado_obligacion` enum('pendiente','mitigada','controlada','vencida','inactiva','suspendida') NOT NULL DEFAULT 'pendiente',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `obligaciones_proceso_id_foreign` (`proceso_id`),
+  KEY `obligaciones_area_compliance_id_foreign` (`area_compliance_id`),
+  CONSTRAINT `obligaciones_area_compliance_id_foreign` FOREIGN KEY (`area_compliance_id`) REFERENCES `areas_compliance` (`id`),
+  CONSTRAINT `obligaciones_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.obligaciones: ~43 rows (aproximadamente)
 REPLACE INTO `obligaciones` (`id`, `proceso_id`, `area_compliance_id`, `documento_tecnico_normativo`, `obligacion_principal`, `obligacion_controles`, `consecuencia_incumplimiento`, `documento_deroga`, `estado_obligacion`, `created_at`, `updated_at`) VALUES
@@ -319,6 +909,21 @@ REPLACE INTO `obligaciones` (`id`, `proceso_id`, `area_compliance_id`, `document
 	(49, 78, 14, 'Ley 29542 “Ley de Protección al Denunciante en el Ámbito Administrativo y de Colaboración Eficaz en el Ámbito Penal”', 'Ejecutar los requisitos de protección al denunciante al recibir la denuncia administrativa del usuario.', 'Capacitación de "Ética e Integridad", dirigida al área de mesa de partes.', 'Violación de la confidencialidad, posibles sanciones por filtración de información, pérdida de confianza y reputación de la entidad, y afectación a los derechos de los involucrados. Denuncias por incidentes en uso de documentación que custodia los archivos de la CGR con carácter confidencial.', NULL, 'pendiente', '2025-03-25 00:25:09', '2025-03-25 00:25:09'),
 	(50, 118, 14, 'Resolución jefatural N° 386.2002-INEI, que aprueba la Directiva N°016-2002-INEI/DTNP Normas técnicas para el almacenamiento y Respaldo de la Información procesada por las entidades de la Administración Pública.', 'Tomar las medidas necesarias para proteger y salvaguardar la integridad de los respaldos de la información', 'Mantenimiento preventivo de hardware y software, pruebas semestrales de recuperación de los respaldos\r\nPR-TI-06 Procedimiento "Respaldo y Restauración de Información"', 'No se logra recuperar la información requerida', NULL, 'pendiente', '2025-03-25 00:35:57', '2025-03-25 00:35:57'),
 	(51, 118, 14, 'Contrato de servicio de correo electrónico (solución de respaldo)', 'Tomar las medidas necesarias para proteger y salvaguardar la integridad de los respaldos de la información de los correos electrónicos', 'Reportar al proveedor mediante ticket para que tome acciones de corrección y hacer seguimiento hasta la corrección.', 'No se logra recuperar la información requerida en un tiempo adecuado', NULL, 'pendiente', '2025-03-25 00:36:57', '2025-03-25 00:36:57');
+
+-- Volcando estructura para tabla kallpaq.obligacion_riesgo
+CREATE TABLE IF NOT EXISTS `obligacion_riesgo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `obligacion_id` bigint(20) unsigned NOT NULL,
+  `riesgo_id` bigint(20) unsigned NOT NULL,
+  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `obligacion_riesgo_obligacion_id_foreign` (`obligacion_id`),
+  KEY `obligacion_riesgo_riesgo_id_foreign` (`riesgo_id`),
+  CONSTRAINT `obligacion_riesgo_obligacion_id_foreign` FOREIGN KEY (`obligacion_id`) REFERENCES `obligaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `obligacion_riesgo_riesgo_id_foreign` FOREIGN KEY (`riesgo_id`) REFERENCES `riesgos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.obligacion_riesgo: ~47 rows (aproximadamente)
 REPLACE INTO `obligacion_riesgo` (`id`, `obligacion_id`, `riesgo_id`, `estado`, `created_at`, `updated_at`) VALUES
@@ -373,6 +978,31 @@ REPLACE INTO `obligacion_riesgo` (`id`, `obligacion_id`, `riesgo_id`, `estado`, 
 	(66, 49, 81, 'activo', NULL, NULL),
 	(67, 50, 82, 'activo', NULL, NULL),
 	(68, 51, 83, 'activo', NULL, NULL);
+
+-- Volcando estructura para tabla kallpaq.ouos
+CREATE TABLE IF NOT EXISTS `ouos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `ouo_nombre` varchar(255) NOT NULL,
+  `ouo_codigo` varchar(255) NOT NULL,
+  `ouo_padre` bigint(20) unsigned DEFAULT NULL,
+  `subgerente_id` bigint(20) unsigned DEFAULT NULL,
+  `subgerente_condicion` enum('encargatura','designacion','suplencia') DEFAULT NULL,
+  `nivel_jerarquico` int(11) NOT NULL,
+  `doc_vigencia_alta` varchar(255) DEFAULT NULL,
+  `fecha_vigencia_inicio` date NOT NULL,
+  `doc_vigencia_baja` varchar(255) DEFAULT NULL,
+  `fecha_vigencia_fin` date DEFAULT NULL,
+  `estado` tinyint(4) DEFAULT NULL,
+  `inactive_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ouo_codigo_unique` (`ouo_codigo`),
+  KEY `ouo_ouo_padre_foreign` (`ouo_padre`),
+  KEY `ouo_subgerente_id_foreign` (`subgerente_id`),
+  CONSTRAINT `ouo_ouo_padre_foreign` FOREIGN KEY (`ouo_padre`) REFERENCES `ouos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `ouo_subgerente_id_foreign` FOREIGN KEY (`subgerente_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=146 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.ouos: ~97 rows (aproximadamente)
 REPLACE INTO `ouos` (`id`, `ouo_nombre`, `ouo_codigo`, `ouo_padre`, `subgerente_id`, `subgerente_condicion`, `nivel_jerarquico`, `doc_vigencia_alta`, `fecha_vigencia_inicio`, `doc_vigencia_baja`, `fecha_vigencia_fin`, `estado`, `inactive_at`, `created_at`, `updated_at`) VALUES
@@ -476,9 +1106,36 @@ REPLACE INTO `ouos` (`id`, `ouo_nombre`, `ouo_codigo`, `ouo_padre`, `subgerente_
 	(144, 'Órgano Instructor Arequipa', 'E213', 4, 214, 'encargatura', 3, NULL, '0000-00-00', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL),
 	(145, 'Órgano Instructor Junín', 'E212', 4, 215, 'encargatura', 3, NULL, '0000-00-00', NULL, NULL, 1, NULL, '2025-02-04 19:26:35', NULL);
 
+-- Volcando estructura para tabla kallpaq.password_resets
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  KEY `password_resets_email_index` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.password_resets: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.password_reset_tokens
+CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.password_reset_tokens: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.permissions
+CREATE TABLE IF NOT EXISTS `permissions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `guard_name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `permissions_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.permissions: ~4 rows (aproximadamente)
 REPLACE INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
@@ -487,256 +1144,336 @@ REPLACE INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_a
 	(3, 'Modulo Hallazgos', 'web', '2023-08-25 20:55:30', '2023-08-25 20:55:30'),
 	(4, 'Modulo Riesgos', 'web', '2023-08-25 20:55:30', '2023-08-25 20:55:30');
 
+-- Volcando estructura para tabla kallpaq.personal_access_tokens
+CREATE TABLE IF NOT EXISTS `personal_access_tokens` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.personal_access_tokens: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.planificacion_pei
+CREATE TABLE IF NOT EXISTS `planificacion_pei` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `planificacion_pei_cod` varchar(255) NOT NULL,
+  `planificacion_pei_nombre` varchar(255) NOT NULL,
+  `alcance` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.planificacion_pei: ~5 rows (aproximadamente)
-REPLACE INTO `planificacion_pei` (`id`, `cod_objetivo`, `objetivo_nombre`, `alcance`, `created_at`, `updated_at`) VALUES
+REPLACE INTO `planificacion_pei` (`id`, `planificacion_pei_cod`, `planificacion_pei_nombre`, `alcance`, `created_at`, `updated_at`) VALUES
 	(1, 'OEI.01', 'Contribuir a la reducción de la inconducta funcional y la corrupción en las entidades públicas', '2022-2026, ampliado al 2027', '2025-02-17 19:25:17', NULL),
 	(2, 'OEI.02', 'Contribuir a la gestión eficiente y eficaz de los recursos públicos en beneficio de la población', '2022-2026, ampliado al 2027', '2025-02-17 19:25:17', NULL),
 	(3, 'OEI.03', 'Promover la participación ciudadana a través del control social y la formación en valores de Integridad', '2022-2026, ampliado al 2027', '2025-02-17 19:25:17', NULL),
 	(4, 'OEI.04', 'Fortalecer la gestión institucional del Sistema Nacional de Control', '2022-2026, ampliado al 2027', '2025-02-17 19:25:17', NULL),
 	(5, 'OEI.05', 'Implementar la gestión de riesgos de desastres', '2022-2026, ampliado al 2027', '2025-02-17 19:25:17', NULL);
 
+-- Volcando estructura para tabla kallpaq.planificacion_sig
+CREATE TABLE IF NOT EXISTS `planificacion_sig` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `objetivo_sig_cod` varchar(255) NOT NULL,
+  `sistema` enum('SGC','SGAS') NOT NULL,
+  `objetivo_sig_nombre` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.planificacion_sig: ~4 rows (aproximadamente)
-REPLACE INTO `planificacion_sig` (`id`, `objetivo`, `sistema`, `objetivo_nombre_sig`, `created_at`, `updated_at`) VALUES
+REPLACE INTO `planificacion_sig` (`id`, `objetivo_sig_cod`, `sistema`, `objetivo_sig_nombre`, `created_at`, `updated_at`) VALUES
 	(1, 'OSGC1', 'SGC', 'Contribuir a la reducción de la inconducta funcional y la corrupción en las entidades públicas.', '2023-08-19 02:27:59', NULL),
 	(2, 'OSGC2', 'SGC', 'Apoyar la gestión eficiente y eficaz de los recursos públicos en beneficio de la población', '2023-08-19 02:27:59', NULL),
 	(3, 'OSGC3', 'SGC', 'Promover la participación ciudadana en el control social.', '2023-08-19 02:28:31', NULL),
 	(4, 'OSGC4', 'SGC', 'Fortalecer la gestión del Sistema Nacional de Control.', NULL, NULL);
 
--- Volcando datos para la tabla kallpaq.procesos: ~232 rows (aproximadamente)
-REPLACE INTO `procesos` (`id`, `cod_proceso`, `proceso_nombre`, `proceso_objetivo`, `proceso_sigla`, `proceso_tipo`, `objetivo_pei`, `cod_proceso_padre`, `proceso_nivel`, `proceso_estado`, `inactivate_at`, `created_at`, `updated_at`) VALUES
-	(1, 'PE01', 'Gestión Estratégica', '', NULL, 'Estratégico', NULL, NULL, 0, 1, NULL, '2023-05-26 23:01:48', '2023-06-02 04:00:48'),
-	(2, 'PE02', 'Desarrollo Institucional', '', NULL, 'Estratégico', NULL, NULL, 0, 1, NULL, '2025-02-03 21:23:17', NULL),
-	(3, 'PE03', 'Comunicación y Relaciones Interinstitucionales', '', NULL, 'Estratégico', NULL, NULL, 0, 1, NULL, '2025-02-03 21:23:41', NULL),
-	(4, 'PM01', 'Prevención y Detección de la Corrupción', '', NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(5, 'PM02', 'Atención a las Entidades y Partes Interesadas', '', NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(6, 'PM03', 'Realización de los Servicios de Control Simultáneo, Posterior y Relacionados', '', NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(7, 'PM04', 'Gestión de Sanciones y Procesos Judiciales', '', NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(8, 'PM05', 'Gestión de los Resultados del Control', '', NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
+-- Volcando estructura para tabla kallpaq.procesos
+CREATE TABLE IF NOT EXISTS `procesos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `cod_proceso` varchar(255) NOT NULL,
+  `proceso_nombre` varchar(255) NOT NULL,
+  `proceso_objetivo` varchar(1000) DEFAULT NULL,
+  `proceso_sigla` varchar(6) DEFAULT NULL,
+  `proceso_tipo` enum('Misional','Estratégico','Apoyo') NOT NULL,
+  `planificacion_pei_id` bigint(20) unsigned DEFAULT NULL,
+  `cod_proceso_padre` varchar(20) DEFAULT NULL,
+  `proceso_nivel` int(11) NOT NULL DEFAULT 0,
+  `proceso_estado` tinyint(1) NOT NULL DEFAULT 1,
+  `inactivate_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `cod_proceso` (`cod_proceso`),
+  UNIQUE KEY `sigla` (`proceso_sigla`)
+) ENGINE=InnoDB AUTO_INCREMENT=296 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Volcando datos para la tabla kallpaq.procesos: ~231 rows (aproximadamente)
+REPLACE INTO `procesos` (`id`, `cod_proceso`, `proceso_nombre`, `proceso_objetivo`, `proceso_sigla`, `proceso_tipo`, `planificacion_pei_id`, `cod_proceso_padre`, `proceso_nivel`, `proceso_estado`, `inactivate_at`, `created_at`, `updated_at`) VALUES
+	(1, 'PE01', 'Gestión Estratégica', NULL, NULL, 'Estratégico', NULL, NULL, 0, 1, NULL, '2023-05-26 23:01:48', '2023-06-02 04:00:48'),
+	(2, 'PE02', 'Desarrollo Institucional', NULL, NULL, 'Estratégico', NULL, NULL, 0, 1, NULL, '2025-02-03 21:23:17', NULL),
+	(3, 'PE03', 'Comunicación y Relaciones Interinstitucionales', NULL, NULL, 'Estratégico', NULL, NULL, 0, 1, NULL, '2025-02-03 21:23:41', NULL),
+	(4, 'PM01', 'Prevención y Detección de la Corrupción', NULL, NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(5, 'PM02', 'Atención a las Entidades y Partes Interesadas', NULL, NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(6, 'PM03', 'Realización de los Servicios de Control Simultáneo, Posterior y Relacionados', NULL, NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(7, 'PM04', 'Gestión de Sanciones y Procesos Judiciales', NULL, NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(8, 'PM05', 'Gestión de los Resultados del Control', NULL, NULL, 'Misional', NULL, NULL, 0, 1, NULL, NULL, NULL),
 	(9, 'PA01', 'Gestión del Capital Humano', 'Seleccionar, vincular e impulsar el desarrollo del capital humano de la Contraloría General de la República.', 'GCH', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, '2025-05-05 22:55:41'),
-	(10, 'PA02', 'Gestión de Activos Documentarios', '', NULL, 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(11, 'PA03', 'Gestión de Abastecimiento', '', NULL, 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(12, 'PA04', 'Gestión Financiera', '', 'GFIN', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(13, 'PA05', 'Gestión de Tecnologías de la Información y Comunicaciones', '', 'GTI', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(14, 'PA06', 'Gestión Jurídico Legal', '', 'GJL', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(15, 'PA07', 'Gestión de la Seguridad', '', 'GSG', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
-	(30, 'PE01.01', 'Planeamiento Estratégico', '', 'PEI', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(31, 'PE01.02', 'Gestión de Entidades Sujetad a Control', '', 'GESC', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(32, 'PE01.03', 'Planeamiento Operativo', '', 'POI', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(33, 'PE01.04', 'Control Institucional', '', 'CIN', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(34, 'PE02.01', 'Diseño Organizacional', '', 'DEO', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(35, 'PE02.02', 'Gestión de la Modernización', '', 'MOD', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(36, 'PE02.03', 'Gestión Normativa', '', 'GNOR', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(37, 'PE02.04', 'Gestión de la Inversión', '', 'PROY', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(38, 'PE02.05', 'Gestión del Conocimiento', '', 'GCON', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(39, 'PE02.06', 'Gestión de la Continuidad del Negocio', '', 'GCNE', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(40, 'PE02.07', 'Gestión de la Integridad Institucional', '', NULL, 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(41, 'PE03.01', 'Gestión de la Comunicación Institucional', '', NULL, 'Estratégico', NULL, '3', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(42, 'PE03.02', 'Gestión de las Relaciones Interinstitucionales', '', NULL, 'Estratégico', NULL, '3', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
-	(56, 'PM01.01', 'Gestión de mecanismos de prevención y detección de la corrupción', '', NULL, 'Misional', NULL, '4', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(57, 'PM01.02', 'Participación ciudadana', '', NULL, 'Misional', NULL, '4', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(58, 'PM02.01', 'Atención de la demanda imprevisible de control', '', NULL, 'Misional', NULL, '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(59, 'PM02.02', 'Atención de pedidos de información y solicitudes de opinión', '', NULL, 'Misional', NULL, '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(60, 'PM02.03', 'Atención de quejas y reclamos', '', NULL, 'Misional', NULL, '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(61, 'PM03.01', 'Programación de los servicios de control y de fiscalización', '', NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(10, 'PA02', 'Gestión de Activos Documentarios', NULL, NULL, 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(11, 'PA03', 'Gestión de Abastecimiento', NULL, NULL, 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(12, 'PA04', 'Gestión Financiera', NULL, 'GFIN', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(13, 'PA05', 'Gestión de Tecnologías de la Información y Comunicaciones', NULL, 'GTI', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(14, 'PA06', 'Gestión Jurídico Legal', NULL, 'GJL', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(15, 'PA07', 'Gestión de la Seguridad', NULL, 'GSG', 'Apoyo', NULL, NULL, 0, 1, NULL, NULL, NULL),
+	(30, 'PE01.01', 'Planeamiento Estratégico', 'Definir los componentes de la estrategia institucional para el mediano plazo y su seguimiento que permitan obtener los resultados que satisfagan las necesidades de la ciudadanía y de las entidades públicas sujetas a control.', 'PEI', 'Estratégico', 2, '1', 1, 1, NULL, '2023-08-09 17:21:22', '2025-05-28 20:51:47'),
+	(31, 'PE01.02', 'Gestión de Entidades Sujetad a Control', NULL, 'GESC', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(32, 'PE01.03', 'Planeamiento Operativo', NULL, 'POI', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(33, 'PE01.04', 'Control Institucional', NULL, 'CIN', 'Estratégico', NULL, '1', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(34, 'PE02.01', 'Diseño Organizacional', NULL, 'DEO', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(35, 'PE02.02', 'Gestión de la Modernización', NULL, 'MOD', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(36, 'PE02.03', 'Gestión Normativa', NULL, 'GNOR', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(37, 'PE02.04', 'Gestión de la Inversión', NULL, 'PROY', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(38, 'PE02.05', 'Gestión del Conocimiento', NULL, 'GCON', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(39, 'PE02.06', 'Gestión de la Continuidad del Negocio', NULL, 'GCNE', 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(40, 'PE02.07', 'Gestión de la Integridad Institucional', NULL, NULL, 'Estratégico', NULL, '2', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(41, 'PE03.01', 'Gestión de la Comunicación Institucional', NULL, NULL, 'Estratégico', NULL, '3', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(42, 'PE03.02', 'Gestión de las Relaciones Interinstitucionales', NULL, NULL, 'Estratégico', NULL, '3', 1, 1, NULL, '2023-08-09 17:21:22', NULL),
+	(56, 'PM01.01', 'Gestión de mecanismos de prevención y detección de la corrupción', NULL, NULL, 'Misional', NULL, '4', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(57, 'PM01.02', 'Participación ciudadana', NULL, NULL, 'Misional', NULL, '4', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(58, 'PM02.01', 'Atención de la demanda imprevisible de control', NULL, NULL, 'Misional', NULL, '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(59, 'PM02.02', 'Atención de pedidos de información y solicitudes de opinión', NULL, NULL, 'Misional', NULL, '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(60, 'PM02.03', 'Atención de quejas y reclamos', NULL, NULL, 'Misional', NULL, '5', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(61, 'PM03.01', 'Programación de los servicios de control y de fiscalización', NULL, NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
 	(62, 'PM03.02', 'Realización de los servicios de control simultáneo', 'Realizar una supervisión continua y simultánea de las operaciones y actividades del sector público para garantizar que se cumplan los principios de legalidad, eficiencia, eficacia y transparencia en la gestión pública. Este proceso busca identificar riesgos, irregularidades y desviaciones en tiempo real, proporcionando recomendaciones para la mejora de la gestión y promoviendo la rendición de cuentas ante la ciudadanía', 'SCSIM', 'Misional', 2, '6', 1, 1, NULL, '2023-08-09 17:28:23', '2025-05-09 22:51:03'),
-	(63, 'PM03.03', 'Realización de los servicios de control posterior', '', NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(64, 'PM03.04', 'Realización de los servicios relacionados', '', NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', '', NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(66, 'PM04.01', 'Gestión de sanciones administrativas', '', 'GSAD', 'Misional', NULL, '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', '', 'GPSA', 'Misional', NULL, '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', '', '', 'Misional', NULL, '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', '', 'SEIR', 'Misional', NULL, '8', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
-	(70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', '', 'DBPM', 'Misional', NULL, '8', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(63, 'PM03.03', 'Realización de los servicios de control posterior', NULL, NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(64, 'PM03.04', 'Realización de los servicios relacionados', NULL, NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(65, 'PM03.05', 'Supervisión técnica y revisión de oficio de los servicios de control', NULL, NULL, 'Misional', NULL, '6', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(66, 'PM04.01', 'Gestión de sanciones administrativas', NULL, 'GSAD', 'Misional', NULL, '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(67, 'PM04.02', 'Gestión del procedimiento sancionador por infracción al ejercicio del control gubernamental', NULL, 'GPSA', 'Misional', NULL, '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(68, 'PM04.03', 'Gestión de los procesos judiciales resultantes de los servicios de control', NULL, '', 'Misional', NULL, '7', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(69, 'PM05.01', 'Seguimiento y evaluación a la implementación de las recomendaciones, acciones y pronunciamientos, resultados de los servicios de control', NULL, 'SEIR', 'Misional', NULL, '8', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
+	(70, 'PM05.02', 'Desarrollo de buenas prácticas y propuestas de mejora para la gestión de las entidades', NULL, 'DBPM', 'Misional', NULL, '8', 1, 1, NULL, '2023-08-09 17:28:23', NULL),
 	(71, 'PA01.01', 'Planificación del capital humano', 'El objetivo del proceso de planificación del capital humano es asegurar que la organización cuente con el personal adecuado, en el momento adecuado y con las competencias necesarias para cumplir con sus metas estratégicas y operativas. Este proceso involucra la identificación de necesidades de talento, la evaluación de los recursos humanos actuales, y la implementación de planes de desarrollo y capacitación para optimizar el desempeño y asegurar la alineación entre las capacidades del personal y los objetivos organizacionales.', 'PLCH', 'Apoyo', 4, '9', 1, 1, NULL, '2023-08-09 18:30:44', '2025-05-09 00:47:51'),
-	(72, 'PA01.02', 'Incorporación del capital humano', '', 'INCH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(73, 'PA01.03', 'Desarrollo del capital humano', '', 'DECH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(74, 'PA01.04', 'Administración del capital humano', '', 'ADCH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(75, 'PA01.05', 'Gestión del bienestar del capital humano', '', 'GBCH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(76, 'PA01.06', 'Gestión del jefe y personal del OCI', '', 'GOCI', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(77, 'PA02.01', 'Planificación del activo documentario', '', 'PDAD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(78, 'PA02.02', 'Recepción de documentos', '', 'RDGD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(79, 'PA02.03', 'Clasificación, reclasificación y desclasificación de documentos secretos y reservados', '', 'CRDD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(80, 'PA02.04', 'Distribución de documentos y valijas', '', 'MSJ', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(81, 'PA02.05', 'Archivo, custodia y conservación de documentos', '', 'ARCH', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(82, 'PA02.06', 'Autenticación de firmas y certificación de documentos', '', 'AFCD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(83, 'PA03.01', 'Elaboración del plan anual de contrataciones', '', 'PNCO', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(84, 'PA03.02', 'Contratación de bienes y servicios', '', 'ACBS', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(85, 'PA03.03', 'Gestión de bienes patrimoniales', '', 'GBPA', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(86, 'PA03.04', 'Gestión de almacén', '', 'GALM', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(87, 'PA03.05', 'Administración de servicios generales', '', 'ADSG', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(88, 'PA03.06', 'Gestión de sociedades de auditoria', '', 'GSOA', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(89, 'PA04.01', 'Programación multianual, formulación y aprobación del presupuesto', '', NULL, 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(90, 'PA04.02', 'Ejecución presupuestal', '', 'EJPR', 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(91, 'PA04.03', 'Evaluación presupuestal', '', 'EVPR', 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(92, 'PA04.04', 'Gestión contable', '', 'CONT', 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(93, 'PA05.01', 'Planificación de tecnologías de la información y comunicaciones', '', NULL, 'Apoyo', NULL, '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', '', NULL, 'Apoyo', NULL, '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', '', NULL, 'Apoyo', NULL, '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(96, 'PA06.01', 'Gestión y difusión de productos de interés legal', '', NULL, 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', '', 'GPRJ', 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', '', NULL, 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', '', NULL, 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', '', 'ACCJ', 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(101, 'PA07.01', 'Gestión de prevención de riesgos de desastres', '', NULL, 'Apoyo', NULL, '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(102, 'PA07.02', 'Operación de la gestión de la seguridad', '', NULL, 'Apoyo', NULL, '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(103, 'PA07.03', 'Fomento de una cultura de seguridad', '', NULL, 'Apoyo', NULL, '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
-	(104, 'PM06', 'Gestión Educativa', '', 'GEDU', 'Misional', NULL, NULL, 0, 1, NULL, '2023-09-27 15:13:56', NULL),
-	(105, 'PE02.02.02', 'Administración de los Sistemas de Gestión', '', 'MODER', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:38:59', NULL),
-	(106, 'PE02.02.03', 'Gestión de la Calidad', '', 'SGC', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
-	(107, 'PE02.02.04', 'Gestión de Riesgos', '', 'SGR', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
-	(108, 'PE02.02.05', 'Gestión del Control Interno', '', NULL, 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:47:23', NULL),
-	(109, 'PE02.02.06', 'Gestión Antisoborno', '', 'SGAS', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:47:23', NULL),
-	(110, 'PE02.02.07', 'Gestión de la Simplificación Administrativa', '', 'SIMP', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
-	(111, 'PE02.02.08', 'Aseguramiento de la Calidad', '', 'ACAL', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
-	(112, 'PE02.02.09', 'Gestión de la Seguridad de la Información', '', 'SGSI', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
-	(113, 'PE02.02.01', 'Gestión por Procesos', '', 'PROC', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:53:40', NULL),
-	(114, 'PE02.02.10', 'Gestión de Compliance', '', 'SGCM', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:53:40', NULL),
-	(115, 'PE02.03.01', 'Gestión de Inciativas Legislativas', '', 'GNIL', 'Estratégico', NULL, '36', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
-	(116, 'PE02.03.02', 'Gestión de Documentos Normativos', '', 'GNDN', 'Estratégico', NULL, '36', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
-	(117, 'PE02.03.03', 'Gestión de documentos en el Alcance del SIG', '', 'NORM', 'Estratégico', NULL, '36', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
-	(118, 'PA05.03.01', 'Respaldo de información', '', 'REST', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:18:37', NULL),
-	(119, 'PA05.03.02', 'Atención de requeremientos de recursos informáticos', '', 'MDA', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:34:32', NULL),
-	(120, 'PA05.03.03', 'Seguimiento y control de los servicios de tecnologías de información y comunicaciones', '', 'SCST', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:37:25', NULL),
-	(121, 'PA05.03.04', 'Mantenimiento preventivo y correctivo de activos informáticos y de comunicaciones', '', 'MTNE', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:38:13', NULL),
-	(122, 'PA05.02.01', 'Desarrollo de arquitectura informática y de comunicaciones', '', 'DACO', 'Apoyo', NULL, '94', 2, 1, NULL, '2024-06-25 17:42:35', NULL),
-	(123, 'PA05.02.02', 'Desarrollo de soluciones', '', 'DSO', 'Apoyo', NULL, '94', 2, 1, NULL, '2024-06-25 17:43:08', NULL),
+	(72, 'PA01.02', 'Incorporación del capital humano', NULL, 'INCH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(73, 'PA01.03', 'Desarrollo del capital humano', NULL, 'DECH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(74, 'PA01.04', 'Administración del capital humano', NULL, 'ADCH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(75, 'PA01.05', 'Gestión del bienestar del capital humano', NULL, 'GBCH', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(76, 'PA01.06', 'Gestión del jefe y personal del OCI', NULL, 'GOCI', 'Apoyo', NULL, '9', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(77, 'PA02.01', 'Planificación del activo documentario', NULL, 'PDAD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(78, 'PA02.02', 'Recepción de documentos', NULL, 'RDGD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(79, 'PA02.03', 'Clasificación, reclasificación y desclasificación de documentos secretos y reservados', NULL, 'CRDD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(80, 'PA02.04', 'Distribución de documentos y valijas', NULL, 'MSJ', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(81, 'PA02.05', 'Archivo, custodia y conservación de documentos', NULL, 'ARCH', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(82, 'PA02.06', 'Autenticación de firmas y certificación de documentos', NULL, 'AFCD', 'Apoyo', NULL, '10', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(83, 'PA03.01', 'Elaboración del plan anual de contrataciones', NULL, 'PNCO', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(84, 'PA03.02', 'Contratación de bienes y servicios', NULL, 'ACBS', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(85, 'PA03.03', 'Gestión de bienes patrimoniales', NULL, 'GBPA', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(86, 'PA03.04', 'Gestión de almacén', NULL, 'GALM', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(87, 'PA03.05', 'Administración de servicios generales', NULL, 'ADSG', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(88, 'PA03.06', 'Gestión de sociedades de auditoria', NULL, 'GSOA', 'Apoyo', NULL, '11', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(89, 'PA04.01', 'Programación multianual, formulación y aprobación del presupuesto', NULL, NULL, 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(90, 'PA04.02', 'Ejecución presupuestal', NULL, 'EJPR', 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(91, 'PA04.03', 'Evaluación presupuestal', NULL, 'EVPR', 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(92, 'PA04.04', 'Gestión contable', NULL, 'CONT', 'Apoyo', NULL, '12', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(93, 'PA05.01', 'Planificación de tecnologías de la información y comunicaciones', NULL, NULL, 'Apoyo', NULL, '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(94, 'PA05.02', 'Implementación de tecnologías de la información y comunicaciones', NULL, NULL, 'Apoyo', NULL, '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(95, 'PA05.03', 'Operación de tecnologías de la información y comunicaciones', NULL, NULL, 'Apoyo', NULL, '13', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(96, 'PA06.01', 'Gestión y difusión de productos de interés legal', NULL, NULL, 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(97, 'PA06.02', 'Gestión de los procesos judiciales de la CGR', NULL, 'GPRJ', 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(98, 'PA06.03', 'Gestión de los procesos arbitrales de la CGR', NULL, NULL, 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(99, 'PA06.04', 'Defensa legal de los colaboradores y ex colaboradores', NULL, NULL, 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(100, 'PA06.05', 'Absolución de consultas internas de carácter jurídico', NULL, 'ACCJ', 'Apoyo', NULL, '14', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(101, 'PA07.01', 'Gestión de prevención de riesgos de desastres', NULL, NULL, 'Apoyo', NULL, '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(102, 'PA07.02', 'Operación de la gestión de la seguridad', NULL, NULL, 'Apoyo', NULL, '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(103, 'PA07.03', 'Fomento de una cultura de seguridad', NULL, NULL, 'Apoyo', NULL, '15', 1, 1, NULL, '2023-08-09 18:30:44', NULL),
+	(104, 'PM06', 'Gestión Educativa', NULL, 'GEDU', 'Misional', NULL, NULL, 0, 1, NULL, '2023-09-27 15:13:56', NULL),
+	(105, 'PE02.02.02', 'Administración de los Sistemas de Gestión', NULL, 'MODER', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:38:59', NULL),
+	(106, 'PE02.02.03', 'Gestión de la Calidad', NULL, 'SGC', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
+	(107, 'PE02.02.04', 'Gestión de Riesgos', NULL, 'SGR', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:45:13', NULL),
+	(108, 'PE02.02.05', 'Gestión del Control Interno', NULL, NULL, 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:47:23', NULL),
+	(109, 'PE02.02.06', 'Gestión Antisoborno', NULL, 'SGAS', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:47:23', NULL),
+	(110, 'PE02.02.07', 'Gestión de la Simplificación Administrativa', NULL, 'SIMP', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
+	(111, 'PE02.02.08', 'Aseguramiento de la Calidad', NULL, 'ACAL', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
+	(112, 'PE02.02.09', 'Gestión de la Seguridad de la Información', NULL, 'SGSI', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:51:57', NULL),
+	(113, 'PE02.02.01', 'Gestión por Procesos', NULL, 'PROC', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:53:40', NULL),
+	(114, 'PE02.02.10', 'Gestión de Compliance', NULL, 'SGCM', 'Estratégico', NULL, '35', 2, 1, NULL, '2024-06-19 14:53:40', NULL),
+	(115, 'PE02.03.01', 'Gestión de Inciativas Legislativas', NULL, 'GNIL', 'Estratégico', NULL, '36', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
+	(116, 'PE02.03.02', 'Gestión de Documentos Normativos', NULL, 'GNDN', 'Estratégico', NULL, '36', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
+	(117, 'PE02.03.03', 'Gestión de documentos en el Alcance del SIG', NULL, 'NORM', 'Estratégico', NULL, '36', 2, 1, NULL, '2024-06-19 15:11:26', NULL),
+	(118, 'PA05.03.01', 'Respaldo de información', NULL, 'REST', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:18:37', NULL),
+	(119, 'PA05.03.02', 'Atención de requeremientos de recursos informáticos', NULL, 'MDA', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:34:32', NULL),
+	(120, 'PA05.03.03', 'Seguimiento y control de los servicios de tecnologías de información y comunicaciones', NULL, 'SCST', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:37:25', NULL),
+	(121, 'PA05.03.04', 'Mantenimiento preventivo y correctivo de activos informáticos y de comunicaciones', NULL, 'MTNE', 'Apoyo', NULL, '95', 2, 1, NULL, '2024-06-25 17:38:13', NULL),
+	(122, 'PA05.02.01', 'Desarrollo de arquitectura informática y de comunicaciones', NULL, 'DACO', 'Apoyo', NULL, '94', 2, 1, NULL, '2024-06-25 17:42:35', NULL),
+	(123, 'PA05.02.02', 'Desarrollo de soluciones', NULL, 'DSO', 'Apoyo', NULL, '94', 2, 1, NULL, '2024-06-25 17:43:08', NULL),
 	(125, 'PM03.02.01', 'Visita de Control', 'Identificar y comunicar situaciones adversas que afecten o puedan afectar la continuidad, el resultado o el logro de los objetivos del proceso en curso, coadyuvando así a la toma \r\nde acciones preventivas o correctivas oportunas, que aseguren el logro de sus objetivos en beneficio de la ciudadanía.', 'VICO', 'Misional', 2, '62', 2, 1, NULL, '2024-06-25 18:43:12', '2025-05-12 20:02:09'),
-	(126, 'PM03.02.02', 'Orientación de oficio', '', 'OROF', 'Misional', NULL, '62', 2, 1, NULL, '2024-06-25 18:43:12', NULL),
-	(127, 'PM03.02.03', 'Control Concurrente', '', 'COCO', 'Misional', NULL, '62', 2, 1, NULL, '2024-06-25 18:45:44', NULL),
-	(128, 'PM03.02.04', 'Operativo de Control Simultaneo', '', 'OCOS', 'Misional', NULL, '62', 2, 1, NULL, '2024-06-25 18:45:44', NULL),
-	(129, 'PM02.01.01', 'Realización de los servicios de control previo', '', NULL, 'Misional', NULL, '58', 2, 1, NULL, '2024-06-25 18:49:07', NULL),
-	(130, 'PM02.01.01.01', 'Evaluación de prestaciones de adicionales de obra', '', 'EAOB', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 18:52:50', NULL),
-	(131, 'PM02.01.01.02', 'Evaluación de recursos de apelación de prestaciones adicionales de obra', '', 'APAO', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
-	(132, 'PM02.01.01.03', 'Evaluación de prestaciones adicionales de supervisión de obra', '', 'EPAS', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
-	(133, 'PM02.01.01.04', 'Evaluación de recursos de apelación de prestaciones adicionales de supervisión de obra', '', 'APAS', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
-	(134, 'PM02.01.01.05', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de asociaciones público privadas y obras por impuestos', '', 'ESIP', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
-	(135, 'PM02.01.01.06', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de endeudamiento público interno y externo', '', 'ESIE', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
-	(136, 'PM02.01.01.07', 'Emisión de opinión previa a las compras con carácter de secreto militar o de orden interno', '', 'EOPM', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
-	(137, 'PM02.02.01.01', 'Atención de solicitudes de acceso a la información pública', '', 'SAIP', 'Misional', NULL, 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
-	(138, 'PM02.02.01.02', 'Atención de requerimientos de información del congreso', '', 'ARIC', 'Misional', NULL, 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
-	(139, 'PM02.02.01.03', 'Atención de requerimientos de información de entidades', '', 'ARIE', 'Misional', NULL, 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
-	(140, 'PM02.02.02.01', 'Atención de consulta legal externa respecto a la interpretación y alcance de la normativa de servicios de control o servicios relacionados', '', 'ACLE', 'Misional', NULL, 'PM02.02.02', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
-	(141, 'PM02.02.02.02', 'Atención de solicitudes de opinión sobre proyectos de ley y otras normas con rango de ley', '', 'ASOL', 'Misional', NULL, 'PM02.02.02', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
-	(142, 'PM03.03.01', 'Auditoría de cumplimiento', '', 'ACUM', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
-	(143, 'PM03.03.02', 'Auditoría de desempeño', '', 'ADES', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
-	(144, 'PM03.03.03', 'Auditoría financiera', '', 'AFIN', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
-	(145, 'PM03.03.04', 'Auditoría de la Cuenta General de la República', '', 'ACGR', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
-	(146, 'PM03.03.05', 'Servicio de control específico a hechos con presunta irregularidad', '', 'SCEH', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
-	(147, 'PM03.03.06', 'Acción de oficio posterior', '', 'AOPO', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
-	(148, 'PE03.01.01', 'Diseño del plan de comunicación corporativa', '', 'CODP', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(149, 'PE03.01.02', 'Gestión de la comunicación interna', '', 'COGI', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(150, 'PE03.01.03', 'Organización y ejecución de eventos para la promoción de la imagen y desarrollo institucional', '', 'COEI', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(151, 'PE03.01.04', 'Gestión de la publicación institucional', '', 'COGP', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(152, 'PE03.01.05', 'Actualización de contenidos del portal de transparencia estándar de la contraloría general de la república', '', 'COPT', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(153, 'PE03.01.06', 'Gestión de prensa', '', 'COPR', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(154, 'PE03.02.01', 'Diseño de la estrategia de relacionamiento interinstitucional', '', 'GRDE', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(155, 'PE03.02.02', 'Atención de necesidades interinstitucionales de representación de autoridades y funcionarios de la cgr', '', 'GRRE', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(156, 'PE03.02.03', 'Gestión de la representación institucional en eventos internacionales', '', 'GRRI', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(157, 'PE03.02.04', 'Gestión de las necesidades institucionales de cooperación técnica y financiera', '', 'GRCT', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(158, 'PE03.02.05', 'Gestión de instrumentos de cooperación', '', 'GICO', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
-	(159, 'PA04.02.01', 'Control de la disponibilidad de los créditos presupuestarios', '', 'PRCP', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(160, 'PA04.02.02', 'Gestión de la modificación presupuestal a nivel institucional', '', 'PRMP', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(161, 'PA04.02.03', 'Modificación presupuestal a nivel funcional programático', '', 'PRFP', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(162, 'PA04.02.04', 'Ejecución de ingresos', '', 'EDIN', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(163, 'PA04.02.05', 'Ejecución del gasto', '', 'EDGE', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(164, 'PA04.02.06', 'Gestión de viáticos', '', 'GVIA', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(165, 'PA04.02.07', 'Gestión del fondo de caja chica', '', 'GFCC', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(166, 'PA04.02.08', 'Gestión de anticipos', '', 'GANT', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(167, 'PA03.02.01', 'Formulación del requerimiento para la contratación de bienes y servicios', '', 'BSRC', 'Apoyo', NULL, '84', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(168, 'PA03.02.02', 'Procesos de selección', '', 'BSPS', 'Apoyo', NULL, '84', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(169, 'PA03.02.03', 'Contrataciones de bienes y servicios excluidas de la norma', '', 'BSEX', 'Apoyo', NULL, '84', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
-	(194, 'PA01.01.01', 'Diseño de estrategias, políticas y herramientas para la gestión del capital humano', '', 'DEPH', 'Apoyo', NULL, '71', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(195, 'PA01.01.02', 'Planificación de recursos humanos', '', 'PLRH', 'Apoyo', NULL, '71', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(196, 'PA01.01.03', 'Administración de puestos y perfiles', '', 'APPE', 'Apoyo', NULL, '71', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(197, 'PA01.02.01', 'Reclutamiento y selección', '', 'REYS', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(198, 'PA01.02.02', 'Vinculación de personal', '', 'VIPE', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(199, 'PA01.02.03', 'Inducción de personal', '', 'INPE', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(200, 'PA01.02.04', 'Designación de personal en puestos de confianza', '', 'DPPC', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(201, 'PA01.03.01', 'Gestión de la capacitación', '', 'GCAP', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(202, 'PA01.03.02', 'Gestión del rendimiento', '', 'GREN', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(203, 'PA01.03.03', 'Gestión de incentivos', '', 'GINC', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(204, 'PA01.03.04', 'Progresión de la carrera', '', 'PCPE', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(205, 'PA01.03.05', 'Convocatoria interna', '', 'COIN', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(206, 'PA01.03.06', 'Traslado y encargo del personal', '', 'TREP', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(207, 'PA01.04.01', 'Gestión de las compensaciones', '', 'GCOM', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(208, 'PA01.04.02', 'Atención de solicitudes de personal', '', 'ASPE', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(209, 'PA01.04.03', 'Gestión de seguros', '', 'GSEG', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(210, 'PA01.04.04', 'Administración de información de personal', '', 'AIPE', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(211, 'PA01.04.05', 'Proceso disciplinario de personal', '', 'PADP', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(212, 'PA01.04.06', 'Desvinculación de personal', '', 'DEPE', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(213, 'PA01.04.07', 'Entrega y recepción de puesto de los servidores', '', 'ERPS', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(214, 'PA01.05.01', 'Seguridad y salud en el trabajo', '', 'SYST', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(215, 'PA01.05.02', 'Relaciones labores individuales y colectivas', '', 'RLIC', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(216, 'PA01.05.03', 'Cultura y clima organizacional', '', 'CCOR', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(217, 'PA01.05.04', 'Bienestar social', '', 'BSOC', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
-	(218, 'PE02.04.01', 'Programación de las inversiones', '', 'PRIN', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
-	(219, 'PE02.04.02', 'Formulación, evaluación, ejecución y cierre de proyectos', '', 'FECP', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
-	(220, 'PE02.04.03', 'Elaboración, aprobación, registro, ejecución física y cierre de las IOARR', '', 'EARC', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
-	(221, 'PE02.04.04', 'Gestión del seguimiento de las inversiones', '', 'GSI', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
-	(222, 'PM02.03.01', 'Atención de reclamos del libro de reclamaciones', '', 'ARECL', 'Misional', NULL, '60', 2, 1, NULL, '2024-06-25 20:17:04', NULL),
-	(223, 'PM02.03.02', 'Atención de quejas por defecto de tramitación', '', 'AQDT', 'Misional', NULL, '60', 2, 1, NULL, '2024-06-25 20:17:04', NULL),
-	(224, 'PM04.01.01', 'Determinación de la existencia de infracción', '', 'DEIF', 'Misional', NULL, '66', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
-	(225, 'PM04.01.02', 'Determinación de la sanción', '', 'DESA', 'Misional', NULL, '66', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
-	(226, 'PM04.01.03', 'Gestión para el cumplimiento de sanciones', '', 'GCSA', 'Misional', NULL, '66', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
-	(227, 'PM04.03.01', 'Gestión a los procesos civiles resultantes de los servicios de control', '', 'GCSC', 'Misional', NULL, '68', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
-	(228, 'PM04.03.02', 'Gestión de procesos penales resultantes de los servicios de control', '', 'GPSC', 'Misional', NULL, '68', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
-	(229, 'PM05.01.01', 'Seguimiento y evaluación a la implementación de las recomendaciones de control posterior', '', 'SRCP', 'Misional', NULL, '69', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
-	(230, 'PM05.01.02', 'Seguimiento y evaluación a la implementación de acciones respecto a los resultados de los informes de control simultáneo', '', 'SRCS', 'Misional', NULL, '69', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
-	(231, 'PM05.01.03', 'Seguimiento y evaluación a la implementación de los pronunciamientos de control previo', '', 'SPCP', 'Misional', NULL, '69', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
-	(232, 'PM01.01.01.01', 'Gestión eventos de prevención de la corrupción', '', 'GEPC', 'Misional', NULL, 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(233, 'PM01.01.01.02', 'Capacitación en temas de ética, integridad pública y lucha contra la corrupción', '', 'CEIN', 'Misional', NULL, 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(234, 'PM01.01.01.03', 'Difusión de contenidos para la prevención y lucha contra la corrupción e inconducta funcional', '', 'DCPR', 'Misional', NULL, 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(235, 'PM01.01.02.01', 'Gestión del registro de avance de obras públicas', '', 'GROP', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(236, 'PM01.01.02.02', 'Administración y verificación de las transferencias de gestión', '', 'AVTG', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(237, 'PM01.01.02.03', 'Administración y verificación de rendición de cuentas de titulares', '', 'ARCT', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(238, 'PM01.01.02.04', 'Recepción y verificación de declaraciones juradas', '', 'RVDJ', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(239, 'PM01.01.02.05', 'Verificación de la rendición de cuenta del programa de vaso de leche', '', 'VRVL', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(240, 'PM01.01.02.06', 'Recopilación de información', '', 'RINF', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(241, 'PM01.01.02.07', 'Gestión de la información de las donaciones de bienes provenientes del exterior', '', 'GDBE', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(242, 'PM01.01.02.08', 'Gestión del registro de información de funcionarios y servidores públicos que administren y manejen fondos públicos', '', 'GRFP', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(243, 'PM01.01.02.09', 'Gestión del registro para el control de contratos de consultoría en el estado', '', 'GRCE', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(244, 'PM01.01.02.10', 'Gestión para la presentación del balance semestral de los regidores municipales y los consejeros regionales sobre la utilización del monto destinado al fortalecimiento de la función de fiscalización', '', 'GPBS', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
-	(245, 'PM01.01.04', 'Gestión del observatorio anticorrupción', '', 'GOAC', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 21:26:59', NULL),
-	(246, 'PM01.01.05', 'Administración y evaluación de la implementación del control interno en las entidades públicas', '', 'AECI', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 21:26:59', NULL),
-	(247, 'PM01.01.02', 'Aprovisionamiento de información específica de operaciones relacionadas a la gestión de recursos públicos', '', 'AIEG', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 22:00:53', NULL),
-	(248, 'PM01.01.03', 'Aprovisionamiento de información masiva de operaciones relacionadas a la gestión de recursos públicos', '', 'AIMG', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 22:00:53', NULL),
-	(249, 'PM03.04.01', 'Fiscalización de los funcionarios y servidores públicos', '', 'FIFP', 'Misional', NULL, '64', 2, 1, NULL, '2024-06-25 22:09:26', NULL),
-	(250, 'PM03.04.02', 'Análisis y evaluación de la ejecución del gasto del programa vaso de leche', '', 'APVL', 'Misional', NULL, '64', 2, 1, NULL, '2024-06-25 22:09:26', NULL),
-	(251, 'PM03.05.01', 'Supervisión técnica de los servicios de control', '', 'STSC', 'Misional', NULL, '65', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
-	(252, 'PM03.05.02', 'Revisión de oficio de informes de control', '', 'ROFI', 'Misional', NULL, '65', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
-	(253, 'PM03.05.03', 'Reformulación de informes de control', '', 'REIC', 'Misional', NULL, '65', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
-	(254, 'PA01.03.05.01', 'Recategorización de personal', '', 'RCPR', 'Apoyo', NULL, '205', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(255, 'PA01.03.05.02', 'Convocatoria interna', '', 'CINT', 'Apoyo', NULL, '205', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(256, 'PA01.03.06.01', 'Traslados del personal (rotación)', '', 'TPER', 'Apoyo', NULL, '206', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(257, 'PA01.03.06.02', 'Encargo de jefatura del órgano o unidad órganica', '', 'ECPR', 'Apoyo', NULL, '206', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(259, 'PA01.04.01.01', 'Control de asistencia del personal', '', 'CAPR', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(260, 'PA01.04.01.02', 'Control de vacaciones del personal', '', 'CVPR', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(261, 'PA01.04.01.03', 'Administración de remuneración del personal', '', 'ARPR', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(262, 'PA01.04.01.04', 'Administración de pensiones', '', 'ADPN', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(263, 'PA01.04.01.05', 'Evaluación de solicitudes de pensiones (de cesantía)', '', 'ESPC', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(264, 'PA01.04.02.01', 'Evaluación de licencias del personal', '', 'ELPR', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(265, 'PA01.04.02.02', 'Evaluación de horarios especiales del personal', '', 'EHPR', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(266, 'PA01.04.02.03', 'Emisión de certificados y constancias de trabajo del personal', '', 'ECTP', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(267, 'PA01.04.02.04', 'Emisión de cartas de presentación del personal', '', 'ECPP', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(268, 'PA01.04.03.01', 'Afiliación a seguros EPS', '', 'ASEP', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(269, 'PA01.04.03.02', 'Afiliación a seguros Es Salud', '', 'ASES', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(270, 'PA01.04.03.03', 'Desafiliación a seguros EPS', '', 'DSEP', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(271, 'PA01.04.03.04', 'Desafiliación a seguros Es Salud', '', 'DSES', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(272, 'PA01.04.03.05', 'Reembolso de seguros EPS', '', 'RSEP', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(273, 'PA01.04.03.06', 'Atención de solicitudes de subsidios (incluye canje CITT)', '', 'ASSC', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(274, 'PA01.04.04.01', 'Administración de legajos', '', 'ADLG', 'Apoyo', NULL, '210', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(275, 'PA01.04.04.02', 'Verificación de autenticidad de documentos', '', 'VADN', 'Apoyo', NULL, '210', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(276, 'PA01.04.05.01', 'Evaluación de denuncias de corrupción contra el personal de la CGR', '', 'DCGR', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(277, 'PA01.04.05.02', 'Evaluación de denuncias contra el gerente y personal del órgano de auditoría interna de la CGR', '', 'DOAI', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(278, 'PA01.04.05.03', 'Evaluación de denuncias contra los jefes y personal del OCI', '', 'DOCI', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(279, 'PA01.04.05.04', 'Gestión del procedimiento administrativo disciplinario', '', 'GPAD', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(280, 'PA01.04.06.01', 'Tramite documental para el cese de personal', '', 'TDCP', 'Apoyo', NULL, '212', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(281, 'PA01.04.06.02', 'Generación y pago de la liquidación de beneficios sociales', '', 'GPLB', 'Apoyo', NULL, '212', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
-	(282, 'PM01.02.01', 'Participación ciudadana en el control social a través de auditores juveniles', '', 'PCAJ', 'Misional', NULL, '57', 2, 1, NULL, '2024-06-25 22:26:03', NULL),
-	(283, 'PM01.02.02', 'Participación ciudadana en el control social a través de monitores ciudadanos de control', '', 'PCMC', 'Misional', NULL, '57', 2, 1, NULL, '2024-06-25 22:26:03', NULL),
-	(284, 'PM01.02.03', 'Participación ciudadana en el control social a través de audiencias públicas', '', 'PCAP', 'Misional', NULL, '57', 2, 1, NULL, '2024-06-25 22:26:03', NULL);
+	(126, 'PM03.02.02', 'Orientación de oficio', NULL, 'OROF', 'Misional', NULL, '62', 2, 1, NULL, '2024-06-25 18:43:12', NULL),
+	(127, 'PM03.02.03', 'Control Concurrente', NULL, 'COCO', 'Misional', NULL, '62', 2, 1, NULL, '2024-06-25 18:45:44', NULL),
+	(128, 'PM03.02.04', 'Operativo de Control Simultaneo', NULL, 'OCOS', 'Misional', NULL, '62', 2, 1, NULL, '2024-06-25 18:45:44', NULL),
+	(129, 'PM02.01.01', 'Realización de los servicios de control previo', NULL, NULL, 'Misional', NULL, '58', 2, 1, NULL, '2024-06-25 18:49:07', NULL),
+	(130, 'PM02.01.01.01', 'Evaluación de prestaciones de adicionales de obra', NULL, 'EAOB', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 18:52:50', NULL),
+	(131, 'PM02.01.01.02', 'Evaluación de recursos de apelación de prestaciones adicionales de obra', NULL, 'APAO', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+	(132, 'PM02.01.01.03', 'Evaluación de prestaciones adicionales de supervisión de obra', NULL, 'EPAS', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+	(133, 'PM02.01.01.04', 'Evaluación de recursos de apelación de prestaciones adicionales de supervisión de obra', NULL, 'APAS', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+	(134, 'PM02.01.01.05', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de asociaciones público privadas y obras por impuestos', NULL, 'ESIP', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+	(135, 'PM02.01.01.06', 'Evaluación de solicitudes de emisión de informe previo a las operaciones de endeudamiento público interno y externo', NULL, 'ESIE', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+	(136, 'PM02.01.01.07', 'Emisión de opinión previa a las compras con carácter de secreto militar o de orden interno', NULL, 'EOPM', 'Misional', NULL, '129', 2, 1, NULL, '2024-06-25 19:02:26', NULL),
+	(137, 'PM02.02.01.01', 'Atención de solicitudes de acceso a la información pública', NULL, 'SAIP', 'Misional', NULL, 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+	(138, 'PM02.02.01.02', 'Atención de requerimientos de información del congreso', NULL, 'ARIC', 'Misional', NULL, 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+	(139, 'PM02.02.01.03', 'Atención de requerimientos de información de entidades', NULL, 'ARIE', 'Misional', NULL, 'PM02.02.01', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+	(140, 'PM02.02.02.01', 'Atención de consulta legal externa respecto a la interpretación y alcance de la normativa de servicios de control o servicios relacionados', NULL, 'ACLE', 'Misional', NULL, 'PM02.02.02', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+	(141, 'PM02.02.02.02', 'Atención de solicitudes de opinión sobre proyectos de ley y otras normas con rango de ley', NULL, 'ASOL', 'Misional', NULL, 'PM02.02.02', 2, 1, NULL, '2024-06-25 19:08:40', NULL),
+	(142, 'PM03.03.01', 'Auditoría de cumplimiento', NULL, 'ACUM', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+	(143, 'PM03.03.02', 'Auditoría de desempeño', NULL, 'ADES', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+	(144, 'PM03.03.03', 'Auditoría financiera', NULL, 'AFIN', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+	(145, 'PM03.03.04', 'Auditoría de la Cuenta General de la República', NULL, 'ACGR', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+	(146, 'PM03.03.05', 'Servicio de control específico a hechos con presunta irregularidad', NULL, 'SCEH', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+	(147, 'PM03.03.06', 'Acción de oficio posterior', NULL, 'AOPO', 'Misional', NULL, '63', 2, 1, NULL, '2024-06-25 19:12:46', NULL),
+	(148, 'PE03.01.01', 'Diseño del plan de comunicación corporativa', NULL, 'CODP', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(149, 'PE03.01.02', 'Gestión de la comunicación interna', NULL, 'COGI', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(150, 'PE03.01.03', 'Organización y ejecución de eventos para la promoción de la imagen y desarrollo institucional', NULL, 'COEI', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(151, 'PE03.01.04', 'Gestión de la publicación institucional', NULL, 'COGP', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(152, 'PE03.01.05', 'Actualización de contenidos del portal de transparencia estándar de la contraloría general de la república', NULL, 'COPT', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(153, 'PE03.01.06', 'Gestión de prensa', NULL, 'COPR', 'Estratégico', NULL, '41', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(154, 'PE03.02.01', 'Diseño de la estrategia de relacionamiento interinstitucional', NULL, 'GRDE', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(155, 'PE03.02.02', 'Atención de necesidades interinstitucionales de representación de autoridades y funcionarios de la cgr', NULL, 'GRRE', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(156, 'PE03.02.03', 'Gestión de la representación institucional en eventos internacionales', NULL, 'GRRI', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(157, 'PE03.02.04', 'Gestión de las necesidades institucionales de cooperación técnica y financiera', NULL, 'GRCT', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(158, 'PE03.02.05', 'Gestión de instrumentos de cooperación', NULL, 'GICO', 'Estratégico', NULL, '42', 2, 1, NULL, '2024-06-25 19:25:53', NULL),
+	(159, 'PA04.02.01', 'Control de la disponibilidad de los créditos presupuestarios', NULL, 'PRCP', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(160, 'PA04.02.02', 'Gestión de la modificación presupuestal a nivel institucional', NULL, 'PRMP', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(161, 'PA04.02.03', 'Modificación presupuestal a nivel funcional programático', NULL, 'PRFP', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(162, 'PA04.02.04', 'Ejecución de ingresos', NULL, 'EDIN', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(163, 'PA04.02.05', 'Ejecución del gasto', NULL, 'EDGE', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(164, 'PA04.02.06', 'Gestión de viáticos', NULL, 'GVIA', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(165, 'PA04.02.07', 'Gestión del fondo de caja chica', NULL, 'GFCC', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(166, 'PA04.02.08', 'Gestión de anticipos', NULL, 'GANT', 'Apoyo', NULL, '90', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(167, 'PA03.02.01', 'Formulación del requerimiento para la contratación de bienes y servicios', NULL, 'BSRC', 'Apoyo', NULL, '84', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(168, 'PA03.02.02', 'Procesos de selección', NULL, 'BSPS', 'Apoyo', NULL, '84', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(169, 'PA03.02.03', 'Contrataciones de bienes y servicios excluidas de la norma', NULL, 'BSEX', 'Apoyo', NULL, '84', 2, 1, NULL, '2024-06-25 19:39:57', NULL),
+	(194, 'PA01.01.01', 'Diseño de estrategias, políticas y herramientas para la gestión del capital humano', NULL, 'DEPH', 'Apoyo', NULL, '71', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(195, 'PA01.01.02', 'Planificación de recursos humanos', NULL, 'PLRH', 'Apoyo', NULL, '71', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(196, 'PA01.01.03', 'Administración de puestos y perfiles', NULL, 'APPE', 'Apoyo', NULL, '71', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(197, 'PA01.02.01', 'Reclutamiento y selección', NULL, 'REYS', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(198, 'PA01.02.02', 'Vinculación de personal', NULL, 'VIPE', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(199, 'PA01.02.03', 'Inducción de personal', NULL, 'INPE', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(200, 'PA01.02.04', 'Designación de personal en puestos de confianza', NULL, 'DPPC', 'Apoyo', NULL, '72', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(201, 'PA01.03.01', 'Gestión de la capacitación', NULL, 'GCAP', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(202, 'PA01.03.02', 'Gestión del rendimiento', NULL, 'GREN', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(203, 'PA01.03.03', 'Gestión de incentivos', NULL, 'GINC', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(204, 'PA01.03.04', 'Progresión de la carrera', NULL, 'PCPE', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(205, 'PA01.03.05', 'Convocatoria interna', NULL, 'COIN', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(206, 'PA01.03.06', 'Traslado y encargo del personal', NULL, 'TREP', 'Apoyo', NULL, '73', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(207, 'PA01.04.01', 'Gestión de las compensaciones', NULL, 'GCOM', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(208, 'PA01.04.02', 'Atención de solicitudes de personal', NULL, 'ASPE', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(209, 'PA01.04.03', 'Gestión de seguros', NULL, 'GSEG', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(210, 'PA01.04.04', 'Administración de información de personal', NULL, 'AIPE', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(211, 'PA01.04.05', 'Proceso disciplinario de personal', NULL, 'PADP', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(212, 'PA01.04.06', 'Desvinculación de personal', NULL, 'DEPE', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(213, 'PA01.04.07', 'Entrega y recepción de puesto de los servidores', NULL, 'ERPS', 'Apoyo', NULL, '74', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(214, 'PA01.05.01', 'Seguridad y salud en el trabajo', NULL, 'SYST', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(215, 'PA01.05.02', 'Relaciones labores individuales y colectivas', NULL, 'RLIC', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(216, 'PA01.05.03', 'Cultura y clima organizacional', NULL, 'CCOR', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(217, 'PA01.05.04', 'Bienestar social', NULL, 'BSOC', 'Apoyo', NULL, '75', 2, 1, NULL, '2024-06-25 20:04:19', NULL),
+	(218, 'PE02.04.01', 'Programación de las inversiones', NULL, 'PRIN', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+	(219, 'PE02.04.02', 'Formulación, evaluación, ejecución y cierre de proyectos', NULL, 'FECP', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+	(220, 'PE02.04.03', 'Elaboración, aprobación, registro, ejecución física y cierre de las IOARR', NULL, 'EARC', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+	(221, 'PE02.04.04', 'Gestión del seguimiento de las inversiones', NULL, 'GSI', 'Estratégico', NULL, '37', 2, 1, NULL, '2024-06-25 20:09:53', NULL),
+	(222, 'PM02.03.01', 'Atención de reclamos del libro de reclamaciones', NULL, 'ARECL', 'Misional', NULL, '60', 2, 1, NULL, '2024-06-25 20:17:04', NULL),
+	(223, 'PM02.03.02', 'Atención de quejas por defecto de tramitación', NULL, 'AQDT', 'Misional', NULL, '60', 2, 1, NULL, '2024-06-25 20:17:04', NULL),
+	(224, 'PM04.01.01', 'Determinación de la existencia de infracción', NULL, 'DEIF', 'Misional', NULL, '66', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+	(225, 'PM04.01.02', 'Determinación de la sanción', NULL, 'DESA', 'Misional', NULL, '66', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+	(226, 'PM04.01.03', 'Gestión para el cumplimiento de sanciones', NULL, 'GCSA', 'Misional', NULL, '66', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+	(227, 'PM04.03.01', 'Gestión a los procesos civiles resultantes de los servicios de control', NULL, 'GCSC', 'Misional', NULL, '68', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+	(228, 'PM04.03.02', 'Gestión de procesos penales resultantes de los servicios de control', NULL, 'GPSC', 'Misional', NULL, '68', 2, 1, NULL, '2024-06-25 21:03:13', NULL),
+	(229, 'PM05.01.01', 'Seguimiento y evaluación a la implementación de las recomendaciones de control posterior', NULL, 'SRCP', 'Misional', NULL, '69', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
+	(230, 'PM05.01.02', 'Seguimiento y evaluación a la implementación de acciones respecto a los resultados de los informes de control simultáneo', NULL, 'SRCS', 'Misional', NULL, '69', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
+	(231, 'PM05.01.03', 'Seguimiento y evaluación a la implementación de los pronunciamientos de control previo', NULL, 'SPCP', 'Misional', NULL, '69', 2, 1, NULL, '2024-06-25 21:10:34', NULL),
+	(232, 'PM01.01.01.01', 'Gestión eventos de prevención de la corrupción', NULL, 'GEPC', 'Misional', NULL, 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(233, 'PM01.01.01.02', 'Capacitación en temas de ética, integridad pública y lucha contra la corrupción', NULL, 'CEIN', 'Misional', NULL, 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(234, 'PM01.01.01.03', 'Difusión de contenidos para la prevención y lucha contra la corrupción e inconducta funcional', NULL, 'DCPR', 'Misional', NULL, 'PM01.01.01', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(235, 'PM01.01.02.01', 'Gestión del registro de avance de obras públicas', NULL, 'GROP', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(236, 'PM01.01.02.02', 'Administración y verificación de las transferencias de gestión', NULL, 'AVTG', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(237, 'PM01.01.02.03', 'Administración y verificación de rendición de cuentas de titulares', NULL, 'ARCT', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(238, 'PM01.01.02.04', 'Recepción y verificación de declaraciones juradas', NULL, 'RVDJ', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(239, 'PM01.01.02.05', 'Verificación de la rendición de cuenta del programa de vaso de leche', NULL, 'VRVL', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(240, 'PM01.01.02.06', 'Recopilación de información', NULL, 'RINF', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(241, 'PM01.01.02.07', 'Gestión de la información de las donaciones de bienes provenientes del exterior', NULL, 'GDBE', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(242, 'PM01.01.02.08', 'Gestión del registro de información de funcionarios y servidores públicos que administren y manejen fondos públicos', NULL, 'GRFP', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(243, 'PM01.01.02.09', 'Gestión del registro para el control de contratos de consultoría en el estado', NULL, 'GRCE', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(244, 'PM01.01.02.10', 'Gestión para la presentación del balance semestral de los regidores municipales y los consejeros regionales sobre la utilización del monto destinado al fortalecimiento de la función de fiscalización', NULL, 'GPBS', 'Misional', NULL, '247', 2, 1, NULL, '2024-06-25 21:23:10', NULL),
+	(245, 'PM01.01.04', 'Gestión del observatorio anticorrupción', NULL, 'GOAC', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 21:26:59', NULL),
+	(246, 'PM01.01.05', 'Administración y evaluación de la implementación del control interno en las entidades públicas', NULL, 'AECI', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 21:26:59', NULL),
+	(247, 'PM01.01.02', 'Aprovisionamiento de información específica de operaciones relacionadas a la gestión de recursos públicos', NULL, 'AIEG', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 22:00:53', NULL),
+	(248, 'PM01.01.03', 'Aprovisionamiento de información masiva de operaciones relacionadas a la gestión de recursos públicos', NULL, 'AIMG', 'Misional', NULL, '56', 2, 1, NULL, '2024-06-25 22:00:53', NULL),
+	(249, 'PM03.04.01', 'Fiscalización de los funcionarios y servidores públicos', NULL, 'FIFP', 'Misional', NULL, '64', 2, 1, NULL, '2024-06-25 22:09:26', NULL),
+	(250, 'PM03.04.02', 'Análisis y evaluación de la ejecución del gasto del programa vaso de leche', NULL, 'APVL', 'Misional', NULL, '64', 2, 1, NULL, '2024-06-25 22:09:26', NULL),
+	(251, 'PM03.05.01', 'Supervisión técnica de los servicios de control', NULL, 'STSC', 'Misional', NULL, '65', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
+	(252, 'PM03.05.02', 'Revisión de oficio de informes de control', NULL, 'ROFI', 'Misional', NULL, '65', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
+	(253, 'PM03.05.03', 'Reformulación de informes de control', NULL, 'REIC', 'Misional', NULL, '65', 2, 1, NULL, '2024-06-25 22:11:46', NULL),
+	(254, 'PA01.03.05.01', 'Recategorización de personal', NULL, 'RCPR', 'Apoyo', NULL, '205', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(255, 'PA01.03.05.02', 'Convocatoria interna', NULL, 'CINT', 'Apoyo', NULL, '205', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(256, 'PA01.03.06.01', 'Traslados del personal (rotación)', NULL, 'TPER', 'Apoyo', NULL, '206', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(257, 'PA01.03.06.02', 'Encargo de jefatura del órgano o unidad órganica', NULL, 'ECPR', 'Apoyo', NULL, '206', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(259, 'PA01.04.01.01', 'Control de asistencia del personal', NULL, 'CAPR', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(260, 'PA01.04.01.02', 'Control de vacaciones del personal', NULL, 'CVPR', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(261, 'PA01.04.01.03', 'Administración de remuneración del personal', NULL, 'ARPR', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(262, 'PA01.04.01.04', 'Administración de pensiones', NULL, 'ADPN', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(263, 'PA01.04.01.05', 'Evaluación de solicitudes de pensiones (de cesantía)', NULL, 'ESPC', 'Apoyo', NULL, '207', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(264, 'PA01.04.02.01', 'Evaluación de licencias del personal', NULL, 'ELPR', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(265, 'PA01.04.02.02', 'Evaluación de horarios especiales del personal', NULL, 'EHPR', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(266, 'PA01.04.02.03', 'Emisión de certificados y constancias de trabajo del personal', NULL, 'ECTP', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(267, 'PA01.04.02.04', 'Emisión de cartas de presentación del personal', NULL, 'ECPP', 'Apoyo', NULL, '208', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(268, 'PA01.04.03.01', 'Afiliación a seguros EPS', NULL, 'ASEP', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(269, 'PA01.04.03.02', 'Afiliación a seguros Es Salud', NULL, 'ASES', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(270, 'PA01.04.03.03', 'Desafiliación a seguros EPS', NULL, 'DSEP', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(271, 'PA01.04.03.04', 'Desafiliación a seguros Es Salud', NULL, 'DSES', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(272, 'PA01.04.03.05', 'Reembolso de seguros EPS', NULL, 'RSEP', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(273, 'PA01.04.03.06', 'Atención de solicitudes de subsidios (incluye canje CITT)', NULL, 'ASSC', 'Apoyo', NULL, '209', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(274, 'PA01.04.04.01', 'Administración de legajos', NULL, 'ADLG', 'Apoyo', NULL, '210', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(275, 'PA01.04.04.02', 'Verificación de autenticidad de documentos', NULL, 'VADN', 'Apoyo', NULL, '210', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(276, 'PA01.04.05.01', 'Evaluación de denuncias de corrupción contra el personal de la CGR', NULL, 'DCGR', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(277, 'PA01.04.05.02', 'Evaluación de denuncias contra el gerente y personal del órgano de auditoría interna de la CGR', NULL, 'DOAI', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(278, 'PA01.04.05.03', 'Evaluación de denuncias contra los jefes y personal del OCI', NULL, 'DOCI', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(279, 'PA01.04.05.04', 'Gestión del procedimiento administrativo disciplinario', NULL, 'GPAD', 'Apoyo', NULL, '211', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(280, 'PA01.04.06.01', 'Tramite documental para el cese de personal', NULL, 'TDCP', 'Apoyo', NULL, '212', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(281, 'PA01.04.06.02', 'Generación y pago de la liquidación de beneficios sociales', NULL, 'GPLB', 'Apoyo', NULL, '212', 2, 1, NULL, '2024-06-25 22:20:25', NULL),
+	(282, 'PM01.02.01', 'Participación ciudadana en el control social a través de auditores juveniles', NULL, 'PCAJ', 'Misional', NULL, '57', 2, 1, NULL, '2024-06-25 22:26:03', NULL),
+	(283, 'PM01.02.02', 'Participación ciudadana en el control social a través de monitores ciudadanos de control', NULL, 'PCMC', 'Misional', NULL, '57', 2, 1, NULL, '2024-06-25 22:26:03', NULL),
+	(284, 'PM01.02.03', 'Participación ciudadana en el control social a través de audiencias públicas', NULL, 'PCAP', 'Misional', NULL, '57', 2, 1, NULL, '2024-06-25 22:26:03', NULL);
+
+-- Volcando estructura para tabla kallpaq.procesos_ouo
+CREATE TABLE IF NOT EXISTS `procesos_ouo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id_proceso` bigint(20) unsigned NOT NULL,
+  `id_ouo` bigint(20) unsigned NOT NULL,
+  `responsable` int(11) DEFAULT 0,
+  `delegada` int(11) DEFAULT 0,
+  `SGC` tinyint(4) DEFAULT 0,
+  `SGAS` tinyint(4) DEFAULT 0,
+  `SGCM` tinyint(4) DEFAULT 0,
+  `SGSI` tinyint(4) DEFAULT 0,
+  `SGCE` tinyint(4) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `u_proceso_ouo` (`id_proceso`,`id_ouo`),
+  KEY `procesos_ouo_ibfk_2` (`id_ouo`),
+  CONSTRAINT `procesos_ouo_ibfk_1` FOREIGN KEY (`id_proceso`) REFERENCES `procesos` (`id`),
+  CONSTRAINT `procesos_ouo_ibfk_2` FOREIGN KEY (`id_ouo`) REFERENCES `ouos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=298 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.procesos_ouo: ~270 rows (aproximadamente)
 REPLACE INTO `procesos_ouo` (`id`, `id_proceso`, `id_ouo`, `responsable`, `delegada`, `SGC`, `SGAS`, `SGCM`, `SGSI`, `SGCE`, `created_at`, `updated_at`) VALUES
@@ -995,7 +1732,6 @@ REPLACE INTO `procesos_ouo` (`id`, `id_proceso`, `id_ouo`, `responsable`, `deleg
 	(265, 37, 19, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL),
 	(266, 39, 40, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL),
 	(273, 72, 43, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL),
-	(282, 10, 70, 1, NULL, 0, 0, 0, 0, 0, NULL, NULL),
 	(283, 11, 69, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
 	(284, 13, 44, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
 	(285, 1, 47, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
@@ -1009,7 +1745,22 @@ REPLACE INTO `procesos_ouo` (`id`, `id_proceso`, `id_ouo`, `responsable`, `deleg
 	(293, 4, 8, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
 	(294, 12, 42, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
 	(295, 8, 7, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
-	(296, 7, 4, 1, 0, 0, 0, 0, 0, 0, NULL, NULL);
+	(296, 7, 4, 1, 0, 0, 0, 0, 0, 0, NULL, NULL),
+	(297, 10, 70, 1, 0, 0, 0, 0, 0, 0, NULL, NULL);
+
+-- Volcando estructura para tabla kallpaq.proceso_user
+CREATE TABLE IF NOT EXISTS `proceso_user` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_proceso_user_id_foreign` (`user_id`),
+  KEY `user_proceso_proceso_id_foreign` (`proceso_id`),
+  CONSTRAINT `user_proceso_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_proceso_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.proceso_user: ~3 rows (aproximadamente)
 REPLACE INTO `proceso_user` (`id`, `user_id`, `proceso_id`, `created_at`, `updated_at`) VALUES
@@ -1017,9 +1768,50 @@ REPLACE INTO `proceso_user` (`id`, `user_id`, `proceso_id`, `created_at`, `updat
 	(12, 1, 9, NULL, NULL),
 	(26, 1, 35, NULL, NULL);
 
+-- Volcando estructura para tabla kallpaq.programa_auditorias
+CREATE TABLE IF NOT EXISTS `programa_auditorias` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `observacion` varchar(255) NOT NULL,
+  `avance` decimal(10,2) NOT NULL,
+  `version` int(11) NOT NULL,
+  `periodo` varchar(200) NOT NULL,
+  `presupuesto` double NOT NULL,
+  `fecha_aprobacion` date NOT NULL,
+  `fecha_publicacion` date NOT NULL,
+  `archivo_pdf` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.programa_auditorias: ~0 rows (aproximadamente)
 REPLACE INTO `programa_auditorias` (`id`, `observacion`, `avance`, `version`, `periodo`, `presupuesto`, `fecha_aprobacion`, `fecha_publicacion`, `archivo_pdf`, `created_at`, `updated_at`) VALUES
 	(1, 'Nuevo Programa 2024', 0.00, 0, '2024', 130000, '2024-06-05', '2024-06-05', '', '2024-06-05 19:38:32', NULL);
+
+-- Volcando estructura para tabla kallpaq.requerimientos
+CREATE TABLE IF NOT EXISTS `requerimientos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `facilitador_id` bigint(20) unsigned DEFAULT NULL,
+  `descripcion` text NOT NULL,
+  `justificacion` text NOT NULL,
+  `estado` enum('creado','aprobado','asignado','atendido','desestimado') NOT NULL,
+  `prioridad` enum('baja','media','alta','muy alta') NOT NULL,
+  `complejidad` enum('baja','media','alta','muy alta') NOT NULL,
+  `ruta_archivo_desistimacion` varchar(255) DEFAULT NULL,
+  `ruta_archivo_entregable` varchar(255) DEFAULT NULL,
+  `fecha_limite` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `requerimientos_proceso_id_foreign` (`proceso_id`),
+  KEY `requerimientos_user_id_foreign` (`user_id`),
+  KEY `facilitador_id` (`facilitador_id`),
+  CONSTRAINT `requerimientos_ibfk_1` FOREIGN KEY (`facilitador_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `requerimientos_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`),
+  CONSTRAINT `requerimientos_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.requerimientos: ~15 rows (aproximadamente)
 REPLACE INTO `requerimientos` (`id`, `proceso_id`, `user_id`, `facilitador_id`, `descripcion`, `justificacion`, `estado`, `prioridad`, `complejidad`, `ruta_archivo_desistimacion`, `ruta_archivo_entregable`, `fecha_limite`, `updated_at`, `created_at`) VALUES
@@ -1040,9 +1832,56 @@ REPLACE INTO `requerimientos` (`id`, `proceso_id`, `user_id`, `facilitador_id`, 
 	(15, 4, 1, NULL, 'sass', 'sas', 'creado', 'baja', 'baja', NULL, NULL, NULL, '2024-05-09 00:56:48', '2024-05-09 00:56:48'),
 	(16, 4, 1, NULL, 'sass', 'sas', 'creado', 'baja', 'baja', NULL, NULL, NULL, '2024-05-09 00:56:50', '2024-05-09 00:56:50');
 
+-- Volcando estructura para tabla kallpaq.requerimiento_movimientos
+CREATE TABLE IF NOT EXISTS `requerimiento_movimientos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `requerimiento_id` bigint(20) unsigned NOT NULL,
+  `estado` enum('creado','aprobado','derivado','atendido','desestimado','cerrado') NOT NULL,
+  `comentario` text DEFAULT NULL,
+  `usuario_id` bigint(20) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `requerimiento_movimientos_requerimiento_id_foreign` (`requerimiento_id`),
+  KEY `requerimiento_movimientos_usuario_id_foreign` (`usuario_id`),
+  CONSTRAINT `requerimiento_movimientos_requerimiento_id_foreign` FOREIGN KEY (`requerimiento_id`) REFERENCES `requerimientos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `requerimiento_movimientos_usuario_id_foreign` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.requerimiento_movimientos: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.requerimiento_tipo_documento
+CREATE TABLE IF NOT EXISTS `requerimiento_tipo_documento` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `requerimiento_id` bigint(20) unsigned NOT NULL,
+  `tipo_documento_id` bigint(20) unsigned NOT NULL,
+  `estado` enum('crear','actualizar','eliminar') NOT NULL,
+  `nombre_documento` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `requerimiento_tipo_documento_requerimiento_id_foreign` (`requerimiento_id`),
+  KEY `requerimiento_tipo_documento_tipo_documento_id_foreign` (`tipo_documento_id`),
+  CONSTRAINT `requerimiento_tipo_documento_requerimiento_id_foreign` FOREIGN KEY (`requerimiento_id`) REFERENCES `requerimientos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `requerimiento_tipo_documento_tipo_documento_id_foreign` FOREIGN KEY (`tipo_documento_id`) REFERENCES `tipo_documentos` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.requerimiento_tipo_documento: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.requisitos
+CREATE TABLE IF NOT EXISTS `requisitos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `salida_id` bigint(20) unsigned NOT NULL,
+  `requisito_cod` tinytext DEFAULT NULL,
+  `requisito` text NOT NULL,
+  `documento` mediumtext DEFAULT NULL,
+  `fecha_requisito` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `requisitos_salida_id_foreign` (`salida_id`),
+  CONSTRAINT `requisitos_salida_id_foreign` FOREIGN KEY (`salida_id`) REFERENCES `salidas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.requisitos: ~3 rows (aproximadamente)
 REPLACE INTO `requisitos` (`id`, `salida_id`, `requisito_cod`, `requisito`, `documento`, `fecha_requisito`, `created_at`, `updated_at`) VALUES
@@ -1050,6 +1889,37 @@ REPLACE INTO `requisitos` (`id`, `salida_id`, `requisito_cod`, `requisito`, `doc
 	(2, 1, NULL, 'Debe ser elaborado y suscrito por la Comisión de Control (jefe de Comisión, Supervisor y/o Especialista), en un plazo máximo de tres (3) días hábiles de terminada la etapa de ejecución del servicio, y revisado y aprobado por la unidad orgánica u órgano de la CGR o por el OCI en un plazo de máximo de dos (2) días hábiles, para ser comunicado a las instancias que correspondan.', 'Directiva N. 013-2022-CG/NORM ?Servicio de Control Simult?neo?', '2022-05-31', '2025-05-09 17:59:05', NULL),
 	(3, 1, NULL, 'El Informe de Visita de Control debe contener el detalle de las situaciones adversas identificadas en la actividad o hito de control, las cuales se describen de forma objetiva, clara y \r\nprecisa, identificando sus elementos, la evidencia que las sustentan e incluyendo sus conclusiones y la recomendación general a la que haya lugar. De igual forma, en caso no se hayan identificado situaciones adversas, se deja constancia de ello, dando cuenta de la \r\nevaluación realizada. Asimismo, de corresponder, incluye el detalle de los Reportes de Avance ante Situaciones Adversas y las acciones preventivas y correctivas adoptadas y comunicadas \r\npor la entidad o dependencia, y aquellas que respecto de las cuales no se ha comunicado acción alguna.', 'Directiva N. 013-2022-CG/NORM ?Servicio de Control Simult?neo?', '2022-05-31', '2025-05-09 17:59:06', NULL),
 	(5, 1, NULL, 'La publicacion de los informes se realiza dentros de los cinco (5) dias hábiles siguientes de la notificación de los mismos ', 'Directiva N. 013-2022-CG/NORM ?Servicio de Control Simult?neo?', '2022-05-31', '2025-05-09 19:30:17', NULL);
+
+-- Volcando estructura para tabla kallpaq.riesgos
+CREATE TABLE IF NOT EXISTS `riesgos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `riesgo_cod` varchar(255) DEFAULT NULL,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `riesgo_nombre` text NOT NULL,
+  `riesgo_tipo` enum('Riesgo','Oportunidad') DEFAULT NULL,
+  `factor_id` bigint(20) unsigned DEFAULT NULL,
+  `controles` text DEFAULT NULL,
+  `probabilidad` int(11) NOT NULL,
+  `impacto` int(11) NOT NULL,
+  `riesgo_valor` int(11) NOT NULL,
+  `riesgo_valoracion` varchar(255) NOT NULL,
+  `riesgo_tratamiento` enum('Reducir','Aceptar','Trasladar') DEFAULT NULL,
+  `estado` enum('abierto','cerrado','pendiente','proyecto') NOT NULL,
+  `fecha_valoracion_rr` date DEFAULT NULL,
+  `probabilidad_rr` int(11) DEFAULT NULL,
+  `impacto_rr` int(11) DEFAULT NULL,
+  `evaluacion_rr` int(11) DEFAULT NULL,
+  `riesgo_estado_rr` enum('Con Eficacia','Sin eficacia') DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `riesgos_riesgo_cod_unique` (`riesgo_cod`),
+  KEY `riesgos_proceso_cod_foreign` (`proceso_id`),
+  KEY `riesgos_factor_cod_foreign` (`factor_id`),
+  CONSTRAINT `riesgos_factor_cod_foreign` FOREIGN KEY (`factor_id`) REFERENCES `factores` (`id`),
+  CONSTRAINT `riesgos_proceso_cod_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.riesgos: ~51 rows (aproximadamente)
 REPLACE INTO `riesgos` (`id`, `riesgo_cod`, `proceso_id`, `riesgo_nombre`, `riesgo_tipo`, `factor_id`, `controles`, `probabilidad`, `impacto`, `riesgo_valor`, `riesgo_valoracion`, `riesgo_tratamiento`, `estado`, `fecha_valoracion_rr`, `probabilidad_rr`, `impacto_rr`, `evaluacion_rr`, `riesgo_estado_rr`, `created_at`, `updated_at`, `deleted_at`) VALUES
@@ -1105,9 +1975,63 @@ REPLACE INTO `riesgos` (`id`, `riesgo_cod`, `proceso_id`, `riesgo_nombre`, `ries
 	(82, NULL, 118, 'Indisponibilidad de la información respaldada por una falla de software o hardware', 'Riesgo', 4, NULL, 4, 6, 24, 'Bajo', NULL, 'proyecto', NULL, NULL, NULL, NULL, NULL, '2025-03-25 00:37:13', '2025-03-25 00:37:13', NULL),
 	(83, NULL, 118, 'Demora en el resguardo y recuperación de la información del correo electrónico respaldada por el proveedor debido que los recursos e infraestructura no están bajo el control de CGR', 'Riesgo', 4, NULL, 4, 6, 24, 'Bajo', NULL, 'proyecto', NULL, NULL, NULL, NULL, NULL, '2025-03-25 00:37:28', '2025-03-25 00:37:28', NULL);
 
+-- Volcando estructura para tabla kallpaq.riesgo_acciones
+CREATE TABLE IF NOT EXISTS `riesgo_acciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `riesgo_cod` bigint(20) unsigned NOT NULL,
+  `nombre` varchar(255) NOT NULL,
+  `descripcion` text NOT NULL,
+  `fecha_prog_inicio` date DEFAULT NULL,
+  `fecha_prog_fin` date DEFAULT NULL,
+  `fecha_implementacion` date DEFAULT NULL,
+  `responsable` varchar(255) DEFAULT NULL,
+  `estado` enum('En Implementación','Pendiente','Implementado','Cancelado') NOT NULL,
+  `comentario` longtext DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `riesgo_acciones_riesgo_cod_foreign` (`riesgo_cod`),
+  CONSTRAINT `riesgo_acciones_riesgo_cod_foreign` FOREIGN KEY (`riesgo_cod`) REFERENCES `riesgos` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.riesgo_acciones: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla kallpaq.riesgo_controles
+CREATE TABLE IF NOT EXISTS `riesgo_controles` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `control_cod` varchar(255) NOT NULL,
+  `descripcion` text NOT NULL,
+  `tipo` enum('Manual','Automatico','Mixto') NOT NULL,
+  `frecuencia` varchar(255) NOT NULL,
+  `responsable` varchar(255) NOT NULL,
+  `fecha_implementacion` date DEFAULT NULL,
+  `fecha_evaluacion` date DEFAULT NULL,
+  `evaluación` enum('implementado','parcialmente','no implementado','inadecuado') NOT NULL,
+  `fecha_revaluacion` date DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `riesgo_cod` bigint(20) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `riesgo_controles_riesgo_cod_foreign` (`riesgo_cod`),
+  CONSTRAINT `riesgo_controles_riesgo_cod_foreign` FOREIGN KEY (`riesgo_cod`) REFERENCES `riesgos` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.riesgo_controles: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla kallpaq.roles
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `descripcion` varchar(255) NOT NULL,
+  `guard_name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `roles_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.roles: ~5 rows (aproximadamente)
 REPLACE INTO `roles` (`id`, `name`, `descripcion`, `guard_name`, `created_at`, `updated_at`) VALUES
@@ -1117,9 +2041,32 @@ REPLACE INTO `roles` (`id`, `name`, `descripcion`, `guard_name`, `created_at`, `
 	(4, 'especialista', 'Tienes acceso de sólo lectura a los reportes y dashboards del SIG de acuerdo a los procesos de su propiedad.', 'web', '2023-08-25 20:55:30', '2023-08-25 20:55:30'),
 	(5, 'propietario', 'Tienes acceso de sólo lectura a los reportes y dashboards del SIG de acuerdo a los procesos de su propiedad.', 'web', '2023-08-25 20:55:30', '2023-08-25 20:55:30');
 
+-- Volcando estructura para tabla kallpaq.role_has_permissions
+CREATE TABLE IF NOT EXISTS `role_has_permissions` (
+  `permission_id` bigint(20) unsigned NOT NULL,
+  `role_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`permission_id`,`role_id`),
+  KEY `role_has_permissions_role_id_foreign` (`role_id`),
+  CONSTRAINT `role_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_has_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.role_has_permissions: ~1 rows (aproximadamente)
 REPLACE INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 	(1, 1);
+
+-- Volcando estructura para tabla kallpaq.salidas
+CREATE TABLE IF NOT EXISTS `salidas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `salida` varchar(255) NOT NULL,
+  `tipo` enum('servicio','producto','ambos') NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_proceso_salida` (`proceso_id`),
+  CONSTRAINT `fk_proceso_salida` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.salidas: ~4 rows (aproximadamente)
 REPLACE INTO `salidas` (`id`, `proceso_id`, `salida`, `tipo`, `created_at`, `updated_at`) VALUES
@@ -1128,9 +2075,36 @@ REPLACE INTO `salidas` (`id`, `proceso_id`, `salida`, `tipo`, `created_at`, `upd
 	(3, 127, 'Informe de Control Concurrente', 'producto', '2025-05-09 17:10:00', NULL),
 	(4, 128, 'Informe de Control Simutaneo', 'producto', '2025-05-09 17:10:01', NULL);
 
+-- Volcando estructura para tabla kallpaq.sipocs
+CREATE TABLE IF NOT EXISTS `sipocs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `proceso_id` bigint(20) unsigned NOT NULL,
+  `proveedores` varchar(255) NOT NULL,
+  `entradas` varchar(255) NOT NULL,
+  `clientes` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sipocs_proceso_id_foreign` (`proceso_id`),
+  CONSTRAINT `sipocs_proceso_id_foreign` FOREIGN KEY (`proceso_id`) REFERENCES `procesos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Volcando datos para la tabla kallpaq.sipocs: ~0 rows (aproximadamente)
 REPLACE INTO `sipocs` (`id`, `proceso_id`, `proveedores`, `entradas`, `clientes`, `created_at`, `updated_at`) VALUES
 	(1, 62, 'Entidades, Ciudadanos, Medios de Comunicacion', 'Denuncias, Alertas', 'Entidad, Ciudadano', '2025-05-09 17:02:00', NULL);
+
+-- Volcando estructura para tabla kallpaq.tipo_documentos
+CREATE TABLE IF NOT EXISTS `tipo_documentos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `sigla` varchar(255) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `inactive_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tipos_documentos_sigla_unique` (`sigla`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.tipo_documentos: ~12 rows (aproximadamente)
 REPLACE INTO `tipo_documentos` (`id`, `sigla`, `nombre`, `estado`, `inactive_at`, `created_at`, `updated_at`) VALUES
@@ -1146,6 +2120,20 @@ REPLACE INTO `tipo_documentos` (`id`, `sigla`, `nombre`, `estado`, `inactive_at`
 	(10, 'MA', 'Manual', 1, NULL, NULL, NULL),
 	(11, 'DA', 'Directiva', 1, NULL, NULL, NULL),
 	(12, 'RE', 'Reglamento', 1, NULL, NULL, NULL);
+
+-- Volcando estructura para tabla kallpaq.users
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=216 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcando datos para la tabla kallpaq.users: ~94 rows (aproximadamente)
 REPLACE INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
