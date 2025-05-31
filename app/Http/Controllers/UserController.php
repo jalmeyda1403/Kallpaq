@@ -25,26 +25,26 @@ class UserController extends Controller
     {
       
         $users = User::all();
-        return view('admin.user.index', compact('users'));
+        return view('user.index', compact('users'));
     }
 
     public function create()
     {
         // Código para cargar los datos necesarios para la creación
         
-        return view('admin.user.create');
+        return view('user.create');
     }
 
     public function edit(User $user)
     {
         $roles = Role::all();
-        return view('admin.usuarios.edit', compact('user', 'roles'));
+        return view('user.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, User $user)
     {
         $user->syncRoles($request->input('roles', []));
-        return redirect()->route('admin.usuarios.index')->with('success', 'Roles actualizados exitosamente.');
+        return redirect()->route('user.index')->with('success', 'Roles actualizados exitosamente.');
     }
 
     public function store(Request $request)
@@ -64,13 +64,13 @@ class UserController extends Controller
         $user->save();
 
         // Redireccionar a la vista de gestión de usuarios
-        return redirect()->route('usuarios.index')->with('success', 'Usuario creado exitosamente.');
+        return redirect()->route('user.index')->with('success', 'Usuario creado exitosamente.');
     }
     
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect()->route('admin.usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
+        return redirect()->route('user.index')->with('success', 'Usuario eliminado exitosamente.');
     }
 
     public function resetPassword($id)
@@ -80,7 +80,7 @@ class UserController extends Controller
         $user->save();
         
         $user->notify(new ResetPasswordNotification());
-        return redirect()->route('usuarios.index')->with('success', 'Contraseña reiniciada exitosamente. Se ha enviado un correo electrónico al usuario.');
+        return redirect()->route('user.index')->with('success', 'Contraseña reiniciada exitosamente. Se ha enviado un correo electrónico al usuario.');
     }
 //Asignar Procesos
     public function asignarProcesos($id)
@@ -92,7 +92,7 @@ class UserController extends Controller
         $procesosDisponibles = Proceso::whereNotIn('id', $procesosAsignados->pluck('id'))
         ->paginate(15);
         
-        return view('admin.user.asignarprocesos', compact('user', 'procesosAsignados', 'procesosDisponibles'));
+        return view('user.asignarprocesos', compact('user', 'procesosAsignados', 'procesosDisponibles'));
         
     }
 
@@ -104,7 +104,7 @@ class UserController extends Controller
 
               
         if ($user->hasRole('facilitador')) {
-             return view('procesos.listarprocesos', compact('user','procesosAsignados'));
+             return view('user.listarprocesos', compact('user','procesosAsignados'));
         }
 
              
@@ -138,7 +138,7 @@ public function asignarRoles($id)
     $rolesDisponibles = Role::all();
 
     
-    return view('admin.user.asignarroles', compact('user', 'rolesAsignados', 'rolesDisponibles'));  
+    return view('user.asignarroles', compact('user', 'rolesAsignados', 'rolesDisponibles'));  
 }
 
 public function guardarRoles(Request $request, $id)
@@ -161,7 +161,7 @@ public function asignarPermisos($id)
     $permisosDisponibles = Permission::all();
 
     
-    return view('admin.user.asignarpermisos', compact('user', 'permisosAsignados', 'permisosDisponibles'));  
+    return view('user.asignarpermisos', compact('user', 'permisosAsignados', 'permisosDisponibles'));  
 }
 
 public function guardarPermisos(Request $request, $id)

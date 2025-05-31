@@ -27,14 +27,12 @@ class DocumentoModal extends Component
         'recargarVersiones' => 'recargarVersiones',// Evento para crear nuevo documento
         'eliminarVersion' => 'eliminarVersion',
         'actualizarProceso' => 'actualizarProceso', // Evento para eliminar una versión
-        'selecItem'=>'selecItem',
+        'procesoSeleccionado' => 'procesoSeleccionado',
     ];
-    public function selecItem($data)
+    public function procesoSeleccionado($datos)
     {
-        $this->proceso_id = $data['procesoId'];
-        $this->proceso_nombre = $data['procesoNombre'];
-        // Cerrar modal si es necesario
-        $this->dispatch('cerrar-busqueda-modal');
+        $this->proceso_id = $datos['id'];
+        $this->proceso_nombre = $datos['nombre'];
     }
 
     public function actualizarProceso($id)

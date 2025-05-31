@@ -222,6 +222,17 @@
         let documentoId = null;
         $(document).ready(function() {
             var table = $('#documentosTable').DataTable({
+                dom: "<'row'<'col-sm-6'l><'col-sm-6 d-flex justify-content-end'B>>" +                   
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+                buttons: [{
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel"></i> Descargar',
+                        className: 'btn btn-success btn-sm'
+                    },
+
+                   
+                ],
                 "columnDefs": [{
                         "orderable": false,
                         "targets": [0, 1, 2, 3, 4, 5, 6, 7]
@@ -242,6 +253,7 @@
                     },
                     "info": "",
                 }
+
 
             });
 

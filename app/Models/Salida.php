@@ -9,15 +9,17 @@ class Salida extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sipoc_id', 'salida', 'tipo'];
+    protected $fillable = ['proceso_id', 'salida', 'tipo' ];
 
     public function requisitos()
     {
         return $this->hasMany(Requisito::class);
     }
 
-    public function sipoc()
+    public function proceso()
     {
-        return $this->belongsTo(Sipoc::class);
+        return $this->belongsTo(Proceso::class);
     }
+
+   
 }

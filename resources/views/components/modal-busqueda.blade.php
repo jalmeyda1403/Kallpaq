@@ -15,7 +15,7 @@
                     placeholder="Buscar elementos..." onkeyup="filtrarItems('{{ $modalId }}')">
                 <!-- Tabla de elementos -->
                 <div>
-                    <table class="table table-responsive table-sm table-procesos">
+                    <table class="table table-sm table-procesos">
                         <thead>
                             <tr>
                                 <th>Item</th>
@@ -69,14 +69,18 @@
                     .then(data => {
                         listaItems.innerHTML = ''; // Limpiar la lista antes de agregar nuevos ítems
                         data.forEach(item => {
-                            const row = document.createElement('tr');
                             const values = Object.values(item);
-                            const nombre = values[1] || ''; // Accede al segundo valor del objeto
-
-
+                            const id = values[0] ?? '';
+                            const codigo = values[1] ?? '';
+                            const descripcion = values[2] ?? '';
+                            const nombre = `${codigo} - ${descripcion}`;
+                            const row = document.createElement('tr');
                             row.innerHTML = `
-                    <td class="text-center"><input class="form-check-input" type="radio" name="${tipo}" value="${item.id}" data-nombre="${nombre}"></td>
-                    <td>${nombre}</td>
+                    <td class="text-center">
+                        <input class="form-check-input" type="radio" name="${tipo}" value="${id}" data-nombre="${nombre}">
+                    </td>
+                    <td>${nombre}
+                    </td>
                 `;
                             listaItems.appendChild(row);
                         });

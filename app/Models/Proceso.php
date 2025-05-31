@@ -19,6 +19,11 @@ class Proceso extends Model
         'cod_proceso_padre',
         'proceso_nivel',
         'proceso_estado',
+        'sgc',
+        'sgas',
+        'sgcm',
+        'sgsi',
+        'sgce',
         'planificacion_pei_id',
         'inactivate_at',
     ];
@@ -78,6 +83,22 @@ class Proceso extends Model
     public function ouo_responsable()
     {
         return $this->ouos()->wherePivot('responsable', 1)->pluck('ouo_nombre')->first();
+    }
+    public function descendientes()
+    {
+        $descendientes = $this->subprocesos;
+
+        foreach ($this->subprocesos as $subproceso) {
+            $descendientes = $descendientes->merge($subproceso->descendientes());
+        }
+
+        return $descendientes;
+    }
+    public function descendiente_salidas()
+    {
+        $procesos = $this->descendientes()->push($this);
+
+        return Salida::whereIn('proceso_id', $procesos->pluck('id'))->get();
     }
      
 

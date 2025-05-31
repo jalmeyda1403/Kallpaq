@@ -277,7 +277,7 @@ class HallazgoController extends Controller
             $query->whereIn('clasificacion', ['Ncme', 'NCM']);
         };
        
-        $estadoSmpData = Proceso::select('id', 'cod_proceso', 'nombre as proceso')
+        $estadoSmpData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
             ->withCount([
                 'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
                     $query->where('estado', 'Abierto')->where($clasificacionFiltro)->filterBySig($sig);
@@ -339,7 +339,7 @@ class HallazgoController extends Controller
         $clasificacionFiltro = function ($query) {
             $query->whereIn('clasificacion', ['Obs', 'Odm']);
         };
-        $estadoObsData = Proceso::select('id', 'cod_proceso', 'nombre as proceso')
+        $estadoObsData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
             ->withCount([
                 'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
                     $query->where('estado', 'Abierto')->where($clasificacionFiltro)->filterBySig($sig);

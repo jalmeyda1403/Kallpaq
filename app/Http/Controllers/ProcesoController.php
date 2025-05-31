@@ -114,52 +114,22 @@ class ProcesoController extends Controller
 
     public function findProcesos($proceso_id = null)
     {
-        $resultado = [];
+        $procesos =  Proceso::find($proceso_id);   
 
         if ($proceso_id) {
             // Si se pasa un proceso_id, obtener ese proceso específico con sus hijos y nietos
-            $procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
-                ->with('subprocesos.subprocesos')
-                ->where('id', $proceso_id)
-                ->first();
-
-            if ($procesos) {
-                $resultado = $this->getFlatProcessList($procesos);
-            }
+              $resultado = $procesos->descendientes();
+            
         } else {
             // Si no se pasa un proceso_id, devolver todos los procesos
-            $procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
-                ->orderBy('cod_proceso')->get();
-
-
-            foreach ($procesos as $proceso) {
-                $resultado = array_merge($resultado, $this->getFlatProcessList($proceso));
-            }
+            $resultado = Proceso::all();         
 
         }
 
         return response()->json($resultado);
     }
 
-    private function getFlatProcessList($proceso)
-    {
-        $resultado = [
-            [
-                'id' => $proceso->id,
-                'proceso_nombre' => $proceso->cod_proceso . ' - ' . $proceso->proceso_nombre
-            ]
-        ];
-
-        foreach ($proceso->subprocesos as $subproceso) {
-            $resultado = array_merge($resultado, $this->getFlatProcessList($subproceso));
-        }
-
-        usort($resultado, function ($a, $b) {
-            return strcmp($a['proceso_nombre'], $b['proceso_nombre']);
-        });
-
-        return $resultado;
-    }
+    
 
     public function listar()
     {

@@ -38,8 +38,9 @@
 
        <!-- Incluir el archivo JS de lightGallery -->
        <script src="{{ asset('vendor/adminlte/dist/plugins/lightgallery/js/lightgallery.min.js') }}"></script>
-      
-     
+
+       <!--Summernote-->
+       <script src="{{ asset('vendor/adminlte/dist/plugins/summernote/summernote-bs4.min.js') }}"></script>
    @else
        <script src="{{ mix(config('adminlte.laravel_mix_js_path', 'js/app.js')) }}"></script>
    @endif

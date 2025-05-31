@@ -22,7 +22,30 @@
                     @csrf
                     <input type="hidden" name="_method" value="{{ $method }}">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
+                            <div class="form-group small">
+                                <label for="Tipo" class="required-field">Tipo</label>
+                                <select wire:model.live="proceso_tipo" name="proceso_tipo" id="proceso_tipo"
+                                    class="form-control" required>
+                                    <option value="Misional">Misional</option>
+                                    <option value="Estratégico">Estratégico</option>
+                                    <option value="Apoyo">Apoyo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group small">
+                                <label for="Estado"> Estado</label>
+                                <select wire:model.live="proceso_estado" name="proceso_estado" id="proceso_estado"
+                                    class="form-control" required>
+                                    <option value="1">Activo</option>
+                                    <option value="0">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="form-group small">
 
                                 <label for="codigoProceso" class="required-field">Código de Proceso</label>
@@ -34,32 +57,8 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-8">
-                            <div class="form-group small">
-                                <label for="Objetivo"> Objetivo Estratégico</label>
-                                <!-- Campo oculto para el ID del proceso -->
-                                <input type="hidden" wire:model.live="planificacion_pei_id" name="planificacion_pei_id"
-                                    id="planificacion_pei_id" required disabled>
-                                <div class="input-group">
-                                    <!-- Campo de texto para el nombre del proceso -->
-                                    <input type="text" class="form-control" id="planificacion_pei_nombre"
-                                        name="objetivo_pei_nombre" wire:model.live="planificacion_pei_nombre" readonly>
-                                    <!-- Botón para abrir el modal -->
-                                    <button type="button" class ="btn btn-dark" data-toggle="modal"
-                                        data-target="#objetivoPEIModal">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <x-modal-busqueda :ruta="route('objetivoPEI.buscar')" campo-id="planificacion_pei_id" campo-nombre="planificacion_pei_nombre"
-                        modal-titulo="Objetivo" modal-id="objetivoPEIModal" :modalBgcolor="'#001f3f'" :modalTxtcolor="'#FFFFFF'">>
-                    </x-modal-busqueda>
+                        <div class="col-md-6">
 
-                    <div class="row">
-                 
-                        <div class="col-md-4">
                             <div class="form-group small">
                                 <div class="d-flex justify-content-between">
                                     <div class="text-start">
@@ -83,8 +82,17 @@
                                 </div>
 
                             </div>
+
                         </div>
-                        <div class="col-md-8">
+                    </div>
+                    <x-modal-busqueda :ruta="route('objetivoPEI.buscar')" campo-id="planificacion_pei_id"
+                        campo-nombre="planificacion_pei_nombre" modal-titulo="Objetivo" modal-id="objetivoPEIModal"
+                        :modalBgcolor="'#001f3f'" :modalTxtcolor="'#FFFFFF'">>
+                    </x-modal-busqueda>
+
+                    <div class="row">
+
+                        <div class="col-md-12">
                             <div class="form-group small">
                                 <div class="d-flex justify-content-between">
                                     <div class="text-start">
@@ -145,13 +153,20 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group small">
-                                <label for="Tipo" class="required-field">Tipo</label>
-                                <select wire:model.live="proceso_tipo" name="proceso_tipo" id="proceso_tipo"
-                                    class="form-control" required>
-                                    <option value="Misional">Misional</option>
-                                    <option value="Estratégico">Estratégico</option>
-                                    <option value="Apoyo">Apoyo</option>
-                                </select>
+                                <label for="Objetivo"> Objetivo Estratégico</label>
+                                <!-- Campo oculto para el ID del proceso -->
+                                <input type="hidden" wire:model.live="planificacion_pei_id" name="planificacion_pei_id"
+                                    id="planificacion_pei_id" required disabled>
+                                <div class="input-group">
+                                    <!-- Campo de texto para el nombre del proceso -->
+                                    <input type="text" class="form-control" id="planificacion_pei_nombre"
+                                        name="objetivo_pei_nombre" wire:model.live="planificacion_pei_nombre" readonly>
+                                    <!-- Botón para abrir el modal -->
+                                    <button type="button" class ="btn btn-dark" data-toggle="modal"
+                                        data-target="#objetivoPEIModal">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -197,14 +212,7 @@
 
 
 
-                    <div class="form-group small">
-                        <label for="Estado"> Estado</label>
-                        <select wire:model.live="proceso_estado" name="proceso_estado" id="proceso_estado"
-                            class="form-control" required>
-                            <option value="1">Activo</option>
-                            <option value="0">Inactivo</option>
-                        </select>
-                    </div>
+
                     <div class="text-muted">
                         <small>(*) Es obligatorio completar los campos.</small>
                     </div>

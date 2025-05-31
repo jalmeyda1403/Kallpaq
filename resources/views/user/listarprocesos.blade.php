@@ -17,7 +17,7 @@
                 </td>
                 <td>{{ $proceso->id }}</td>
                 <td>{{ $proceso->cod_proceso }}</td>
-                <td>{{ $proceso->nombre }}</td>
+                <td>{{ $proceso->proceso_nombre }}</td>
             </tr>
         @endforeach
     </tbody>

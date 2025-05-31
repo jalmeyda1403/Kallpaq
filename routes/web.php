@@ -42,9 +42,12 @@ use App\Http\Controllers\DocumentoVersionController;
 Route::get('/', function () {
     return view('home');
 });
+
 Auth::routes();
+
 Route::get('home', [HomeController::class, 'index'])->name('home');
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
 
@@ -57,6 +60,8 @@ Route::resource('obligaciones', ObligacionController::class);
 Route::resource('riesgos', RiesgoController::class);
 Route::resource('ouos', OUOController::class);
 Route::resource('documentos', DocumentoController::class);
+Route::resource('sipoc', SipocController::class);
+
 //Procesos
 Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProcesos'])->name('procesos.buscar');
 

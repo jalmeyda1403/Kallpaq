@@ -44,7 +44,6 @@
                         </div>
 
 
-
                         <div class="col-md-6 mb-1">
                             <div class="form-group small">
                                 <label for="tipo_documento_id">Tipo Documento</label>
@@ -130,7 +129,7 @@
 
                 {{-- Listado de versiones --}}
                 <div class="row">
-                    <table class="table table-bordered table-hover table-versiones table-sms">
+                    <table class="table table-bordered table-hover table-versiones table-sm">
                         <h6>Versiones</h6>
                         <thead class="thead-light">
                             <tr>
@@ -186,7 +185,7 @@
         </div>
     </div>
     @livewire('documento-version-modal')
-    @livewire('busqueda-procesos-modal')
+    @livewire('busqueda-procesos-modal', ['eventoRetorno' => 'procesoSeleccionado'])
 
 </div>
 
@@ -199,6 +198,14 @@
 @endpush
 @push('scripts')
     <script>
+        Livewire.on('procesoSeleccionado', ({
+            id,
+            nombre
+        }) => {
+            @this.set('proceso_id', id);
+            @this.set('proceso_nombre', nombre);
+        });
+
         Livewire.on('versionActualizada', () => {
             $('#versionesModal').modal('hide');
             @this.call('obtenerVersiones');
@@ -217,12 +224,5 @@
                 $('body').addClass('modal-open');
             }
         });
-        
-        // Sincronizar cuando el modal de proceso se cierra
-        $('#procesoModal').on('hidden.bs.modal', function() {      
-            const procesoInput = document.getElementById('proceso_id')
-            @this.call('actualizarProceso', procesoInput.value)
-        });
-
-</script>
+    </script>
 @endpush

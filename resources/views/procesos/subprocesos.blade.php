@@ -29,7 +29,7 @@
             @endphp
             <div class="card-header {{ $bgClass }}">
 
-                <h5 style="color: white">{{ $proceso_padre->proceso_nombre }}</h5>
+                <h5 style="color: white">{{ $proceso_padre->cod_proceso }} {{ $proceso_padre->proceso_nombre }}</h5>
                 <h7 style="color: white">Nivel: {{ $proceso_padre->proceso_nivel + 1 }}</h7>
 
             </div>
@@ -65,7 +65,7 @@
                         <thead class="table-header">
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Procesos Nivel 1</th>
-                                <th colspan="4" class="text-center">Sistema de Gestión</th>
+                                <th colspan="5" class="text-center">Sistema de Gestión</th>
                                 <th colspan="4" class="text-center">Componentes</th>
                                 <th colspan="2" class="text-center">Requerimientos</th>
                             </tr>
@@ -74,6 +74,7 @@
                                 <th>SGAS</th>
                                 <th>SGCM</th>
                                 <th>SGSI</th>
+                                <th>SGCE</th>
                                 <th class="text-nowrap"><i class="fas fa-file-alt"></i> Documentos</th>
                                 <th class="text-nowrap"><i class="fas fa-clipboard-check"></i> Obligaciones</th>
                                 <th class="text-nowrap"><i class="fas fa-exclamation-triangle"></i> Riesgos</th>
@@ -86,10 +87,11 @@
                             @foreach ($procesos as $proceso)
                                 <tr>
                                     <td class="text-left">{{ $proceso->cod_proceso }}-{{ $proceso->proceso_nombre }}</td>
-                                    <td>x</td>
-                                    <td>x</td>
-                                    <td>x</td>
-                                    <td>x</td>
+                                    <td>{{ $proceso->sgc == 1 ? 'x' : '' }} </td>
+                                    <td>{{ $proceso->sgas== 1 ? 'x' : ''}}</td>
+                                    <td>{{ $proceso->sgcm== 1 ? 'x' : ''}}</td>
+                                    <td>{{ $proceso->sgsi== 1 ? 'x' : ''}}</td>
+                                    <td>{{ $proceso->sgce== 1 ? 'x' : ''}}</td>                                  
                                     <td>{{ $proceso->documentos->count() }}</td>
                                     <td>{{ $proceso->obligaciones->count() }}</td>
                                     <td>{{ $proceso->riesgos->count() }}</td>

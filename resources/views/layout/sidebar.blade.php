@@ -29,7 +29,7 @@
         </div>
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                @if (Auth::check())
+             
                     <li class="nav-item has-treeview {{ request()->is('procesos*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cog"></i>
@@ -40,7 +40,7 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{{ route('procesos.mapa', auth()->user()->id) }}" class="nav-link">
+                                <a href="{{ route('procesos.mapa')}}" class="nav-link">
                                     <i class="nav-icon fas fa-sitemap"></i>
                                     <p>Mapa de Procesos</p>
                                 </a>
@@ -55,26 +55,29 @@
                             </li>
 
                             <li class="nav-item">
-                                <a href="{{ route('indicadores.index') }}" class="nav-link">
+
+                                <a href="{{ route('documento.buscar') }}" class="nav-link">
+                                    <i class="nav-icon fas fa-clipboard-list"></i>
+                                    <p> Listado de documentos </p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-chart-bar"></i>
                                     <p>Listado de Indicadores</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('requerimientos.index', auth()->user()->id) }}" class="nav-link">
+                                <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-file-alt"></i>
                                     <p> Requerimiento</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-tasks"></i>
-                                    <p> Seguimiento</p>
-                                </a>
-                            </li>
+                        
                         </ul>
                     </li>
-                @endif
+         
                 <!-- Configuración Auditorias SIG (SMP)
                  <li class="nav-item">
                     <a href="#" class="nav-link">
@@ -227,7 +230,7 @@
 
                     </ul>
                 </li>
-
+                @if (Auth::check())
                 <!-- Administración de Usuarios -->
                 <li class="nav-item has-treeview {{ request()->routeIs('usuarios.*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
@@ -245,25 +248,26 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ url('/admin/usuarios/roles-permisos') }}" class="nav-link">
+                            <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-user-shield"></i>
                                 <p>Roles y Permisos</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ url('/admin/usuarios/roles-permisos') }}" class="nav-link">
+                            <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-user-shield"></i>
                                 <p>Listado de Roles</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ url('/admin/usuarios/roles-permisos') }}" class="nav-link">
+                            <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-user-shield"></i>
                                 <p>Listado de Permisos</p>
                             </a>
                         </li>
                     </ul>
                 </li>
+                @endif
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

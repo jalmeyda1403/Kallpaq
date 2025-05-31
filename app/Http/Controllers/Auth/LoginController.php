@@ -25,13 +25,35 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
+
         return view('auth.login');
+    }
+    public function login(Request $request)
+    {
+       
+        // Validar las credenciales del usuario
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+       
+        // Intentar autenticar al usuario
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            // Redirigir a la página de bienvenida o a la ruta que desees
+            return redirect()->intended($this->redirectTo);
+        }
+
+        // Si la autenticación falla, redirigir de vuelta al formulario de inicio de sesión con un error
+        return back()->withErrors([
+            'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+        ]);
     }
 
     protected function authenticated($user)
     {
 
-        // Verificar si el usuario está autenticado
         if (!Auth::check()) {
             return redirect()->route('login'); // Redireccionar al login si no está autenticado
         } else {
@@ -39,8 +61,9 @@ class LoginController extends Controller
             return view('welcome');
         }
 
-       
+
     }
+
 
 
     public function logout()
@@ -53,8 +76,8 @@ class LoginController extends Controller
     {
         // Example: Redirect to different routes based on user role
         $role = Auth::user()->role; // assuming you have a role field in users table
-         return view('welcome');
+        return view('welcome');
 
-        
+
     }
 }

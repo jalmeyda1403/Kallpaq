@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Sipoc;
 use App\Models\Salida;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -24,4 +25,21 @@ class SipocController extends Controller
             })
         ]);
     }
+    public function update(Request $request, $id)
+    {
+     
+        $sipoc = Sipoc::findOrFail($id);
+        $sipoc->update($request->all());
+
+        return redirect()->back()->with('success', 'SIPOC actualizado correctamente');
+
+    }
+    public function store(Request $request)
+    {
+    
+        $sipoc = Sipoc::create($request->all());
+        return redirect()->back()->with('success', 'SIPOC actualizado correctamente');
+    }
+
+
 }

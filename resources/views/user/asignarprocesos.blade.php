@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('layout.master')
 @section('title', 'SIG')
 @section('content')
     <div class="container-fluid">
@@ -28,8 +28,8 @@
                                 @foreach ($procesosAsignados as $proceso)
                                     <tr>
                                         <td>{{ $proceso->cod_proceso }}</td>
-                                        <td>{{ $proceso->nombre }}</td>
-                                        <td>{{ $proceso->tipo_proceso }}</td>
+                                        <td>{{ $proceso->proceso_nombre }}</td>
+                                        <td>{{ $proceso->proceso_tipo }}</td>
                                
                                         <td>
                                             <a href="{{ route('usuarios.eliminar-proceso', ['id' => $user->id, 'proceso_id' => $proceso->id]) }}" class="btn btn-danger btn-sm">
@@ -63,7 +63,7 @@
                     @csrf
                 <div class="modal-body" id="modal-body">
                     @section('pagination_url', route('usuario.listar-procesos',$user->id) )
-                    @include('admin.user.listarprocesos')
+                    @include('user.listarprocesos')
                 </div>
               
                     <div class="modal-footer">

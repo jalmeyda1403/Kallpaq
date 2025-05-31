@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Requisito extends Model
 {
     use HasFactory;
-    protected $fillable = ['salida_id', 'requisito'];
+    protected $fillable = ['salida_id', 'requisito','documento','fecha_requisito'];
 
     public function salida()
     {

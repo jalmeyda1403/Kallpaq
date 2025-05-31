@@ -9,58 +9,34 @@ use Illuminate\Support\Facades\Http;
 
 class BusquedaProcesosModal extends Component
 {
-    use WithPagination;
-
-    public $modalTitle;
-    public $proceso_id;
-    public $proceso_nombre;
-    public $ruta;
+    public string $eventoRetorno;
     public $procesos = [];
-    public $selectedId;
-    public $busqueda = '';
-    protected $listeners = ['cargarModal'];
-    public $perPage = 10;
+    public $modalTitle = 'Buscar Procesos';
 
+    
     public function mount()
     {
-        $this->modalTitle = "Buscar";
-
+        $this->loadProcesos();
     }
-    public function cargarModal()
-    {
-        $this->loadItems();
-
-    }
-    public function updatedBusqueda()
-    {
-        $this->loadItems();
-    }
-
-
-    public function loadItems()
-    {
-
-        if ($this->busqueda) {
-            $this->procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
-                ->where('proceso_nombre', 'like', '%' . $this->busqueda . '%')
-                ->get();
-        } else {
-            $this->procesos = Proceso::select('id', 'cod_proceso', 'proceso_nombre')
-                ->orderBy('cod_proceso')
-                ->get();
-        }
-    }
-
-
-
-
     public function selectItem($id, $nombre)
     {
-        $this->dispatch('selecItem', [
-            'procesoId' => $id,
-            'procesoNombre' => $nombre
+        // Despacha al evento indicado por el padre
+        $this->dispatch($this->eventoRetorno, [
+            'id' => $id,
+            'nombre' => $nombre,
         ]);
-     }
+
+    }
+   
+    public function loadProcesos()
+    {
+        // Tu lógica para cargar procesos
+        // Ejemplo:
+        $query = Proceso::query();
+
+        $this->procesos = $query->get();
+    }
+
 
     public function render()
     {

@@ -11,7 +11,7 @@ class Sipoc extends Model
     protected $fillable = ['proveedores', 'entradas',  'clientes', 'proceso_id'];
 
     
-    public function procesos()
+    public function proceso()
     {
         return $this->belongsTo(Proceso::class);
     }

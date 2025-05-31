@@ -196,20 +196,20 @@
             <div class="col-md-6">
                 <div class="card shadow-sm h-100 d-flex flex-column">
                     @php
-                    $tipoNormalizado = strtolower(
-                        str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $proceso->proceso_tipo),
-                    );
-                    $bgClass = 'bg-' . $tipoNormalizado;
-                @endphp
+                        $tipoNormalizado = strtolower(
+                            str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $proceso->proceso_tipo),
+                        );
+                        $bgClass = 'bg-' . $tipoNormalizado;
+                    @endphp
                     <!-- Card Header con un fondo diferente y texto centrado -->
                     <div class="card-header {{ $bgClass }}">
                         <div class="d-flex justify-content-between align-items-center">
-                        <h6>Proceso:</h6>
-                        <h6>{{ $proceso->cod_proceso }} -{{ $proceso->proceso_nombre }}  ({{ $proceso->proceso_sigla }})</h6>
+                            <h6>{{ $proceso->cod_proceso }} -{{ $proceso->proceso_nombre }}
+                                ({{ $proceso->proceso_sigla }})</h6>
                         </div>
                     </div>
                     <div class="card-body">
-                       
+
                         <div class="mb-3">
                             <h6 class="font-weight-bold">Tipo de Proceso:</h6>
                             <p class="proceso">{{ $proceso->proceso_tipo }}</p>
@@ -253,197 +253,217 @@
                 </div>
             </div>
         </div>
-    
-    @livewire('proceso-modal')
-    <!-- Section SIPOC -->
-    <div class="row d-flex align-items-stretch">
-        <div class="card col-md-12">
-            <div class="card-header bg-dark">
-                <h6>SIPOC</h6>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Proveedores</th>
-                            <th>Entradas</th>
-                            <th>Procesos</th>
-                            <th>Salidas</th>
-                            <th>Clientes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($sipocs as $sipoc)
-                            <tr>
-                                <td>{{ $sipoc->proveedores }}</td>
-                                <td>{{ $sipoc->entradas }}</td>
-                                <td>
-                                    @foreach ($procesos as $subproceso)
-                                        <a href="#" data-toggle="modal"
-                                            data-target="#requisitosModal{{ $subproceso->id }}">
-                                            {{ $subproceso->cod_proceso }} - {{ $subproceso->proceso_nombre }}
-                                        </a><br>
-                                    @endforeach
-                                </td>
-                                <td>
-                                    @foreach ($salidas as $salida)
-                                        <a href="#" class="load-requisitos" data-id="{{ $salida->id }}">
-                                            {{ $salida->salida }} ( {{ $salida->tipo }})
-                                        </a><br>
-                                    @endforeach
 
-                                </td>
-                                <td>{{ $sipoc->clientes }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">No Se ha generado algún SIPOC para este proceso.</td>
-                            </tr>
-                        @endforelse
-
-                    </tbody>
-                </table>
-
-            </div>
-        </div>
-
-    </div>
-    <!-- Section Documentacion -->
-    <div class="row d-flex align-items-stretch">
-        <div class="card col-md-12">
-            <div class="card-header bg-dark">
-                <h6>Documentación del Proceso</h6>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Lista Maestra de documentos Internos</th>
-                            <th>Lista Maestra de documentos Externos </th>
-
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        <tr>
-                            <td class="col-md-6">
-                                <ul style="padding-left: 20px;">
-
-                                    @foreach ($documentos as $documento)
-                                        @if ($documento->fuente == 'interno')
-                                            <li>
-                                                <a href="#" data-toggle="modal"
-                                                    onclick="Livewire.dispatchTo('pdf-modal','openPdfModal', { path: '{{ $documento->ultimaVersion->archivo_path ?? '' }}' })"
-                                                    data-target="#pdfModal">
-                                                    {{ $documento->cod_documento }} - {{ $documento->nombre }}<label
-                                                        class="required-field"></label>.v
-                                                    {{ str_pad(optional($documento->ultimaVersion)->version ?? 0, 2, '0', STR_PAD_LEFT) }}
-                                                </a>
-
-                                            </li>
-                                        @endif
-                                    @endforeach
-
-                                </ul>
-                            </td>
-                            <td>
-                                @foreach ($documentos as $documento)
-                                    @if ($documento->fuente == 'externo')
-                                        <a href="{{ $documento->enlace }}">{{ $documento->cod_documento }} -
-                                            {{ $documento->nombre }} </a><br>
-                                    @endif
-                                @endforeach
-                            </td>
-
-                        </tr>
-
-
-                    </tbody>
-                </table>
-
-            </div>
-        </div>
-    </div>
-    @livewire('pdf-modal')
-
-
-
-    <!-- Modal para actualizar el diagrama -->
-    <div class="modal fade" id="ActualizarDiagrama" tabindex="-1" role="dialog"
-        aria-labelledby="verRiesgosModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-info">
-                    <h5 class="modal-title" id="verRiesgosModalLabel">Actualizar Diagrama
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+        @livewire('proceso-modal')
+        <!-- Section SIPOC -->
+        <div class="row d-flex align-items-stretch">
+            <div class="card col-md-12">
+                <div class="card-header bg-dark">
+                    <h6>SIPOC</h6>
                 </div>
-                <div class="modal-body">
-                    @if ($diagrama)
-                        <h3>Actualizar Diagrama de Contexto</h3>
-                        <form action="{{ route('caracterizacion.update', $diagrama->id) }}" method="POST"
-                            enctype="multipart/form-data">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group">
-                                <label for="archivo">Nuevo Diagrama</label>
-                                <input type="file" class="form-control" id="archivo" name="archivo">
-                            </div>
-                            <div class="form-group">
-                                <label for="version">Versión</label>
-                                <input type="text" class="form-control" id="version" name="version"
-                                    value="{{ $diagrama->version }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="vigencia">Vigencia</label>
-                                <input type="date" class="form-control" id="vigencia" name="vigencia"
-                                    value="{{ $diagrama->vigencia }}">
-                            </div>
-                            <button type="submit" class="btn btn-info">Actualizar
-                                Diagrama</button>
-                        </form>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Requisitos -->
-    <div class="modal fade" id="requisitosModal" tabindex="-1" role="dialog" aria-labelledby="requisitosModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title" id="requisitosModalLabel">Requisitos del Producto</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Tarjeta para mostrar los requisitos -->
-
-
-                    <!-- Tabla para mostrar los requisitos -->
-                    <table class="table table-bordered table-hover table-sm table-requisitos" id="procesos">
+                <div class="card-body">
+                    <table class="table table-bordered">
                         <thead class="thead-light">
                             <tr>
-                                <th>N°</th>
-                                <th>Requisito</th>
-                                <th class="text-nowrap">Fecha</th>
+                                <th>Proveedores</th>
+                                <th>Entradas</th>
+                                <th>Procesos</th>
+                                <th>Salidas</th>
+                                <th>Clientes</th>
                             </tr>
                         </thead>
-                        <tbody id="modal-body">
-                            <!-- Los requisitos se cargarán aquí -->
+                        <tbody>
+                            @forelse ($sipocs as $sipoc)
+                                <tr>
+                                    <td>{!! nl2br(e($sipoc->proveedores)) !!}</td>
+                                    <td>{!! nl2br(e(value: $sipoc->entradas)) !!}</td>
+                                    <td>
+                                        @foreach ($procesos as $subproceso)
+                                            <a href="#" data-toggle="modal"
+                                                data-target="#requisitosModal{{ $subproceso->id }}">
+                                                {{ $subproceso->cod_proceso }} - {{ $subproceso->proceso_nombre }}
+                                            </a><br>
+                                        @endforeach
+                                    </td>
+                                    <td>
+                                        @foreach ($salidas as $salida)
+                                            <a href="#" class="load-requisitos" data-id="{{ $salida->id }}">
+                                                {{ $salida->salida }} ( {{ $salida->tipo }})
+                                            </a><br>
+                                        @endforeach
+
+                                    </td>
+                                    <td>{!! nl2br(e(value: $sipoc->clientes)) !!}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5">No Se ha generado algún SIPOC para este proceso.</td>
+                                </tr>
+                            @endforelse
+
                         </tbody>
                     </table>
 
                 </div>
-               
+
+                <div class="card-footer mt-auto">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-column">
+                        </div>
+                        @if ($sipocs->count() > 0)
+                            <button class="btn bg-navy color-palette ms-auto btn-sm"
+                                onclick="Livewire.dispatchTo('sipoc-modal','editarSipoc', {id: {{ $proceso->id }}})"
+                                data-target="#sipocModal" data-toggle="modal">
+                                <i class="fas fa-pencil-alt"></i> Actualizar
+                            </button>
+                        @else
+                            <button class="btn bg-navy color-palette ms-auto btn-sm"
+                                onclick="Livewire.dispatchTo('sipoc-modal','nuevoSipoc', {id: {{ $proceso->id }}})"
+                                data-target="#sipocModal" data-toggle="modal">
+                                <i class="fas fa-pencil-alt"></i> Nuevo
+                            </button>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+        <!-- Section Documentacion -->
+        <div class="row d-flex align-items-stretch">
+            <div class="card col-md-12">
+                <div class="card-header bg-dark">
+                    <h6>Documentación del Proceso</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Lista Maestra de documentos Internos</th>
+                                <th>Lista Maestra de documentos Externos </th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td class="col-md-6">
+                                    <ul style="padding-left: 20px;">
+
+                                        @foreach ($documentos as $documento)
+                                            @if ($documento->fuente == 'interno')
+                                                <li>
+                                                    <a href="#" data-toggle="modal"
+                                                        onclick="Livewire.dispatchTo('pdf-modal','openPdfModal', { path: '{{ $documento->ultimaVersion->archivo_path ?? '' }}' })"
+                                                        data-target="#pdfModal">
+                                                        {{ $documento->cod_documento }} -
+                                                        {{ $documento->nombre }}<label class="required-field"></label>.v
+                                                        {{ str_pad(optional($documento->ultimaVersion)->version ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                                    </a>
+
+                                                </li>
+                                            @endif
+                                        @endforeach
+
+                                    </ul>
+                                </td>
+                                <td>
+                                    @foreach ($documentos as $documento)
+                                        @if ($documento->fuente == 'externo')
+                                            <a href="{{ $documento->enlace }}">{{ $documento->cod_documento }} -
+                                                {{ $documento->nombre }} </a><br>
+                                        @endif
+                                    @endforeach
+                                </td>
+
+                            </tr>
+
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+        @livewire('pdf-modal')
+        @livewire('sipoc-modal')
+
+
+
+        <!-- Modal para actualizar el diagrama -->
+        <div class="modal fade" id="ActualizarDiagrama" tabindex="-1" role="dialog"
+            aria-labelledby="verRiesgosModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-info">
+                        <h5 class="modal-title" id="verRiesgosModalLabel">Actualizar Diagrama
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @if ($diagrama)
+                            <h3>Actualizar Diagrama de Contexto</h3>
+                            <form action="{{ route('caracterizacion.update', $diagrama->id) }}" method="POST"
+                                enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
+                                <div class="form-group">
+                                    <label for="archivo">Nuevo Diagrama</label>
+                                    <input type="file" class="form-control" id="archivo" name="archivo">
+                                </div>
+                                <div class="form-group">
+                                    <label for="version">Versión</label>
+                                    <input type="text" class="form-control" id="version" name="version"
+                                        value="{{ $diagrama->version }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="vigencia">Vigencia</label>
+                                    <input type="date" class="form-control" id="vigencia" name="vigencia"
+                                        value="{{ $diagrama->vigencia }}">
+                                </div>
+                                <button type="submit" class="btn btn-info">Actualizar
+                                    Diagrama</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Requisitos -->
+        <div class="modal fade" id="requisitosModal" tabindex="-1" role="dialog"
+            aria-labelledby="requisitosModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger">
+                        <h5 class="modal-title" id="requisitosModalLabel">Requisitos del Producto</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Tarjeta para mostrar los requisitos -->
+
+
+                        <!-- Tabla para mostrar los requisitos -->
+                        <table class="table table-bordered table-hover table-sm table-requisitos" id="procesos">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Requisito</th>
+                                    <th class="text-nowrap">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-body">
+                                <!-- Los requisitos se cargarán aquí -->
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
 
     </div>
 @endsection
