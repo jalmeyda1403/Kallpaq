@@ -30,6 +30,16 @@
               <span>{{ mensaje }}</span>
             </div>
           </div>
+          <!-- Documentos Adjuntos -->
+          <div v-if="uploadedFiles.length > 0" class="mb-4">
+              <h6><strong>Documentos Adjuntos:</strong></h6>
+              <ul class="list-group">
+                  <li v-for="(file, index) in uploadedFiles" :key="index" class="list-group-item">
+                      <i class="fas fa-file-pdf mr-2"></i>
+                      <a :href="file.path" target="_blank">{{ file.name }}</a>
+                  </li>
+              </ul>
+          </div>
           <!-- Formulario de Evaluación -->
           <div>
             <h6><strong>Instrucciones:</strong></h6>
@@ -189,6 +199,7 @@ export default {
       mensaje: '',
       isGuardadoExitoso: null,
       isEvaluacionPermitida: false,
+      uploadedFiles: [],
     };
   },
   watch: {
@@ -206,6 +217,8 @@ export default {
       this.isFetchingData = true;
       const estadosPermitidos = ['aprobado', 'evaluado'];
       this.isEvaluacionPermitida = estadosPermitidos.includes(requerimiento.estado.toLowerCase());
+      
+      // Fetch evaluation data
       axios.get(route('requerimiento.evaluacion', { id: requerimiento.id }, false, Ziggy))
         .then(response => {
           if (response.data && response.data.id) {
@@ -223,6 +236,28 @@ export default {
         .finally(() => {
           this.isFetchingData = false;
         });
+
+      // Fetch requirement data to get the files
+      axios.get(route('requerimientos.show', { id: requerimiento.id }, false, Ziggy))
+        .then(response => {
+            if (response.data && response.data.ruta_archivo_requerimiento) {
+                try {
+                    const files = JSON.parse(response.data.ruta_archivo_requerimiento);
+                    if (Array.isArray(files)) {
+                        this.uploadedFiles = files.map(file => ({
+                            name: file.name,
+                            path: file.path.startsWith('/storage/') ? file.path : '/storage/' + file.path
+                        }));
+                    }
+                } catch (error) {
+                    console.error('Error parsing ruta_archivo_requerimiento:', error);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar los detalles del requerimiento:', error);
+        });
+
       if (this.modalInstance) {
         this.modalInstance.show();
       } else {
@@ -278,6 +313,7 @@ export default {
       this.isLoading = false;
       this.evaluacionExistente = false;
       this.puntajeTotal = 0;
+      this.uploadedFiles = [];
     },
     closeModal() {
       this.modalInstance.hide();

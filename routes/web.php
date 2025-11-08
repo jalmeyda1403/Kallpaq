@@ -367,6 +367,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/requerimientos/{id}/guardar-avance', [RequerimientoController::class, 'guardarAvance'])->name('requerimientos.guardarAvance');
     Route::post('/requerimientos/{id}/desestimar', [RequerimientoController::class, 'desestimar'])->name('requerimientos.desestimar');
     Route::post('/requerimientos/{id}/finalizar', [RequerimientoController::class, 'finalizar'])->name('requerimientos.finalizar');
+    Route::post('/requerimientos/{id}/delete-document', [RequerimientoController::class, 'deleteDocument'])->name('requerimientos.deleteDocument');
 
     Route::prefix('requerimientos/{id}/evidencias')->name('requerimientos.evidencias.')->group(function () {
         Route::get('/', [RequerimientoController::class, 'listarEvidencias'])->name('listar');

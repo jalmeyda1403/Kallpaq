@@ -206,6 +206,7 @@
                                                 class="d-none"
                                                 @change="handleFileUpload($event, 'signed_requerimiento')"
                                                 accept=".pdf"
+                                                multiple
                                             />
                                             <div class="text-center">
                                                 <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
@@ -227,16 +228,18 @@
                                             </div>
                                         </div>
 
-                                        <div v-if="form.ruta_archivo_requerimiento" class="alert alert-success mt-3 p-2 d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p class="mb-0">
-                                                    <i class="fas fa-check-circle mr-2"></i> Archivo adjunto correctamente.
-                                                </p>
-                                                <small class="text-muted">{{ uploadedFileName }}</small>
-                                            </div>
-                                            <a :href="form.ruta_archivo_requerimiento" target="_blank" class="btn btn-sm btn-outline-success">
-                                                <i class="fas fa-eye mr-1"></i> Ver Documento
-                                            </a>
+                                        <div v-if="uploadedFiles.length > 0" class="mt-3">
+                                            <ul class="list-group">
+                                                <li v-for="(file, index) in uploadedFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <i class="fas fa-file-pdf mr-2"></i>
+                                                        <a :href="file.path" target="_blank">{{ file.name }}</a>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-danger" @click="deleteFile(index)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </li>
+                                            </ul>
                                         </div>
 
                                         <div v-else-if="!uploadProgress" class="alert alert-warning mt-3 p-2">
@@ -457,6 +460,7 @@ const loading = ref(true); // New loading state
 const isDragging = ref(false);
 const uploadProgress = ref(0);
 const uploadedFileName = ref('');
+const uploadedFiles = ref([]);
 const fileInput = ref(null);
 
 const openFileDialog = () => {
@@ -677,39 +681,60 @@ const printRequerimiento = () => {
 };
 
 const handleFileUpload = async (event, documentType) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files.length) return;
 
     if (!requerimientoId.value) {
         alert('Primero debe guardar la información básica del requerimiento.');
         return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('document_type', documentType);
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('document_type', documentType);
+
+        try {
+            const response = await axios.post(route('requerimientos.uploadDocument', { id: requerimientoId.value }), formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                onUploadProgress: (progressEvent) => {
+                    uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                },
+            });
+            if (documentType === 'signed_requerimiento') {
+                const newFile = {
+                    name: response.data.file.name,
+                    path: response.data.file.path.startsWith('/storage/') ? response.data.file.path : '/storage/' + response.data.file.path
+                };
+                uploadedFiles.value.push(newFile);
+            }
+            alert(response.data.message);
+            setTimeout(() => {
+                uploadProgress.value = 0;
+            }, 2000);
+        } catch (error) {
+            console.error('Error al subir el documento:', error);
+            alert('Error al subir el documento.');
+            uploadProgress.value = 0;
+        }
+    }
+};
+
+const deleteFile = async (index) => {
+    const fileToDelete = uploadedFiles.value[index];
+    if (!fileToDelete) return;
 
     try {
-        const response = await axios.post(route('requerimientos.uploadDocument', { id: requerimientoId.value }), formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: (progressEvent) => {
-                uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            },
+        await axios.post(route('requerimientos.deleteDocument', { id: requerimientoId.value }), {
+            path: fileToDelete.path.startsWith('/storage/') ? fileToDelete.path.substring(8) : fileToDelete.path
         });
-        if (documentType === 'signed_requerimiento') {
-            form.ruta_archivo_requerimiento = response.data.path;
-            uploadedFileName.value = response.data.filename;
-        }
-        alert(response.data.message);
-        setTimeout(() => {
-            uploadProgress.value = 0;
-        }, 2000);
+        uploadedFiles.value.splice(index, 1);
+        alert('Documento eliminado con éxito.');
     } catch (error) {
-        console.error('Error al subir el documento:', error);
-        alert('Error al subir el documento.');
-        uploadProgress.value = 0;
+        console.error('Error al eliminar el documento:', error);
+        alert('Error al eliminar el documento.');
     }
 };
 
@@ -766,7 +791,23 @@ const fetchRequerimientoDetails = async (id) => {
         }
 
         if (data.ruta_archivo_requerimiento) {
-            uploadedFileName.value = data.ruta_archivo_requerimiento.split('/').pop();
+            try {
+                const files = JSON.parse(data.ruta_archivo_requerimiento);
+                if (Array.isArray(files)) {
+                    uploadedFiles.value = files.map(file => ({
+                        name: file.name,
+                        path: file.path.startsWith('/storage/') ? file.path : '/storage/' + file.path
+                    }));
+                }
+            } catch (error) {
+                // Fallback for single file path
+                if (typeof data.ruta_archivo_requerimiento === 'string') {
+                     const fileName = data.ruta_archivo_requerimiento.split('/').pop();
+                     const filePath = data.ruta_archivo_requerimiento.startsWith('/storage/') ? data.ruta_archivo_requerimiento : '/storage/' + data.ruta_archivo_requerimiento;
+                     uploadedFiles.value = [{ name: fileName, path: filePath }];
+                }
+                console.error('Error parsing ruta_archivo_requerimiento:', error);
+            }
         }
 
         // Handle evaluation data, ensuring values are numbers

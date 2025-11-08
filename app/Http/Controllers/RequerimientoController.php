@@ -14,7 +14,7 @@ use App\Models\RequerimientoMovimiento;
 use App\Models\RequerimientoEvaluacion;
 
 use App\Models\RequerimientoAvance;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 
 
@@ -180,27 +180,26 @@ class RequerimientoController extends Controller
         $requerimiento = Requerimiento::findOrFail($id);
 
         $path = $request->file('file')->store('requerimientos/' . $id . '/' . $request->document_type, 'public');
+        $filename = $request->file('file')->getClientOriginalName();
 
-        // Depending on how you want to store multiple documents, you might need a separate model
-        // For now, let's assume we update a field on the requerimiento model based on document_type
         if ($request->document_type === 'signed_requerimiento') {
-            $requerimiento->ruta_archivo_requerimiento = $path;
-        } else {
-            // For other documents, you might need a more complex storage mechanism
-            // For simplicity, let's just log it for now or add to a generic 'documents' field
-            // This part needs further design based on how 'other documents' are managed.
-            // For now, we'll just update a generic field or assume a single 'other_document' type.
-            // A better approach would be a separate 'RequerimientoDocument' model.
-            // For this iteration, let's assume we're only handling the signed requerimiento here.
-            // If there are multiple 'other documents', a dedicated relationship/model is needed.
+            $files = json_decode($requerimiento->ruta_archivo_requerimiento, true);
+            if (!is_array($files)) {
+                $files = [];
+            }
+            $newFile = ['path' => $path, 'name' => $filename];
+            $files[] = $newFile;
+            $requerimiento->ruta_archivo_requerimiento = json_encode($files);
         }
 
         $requerimiento->save();
 
         return response()->json([
             'message' => 'Documento subido con éxito.',
-            'path' => Storage::url($path),
-            'filename' => basename($path)
+            'file' => [
+                'path' => Storage::url($path),
+                'name' => $filename,
+            ]
         ]);
     }
 
@@ -566,4 +565,30 @@ class RequerimientoController extends Controller
         return response()->json($requerimiento);
     }
 
+    public function deleteDocument(Request $request, $id)
+    {
+        $request->validate([
+            'path' => 'required|string',
+        ]);
+
+        $requerimiento = Requerimiento::findOrFail($id);
+
+        $files = json_decode($requerimiento->ruta_archivo_requerimiento, true);
+        if (!is_array($files)) {
+            $files = [];
+        }
+
+        $pathToDelete = $request->path;
+
+        $files = array_filter($files, function ($file) use ($pathToDelete) {
+            return $file['path'] !== $pathToDelete;
+        });
+
+        Storage::disk('public')->delete($pathToDelete);
+
+        $requerimiento->ruta_archivo_requerimiento = json_encode(array_values($files));
+        $requerimiento->save();
+
+        return response()->json(['message' => 'Documento eliminado con éxito.']);
+    }
 }

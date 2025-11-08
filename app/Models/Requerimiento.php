@@ -70,14 +70,6 @@ class Requerimiento extends Model
         return $this->hasOne(RequerimientoEvaluacion::class);
     }
 
-    public function getRutaArchivoRequerimientoAttribute($value)
-    {
-        if ($value) {
-            return '/storage/' . $value;
-        }
-        return null;
-    }
-
     public function getRutaArchivoDesistimacionAttribute($value)
     {
         if ($value) {
