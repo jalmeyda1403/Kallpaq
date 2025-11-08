@@ -52,6 +52,31 @@
 @stop
 
 @section('adminlte_js')
+    <script>
+        $(document).ready(function() {
+            var currentUrl = window.location.href;
+
+            // Loop through each link to find a match
+            $('ul.nav-sidebar a.nav-link').each(function () {
+                // Check for an exact match
+                if (this.href === currentUrl) {
+                    // Add active class to the link itself
+                    $(this).addClass('active');
+
+                    // Add active class to the parent li for proper highlighting
+                    $(this).closest('li.nav-item').addClass('active');
+
+                    // Check for and open the parent treeview
+                    var treeview = $(this).parents('.has-treeview').first();
+                    if (treeview.length > 0) {
+                        treeview.addClass('menu-open');
+                        // Also activate the main link of the treeview
+                        treeview.find('> a.nav-link').addClass('active');
+                    }
+                }
+            });
+        });
+    </script>
     @stack('js')
     @yield('js')
 @stop

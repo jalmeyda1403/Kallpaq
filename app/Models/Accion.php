@@ -9,26 +9,29 @@ class Accion extends Model
 {
     use HasFactory;
 
-    protected $table = 'hallazgos_acciones';
+    protected $table = 'acciones';
     protected $fillable = [
         'hallazgo_id',
-        'accion',
+        'proceso_id',
         'accion_cod',
-        'fecha_inicio',
-        'fecha_fin',
-        'responsable_id',
-        'responsable_correo',
-        'comentario',
-        'fecha_fin_reprogramada',
-        'fecha_fin_real',
-        'ruta_evidencia',
-        'estado',
-        'es_correctiva',
+        'tipo_accion',
+        'accion_descripcion',
+        'accion_comentario',
+        'accion_fecha_inicio',
+        'accion_fecha_fin_planificada',
+        'accion_fecha_fin_reprogramada',
+        'accion_fecha_cancelada',
+        'accion_fecha_fin_real',
+        'accion_justificacion',
+        'accion_ruta_evidencia',
+        'accion_responsable',
+        'accion_responsable_correo',
+        'accion_estado',
     ];
 
-    public function responsable()
+    public function proceso()
     {
-        return $this->belongsTo(User::class, 'responsable_id');
+        return $this->belongsTo(Proceso::class);
     }
     public function hallazgo()
     {

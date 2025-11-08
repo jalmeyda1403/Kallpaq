@@ -22,6 +22,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'sigla',
+        'foto_url',
         'email',
         'password',
     ];
@@ -45,9 +47,21 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
+    //Obtiene los procesos del usuario
     public function procesos(): BelongsToMany
     {
         return $this->belongsToMany(Proceso::class);
+    }
+    //Obtiene los hallazgos donde este usuario es el especialista ACTUALMENTE asignado
+    public function hallazgosAsignados()
+    {
+        return $this->hasMany(Hallazgo::class, 'especialista_id');
+    }
+
+    //Obtiene el historial de asignaciones que este usuario ha REALIZADO a otros
+    public function asignacionesRealizadas()
+    {
+        // Corregido: Ahora apunta al modelo 'HallazgoAsignacion' y a la clave foránea correcta.
+        return $this->hasMany(HallazgoAsignacion::class, 'user_asigna_id');
     }
 }

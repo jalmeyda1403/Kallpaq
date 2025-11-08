@@ -1,0 +1,8 @@
+### Probar validación de URL (ruta web)
+# Si tu ruta está en routes/web.php
+POST http://127.0.0.1:8000/api/documento/validar-url
+Content-Type: application/json
+
+{
+    "url": "https://cdn.www.gob.pe/uploads/document/file/8046520/6755367-directiva-para-la-implementacion-de-la-gestion-por-procesos.pdf?v=1746830104"
+}

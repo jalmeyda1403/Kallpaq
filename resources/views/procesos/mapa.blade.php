@@ -51,13 +51,28 @@
                                         @if ($proceso->proceso_tipo === 'Estratégico')
                                             <div class="col-lg-2 col-md-2 col-sm-4 col-6">
                                                 <div class="small-box bg-estrategico">
-                                                    <div class="inner">
-                                                        {{ $proceso->proceso_nombre }}
+                                                    <div class="inner text-white d-flex flex-column"
+                                                        style="min-height: 100px;">
+                                                        {{-- Nombre arriba --}}
+                                                        <div>
+                                                            {{ $proceso->proceso_nombre }}
+                                                        </div>
+
+                                                        {{-- Icono abajo --}}
+                                                        <div class="mt-auto">
+                                                            <a href="{{ route('procesos.caracterizacion', $proceso->id) }}"
+                                                                data-toggle="tooltip" data-placement="bottom"
+                                                                title="Matriz de caracterización">
+                                                                <i class="fas fa-network-wired fa-lg text-white"></i>
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                    <a href="{{ route('procesos.nivel', ['proceso_id' => $proceso->id]) }}"
-                                                        class="small-box-footer">
-                                                        {{ $proceso->cod_proceso }} <i
-                                                            class="fas fa-arrow-circle-right"></i></a>
+                                                    <div class="small-box-footer">
+                                                        <a href="{{ route('documento.buscar', ['buscar_proceso' => $proceso->proceso_nombre]) }}"
+                                                            class="text-white">
+                                                            {{ $proceso->cod_proceso }}<i
+                                                                class="fas fa-arrow-circle-right"></i></a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
@@ -81,14 +96,29 @@
                                     @foreach ($procesos as $proceso)
                                         @if ($proceso->proceso_tipo === 'Misional')
                                             <div class="col-lg-2 col-md-2 col-sm-4 col-6">
-                                                <div class="small-box bg-misional" style="top: 10px;margin-top: 10px;">
-                                                    <div class="inner">
-                                                        {{ $proceso->proceso_nombre }}
+                                                <div class="small-box bg-misional" >
+                                                    <div class="inner text-white d-flex flex-column"
+                                                        style="min-height: 100px;">
+                                                        {{-- Nombre arriba --}}
+                                                        <div>
+                                                            {{ $proceso->proceso_nombre }}
+                                                        </div>
+
+                                                        {{-- Icono abajo --}}
+                                                        <div class="mt-auto">
+                                                            <a href="{{ route('procesos.caracterizacion', $proceso->id) }}"
+                                                                data-toggle="tooltip" data-placement="bottom"
+                                                                title="Matriz de caracterización">
+                                                                <i class="fas fa-network-wired fa-lg text-white"></i>
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                    <a href="{{ route('procesos.nivel', ['proceso_id' => $proceso->id]) }}"
-                                                        class="small-box-footer">
-                                                        {{ $proceso->cod_proceso }} <i
-                                                            class="fas fa-arrow-circle-right"></i></a>
+                                                    <div class="small-box-footer">
+                                                        <a href="{{ route('documento.buscar', ['buscar_proceso' => $proceso->proceso_nombre]) }}"
+                                                            class="text-white">
+                                                            {{ $proceso->cod_proceso }}<i
+                                                                class="fas fa-arrow-circle-right"></i></a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
@@ -113,13 +143,29 @@
                                         @if ($proceso->proceso_tipo === 'Apoyo')
                                             <div class="col-lg-2 col-md-2 col-sm-4 col-6"
                                                 style="top: 10px;margin-top: 10px;">
-                                                <div class="small-box bg-apoyo" style="top: 10px;">
-                                                    <div class="inner">
-                                                        {{ $proceso->proceso_nombre }}
+                                                <div class="small-box bg-apoyo" >
+                                                    <div class="inner text-white d-flex flex-column"
+                                                        style="min-height: 100px;">
+                                                        {{-- Nombre arriba --}}
+                                                        <div>
+                                                            {{ $proceso->proceso_nombre }}
+                                                        </div>
+
+                                                        {{-- Icono abajo --}}
+                                                        <div class="mt-auto">
+                                                            <a href="{{ route('procesos.caracterizacion', $proceso->id) }}"
+                                                                data-toggle="tooltip" data-placement="bottom"
+                                                                title="Matriz de caracterización">
+                                                                <i class="fas fa-network-wired fa-lg text-white"></i>
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                    <a href="{{ route('procesos.nivel', ['proceso_id' => $proceso->id]) }}"
-                                                        class="small-box-footer">{{ $proceso->cod_proceso }}
-                                                        <i class="fas fa-arrow-circle-right"></i></a>
+                                                    <div class="small-box-footer">
+                                                        <a href="{{ route('documento.buscar', ['buscar_proceso' => $proceso->proceso_nombre]) }}"
+                                                            class="text-white">
+                                                            {{ $proceso->cod_proceso }}<i
+                                                                class="fas fa-arrow-circle-right"></i></a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif

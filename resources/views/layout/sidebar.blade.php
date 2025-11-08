@@ -1,4 +1,3 @@
-
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="#" class="brand-link">
@@ -15,39 +14,184 @@
             <div class="info">
 
                 @if (Auth::check())
-                    <a href="#" class="d-block"> <i class="far fa-user nav-icon"></i>
-                        {{ auth()->user()->name }}</a>
-                    <span class="d-block small text-right">Rol: 
-                        {{ ucwords(auth()->user()->getRoleNames()->first()) }}</span>
-                    <span class="d-block small text-right"> <a href="{{ route('logout') }}">
+                    <a href="#" class="d-block text-white">
+                        <i class="far fa-user nav-icon"></i>
+                        {{ auth()->user()->name }}
+                    </a>
+
+                    <div class="small text-right mt-1 text-white">
+
+                        <span>
+                            Rol: {{ ucwords(auth()->user()->getRoleNames()->first()) }}
+                        </span>
+
+                        <span class="mx-1">|</span>
+
+                        <a href="{{ route('logout') }}" class="text-white">
                             <i class="nav-icon fas fa-sign-out-alt"></i>
                             Cerrar Sesión
-                        </a></span>
+                        </a>
+                    </div>
                 @endif
             </div>
 
         </div>
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-             
-                    <li class="nav-item has-treeview {{ request()->is('procesos*') ? 'menu-open' : '' }}">
+                <!-- Vista Usuarios No logueados -->
+                <li class="nav-item has-treeview menu-open">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-cog"></i>
+                        <p>
+                            Documentación por Procesos
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('procesos.mapa') }}" class="nav-link">
+                                <i class="nav-icon fas fa-sitemap"></i>
+                                <p>Mapa de Procesos</p>
+                            </a>
+                        </li>
+
+
+                        <li class="nav-item">
+
+                            <a href="{{ route('documento.buscar') }}" class="nav-link">
+                                <i class="nav-icon fas fa-clipboard-list"></i>
+                                <p> Listado de documentos </p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('obligaciones.index') }}" class="nav-link">
+                                <i class="nav-icon fas fa-exclamation-circle"></i>
+                                <p> Listado de Obligaciones</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Listado de Indicadores</p>
+                            </a>
+                        </li>
+
+
+
+                    </ul>
+                </li>
+                @if (Auth::check())
+                    @php
+                        $rol = auth()->user()->getRoleNames()->first();
+                    @endphp
+                    <!-- Configuración Requerimientos-->
+                    <li class="nav-item has-treeview {{ (request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*')) ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-tasks"></i>
+                            <p>
+                                Gestión de Requerimientos
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            {{-- Bandejas para Facilitador y Subgerente --}}
+                            @if (in_array($rol, ['facilitador', 'subgerente']))
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.crear') }}" class="nav-link">
+                                        <i class="far fa-edit nav-icon"></i>
+                                        <p>Crear Requerimiento</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/mis-requerimientos" class="nav-link">
+                                        <i class="fas fa-user-check nav-icon"></i>
+                                        <p>Mis Requerimientos</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}" class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>Requerimientos Asignados</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
+                                        <p>Requerimientos Atendidos</p>
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- Bandejas para Especialista --}}
+                            @if ($rol === 'especialista')
+                                <li class="nav-item">
+                                    <a href="/mis-requerimientos" class="nav-link">
+                                        <i class="fas fa-user-check nav-icon"></i>
+                                        <p>Mis Requerimientos</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>Asignados a Mí</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
+                                        <p>Requerimientos Atendidos</p>
+                                    </a>
+                                </li>
+                            @endif
+                            {{-- Bandejas para Supervisor y Admin --}}
+                            @if (in_array($rol, ['supervisor', 'admin']))
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.index') }}" class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>Bandeja de Requerimientos</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/mis-requerimientos" class="nav-link">
+                                        <i class="fas fa-user-check nav-icon"></i>
+                                        <p>Mis Requerimientos</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
+                                        <p>Dashboard Requerimientos</p>
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+
+                    <!-- Configuración Procesos -->
+                    <li
+                        class="nav-item has-treeview {{ request()->is('procesos*') || request()->is('documento*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
-                                Gestión de Procesos
+                                Gestión por Procesos
                                 <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{{ route('procesos.mapa')}}" class="nav-link">
+                                <a href="{{ route('procesos.inventario') }}" class="nav-link">
                                     <i class="nav-icon fas fa-sitemap"></i>
-                                    <p>Mapa de Procesos</p>
+                                    <p>Inventario de Procesos</p>
                                 </a>
                             </li>
 
-                            <li class="nav-item">
 
+                            <li class="nav-item">
                                 <a href="{{ route('procesos.index') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p> Listado de Procesos </p>
@@ -55,8 +199,14 @@
                             </li>
 
                             <li class="nav-item">
+                                <a href="{{ route('partes.index') }}" class="nav-link">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>Partes Interesadas</p>
+                                </a>
+                            </li>
 
-                                <a href="{{ route('documento.buscar') }}" class="nav-link">
+                            <li class="nav-item">
+                                <a href="{{ route('documento.listar') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p> Listado de documentos </p>
                                 </a>
@@ -68,206 +218,211 @@
                                     <p>Listado de Indicadores</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-file-alt"></i>
-                                    <p> Requerimiento</p>
-                                </a>
-                            </li>
-                        
                         </ul>
                     </li>
-         
-                <!-- Configuración Auditorias SIG (SMP)
-                 <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-search"></i>
-                        <p>
-                            Gestión de Auditorias
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('programa.index') }}" class="nav-link">
-                                <i class="fas fa-calendar-alt"></i>
-                            <p>Programa de Auditoría</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                   -->
-                <!-- Configuración Mejora (SMP)  -->
-                <li class="nav-item has-treeview {{ request()->is('smp*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-arrow-circle-up"></i>
-                        <p>
-                            Gestión de la Mejora
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('smp.dashboard') }}" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard Mejora</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ route('smp.index', ['clasificacion' => 'NCM,Ncme']) }}"
-                                class="nav-link {{ request()->segment(3) == 'Ncm' ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-times-circle"></i>
-                                <p>No Conformidades</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('smp.index', ['clasificacion' => 'Obs']) }}"
-                                class="nav-link {{ request()->segment(3) == 'Obs' ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-exclamation-triangle"></i>
-                                <p>Observaciones</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('smp.index', ['clasificacion' => 'Odm']) }}"
-                                class="nav-link {{ request()->segment(3) == 'Odm' ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-lightbulb"></i>
-                                <p>Oportunidades de Mejora</p>
-                            </a>
-                        </li>
-
-                    </ul>
-                </li>
 
 
-                <!-- Configuracion Contexto -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-project-diagram"></i>
-                        <p>
-                            Análisis de Contexto
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('contexto.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-sliders-h"></i>
-                                <p> Determinación Contexto</p>
-                            </a>
-                        </li>
+                    <!-- Configuración Mejora (SMP)  -->
+                    <li
+                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-sync-alt"></i>
+                            <p>
+                                Gestión de la Mejora
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <!-- Bandejas para Supervisor y Admin -->
+                            @if (in_array($rol, ['supervisor', 'admin']))
+                                <li class="nav-item">
+                                    <a href="{{ route('mejora.listar') }}"
+                                        class="nav-link {{ request()->segment(3) == 'Ncm' ? 'active' : '' }}">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>Bandeja de SMP</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-user-check nav-icon fa-xs"></i>
+                                        <p>SMP Asignadas</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
+                                        <p>SMP Concluidas</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
+                                        <p>Dashboard SMP</p>
+                                    </a>
+                                </li>
+                            @endif
 
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-sliders-h"></i>
-                                <p> Analisis de Contexto</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                            {{-- Bandejas para Facilitador y Subgerente --}}
+                            @if (in_array($rol, ['facilitador', 'subgerente']))
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.crear') }}" class="nav-link">
+                                        <i class="far fa-edit nav-icon"></i>
+                                        <p>Bandeja SMP</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>SMP aprobadas</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
+                                        <p>SMP concluidas</p>
+                                    </a>
+                                </li>
+                            @endif
+                            {{-- Bandejas para Especialista --}}
+                            @if ($rol === 'especialista')
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>Asignados a Mí</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
+                                        <p>SMP Concluidas</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
+                                        class="nav-link">
+                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
+                                        <p>SMP para verificar</p>
+                                    </a>
+                                </li>
+                            @endif
 
-                <!-- Configuracion Obligaciones -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-clipboard-check"></i>
-                        <p>
-                            Gestiónar Obligaciones
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
+                        </ul>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p> Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-exclamation-circle"></i>
-                                <p> Listado de Obligaciones</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-flag-checkered"></i>
-                                <p> Acciones Identificadas</p>
-                            </a>
-                        </li>
+                    <!-- Configuracion Obligaciones -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-clipboard-check"></i>
+                            <p>
+                                Gestiónar Obligaciones
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
 
-                    </ul>
-                </li>
-                <!-- Configuracion Riesgos -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-exclamation-triangle"></i>
-                        <p>
-                            Gestionar Riesgos
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p> Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-exclamation-circle"></i>
+                                    <p> Listado de Obligaciones</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-flag-checkered"></i>
+                                    <p> Acciones Identificadas</p>
+                                </a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-exclamation-circle"></i>
-                                <p>Riesgos Pendientes</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-check-circle"></i>
-                                <p>Riesgos Cerrados</p>
-                            </a>
-                        </li>
+                        </ul>
+                    </li>
+                    <!-- Configuracion Riesgos -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-exclamation-triangle"></i>
+                            <p>
+                                Gestionar Riesgos
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
 
-                    </ul>
-                </li>
-                @if (Auth::check())
-                <!-- Administración de Usuarios -->
-                <li class="nav-item has-treeview {{ request()->routeIs('usuarios.*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>
-                            Gestionar Usuarios
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('usuarios.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Listado de Usuarios</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-user-shield"></i>
-                                <p>Roles y Permisos</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-user-shield"></i>
-                                <p>Listado de Roles</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-user-shield"></i>
-                                <p>Listado de Permisos</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-exclamation-circle"></i>
+                                    <p>Riesgos Pendientes</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-check-circle"></i>
+                                    <p>Riesgos Cerrados</p>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <!-- Administración de Usuarios -->
+                    <li class="nav-item has-treeview {{ request()->routeIs('usuarios.*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                Gestionar Usuarios
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('usuarios.index') }}" class="nav-link">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>Listado de Usuarios</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-user-shield"></i>
+                                    <p>Roles y Permisos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-user-shield"></i>
+                                    <p>Listado de Roles</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-user-shield"></i>
+                                    <p>Listado de Permisos</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                 @endif
+
+
+
+
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

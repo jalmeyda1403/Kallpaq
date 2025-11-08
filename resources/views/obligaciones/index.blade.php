@@ -6,9 +6,11 @@
             background-color: #ECECEC;
             /* Light gray background for selected row */
         }
+
         .table-obligaciones {
             font-size: 12px;
         }
+
         .table-riesgos {
             font-size: 12px;
         }
@@ -20,8 +22,6 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('procesos.index') }}">Procesos</a></li>
-                <li class="breadcrumb-item"><a href="#">{{ $proceso->proceso_nombre }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Listado Obligaciones</li>
             </ol>
         </nav>
@@ -42,58 +42,110 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header ui-sortable-handle">
-                        <h3 class="card-title">Lista de Obligaciones</h3>
-                        <div class="card-tools">
-                            <!-- Botón para agregar una nueva obligación con ícono -->
-                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" id="addObligacionBtn"
-                                data-target="#addObligacionModal" data-toggle="tooltip" title="Nueva Obligación">
-                                <i class="fas fa-plus-circle"></i> Agregar
-                            </a>
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 text-md-left">
+                                <h3 class="card-title">Lista de Obligaciones</h3>
+                            </div>
 
-                            <a href="#" class="btn btn-danger btn-sm" id="deleteObligacionBtn" disabled
-                                data-toggle="tooltip" title="Dar de Baja">
-                                <i class="fas fa-trash-alt"></i> Eliminar
-                            </a>
+                            @if (Auth::check())
+                                 <div class="col-md-6 text-md-right">
+                                    <!-- Botón para agregar una nueva obligación con ícono -->
+                                    <a href="#" class="btn btn-primary btn-sm" data-toggle="modal"
+                                        id="addObligacionBtn" data-target="#addObligacionModal" data-toggle="tooltip"
+                                        title="Nueva Obligación">
+                                        <i class="fas fa-plus-circle"></i> Agregar
+                                    </a>
+
+                                    <a href="#" class="btn btn-danger btn-sm" id="deleteObligacionBtn" disabled
+                                        data-toggle="tooltip" title="Dar de Baja">
+                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                    </a>
+                                </div>
+                            @endif
                         </div>
+
+                        <hr>
+                        <!-- Filtros del Proceso-->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <form action="{{ route('obligaciones.index') }}" method="GET">
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <input type="text" name="documento" id="documento"
+                                            value="{{ request('documento') }}" class="form-control me-2"
+                                            placeholder="Buscar por nombre documento" style="margin-right: 5px">
+
+                                        <input type="text" name="proceso" id="proceso" value="{{ request('proceso') }}"
+                                            class="form-control me-2" placeholder="Buscar por Proceso"
+                                            style="margin-right: 5px">
+
+
+
+                                        <div class="input-group">
+                                            <select name="fuente" id="fuente" class="form-control me-2">
+                                                <option value="">Buscar por fuente</option>
+                                                <option value="interno"
+                                                    {{ request('fuente') == 'interno' ? 'selected' : '' }}>
+                                                    Fuente
+                                                    Interna</option>
+                                                <option value="externo"
+                                                    {{ request('fuente') == 'externo' ? 'selected' : '' }}>
+                                                    Fuente
+                                                    Externa</option>
+                                            </select>
+
+                                            <!-- Botón de Filtrar -->
+                                            <button type="submit" class="btn bg-black btn-sm">
+                                                <i class="fas fa-search"></i> Buscar
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
 
                     </div>
 
                     <div class="card-body">
                         <!-- Listado de obligaciones -->
-                        <div class="row">
-                            <table class="table table-hover table-sm table-obligaciones" id="obligaciones">
-                                <thead>
-                                    <tr>
-                                        <th class="align-top">Item</th>
-                                        <th style="display: none;">Id</th>
-                                        <th style="width: 12%" class="align-top">Proceso</th>
-                                        <th class="align-top">Documento Técnico</th>
-                                        <th class="align-top">Obligación Principal</th>
 
-                                        <th class="align-top">Consecuencia del Incumplimiento</th>
-                                        <th class="align-top" style="width: 7%">Estado</th>
+                        <table class="table table-bordered table-hover table-sm table-obligaciones" id="obligaciones">
+                            <thead class="table-header">
+                                <tr>
+                                    <th class="align-top">Item</th>
+                                    <th style="display: none;">Id</th>
+                                    <th style="width: 20%" class="align-top">Proceso</th>
+                                    <th style="width: 20%" class="align-top">Documento Técnico</th>
+                                    <th style="width: 20%" class="align-top">Obligación Principal</th>
+                                    <th class="align-top">Consecuencia del Incumplimiento</th>
+                                    <th class="align-top" style="width: 7%">Estado</th>
+                                    @if (Auth::check())
                                         <th class="align-top"style="width:7%">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $item = 1;@endphp
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $item = 1;@endphp
 
-                                    @foreach ($obligaciones as $obligacion)
-                                        <tr class="clickable-row">
-                                            <td>{{ $item++ }}</td>
-                                            <td style="display: none;">{{ $obligacion->id }}</td>
-                                            <td>{{ $obligacion->proceso->proceso_nombre }}</td>
-                                            <td>{{ $obligacion->documento_tecnico_normativo }}</td>
-                                            <td>{{ $obligacion->obligacion_principal }}</td>
+                                @foreach ($obligaciones as $obligacion)
+                                    <tr class="clickable-row">
+                                        <td>{{ $item++ }}</td>
+                                        <td style="display: none;">{{ $obligacion->id }}</td>
+                                        <td>{{ $obligacion->proceso->proceso_nombre }}</td>
+                                        <td>{{ $obligacion->documento?->nombre }}</td>
+                                        <td>{{ $obligacion->obligacion_principal }}</td>
 
 
-                                            <td>{{ $obligacion->consecuencia_incumplimiento }}</td>
+                                        <td>{{ $obligacion->consecuencia_incumplimiento }}</td>
 
-                                            <td><span class="badge {{ $obligacion->estadoClass }}">
-                                                    {{ ucfirst($obligacion->estado_obligacion) }}
-                                                </span>
-                                            </td>
+                                        <td><span class="badge {{ $obligacion->estadoClass }}">
+                                                {{ ucfirst($obligacion->estado_obligacion) }}
+                                            </span>
+                                        </td>
+                                        @if (Auth::check())
                                             <td>
 
                                                 <a href="#" class="btn btn-danger btn-sm verRiesgosBtn"
@@ -109,11 +161,12 @@
                                                     <i class="fas fa-pencil-alt" aria-hidden="true"></i>
                                                 </a>
                                             </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+
                     </div>
                 </div>
             </div>
@@ -122,8 +175,8 @@
 
 
     <!-- Modal para agregar o editar obligación -->
-    <div class="modal fade" id="addObligacionModal" tabindex="-1" role="dialog" aria-labelledby="addObligacionModalLabel"
-        aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal fade" id="addObligacionModal" tabindex="-1" role="dialog"
+        aria-labelledby="addObligacionModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
 
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -159,9 +212,6 @@
                                     </div>
                                 </div>
 
-                                <x-modal-busqueda :ruta="route('procesos.buscar', ['proceso_id' => $proceso->id])" campo-id="proceso_id" campo-nombre="proceso_nombre"
-                                    modal-titulo="Proceso" modal-id="procesoModal">
-                                </x-modal-busqueda>
                             </div>
                             <div class="col -md-6">
                                 <div class="form-group">
@@ -373,7 +423,7 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            const $obligacionesTable = $('#obligaciones');
+            
             const $formAddRiesgo = $('#formAddRiesgo');
             const $verRiesgosModal = $('#verRiesgosModal');
             const $loadingSpinner = $('#loading-spinner');
@@ -384,7 +434,45 @@
             let ObligacionId = null;
 
             // Inicializar DataTable
-            $obligacionesTable.DataTable();
+            $(document).ready(function() {
+                const $obligacionesTable = $('#obligaciones').DataTable({
+                    dom: "<'row'<'col-sm-6'l><'col-sm-6 d-flex justify-content-end'B>>" +
+                        "<'row'<'col-sm-12'tr>>" +
+                        "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+                    buttons: [{
+                            extend: 'excelHtml5',
+                            text: '<i class="fas fa-file-excel"></i> Descargar',
+                            className: 'btn btn-success btn-sm'
+                        },
+
+                    ],
+                    "columnDefs": [{
+                            "orderable": false,
+                            "targets": [0, 1, 2, 4, 5]
+                        }, // Deshabilitar la ordenación en todas las columnas excepto la columna "Fuente"
+                        {
+                            "orderable": true,
+                            "targets": [3]
+                        } // Habilitar la ordenación en la columna "Fuente" (columna 5)
+                    ],
+                    "language": {
+                        "search": "Buscar:",
+                        "lengthMenu": "Mostrar _MENU_ registros",
+                        "paginate": {
+                            "first": "Primero", // Botón de la primera página
+                            "last": "Último", // Botón de la última página
+                            "next": "Siguiente", // Botón para la siguiente página
+                            "previous": "Anterior" // Botón para la página anterior
+                        },
+                        "info": "",
+                    }
+
+
+                });
+
+            });
+
+
 
             // Delegar el clic en las filas para manejar selección
             $(document).on('click', '.clickable-row', function() {

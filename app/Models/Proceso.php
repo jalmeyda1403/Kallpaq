@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Proceso extends Model
 {
-    protected $table = 'procesos';
+    use HasFactory;    protected $table = 'procesos';
+    protected $cachedDescDocs = null;
 
     protected $fillable = [
         'id',
+        'planificacion_pei_id',
         'cod_proceso',
         'proceso_sigla',
         'proceso_nombre',
@@ -23,14 +25,21 @@ class Proceso extends Model
         'sgas',
         'sgcm',
         'sgsi',
-        'sgce',
-        'planificacion_pei_id',
-        'inactivate_at',
+        'sgco',        
+        'inactivated_at'
     ];
 
     public function procesoPadre()
     {
         return $this->belongsTo(Proceso::class, 'cod_proceso_padre');
+    }
+    public function procesoPadreNivel($nivel)
+    {
+        $proceso = $this;
+        while ($proceso->proceso_nivel > $nivel && $proceso->procesoPadre) {
+            $proceso = $proceso->procesoPadre;
+        }
+        return $proceso->proceso_nivel == $nivel ? $proceso : null;
     }
     public function users()
     {
@@ -52,7 +61,7 @@ class Proceso extends Model
     public function ouos()
     {
         return $this->belongsToMany(Ouo::class, 'procesos_ouo', 'id_proceso', 'id_ouo')
-        ->withPivot('responsable', 'delegada');
+            ->withPivot('responsable', 'delegada','sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
     }
     public function obligaciones()
     {
@@ -77,7 +86,7 @@ class Proceso extends Model
     }
     public function documentos()
     {
-        return $this->hasMany(Documento::class); // Relación con los documentos
+        return $this->belongsToMany(Documento::class, 'documento_proceso', 'proceso_id', 'documento_id');
     }
 
     public function ouo_responsable()
@@ -100,6 +109,19 @@ class Proceso extends Model
 
         return Salida::whereIn('proceso_id', $procesos->pluck('id'))->get();
     }
-     
+    public function descendiente_documentos()
+    {
+        if ($this->cachedDescDocs) {
+            return $this->cachedDescDocs;
+        }
+        // Obtener todos los procesos descendientes y agregar el proceso actual
+        $procesosIds = $this->descendientes()->pluck('id')->push($this->id);
+
+        // Buscar los documentos cuya relación proceso_id esté en los procesos obtenidos
+        return $this->cachedDescDocs = Documento::whereHas('procesos', function ($query) use ($procesosIds) {
+            $query->whereIn('procesos.id', $procesosIds);
+        })->get();
+    }
+
 
 }

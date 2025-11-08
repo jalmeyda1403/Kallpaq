@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('procesos', function (Blueprint $table) {
             $table->id();
             $table->string('cod_proceso')->unique();
-            $table->string('nombre');
-            $table->enum('tipo_proceso', ['Misional', 'Estratégico', 'Apoyo']);
+            $table->string('proceso_nombre');
+            $table->enum('proceso_tipo', ['Misional', 'Estratégico', 'Apoyo']);
             $table->unsignedBigInteger('cod_proceso_padre')->nullable();
           
             $table->timestamp('inactivate_at')->nullable();

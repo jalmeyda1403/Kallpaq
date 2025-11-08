@@ -11,32 +11,47 @@ class Requerimiento extends Model
 
     protected $fillable = [
         'proceso_id',
-        'user_id',
+        'user_asigna_id',
         'facilitador_id',
+        'especialista_id',
         'justificacion',
+        'asunto',
         'descripcion',
         'estado',
         'prioridad',
         'complejidad',
+        'comentario',
         'ruta_archivo_desistimacion',
-        'ruta_archivo_entregable',
-        'fecha_limite'    
+        'ruta_archivo_requerimiento',
+        'fecha_limite',
+        'fecha_asignacion',
+        'fecha_inicio',
+        'fecha_fin',
+    ];
+    protected $casts = [
+        'fecha_limite' => 'datetime',
+        'fecha_asignacion' => 'datetime',
+        'fecha_inicio' => 'datetime',
+        'fecha_fin' => 'datetime',
     ];
 
-   
     public function proceso()
     {
-        return $this->belongsTo(Proceso::class, 'proceso_id',);
+        return $this->belongsTo(Proceso::class, 'proceso_id', );
     }
 
     public function solicitante()
     {
-        return $this->belongsTo(User::class, 'solicitante_id');
+        return $this->belongsTo(User::class, 'facilitador_id');
     }
 
-    public function facilitador()
+    public function especialista()
     {
-        return $this->belongsTo(User::class, 'facilitador_id');
+        return $this->belongsTo(User::class, 'especialista_id');
+    }
+    public function usuario_asigna()
+    {
+        return $this->belongsTo(User::class, 'user_asigna_id');
     }
 
     public function movimientos()
@@ -44,8 +59,30 @@ class Requerimiento extends Model
         return $this->hasMany(RequerimientoMovimiento::class);
     }
 
-    public function necesidad()
+   
+    public function avance()
     {
-        return $this->hasMany(RequerimientNecesidad::class);
+        return $this->hasOne(RequerimientoAvance::class);
+    }
+
+    public function evaluacion()
+    {
+        return $this->hasOne(RequerimientoEvaluacion::class);
+    }
+
+    public function getRutaArchivoRequerimientoAttribute($value)
+    {
+        if ($value) {
+            return '/storage/' . $value;
+        }
+        return null;
+    }
+
+    public function getRutaArchivoDesistimacionAttribute($value)
+    {
+        if ($value) {
+            return '/storage/' . $value;
+        }
+        return null;
     }
 }

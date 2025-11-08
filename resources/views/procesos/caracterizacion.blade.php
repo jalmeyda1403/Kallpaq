@@ -182,10 +182,11 @@
                                 </div>
 
                                 <!-- El botón se coloca a la derecha -->
-
-                                <a href="#" class="btn bg-navy color-palette ms-auto btn-sm" data-toggle="modal"
-                                    data-target="#ActualizarDiagrama"> <i class="fas fa-pencil-alt"></i> Actualizar
-                                </a>
+                                @if (Auth::check())
+                                    <a href="#" class="btn bg-navy color-palette ms-auto btn-sm" data-toggle="modal"
+                                        data-target="#ActualizarDiagrama"> <i class="fas fa-pencil-alt"></i> Actualizar
+                                    </a>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -240,12 +241,13 @@
                             <div class="d-flex flex-column">
                                 <small>Última actualización: {{ $proceso->updated_at }}</small>
                             </div>
-
-                            <button class="btn bg-navy color-palette ms-auto btn-sm"
-                                onclick="Livewire.dispatchTo('proceso-modal','verProceso', {id: {{ $proceso->id }}})"
-                                data-target="#procesoModal" data-toggle="modal">
-                                <i class="fas fa-pencil-alt"></i> Actualizar
-                            </button>
+                            @if (Auth::check())
+                                <button class="btn bg-navy color-palette ms-auto btn-sm"
+                                    onclick="Livewire.dispatchTo('proceso-modal','verProceso', {id: {{ $proceso->id }}})"
+                                    data-target="#procesoModal" data-toggle="modal">
+                                    <i class="fas fa-pencil-alt"></i> Actualizar
+                                </button>
+                            @endif
 
                         </div>
                     </div>
@@ -305,26 +307,27 @@
                     </table>
 
                 </div>
-
-                <div class="card-footer mt-auto">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex flex-column">
+                @if (Auth::check())
+                    <div class="card-footer mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-column">
+                            </div>
+                            @if ($sipocs->count() > 0)
+                                <button class="btn bg-navy color-palette ms-auto btn-sm"
+                                    onclick="Livewire.dispatchTo('sipoc-modal','editarSipoc', {id: {{ $proceso->id }}})"
+                                    data-target="#sipocModal" data-toggle="modal">
+                                    <i class="fas fa-pencil-alt"></i> Actualizar
+                                </button>
+                            @else
+                                <button class="btn bg-navy color-palette ms-auto btn-sm"
+                                    onclick="Livewire.dispatchTo('sipoc-modal','nuevoSipoc', {id: {{ $proceso->id }}})"
+                                    data-target="#sipocModal" data-toggle="modal">
+                                    <i class="fas fa-pencil-alt"></i> Nuevo
+                                </button>
+                            @endif
                         </div>
-                        @if ($sipocs->count() > 0)
-                            <button class="btn bg-navy color-palette ms-auto btn-sm"
-                                onclick="Livewire.dispatchTo('sipoc-modal','editarSipoc', {id: {{ $proceso->id }}})"
-                                data-target="#sipocModal" data-toggle="modal">
-                                <i class="fas fa-pencil-alt"></i> Actualizar
-                            </button>
-                        @else
-                            <button class="btn bg-navy color-palette ms-auto btn-sm"
-                                onclick="Livewire.dispatchTo('sipoc-modal','nuevoSipoc', {id: {{ $proceso->id }}})"
-                                data-target="#sipocModal" data-toggle="modal">
-                                <i class="fas fa-pencil-alt"></i> Nuevo
-                            </button>
-                        @endif
                     </div>
-                </div>
+                @endif
             </div>
         </div>
         <!-- Section Documentacion -->
@@ -383,7 +386,6 @@
                 </div>
             </div>
         </div>
-        @livewire('pdf-modal')
         @livewire('sipoc-modal')
 
 

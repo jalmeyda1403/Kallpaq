@@ -8,10 +8,20 @@ class PlanificacionPEIController extends Controller
 {
     public function findObjetivosPEI(Request $request)
     {
-    $query = $request->input('query');
+        $query = $request->input('query');
 
-    $objetivos = PlanificacionPEI::select('id','planificacion_pei_nombre')->where('planificacion_pei_nombre', 'LIKE', "%{$query}%")->get();
+        $objetivos = PlanificacionPEI::where(function ($q) use ($query) {
+            $q->where('planificacion_pei_nombre', 'LIKE', "%{$query}%")
+                ->orWhere('planificacion_pei_cod', 'LIKE', "%{$query}%");
+        })->get();
 
-    return response()->json($objetivos);
+        $objetivos->map(function ($objetivo) {
+            return [
+                'id' => $objetivo->id,
+                'descripcion' => $objetivo->descripcion,
+            ];
+        });
+
+        return response()->json($objetivos);
     }
 }

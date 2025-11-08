@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 Use App\Models\Proceso;
 Use App\Models\Especialista;
+Use App\Models\Auditor;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Hash;
@@ -180,7 +181,27 @@ public function showEspecialistas()
    // $role = Role::findById(2);
     //$especialistas = $role->users()->get();
     $especialistas = Especialista::all();
+     $especialistas = $especialistas->map(function ($especialista) {
+            return [
+                'id' => $especialista->user_id,
+                'descripcion' => $especialista->nombres . '  ' . $especialista->apellido_paterno . '  ' . $especialista->apellido_materno,
+            ];
+        });
     return response()->json($especialistas);
+}
+
+public function showAuditores()
+{
+   // $role = Role::findById(2);
+    //$especialistas = $role->users()->get();
+    $auditores = Auditor::all();
+     $auditores = $auditores->map(function ($auditor) {
+            return [
+                'id' => $auditor->user_id,
+                'descripcion' => $auditor->nombres . '  ' . $auditor->apellido_paterno . '  ' . $auditor->apellido_materno,
+            ];
+        });
+    return response()->json($auditores);
 }
 
 }

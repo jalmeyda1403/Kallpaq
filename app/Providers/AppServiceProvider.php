@@ -4,10 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
-use App\Models\Accion;
-use App\Observers\AccionObserver;
-use App\Models\Hallazgo;
-use App\Observers\HallazgoObserver;
+
 
 
 class AppServiceProvider extends ServiceProvider
@@ -26,8 +23,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
-        Accion::observe(AccionObserver::class);
-        Hallazgo::observe(HallazgoObserver::class);
-
+       
     }
 }

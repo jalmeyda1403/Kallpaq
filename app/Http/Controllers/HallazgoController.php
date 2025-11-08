@@ -10,7 +10,9 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Notifications\ActionApprovedNotificacion;
 use Illuminate\Support\Facades\Notification;
-
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 class HallazgoController extends Controller
 {
     /**
@@ -45,9 +47,11 @@ class HallazgoController extends Controller
         return view('smp.index', compact('hallazgos', 'breadcrumb'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    public function listar(Request $request)
+    {
+        return view('smp.index');
+    }
+
     public function create($clasificacion = null)
     {
         if ($clasificacion == 'Ncm') {
@@ -65,7 +69,43 @@ class HallazgoController extends Controller
         }
         return view('smp.create', compact('breadcrumb'));
     }
+    public function apiListar(Request $request)
+    {
+        // Inicia la consulta base, cargando la relación con 'proceso' 
+        // para tener acceso al nombre del proceso en el frontend.
+        $query = Hallazgo::with('procesos')->latest(); // `latest()` ordena por fecha de creación descendente
 
+        // --- Aplicación de Filtros Dinámicos ---
+
+        // 1. Filtrar por descripción o resumen
+        if ($request->filled('descripcion')) {
+            $searchTerm = '%' . $request->descripcion . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('hallazgo_resumen', 'like', $searchTerm)
+                    ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+            });
+        }
+
+        // 2. Filtrar por nombre del proceso (a través de la relación)
+        if ($request->filled('proceso')) {
+            $query->whereHas('procesos', function ($q) use ($request) {
+                $q->where('proceso_nombre', 'like', '%' . $request->proceso . '%');
+            });
+        }
+
+        // 3. Filtrar por clasificación
+        if ($request->filled('clasificacion')) {
+            $query->where('hallazgo_clasificacion', $request->clasificacion);
+        }
+
+        // --- Ejecución y Respuesta ---
+
+        // Ejecuta la consulta construida y obtiene los resultados
+        $hallazgos = $query->get();
+
+        // Devuelve los resultados en formato JSON
+        return response()->json($hallazgos);
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -83,35 +123,20 @@ class HallazgoController extends Controller
         $data['smp_cod'] = $smp_cod;
 
         // Crear un nuevo hallazgo con los datos del formulario
-        Hallazgo::create($data);
+        $hallazgo = Hallazgo::create($data);
 
-        $clasificacion = ($request->clasificacion === 'NCM' || $request->clasificacion === 'Ncme') ? 'Ncm' : $request->clasificacion;
 
         // Redirigir a alguna vista o página después de guardar los datos
-        return redirect()->route('smp.index', ['clasificacion' => $request->clasificacion])
-            ->with('success', 'SMP creada exitosamente.');
+        return response()->json($hallazgo, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($hallazgo_id)
+    public function show(Hallazgo $hallazgo)
     {
-        $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $clasificacion = $hallazgo->clasificacion;
-
-        if ($clasificacion == 'NCM' || $clasificacion == "Ncme") {
-            $breadcrumb['nombre'] = "Listado de SMP";
-            $breadcrumb['codigo'] = "Ncm";
-        } elseif ($hallazgo->clasificacion == 'Obs') {
-            $breadcrumb['nombre'] = "Listado de Observaciones";
-            $breadcrumb['codigo'] = "Obs";
-        } elseif ($hallazgo->clasificacion == 'Odm') {
-            $breadcrumb['nombre'] = "Listado de Oportunidades de mejora";
-            $breadcrumb['codigo'] = "Odm";
-        }
-
-        return view('smp.edit', compact('hallazgo', 'breadcrumb'));
+        // Devuelve el hallazgo como JSON
+        return response()->json($hallazgo->load('procesos'));
     }
 
     /**
@@ -125,53 +150,43 @@ class HallazgoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $hallazgo_id)
+    public function update(Request $request, Hallazgo $hallazgo)
     {
-        $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $hallazgo->resumen = $request->resumen;
-        $hallazgo->descripcion = $request->descripcion;
-        $hallazgo->origen = $request->origen;
-        $hallazgo->informe_id = $request->informe_id;
-        $hallazgo->proceso_id = $request->proceso_id;
-        $hallazgo->criterio = $request->criterio;
-        $hallazgo->auditor = $request->auditor;
-        $hallazgo->auditor_tipo = $request->auditor_tipo;
-        $hallazgo->clasificacion = $request->clasificacion;
-        $hallazgo->sig = $request->sig;
-        $hallazgo->evidencia = $request->evidencia;
-        $hallazgo->fecha_solicitud = $request->fecha_solicitud;
+        // 1. Validar los datos de entrada (en update, 'unique' debe ignorar el registro actual)
+        $validatedData = $request->validate([
+            'hallazgo_cod' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('hallazgos', 'hallazgo_cod')->ignore($hallazgo->id, 'id')
+            ],
+            'informe_id' => 'nullable|string|max:255',
+            'proceso_id' => 'nullable|exists:procesos,id',
+            'especialista_id' => 'nullable|exists:users,id',
+            'auditor_id' => 'nullable|exists:users,id',
+            'hallazgo_resumen' => 'required|string|max:500',
+            'hallazgo_descripcion' => 'required|string',
+            'hallazgo_criterio' => 'nullable|string',
+            'hallazgo_clasificacion' => 'required|string',
+            'hallazgo_origen' => 'required|string',
+            'hallazgo_fecha_identificacion' => 'required|date',
+            'hallazgo_evidencia' => 'nullable|string',
 
-        $hallazgo->save();
-        return redirect()->route('smp.index', ['clasificacion' => $request->clasificacion])
-            ->with('success', 'SMP actualizado exitosamente.');
+            // Añade aquí el resto de validaciones
+        ]);
+
+        // 2. Actualizar el hallazgo con los datos validados
+        $hallazgo->update($validatedData);
+
+        // 3. Devolver el hallazgo actualizado como respuesta JSON
+        return response()->json($hallazgo);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Hallazgo $hallazgo)
     {
         //
     }
-    public function asignarEspecialista(Request $request, $hallazgo_id)
-    {
-        $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $especialista_id = $request->especialista_id;
-        $motivo_asignacion = "15";
 
-        try {
-            // Sincronizar el especialista con el hallazgo
-
-            $hallazgo->especialistas()->sync([$especialista_id => ['fecha_asignacion' => now(), 'motivo_asignacion' => $motivo_asignacion]], false);
-
-
-            // Si la sincronización fue exitosa, devolver un mensaje de éxito
-            return redirect()->route('smp.index')->with('success', 'Hallazgo actualizado correctamente');
-        } catch (\Exception $e) {
-            // Si ocurrió un error durante la sincronización, devolver un mensaje de error
-            return redirect()->route('smp.index')->with('error', 'Error al asignar especialista: ' . $e->getMessage());
-        }
-    }
 
     public function imprimir(Request $request, $id)
     {
@@ -276,7 +291,7 @@ class HallazgoController extends Controller
         $clasificacionFiltro = function ($query) {
             $query->whereIn('clasificacion', ['Ncme', 'NCM']);
         };
-       
+
         $estadoSmpData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
             ->withCount([
                 'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
@@ -296,7 +311,7 @@ class HallazgoController extends Controller
             ->filter(function ($proceso) {
                 return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
             });
-  
+
         $estadoSmpData->each(function ($proceso) {
             $proceso->total = $proceso->abiertos + $proceso->pendientes + $proceso->implementaciones + $proceso->cerradas;
         });
@@ -310,7 +325,7 @@ class HallazgoController extends Controller
 
         // Crear una consulta de clasificacion para gráfico SMP 
         $hallazgos = Hallazgo::where('sig', $sig)->get();
-      
+
         $estados = ['Abierto', 'En implementación', 'Pendiente', 'Cerrado'];
         $smp = [];
         foreach ($classifications as $clasificacion) {
@@ -409,5 +424,78 @@ class HallazgoController extends Controller
 
 
     }
+
+    //Methodo Asociar Procesos
+    public function listarProcesosAsociados(Hallazgo $hallazgo)
+    {
+        // Gracias a la relación definida en el modelo, esto es todo lo que se necesita.
+        // Se devuelven los procesos con todos sus campos.
+        return response()->json($hallazgo->procesos);
+    }
+    public function asociarProceso(Request $request, Hallazgo $hallazgo)
+    {
+        // Validación para asegurar que el proceso_id es enviado y válido.
+        $request->validate([
+            'proceso_id' => 'required|exists:procesos,id',
+        ]);
+
+        // Esto evita errores si la relación ya existe, a diferencia de attach().
+        $hallazgo->procesos()->syncWithoutDetaching($request->proceso_id);
+
+        return response()->json(['message' => 'Proceso asociado con éxito.'], 201);
+    }
+    public function disociarProceso(Hallazgo $hallazgo, Proceso $proceso)
+    {
+        // Usamos detach() para eliminar el registro de la tabla pivote.
+        $hallazgo->procesos()->detach($proceso->id);
+
+        return response()->json(['message' => 'Asociación eliminada con éxito.']);
+    }
+
+    //Methodo Asignar Especialista
+    public function listarAsignaciones(Hallazgo $hallazgo)
+    {
+        return response()->json([
+            // Cargamos la relación 'especialista' para obtener los datos del usuario actual
+            'actual' => $hallazgo->load('especialista')->especialista,
+
+            // Cargamos el historial y las relaciones anidadas para obtener los nombres
+            'historial' => $hallazgo->historialAsignaciones()->with('especialista:id,name', 'asignadoPor:id,name')->latest()->get()
+        ]);
+    }
+    public function asignarEspecialista(Request $request, Hallazgo $hallazgo)
+    {
+        $validatedData = $request->validate([
+            'especialista_id' => 'required|exists:users,id'
+        ]);
+
+        try {
+
+            $nuevoEspecialista = DB::transaction(function () use ($hallazgo, $validatedData) {
+
+                $hallazgo->update([
+                    'especialista_id' => $validatedData['especialista_id']
+                ]);
+
+
+                $hallazgo->historialAsignaciones()->create([
+                    'especialista_id' => $validatedData['especialista_id'],
+                    'user_asigna_id' => Auth::id() // El usuario que está realizando la acción
+                ]);
+
+                return $hallazgo->fresh()->load('especialista');
+            });
+
+
+            return response()->json([
+                'actual' => $nuevoEspecialista->especialista,
+                'historial' => $hallazgo->historialAsignaciones()->with('especialista:id,name', 'asignadoPor:id,name')->latest()->get()
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Ocurrió un error al asignar el especialista.'], 500);
+        }
+    }
+
 
 }

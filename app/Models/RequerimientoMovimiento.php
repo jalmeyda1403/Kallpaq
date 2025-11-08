@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class RequerimientoMovimiento extends Model
 {
-    use HasFactory;
+    protected $table = 'requerimiento_movimientos';
 
     protected $fillable = [
         'requerimiento_id',
         'estado',
         'comentario',
-        'usuario_id',
+        'user_id',
     ];
 
     // Relación con el requerimiento

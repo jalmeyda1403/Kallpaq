@@ -1,27 +1,7 @@
 @extends('layout.master')
 @section('title', 'SIG')
 @push('styles')
-    <style>
-        .selected {
-            background-color: #ECECEC;
-            /* Light gray background for selected row */
-        }
-
-        .table-procesos {
-            font-size: 13px;
-        }
-
-        .bg-acciones {
-            background-color: #949292;
-            color: #fff;
-
-        }
-
-        .bg-acciones:hover {
-            color: #fff;
-            background-color: #666565;            
-        }
-    </style>
+   
 @endpush
 @section('content')
     <div class="container-fluid">
@@ -51,26 +31,30 @@
                         <h3 class="card-title mb-0">Lista de Procesos</h3>
                     </div>
 
-                    <!-- Botones Nuevo, Editar y Eliminar Proceso-->
                     <div class="col-md-6 text-md-right">
-                        <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" id="btnNuevo"
-                            onclick="Livewire.dispatchTo('proceso-modal','nuevoProceso')" data-target="#procesoModal"
-                            data-toggle="modal">
+
+
+                        <!-- Botones Nuevo, Editar y Eliminar Proceso-->
+                        <a href="#" class="btn btn-primary btn-sm" id="btnNuevo" title="Nuevo Proceso">
                             <i class="fas fa-plus-circle"></i> Agregar
                         </a>
 
-                        <button class="btn btn-warning btn-sm" id="btnEditar" disabled
-                            onclick="Livewire.dispatchTo('proceso-modal','verProceso', { id: $(this).data('id') })"
-                            data-target="#procesoModal" data-toggle="modal">
+                        <button class="btn btn-warning btn-sm" id="btnEditar" disabled data-id="">
                             <i class="fas fa-pencil-alt"></i> Editar
                         </button>
 
-                        <button class="btn btn-danger btn-sm" id="btnEliminar" disabled
-                            onclick="confirmarEliminacion($(this).data('id'))">
+                        <button class="btn btn-danger btn-sm" id="btnEliminar" disabled data-id="">
                             <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
+
+                        <div id="app">
+                            <proceso-modal></proceso-modal>
+                        </div>
                     </div>
-                    @livewire('proceso-modal')
+
+                    @routes
+                    @vite(['resources/js/app.js'])
+
 
                 </div>
                 <!-- Filtros del Proceso-->
@@ -106,7 +90,7 @@
             </div>
 
             <div class="card-body">
-                <table class="table table-bordered table-hover table-sm table-procesos" id="procesos">
+                <table class="table table-hover table-striped table-sm table-procesos" id="procesos">
                     <thead class="table-header">
                         <tr>
                             <th>Cod Proceso</th>
@@ -115,10 +99,10 @@
                             <th>Tipo</th>
                             <th>Sigla</th>
                             <th>Nivel</th>
-                            <th>Responsable</th>
+                            <th style="width: 20%">Responsable</th>
                             <th class="text-center">OUOs</th>
                             <th class="text-center">Subprocesos</th>
-                            <th style="width: 14%"></th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,157 +119,131 @@
 
                                 </td>
 
-                                <td class="text-center">{{ $proceso->ouos->count() }}</td>
-                                <td class="text-center">{{ $proceso->subprocesos->count() }}</td>
+                                <td class="text-center">
+                                    <a href ="#"
+                                        onclick="Livewire.dispatchTo('asignarouo-modal', 'obtenerOUO', {id:{{ $proceso->id }}})"
+                                        data-target="#ModalOUO" data-toggle="modal">
+                                        {{ $proceso->ouos->count() }}</a>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('procesos.subprocesos', $proceso->id) }}"
+                                        class="text-primary text-decoration-underline" title="Ver Subprocesos">
+                                        {{ $proceso->subprocesos->count() }}
+                                    </a>
+                                </td>
 
-                                <td class="d-flex justify-content-between align-items-center">
+                                <td class="text-center">
                                     <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle bg-acciones" type="button"
-                                            id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false">
-                                            Acciones
+                                        <button class="btn btn-light btn-sm dropdown-toggle" type="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-link"></i>  Asociaciones
                                         </button>
-                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <button class="dropdown-item verOUOBtn"
-                                                onclick="Livewire.dispatchTo('asignarouo-modal', 'obtenerOUO', {id:{{ $proceso->id }}})"
-                                                data-target="#ModalOUO" data-toggle="modal">
-                                                <i class="fas fa-link"></i> Asignar OUO
-                                            </button>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+
                                             <a class="dropdown-item"
-                                                href="{{ route('caracterizacion.index', ['proceso_id' => $proceso->id]) }}">
-                                                <i class="fas fa-file-pdf"></i> Documentación
+                                                href="{{ route('procesos.caracterizacion', $proceso->id) }}">
+                                                <i class="fas fa-file-alt fa-fw mr-2"></i>Documentación
                                             </a>
+                                           <!-- 
                                             <a class="dropdown-item"
                                                 href="{{ route('documentos.validar.enlaces', ['proceso_id' => $proceso->id]) }}">
                                                 <i class="fa fa-exclamation-circle"></i> Enlaces
                                             </a>
+                                            -->
                                             <a class="dropdown-item"
                                                 href="{{ route('indicadores.listar', ['proceso_id' => $proceso->id]) }}">
-                                                <i class="fas fa-chart-bar"></i> Indicadores
+                                                <i class="fas fa-chart-bar fa-fw mr-2"></i>Indicadores
                                             </a>
                                             <a class="dropdown-item"
                                                 href="{{ route('obligaciones.listar', ['proceso_id' => $proceso->id]) }}">
-                                                <i class="fas fa-list"></i> Obligaciones
+                                                <i class="fas fa-list-ul fa-fw mr-2"></i>Obligaciones
                                             </a>
                                             <a class="dropdown-item"
                                                 href="{{ route('riesgos.listar', ['proceso_id' => $proceso->id]) }}">
-                                                <i class="fas fa-exclamation-circle"></i> Riesgos
+                                                <i class="fas fa-exclamation-triangle fa-fw mr-2"></i>Riesgos
                                             </a>
                                             <a class="dropdown-item" href="#">
-                                                <i class="fas fa-fire"></i> Hallazgos
+                                                <i class="fas fa-fire fa-fw mr-2"></i>Hallazgos
                                             </a>
 
 
                                         </div>
                                     </div>
-                                    <a href="{{ route('procesos.subprocesos', $proceso->id) }}"
-                                        class="btn btn-sm bg-primary" type="button" aria-haspopup="true"
-                                        aria-expanded="false">
-                                        Procesos
-                                    </a>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-              
+
             </div>
         </div>
     </div>
-    @livewire('asignarouo-modal')
+
 @endsection
 @push('scripts')
     <script>
         let procesoId = null;
-        document.addEventListener('DOMContentLoaded', function() {
-
-            const $loadingSpinner = $('#loading-spinner');
-            const $tableOUOs = $('.table-ouos');
-            const $listaOUOs = $('#listaOUOs');
-            const $verModal = $('#ModalOUO');
-            const $formAddOUO = $('#formAddOUO');
-
-            var table = $('#procesos').DataTable({
-                "columnDefs": [{
-                        "orderable": false,
-                        "targets": [1, 3, 4, 5, 6, 7, 8, 9]
-                    }, // Deshabilitar la ordenación en todas las columnas excepto la columna "Fuente"
-                    {
-                        "orderable": true,
-                        "targets": [2]
-                    } // Habilitar la ordenación en la columna "Fuente" (columna 5)
-                ],
-                "language": {
-                    "search": "Buscar:",
-                    "lengthMenu": "Mostrar _MENU_ registros",
-                    "paginate": {
-                        "first": "Primero", // Botón de la primera página
-                        "last": "Último", // Botón de la última página
-                        "next": "Siguiente", // Botón para la siguiente página
-                        "previous": "Anterior" // Botón para la página anterior
+        var table = $('#procesos').DataTable({
+            dom: "<'row'<'col-sm-6'l><'col-sm-6 d-flex justify-content-end'B>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+                buttons: [{
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel"></i> Descargar',
+                        className: 'btn btn-success btn-sm'
                     },
-                    "info": "",
-                }
 
-            });
-
-
-            // Delegar el clic en las filas para manejar selección
-
-            $(document).on('click', '.clickable-row', function() {
-                var editButton = $('#btnEditar');
-                var deleteButton = $('#btnEliminar');
-
-
-                $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
-                $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
-                procesoId = $(this).data('id');
-                console.log(procesoId); // Asegurarse de que estamos capturando el ID
-                // Establecer el atributo data-id
-                editButton.prop('disabled', false).data('id', procesoId);
-                deleteButton.prop('disabled', false).data('id', procesoId);
-
-                // Adjuntar el evento click
-                editButton.on('click', function() {
-                    var id = $(this).data('id'); // Obtener el ID del botón
-                    Livewire.dispatchTo('proceso-modal', 'verProceso', {
-                        id: id
-                    });
-                });
-
-            });
-
+                ],
+            "pageLength": 25,
+            "columnDefs": [{
+                    "orderable": false,
+                    "targets": [1, 3, 4, 5, 6, 7, 8, 9]
+                }, // Deshabilitar la ordenación en todas las columnas excepto la columna "Fuente"
+                {
+                    "orderable": true,
+                    "targets": [2]
+                } // Habilitar la ordenación en la columna "Fuente" (columna 5)
+            ],
+            "language": {
+                "search": "Buscar:",
+                "lengthMenu": "Mostrar _MENU_ registros",
+                "paginate": {
+                    "first": "Primero", // Botón de la primera página
+                    "last": "Último", // Botón de la última página
+                    "next": "Siguiente", // Botón para la siguiente página
+                    "previous": "Anterior" // Botón para la página anterior
+                },
+                "info": "",
+            }
 
         });
 
-        function confirmarEliminacion(id) {
-            if (confirm('¿Estás seguro de que deseas eliminar este proceso?')) {
-                // Enviar una solicitud DELETE a la ruta del controlador usando la función route
-                $.ajax({
-                    url: "{{ route('proceso.eliminar', ['id' => '__id__']) }}".replace('__id__', id),
-                    type: 'DELETE',
-                    data: {
-                        _token: '{{ csrf_token() }}', // Asegúrate de incluir el token CSRF
-                    },
-                    success: function(response) {
-                        // Manejar la respuesta exitosa
-                        const successAlert = document.getElementById('success-alert');
-                        if (successAlert) {
-                            successAlert.innerHTML = 'Proceso eliminado exitosamente.';
-                            successAlert.style.display =
-                                'block'; // Asegúrate de que el alert esté visible
+        $(document).on('click', '.clickable-row', function() {
+            $('.clickable-row').removeClass('selected').find('td').css('opacity', 1);
+            $(this).addClass('selected').find('td:not(:last-child)').css('opacity', 0.8);
 
-                            // Ocultar el mensaje después de 3 segundos
-                            setTimeout(function() {
-                                successAlert.style.display = 'none';
-                                location.reload();
-                            }, 2000);
-                        }
+            let id = $(this).data('id');
 
+            $('#btnEditar').prop('disabled', false).data('id', id);
+            $('#btnEliminar').prop('disabled', false).data('id', id);
+        });
+
+        $('#btnNuevo').on('click', function(e) {
+            e.preventDefault();
+            window.dispatchEvent(new Event('abrirProcesoModal'));
+        });
+
+        $('#btnEditar').on('click', function(e) {
+            e.preventDefault();
+            let id = $(this).data('id');
+            if (id) {
+                window.dispatchEvent(new CustomEvent('editarProceso', {
+                    detail: {
+                        id
                     }
-                });
+                }));
             }
-        }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const successAlert = document.getElementById('success-alert');
@@ -297,12 +255,6 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Escucha el evento para actualizar la vista index
-            window.addEventListener('updateIndexView', function() {
-                // Recarga la vista index
-                location.reload();
-            });
-        });
+       
     </script>
 @endpush

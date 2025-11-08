@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('requerimiento_id')->constrained('requerimientos')->onDelete('cascade');
             $table->enum('estado', ['creado', 'aprobado', 'derivado', 'atendido', 'desestimado', 'cerrado']);
             $table->text('comentario')->nullable();
-            $table->foreignId('usuario_id')->constrained('users');
+            $table->foreignId('user_id')->constrained('users');
             $table->timestamps();
         });
     }

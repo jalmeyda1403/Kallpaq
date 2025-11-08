@@ -11,6 +11,7 @@ class PlanificacionPEI extends Model
     protected $fillable = [
         'id', 'planificacion_pei_cod', 'planificacion_pei_nombre'
     ];
+    protected $appends = ['descripcion']; 
 
     public function indicadores()
     {
@@ -19,6 +20,10 @@ class PlanificacionPEI extends Model
     public function procesos()
     {
         return $this->hasMany(Proceso::class, 'planificacion_pei_id', 'id');
+    }
+     public function getDescripcionAttribute()
+    {
+        return "{$this->planificacion_pei_cod} - {$this->planificacion_pei_nombre}";
     }  
 }
 	

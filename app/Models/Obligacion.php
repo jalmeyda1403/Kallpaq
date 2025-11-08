@@ -71,5 +71,20 @@ class Obligacion extends Model
         return $this->riesgos()->count();  // Devuelve la cantidad de riesgos asociados
     }
 
+    public function getEstadoClassAttribute()
+    {
+        return match ($this->estado_obligacion) {
+            'pendiente' => 'bg-warning text-dark',
+            'controlada' => 'bg-success',
+            'inactiva' => 'bg-secondary',
+            'suspendida' => 'bg-danger',
+            default => 'bg-light text-dark',
+        };
+    }
+
+    public function documento()
+    {
+        return $this->belongsTo(Documento::class);
+    }
 
 }

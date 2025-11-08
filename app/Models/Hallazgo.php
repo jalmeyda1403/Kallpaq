@@ -6,40 +6,58 @@ use Illuminate\Database\Eloquent\Model;
 
 class Hallazgo extends Model
 {
+    protected $table = 'hallazgos';
     protected $fillable = [
+        'hallazgo_cod',
         'informe_id',
-        'smp_cod',
-        'proceso_id',
-        'resumen',
-        'descripcion',
-        'evidencia',
-        'criterio',
-        'clasificacion',
-        'origen',
-        'estado',
-        'sig',
-        'auditor',
-        'auditor_tipo',
-        'fecha_solicitud',
-        'fecha_aprobacion',
-        'fecha_cierre_acciones',
-        'fecha_planificacion_evaluacion',
-        'evaluacion',
-        'fecha_evaluacion',
-        'fecha_cierre_hallazgo',
-        'estado_final',
+        'especialista_id',
+        'auditor_id',
+        'user_asigna_id',
+        'hallazgo_resumen',
+        'hallazgo_descripcion',
+        'hallazgo_criterio',
+        'hallazgo_clasificacion',
+        'hallazgo_origen',
+        'hallazgo_hallazgo_tipo_cierre',
+        'hallazgo_evidencia',
+        'hallazgo_avance',
+        'hallazgo_estado',
+        'hallazgo_fecha_identificacion',
+        'hallazgo_fecha_aprobacion',
+        'hallazgo_fecha_asignacion',
+        'hallazgo_fecha_conclusion',
+        'hallazgo_fecha_cierre',
+        'hallazgo_sig',
     ];
 
-    public function proceso()
+    protected $casts = [
+        'hallazgo_sig' => 'array',
+        'hallazgo_fecha_identificacion' => 'date',
+        'hallazgo_fecha_aprobacion' => 'date',
+        'hallazgo_fecha_asignacion' => 'date',
+        'hallazgo_fecha_conclusion' => 'date',
+        'hallazgo_fecha_cierre' => 'date', // Si no lo tenías, es buena práctica para fechas
+    ];
+
+    public function procesos()
     {
-        return $this->belongsTo(Proceso::class, 'proceso_id', 'id');
+       
+         return $this->belongsToMany(Proceso::class, 'hallazgo_proceso', 'hallazgo_id', 'proceso_id');
+       
     }
 
-    public function especialistas()
+    public function especialista()
     {
-        return $this->belongsToMany(Especialista::class)
-            ->withPivot('motivo_asignacion', 'fecha_asignacion');
+        return $this->belongsTo(User::class, 'especialista_id');
+    }
+    public function historialAsignaciones()
+    {
+        return $this->hasMany(HallazgoAsignacion::class);
+    }
 
+    public function usuario_asigna()
+    {
+        return $this->belongsTo(User::class, 'user_asigna_id');
     }
 
     public function causa()

@@ -1,10 +1,10 @@
 @extends('layout.master')
 @section('title', 'SIG')
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
+<div class="container min-vh-100 d-flex justify-content-center align-items-center">
+<div class="row w-100 justify-content-center" style="margin-top: -200px;">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card shadow">
                 <div class="card-header">{{ __('Login') }}</div>
 
                 <div class="card-body">

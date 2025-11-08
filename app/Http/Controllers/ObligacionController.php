@@ -11,9 +11,23 @@ use Illuminate\Http\Request;
 class ObligacionController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $obligaciones = Obligacion::with('proceso', 'areaCompliance', 'riesgos')->get();
+        $query = Obligacion::with('proceso', 'area_compliance', 'riesgos');
+        // Filtrar por nombre del proceso (relación)
+        if ($request->filled('proceso')) {
+            $query->whereHas('proceso', function ($q) use ($request) {
+                $q->where('proceso_nombre', 'like', '%' . $request->proceso . '%');
+            });
+        }
+
+        // Filtrar por nombre del documento
+        if ($request->filled('documento')) {
+            $query->where('documento_tecnico_normativo', 'like', '%' . $request->documento . '%');
+        }
+
+        $obligaciones = $query->get();
+
         return view('obligaciones.index', compact('obligaciones'));
     }
 

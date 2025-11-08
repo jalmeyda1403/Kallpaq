@@ -2,9 +2,8 @@
    @if (!config('adminlte.enabled_laravel_mix'))
        <script src="{{ asset('vendor/adminlte/dist/plugins/jquery/jquery.min.js') }}"></script>
        <script src="{{ asset('vendor/adminlte/dist/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-
-
-
+       <script src="{{ asset('vendor/adminlte/dist/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
+       <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 
        <!--Datatables-->
        <script src="{{ asset('vendor/adminlte/dist/plugins/datatables/jquery.dataTables.min.js') }}"></script>
@@ -26,7 +25,7 @@
        <script src="{{ asset('vendor/adminlte/dist/plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
        <script src="{{ asset('vendor/adminlte/dist/plugins/datatables-buttons/js/buttons.flash.min.js') }}"></script>
        <script src="{{ asset('vendor/adminlte/dist/plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
-       <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
+
        <!--Dropzone-->
        <script src="{{ asset('vendor/adminlte/dist/plugins/dropzone/min/dropzone.min.js') }}"></script>
 
@@ -41,6 +40,11 @@
 
        <!--Summernote-->
        <script src="{{ asset('vendor/adminlte/dist/plugins/summernote/summernote-bs4.min.js') }}"></script>
+
+       <!-- Incluir el archivo JS  de Chart.js -->
+       <script src="{{ asset('vendor/adminlte/dist/plugins/chart.js/chart.min.js') }}"></script>
+       <!-- Incluir el archivo JS  de  daterangepicker.js -->
+       <script src="{{ asset('vendor/adminlte/dist/plugins/daterangepicker/daterangepicker.js') }}"></script>
    @else
-       <script src="{{ mix(config('adminlte.laravel_mix_js_path', 'js/app.js')) }}"></script>
+      <script src="{{ mix(config('adminlte.laravel_mix_js_path', 'js/app.js')) }}"></script>
    @endif

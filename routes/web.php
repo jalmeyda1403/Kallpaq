@@ -1,6 +1,8 @@
 <?php
 
 
+use App\Http\Controllers\SubAreaComplianceController;
+use App\Http\Controllers\TipoDocumentoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\IndicadorController;
@@ -24,6 +26,11 @@ use App\Http\Controllers\DiagramaContextoController;
 use App\Http\Controllers\SipocController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\DocumentoVersionController;
+use App\Http\Controllers\ParteInteresadaController;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\DashboardController;
+
+
 
 
 
@@ -50,6 +57,17 @@ Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard/resumen-general', [DashboardController::class, 'getResumenGeneral'])->name('dashboard.resumenGeneral');
+    Route::get('/dashboard/resumen-grafico', [DashboardController::class, 'getResumenGrafico'])->name('dashboard.resumenGrafico');
+    Route::get('/dashboard/alertas', [DashboardController::class, 'getResumenAlertas'])->name('dashboard.alertas');
+    Route::get('/dashboard/resumen-especialistas', [DashboardController::class, 'getResumenEspecialistas'])->name('dashboard.resumenEspecialistas');
+    Route::get('/dashboard/detalle-especialista', [DashboardController::class, 'getDetalleEspecialista'])->name('dashboard.detalleEspecialista');
+
+    // Requerimientos Edit and Update routes
+    Route::put('/requerimientos/{id}', [RequerimientoController::class, 'update'])->name('requerimientos.update');
+
+});
 
 Route::resource('procesos', ProcesoController::class);
 Route::resource('indicadores', IndicadorController::class);
@@ -62,19 +80,37 @@ Route::resource('ouos', OUOController::class);
 Route::resource('documentos', DocumentoController::class);
 Route::resource('sipoc', SipocController::class);
 
-//Procesos
-Route::get('/buscarProcesos/{proceso_id?}', [ProcesoController::class, 'findProcesos'])->name('procesos.buscar');
+//Partes Interesadas
+Route::get('/partes', [ParteInteresadaController::class, 'index'])->name('partes.index');
+Route::post('/partes', [ParteInteresadaController::class, 'store'])->name('partes.store');
+Route::put('/partes/update/{id}', [ParteInteresadaController::class, 'update'])->name('partes.update');
+Route::delete('/partes/{id}', [ParteInteresadaController::class, 'destroy'])->name('partes.destroy');
 
+//Procesos
+Route::get('/buscarProcesos', [ProcesoController::class, 'buscar'])->name('procesos.buscar');
+
+Route::get('/proceso/{proceso_id?}/show', [ProcesoController::class, 'show'])->name('procesos.show');
 Route::get('/listarProcesos', [ProcesoController::class, 'listar'])->name('procesos.listar');
 Route::get('/procesos-mapa', [ProcesoController::class, 'mapaProcesos'])->name('procesos.mapa');
+
+Route::get('/procesos-inventario', [ProcesoController::class, 'inventarioProcesos'])->name('procesos.inventario');
+//Procesos-AsociarOUO
 Route::get('/procesos/{proceso_id}/listarouo', [ProcesoController::class, 'listarOUO'])->name('procesos.listarOUO');
-Route::post('/procesos-asociar/{proceso_id}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
-Route::delete('/procesos-disociar/{proceso_id}/ouo/{ouo_id}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
+Route::post('/procesos-asociar/{proceso}/ouo', [ProcesoController::class, 'asociarOUO'])->name('procesos.asociarOUO');
+Route::put('/procesos/{proceso}/ouos/{ouo}', [ProcesoController::class, 'updateOUO'])->name('procesos.ouos.update');
+Route::delete('/procesos-disociar/{proceso}/ouo/{ouo}', [ProcesoController::class, 'disociarOUO'])->name('procesos.disociarOUO');
+
+//Procesos-AsociarDocumentos
+Route::get('procesos/{proceso_id}/listardocumentos', [ProcesoController::class, 'listarDocumentos'])->name('procesos.listarDocumentos');
+Route::post('/procesos-asociar/{proceso}/documentos', [ProcesoController::class, 'asociarDocumentos'])->name('procesos.asociarDocumentos');
+Route::put('/procesos/{proceso}/documentos/{documentos}', [ProcesoController::class, 'updateOUO'])->name('procesos.documentos.update');
+Route::delete('/procesos-disociar/{proceso}/documentos/{documento}', [ProcesoController::class, 'disociarDocumentos'])->name('procesos.disociarDocumentos');
+
 Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.index');
 Route::put('/proceso/update/{id}', [ProcesoController::class, 'update'])->name('proceso.update');
 Route::delete('/proceso/delete/{id}', [ProcesoController::class, 'destroy'])->name('proceso.eliminar');
 Route::get('/proceso/{proceso_id}/subprocesos', [ProcesoController::class, 'subprocesos'])->name('procesos.subprocesos');
-Route::get('//proceso/{proceso_id}/nivel', [ProcesoController::class, 'procesos_nivel'])->name('procesos.nivel');
+Route::get('/proceso/{proceso_id}/nivel', [ProcesoController::class, 'procesos_nivel'])->name('procesos.nivel');
 
 
 // Indicadores
@@ -94,8 +130,16 @@ Route::get('/salida/{salida_id}/requisitos', [SipocController::class, 'getRequis
 //Objetivos
 Route::get('/buscarobjetivosSIG', [PlanificacionSIGController::class, 'findObjetivosSIG'])->name('objetivoSIG.buscar');
 Route::get('/buscarobjetivosPEI', [PlanificacionPEIController::class, 'findObjetivosPEI'])->name('objetivoPEI.buscar');
+
+//Area Compliance
 Route::get('/buscarareacompliance', [AreaComplianceController::class, 'findAreaCompliance'])->name('areaCompliance.buscar');
-;
+Route::get('/buscarsubareacompliance', [SubAreaComplianceController::class, 'findSubAreaCompliance'])->name('subareaCompliance.buscar');
+
+//Tag
+Route::get('/buscartag', [TagController::class, 'findTag'])->name('tag.buscar');
+
+//TipoDocumento
+Route::get('/buscartipodocumento', [TipoDocumentoController::class, 'findTipoDocumento'])->name('tipoDocumento.buscar');
 
 //Indicadores
 Route::get('/indicadores/{id}/editdatos', [IndicadorController::class, 'editDatos'])->name('indicadores.editdatos');
@@ -107,8 +151,9 @@ Route::post('/programa/{programa}/aprobar', [ProgramaAuditoriaController::class,
 Route::post('/programa/{programa}/reprogramar', [ProgramaAuditoriaController::class, 'reprogramar'])->name('programa.reprogramar');
 Route::post('/programa/{programa}/showHistory', [ProgramaAuditoriaController::class, 'showHistory'])->name('programa.showHistory');
 Route::get('usuarios/listar-procesos/{id}', [UserController::class, 'listarProcesos'])->name('usuario.listar-procesos');
-Route::get('usuarios/especialistas', [UserController::class, 'showEspecialistas'])->name('especialistas.show');
-Route::post('/smp/asignar-especialista/{hallazgoId}', [HallazgoController::class, 'asignarEspecialista'])->name('smp.asignarEspecialista');
+Route::get('usuarios/especialistas', [UserController::class, 'showEspecialistas'])->name('usuario.especialistas');
+Route::get('usuarios/auditores', [UserController::class, 'showAuditores'])->name('usuario.auditores');
+
 
 //Obligaciones
 
@@ -123,6 +168,60 @@ Route::delete('/riesgos/eliminar/{riesgo}', [RiesgoController::class, 'destroy']
 Route::get('riesgos/{proceso_id?}/listar', [RiesgoController::class, 'listar'])->name('riesgos.listar');
 
 //hallazgos
+Route::get('/mejora', [HallazgoController::class, 'listar'])->name('mejora.listar');
+Route::get('/mejora/{hallazgo}/show', [HallazgoController::class, 'show'])->name('hallazgo.show');
+Route::put('/mejora/{hallazgo}/update', [HallazgoController::class, 'update'])->name('hallazgo.update');
+Route::post('/mejora/{hallazgo}/store', [HallazgoController::class, 'store'])->name('hallazgo.store');
+Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
+//Asociar hallazgos con Procesos
+Route::controller(HallazgoController::class)
+    ->prefix('hallazgos/{hallazgo}/procesos')
+    ->name('hallazgo.procesos.')
+    ->middleware('auth')
+    ->group(function () {
+        Route::get('/', 'listarProcesosAsociados')->name('listar');
+        Route::post('/', 'asociarProceso')->name('asociar');
+        Route::delete('/{proceso}', 'disociarProceso')->name('disociar');
+    });
+//Asignar especialista
+Route::controller(HallazgoController::class)
+    ->prefix('hallazgos/{hallazgo}/asignaciones') // Agrupamos bajo el prefijo de asignaciones
+    ->name('hallazgo.asignaciones.')           // Nombre base para las rutas del grupo
+    ->middleware('auth')                       // Se recomienda proteger estas rutas
+    ->group(function () {
+        Route::get('/', 'listarAsignaciones')->name('listar');
+        Route::post('/', 'asignarEspecialista')->name('asignar');
+    });
+//Gestionar Acciones
+Route::controller(AccionController::class) // <-- CAMBIO
+    ->prefix('hallazgos/{hallazgo}/procesos/{proceso}/acciones')
+    ->name('hallazgos.acciones.')
+    ->middleware('auth')
+    ->group(function () {
+        // CAMBIO: Se renombra el método a 'listarAcciones'
+        Route::get('/', 'listarAcciones')->name('listar');
+        Route::post('/', 'storeAccion')->name('store');
+    });
+Route::controller(AccionController::class) // <-- CAMBIO
+    ->prefix('acciones/{accion}')
+    ->name('acciones.')
+    ->middleware('auth')
+    ->group(function () {
+        Route::put('/', 'updateAccion')->name('update');
+        Route::delete('/', 'destroyAccion')->name('destroy');
+    });
+
+// Análisis de Causa Raíz
+Route::controller(AccionController::class) // <-- CAMBIO
+    ->prefix('hallazgos/{hallazgo}/causas')
+    ->name('hallazgos.causas.')
+    ->middleware('auth')
+    ->group(function () {
+        // CAMBIO: Se renombra el método a 'listarCausaRaiz'
+        Route::get('/', 'listarCausaRaiz')->name('listar');
+        Route::post('/', 'storeOrUpdateCausaRaiz')->name('storeOrUpdate');
+    });
+
 Route::get('/smp/class/{clasificacion?}', [HallazgoController::class, 'index'])->name('smp.index');
 Route::get('/smp/create/{clasificacion?}', [HallazgoController::class, 'create'])->name('smp.create');
 Route::post('/smp/{id}/aprobar', [HallazgoController::class, 'aprobar'])->name('smp.aprobar');
@@ -148,6 +247,7 @@ Route::prefix('hallazgos/{hallazgo_id}')->group(function () {
 });
 
 //OUO
+Route::get('/buscarOUO', [OUOController::class, 'buscar'])->name('ouos.buscar');
 Route::get('/listarOUO', [OUOController::class, 'listar'])->name('ouos.listar');
 
 //COntexto
@@ -155,15 +255,80 @@ Route::get('/listarOUO', [OUOController::class, 'listar'])->name('ouos.listar');
 Route::get('/contexto/', [ContextoDeterminacionController::class, 'index'])->name('contexto.index');
 
 //Documentos
+Route::get('/buscarDocumentos', [DocumentoController::class, 'buscar'])->name('documentos.buscar');
+Route::get('/documento/{documento_id?}/show', [DocumentoController::class, 'show'])->name('documentos.show');
+Route::put('/documento/{id}/updateInfoGeneral/', [DocumentoController::class, 'updateInfoGeneral'])->name('documento.updateInfoGeneral');
+Route::put('/documento/{id}/updateMetadatos', [DocumentoController::class, 'updateMetadatos'])->name('documento.updateMetadatos');
+
+//Asociar Documentos con Procesos
+Route::controller(DocumentoController::class)
+    ->prefix('documentos/{documento}/procesos')
+    ->name('documento.procesos.')
+    ->group(function () {
+        Route::get('/', 'listarProcesosAsociados')->name('listar');
+        Route::post('/{proceso}', 'asociarProceso')->name('asociar');
+        Route::delete('/{proceso}', 'disociarProceso')->name('disociar');
+    });
+
+// Asociar con Documentos Relacionados
+Route::controller(DocumentoController::class)
+    ->prefix('documentos/{documento}/relacionados')
+    ->name('documento.relacionados.')
+    ->group(function () {
+        Route::get('/', 'listarRelacionados')->name('listar');
+        Route::post('/', 'asociarRelacionado')->name('asociar');
+        // Usamos el nombre del parámetro {relacionado} para claridad
+        Route::delete('/{relacionado}', 'disociarRelacionado')->name('disociar');
+    });
+
+// Ruta Jeasrquia de Documentos
+
+Route::controller(DocumentoController::class)
+    ->prefix('documentos/{documento}/jerarquia')
+    ->name('documento.jerarquia.')
+    ->group(function () {
+        Route::get('/', 'getJerarquia')->name('get');
+        Route::post('/set-padre', 'setPadre')->name('setPadre');
+        Route::post('/remove-padre', 'removePadre')->name('removePadre');
+        Route::post('/set-hijo', 'setHijo')->name('setHijo');
+        Route::post('/remove-hijo/{hijo}', 'removeHijo')->name('removeHijo');
+    });
+// Ruta para el nuevo flujo de creación de versión "inteligente"
+Route::post('documentos/{documento}/versiones/crear-con-dependencias', [DocumentoController::class, 'crearNuevaVersionConDependencias'])
+    ->name('documentos.versiones.crearConDependencias');
+
+// Grupo de rutas para gestionar las dependencias de UNA versión específica.
+// Usamos {version} para el Route-Model Binding con DocumentoVersion.
+Route::controller(DocumentoController::class)
+    ->prefix('versiones/{version}/dependencias')
+    ->name('versiones.dependencias.')
+    ->middleware('auth') // Buena práctica proteger estas rutas
+    ->group(function () {
+        Route::get('/', 'getDependencias')->name('get');
+        Route::post('/', 'setDependencia')->name('set');
+        Route::delete('/{hijo}', 'removeDependencia')->name('remove');
+    });
+// Ruta para el Historial
+Route::get('/documentos/{documento}/historial', [DocumentoController::class, 'listarHistorial'])
+    ->name('documento.historial.listar');
+
+
+Route::get('/documento/mostrar/{path}', [DocumentoController::class, 'mostrarArchivo'])
+    ->name('documento.mostrar')
+    ->where('path', '.*');
+
+Route::get('/documentos', [DocumentoController::class, 'listar'])->name('documento.listar');
+
 Route::put('/documento/update/{id}', [DocumentoController::class, 'update'])->name('documento.update');
 Route::delete('/documento/delete/{id}', [DocumentoController::class, 'destroy'])->name('documento.eliminar');
 Route::get('/documentos/descargar/{id}', [DocumentoController::class, 'descargarArchivo'])->name('documentos.descargar');
-Route::get('/documentos/mostrar/{path}', [DocumentoController::class, 'mostrarArchivo'])
-->where('path', '.*') 
-->name('documentos.mostrar');
+
+Route::get('/documento/{documento_id}/versiones', [DocumentoController::class, 'versiones'])->name('documento.versiones');
 Route::put('/documento/version/update/{id}', [DocumentoVersionController::class, 'update'])->name('documento.version.update');
-Route::get('/buscar-documento', [DocumentoController::class, 'buscar'])->name('documento.buscar');
+Route::get('/buscar-documento', [DocumentoController::class, 'findDocumento'])->name('documento.buscar');
 Route::get('/documentos/{proceso_id}/validar', [DocumentoController::class, 'validarEnlaces'])->name('documentos.validar.enlaces');
+
+Route::get('/api/documentos', [DocumentoController::class, 'apiListar'])->name('api.documentos');
 
 //Pemisos asignados al Usuario
 Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
@@ -188,13 +353,71 @@ Route::post('usuarios/asignar-procesos/{id}', [UserController::class, 'guardarPr
 
 
 //Requerimientos
-Route::get('/requerimientos/listar', [RequerimientoController::class, 'index'])->name('requerimientos.index');
-Route::get('/requerimientos', [RequerimientoController::class, 'create'])->name('requerimientos.create');
+
+Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/requerimientos/index', [RequerimientoController::class, 'index'])->name('requerimientos.index');
+    Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
+    Route::get('/requerimiento/{id}/evaluacion', [RequerimientoController::class, 'getEvaluacion'])->name('requerimiento.evaluacion');
+    Route::post('/requerimiento/{id}/evaluacion', [RequerimientoController::class, 'storeEvaluacion'])->name('requerimiento.grabarEvaluacion');
+    Route::post('/requerimiento/{id}/asignar', [RequerimientoController::class, 'asignarEspecialista'])->name('requerimiento.asignar');
+    Route::get('/requerimientos/{id}/avance', [RequerimientoController::class, 'getAvance'])->name('requerimientos.getAvance');
+    Route::get('/requerimientos/{id}/etapas', [RequerimientoController::class, 'getEtapas'])->name('requerimientos.etapas');
+    Route::post('/requerimientos/{id}/guardar-avance', [RequerimientoController::class, 'guardarAvance'])->name('requerimientos.guardarAvance');
+    Route::post('/requerimientos/{id}/desestimar', [RequerimientoController::class, 'desestimar'])->name('requerimientos.desestimar');
+    Route::post('/requerimientos/{id}/finalizar', [RequerimientoController::class, 'finalizar'])->name('requerimientos.finalizar');
+
+    Route::prefix('requerimientos/{id}/evidencias')->name('requerimientos.evidencias.')->group(function () {
+        Route::get('/', [RequerimientoController::class, 'listarEvidencias'])->name('listar');
+        Route::post('/', [RequerimientoController::class, 'subirEvidencia'])->name('subir');
+        Route::delete('/', [RequerimientoController::class, 'eliminarEvidencia'])->name('eliminar');
+        Route::get('/descargar', [RequerimientoController::class, 'descargarEvidencia'])->name('descargar');
+    });
+
+
+});
+
+
+Route::get('/requerimientos/creados', [RequerimientoController::class, 'creados'])->name('requerimientos.creados');
+
+
+Route::get('/requerimientos/asignados/{rol}', [RequerimientoController::class, 'asignados'])->name('requerimientos.asignados');
+Route::get('/requerimientos/atendidos/{rol}', [RequerimientoController::class, 'atendidos'])->name('requerimientos.atendidos');
+
+Route::get('/requerimientos/seguimiento', [RequerimientoController::class, 'seguimiento'])->name('requerimientos.seguimiento');
+
+Route::get('/mis-requerimientos', [RequerimientoController::class, 'index'])->name('requerimientos.mine');
+
 Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
-Route::get('/requerimientos/{requerimiento}', [RequerimientoController::class, 'show'])->name('requerimientos.show');
+
+
+
+
+
+Route::get('/requerimientos/{id}', [RequerimientoController::class, 'show'])->name('requerimientos.show');
+
+
+
+
 Route::get('/requerimientos/{id}/trazabilidad', [RequerimientoController::class, 'trazabilidad'])->name('requerimientos.trazabilidad');
+
+// Requerimiento Form Wizard related routes
+Route::post('/requerimientos/{id}/upload-document', [RequerimientoController::class, 'uploadDocument'])->name('requerimientos.uploadDocument');
+Route::post('/requerimientos/{id}/submit-for-evaluation', [RequerimientoController::class, 'submitForEvaluation'])->name('requerimientos.submitForEvaluation');
+Route::get('/requerimientos/{id}/print', [RequerimientoController::class, 'printRequerimiento'])->name('requerimientos.print');
+
+// Web API for Requerimientos data
+Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
+
 
 //Necesidades
 Route::post('/necesidades', [RequerimientoNecesidadController::class, 'store'])->name('necesidad.store');
 
+Route::get('/test-styles', function () {
+    return view('test');
+});
 
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '.*');

@@ -2,100 +2,84 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Accion;
 use App\Models\Hallazgo;
+use App\Models\Proceso;
+use App\Models\Accion;
+use App\Models\Causa;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class AccionController extends Controller
 {
 
-
-    public function index($hallazgo_id)
+    public function listarAcciones(Hallazgo $hallazgo, Proceso $proceso)
     {
-        $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $acciones = Accion::where('hallazgo_id', $hallazgo_id)->get();
-        return view('acciones.index', compact('hallazgo', 'acciones'));
+        $acciones = Accion::where('hallazgo_id', $hallazgo->id)
+            ->where('proceso_id', $proceso->id)
+            ->get();
+        return response()->json($acciones);
     }
 
-    public function create()
+    public function storeAccion(Request $request, Hallazgo $hallazgo, Proceso $proceso)
     {
-        $responsables = User::all(); // Obtener todos los usuarios como opciones para responsables
-        return view('acciones.create', compact('responsables'));
-    }
-
-    public function store(Request $request)
-    {
-
-        $smp = Hallazgo::find($request->hallazgo_id);
-        // Contar la cantidad de acciones existentes para el hallazgo
-        $conteoAcciones = Accion::where('hallazgo_id', $request->hallazgo_id)->count();
-
-        // Generar el nuevo correlativo basado en el conteo de acciones
-        $correlativo = $conteoAcciones + 1;
-        $accion_cod = $smp->smp_cod . '-' . sprintf('%03d', $correlativo);
-
-        // Validar los datos del formulario
-        
-        $request->validate([
-
+        // Validación actualizada según tu nuevo SQL
+        $validatedData = $request->validate([
+            'tipo_accion' => 'required|in:1,2', // Asumiendo 1=inmediata, 2=correctiva para TINYINT
+            'accion_descripcion' => 'required|string',
+            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada',
+            'accion_cod' => 'nullable|string|max:255',
+            'accion_comentario' => 'nullable|string',
+            'accion_fecha_inicio' => 'nullable|date',
+            'accion_fecha_fin_planificada' => 'nullable|date',
+            'accion_responsable' => 'nullable|string|max:255',
+            'accion_responsable_correo' => 'nullable|email|max:255',
         ]);
 
-        $accion = new Accion();
-        $accion->hallazgo_id = $request->hallazgo_id;
-        $accion->accion_cod = $accion_cod;
-        $accion->accion = $request->accion;
-        $accion->fecha_inicio = $request->fecha_inicio;
-        $accion->fecha_fin = $request->fecha_fin;
-        $accion->comentario = $request->comentario;    
-        $accion->es_correctiva = $request->es_correctiva;
-        $accion->responsable_id = $request->responsable_id;
-        $accion->responsable_correo = $request->responsable_correo;
-
-
-        $accion->save();
-
-        return back()->with('success', '¡El plan de acción ha sido creado correctamente!');
-
+        try {
+            $data = array_merge($validatedData, [
+                'hallazgo_id' => $hallazgo->id,
+                'proceso_id' => $proceso->id,
+            ]);
+            $accion = Accion::create($data);
+            return response()->json($accion, 201);
+        } catch (\Throwable $e) {
+            Log::error('Error al crear acción: ' . $e->getMessage());
+            return response()->json(['message' => 'Ocurrió un error al crear la acción.'], 500);
+        }
     }
 
-    public function show($id)
+    public function updateAccion(Request $request, Accion $accion)
     {
-        $planAccion = Accion::findOrFail($id);
-        return view('acciones.show', compact('planAccion'));
-    }
-
-    public function edit($id)
-    {
-        $planAccion = Accion::findOrFail($id);
-        $responsables = User::all(); // Obtener todos los usuarios como opciones para responsables
-        return response()->json($planAccion);
-    }
-
-    public function update(Request $request, $id)
-    {
-        // Validar los datos del formulario
-        $request->validate([
-            // Aquí van las reglas de validación para cada campo
+        $validatedData = $request->validate([
+            'tipo_accion' => 'required|in:1,2',
+            'accion_descripcion' => 'required|string',
+            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada',
+            'accion_cod' => 'nullable|string|max:255',
+            'accion_comentario' => 'nullable|string',
+            'accion_fecha_inicio' => 'nullable|date',
+            'accion_fecha_fin_planificada' => 'nullable|date',
+            'accion_fecha_fin_reprogramada' => 'nullable|date',
+            'accion_fecha_cancelada' => 'nullable|date',
+            'accion_fecha_fin_real' => 'nullable|date',
+            'accion_justificacion' => 'nullable|string',
+            'accion_responsable' => 'nullable|string|max:255',
+            'accion_responsable_correo' => 'nullable|email|max:255',
         ]);
-
-
-        // Actualizar el plan de acción en la base de datos
-        $accion = Accion::findOrFail($id);
-        $accion->accion = $request->accion;
-        $accion->fecha_inicio = $request->fecha_inicio;
-        $accion->fecha_fin = $request->fecha_fin;
-        $accion->comentario = $request->comentario;
-        $accion->estado = $request->estado;
-        $accion->es_correctiva = $request->es_correctiva;
-        $accion->responsable_id = $request->responsable_id;
-        $accion->responsable_correo = $request->responsable_correo;
-        $accion->save();
-
-        return back()->with('success', '¡El plan de acción ha sido creado correctamente!');
+        $accion->update($validatedData);
+        return response()->json($accion);
     }
 
+    public function destroyAccion(Accion $accion)
+    {
+        $accion->delete();
+        return response()->json(['message' => 'Acción eliminada con éxito.'], 200);
+    }
+
+    //METODO SEGUIMIENTO DE ACCIONES
     public function update_seguimiento(Request $request, $hallazgo_id, $id)
     {
 
@@ -118,7 +102,7 @@ class AccionController extends Controller
             Storage::disk('public')->makeDirectory($folderPath);
         }
         // Crear la carpeta Accion si no existe
-        $folderPath = 'evidencias/' . $smp_cod.'/'.$accion->accion_cod;
+        $folderPath = 'evidencias/' . $smp_cod . '/' . $accion->accion_cod;
         if (!Storage::disk('public')->exists($folderPath)) {
             Storage::disk('public')->makeDirectory($folderPath);
         }
@@ -144,7 +128,7 @@ class AccionController extends Controller
         $hallazgo = Hallazgo::findOrFail($hallazgo_id);
         $accion = Accion::findOrFail($id);
         $smp_cod = $hallazgo->smp_cod;
-        $folderPath = 'evidencias/' . $smp_cod.'/'.$accion->accion_cod;
+        $folderPath = 'evidencias/' . $smp_cod . '/' . $accion->accion_cod;
 
         // Obtiene todos los archivos en la carpeta
         $files = Storage::disk('public')->files($folderPath);
@@ -153,7 +137,7 @@ class AccionController extends Controller
         foreach ($files as $file) {
             $fileData[] = [
                 'name' => basename($file),
-                'url' => Storage::disk('public')->url($file),
+                'url' => Storage::url($file),
                 'size' => Storage::disk('public')->size($file),
                 'lastModified' => Storage::disk('public')->lastModified($file),
             ];
@@ -185,12 +169,42 @@ class AccionController extends Controller
         }
     }
 
-    public function destroy($id)
-    {
-        // Eliminar el plan de acción de la base de datos
-        $planAccion = Accion::findOrFail($id);
-        $planAccion->delete();
 
-        return back()->with('success', '¡La acción ha sido creado eliminada!');
+    // --- MÉTODOS PARA EL ANÁLISIS DE CAUSA RAÍZ ---
+
+    public function listarCausaRaiz(Hallazgo $hallazgo)
+    {
+        return response()->json($hallazgo->causaRaiz);
     }
+
+    public function storeOrUpdateCausaRaiz(Request $request, Hallazgo $hallazgo)
+    {
+        $validatedData = $request->validate([
+            'causa_metodo' => 'required|in:ishikawa,cinco_porques',
+            'causa_por_que1' => 'nullable|string',
+            'causa_por_que2' => 'nullable|string',
+            'causa_por_que3' => 'nullable|string',
+            'causa_por_que4' => 'nullable|string',
+            'causa_por_que5' => 'nullable|string',
+            'causa_mano_obra' => 'nullable|string',
+            'causa_metodologias' => 'nullable|string',
+            'causa_materiales' => 'nullable|string',
+            'causa_maquinas' => 'nullable|string',
+            'causa_medicion' => 'nullable|string',
+            'causa_medio_ambiente' => 'nullable|string',
+            'causa_resultado' => 'nullable|string',
+        ]);
+
+        try {
+            $causaRaiz = $hallazgo->causaRaiz()->updateOrCreate(
+                ['hallazgo_id' => $hallazgo->id],
+                $validatedData
+            );
+            return response()->json($causaRaiz, 200);
+        } catch (\Throwable $e) {
+            Log::error('Error al guardar análisis de causa: ' . $e->getMessage());
+            return response()->json(['message' => 'Ocurrió un error al guardar el análisis de causa.'], 500);
+        }
+    }
+
 }

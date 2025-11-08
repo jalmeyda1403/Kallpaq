@@ -47,7 +47,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group small">
-
                                 <label for="codigoProceso" class="required-field">Código de Proceso</label>
                                 <input type="text" name="cod_proceso" wire:model="cod_proceso" id="cod_proceso"
                                     value="{{ $cod_proceso }}" class="form-control" maxlength="13"

@@ -8,22 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class Causa extends Model
 {
     use HasFactory;
-    protected $table = 'hallazgos_causas';   
+    protected $table = 'hallazgo_causas';   
     protected $fillable = [
-        'hallazgo_id',       
-        'metodo',
-        'mano_obra',
-        'metodologias',
-        'materiales',
-        'maquinas',
-        'medicion',
-        'medio_ambiente',
-        'por_que_1',
-        'por_que_2',
-        'por_que_3',
-        'por_que_4',
-        'por_que_5',
-        'resultado',
+        'hallazgo_id',
+        'causa_metodo',
+        'causa_por_que1',
+        'causa_por_que2',
+        'causa_por_que3',
+        'causa_por_que4',
+        'causa_por_que5',
+        'causa_mano_obra',
+        'causa_metodologias',
+        'causa_materiales',
+        'causa_maquinas',
+        'causa_medicion',
+        'causa_medio_ambiente',
+        'causa_resultado',
     ];
 
     public function hallazgo()

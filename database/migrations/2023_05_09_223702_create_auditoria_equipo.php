@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('equipo');
             $table->timestamps();
             $table->foreign('auditoria_id')->references('id')->on('auditorias')->onDelete('cascade');
-            $table->foreign('personal_id')->references('id')->on('personal')->onDelete('cascade');
+            $table->foreign('personal_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

@@ -45,8 +45,8 @@ return [
         ],
         'documentos' => [
             'driver' => 'local',
-            'root' => storage_path('app/procesos/documentos'), // carpeta procesos dentro de storage/app
-            'url' => env('APP_URL') . '/storage/procesos/documentos',
+            'root' => storage_path('app/documentos'), // carpeta procesos dentro de storage/app
+            'url' => env('APP_URL') . '/storage/documentos',
             'visibility' => 'private',
         ],
 

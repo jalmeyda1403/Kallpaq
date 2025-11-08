@@ -6,6 +6,15 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Models\Accion;
+use App\Models\Hallazgo;
+use App\Models\Documento;
+use App\Models\DocumentoVersion;
+use App\Observers\AccionObserver;
+use App\Observers\HallazgoObserver;
+use App\Observers\DocumentoObserver;
+use App\Observers\DocumentoVersionObserver;
+
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -25,7 +34,10 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Accion::observe(AccionObserver::class);
+        Hallazgo::observe(HallazgoObserver::class);
+        Documento::observe(DocumentoObserver::class);
+        DocumentoVersion::observe(DocumentoVersionObserver::class);
     }
 
     /**

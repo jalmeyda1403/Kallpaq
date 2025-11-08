@@ -66,8 +66,9 @@
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Procesos Nivel 1</th>
                                 <th colspan="5" class="text-center">Sistema de Gestión</th>
-                                <th colspan="4" class="text-center">Componentes</th>
+                                <th colspan="5" class="text-center">Componentes</th>
                                 <th colspan="2" class="text-center">Requerimientos</th>
+                                <th colspan="2" class="text-center" style="vertical-align: middle">Documentos</th>
                             </tr>
                             <tr>
                                 <th>SGC</th>
@@ -75,12 +76,17 @@
                                 <th>SGCM</th>
                                 <th>SGSI</th>
                                 <th>SGCE</th>
-                                <th class="text-nowrap"><i class="fas fa-file-alt"></i> Documentos</th>
+                                
                                 <th class="text-nowrap"><i class="fas fa-clipboard-check"></i> Obligaciones</th>
                                 <th class="text-nowrap"><i class="fas fa-exclamation-triangle"></i> Riesgos</th>
-                                <th class="text-nowrap"><i class="fas fa-times-circle"></i> No Conformidades</th>
+                                <th class="text-nowrap"><i class="fas fa-times-circle"></i> SNC</th>
+                                <th class="text-nowrap"><i class="fas fa-clipboard-list"></i> NC</th>
+                                <th class="text-nowrap"><i class="fas fa-clipboard-list"></i> Obs</th>
                                 <th>Atendidos</th>
                                 <th>Pendientes</th>
+                                <th>Internos</th>
+                                <th>Externos</th>
+                               
                             </tr>
                         </thead>
                         <tbody class="text-center">
@@ -91,13 +97,26 @@
                                     <td>{{ $proceso->sgas== 1 ? 'x' : ''}}</td>
                                     <td>{{ $proceso->sgcm== 1 ? 'x' : ''}}</td>
                                     <td>{{ $proceso->sgsi== 1 ? 'x' : ''}}</td>
-                                    <td>{{ $proceso->sgce== 1 ? 'x' : ''}}</td>                                  
-                                    <td>{{ $proceso->documentos->count() }}</td>
+                                    <td>{{ $proceso->sgce== 1 ? 'x' : ''}}</td>
                                     <td>{{ $proceso->obligaciones->count() }}</td>
                                     <td>{{ $proceso->riesgos->count() }}</td>
+                                    <td>{{ $proceso->riesgos->count() }}</td>
+                                    <td>{{ $proceso->hallazgos->count() }}</td>
                                     <td>{{ $proceso->hallazgos->count() }}</td>
                                     <td>ND</td>
                                     <td>ND</td>
+                                    <td>
+                                        {{ $proceso->descendiente_documentos()
+                                            ->where('fuente', 'interno')
+                                            ->where('tipo_documento_id', '!=', 9)
+                                            ->count() }}
+                                    </td>
+                                    <td>
+                                        {{ $proceso->descendiente_documentos()
+                                            ->where('fuente', 'externo')
+                                            ->where('tipo_documento_id', '!=', 9)
+                                            ->count() }}</td>                         
+                                 
                                 </tr>
                             @endforeach
 

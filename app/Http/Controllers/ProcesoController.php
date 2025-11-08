@@ -5,6 +5,7 @@ use App\Models\Inventario;
 use Illuminate\Http\Request;
 use App\Models\Proceso;
 use App\Models\OUO;
+use App\Models\Documento;
 use App\Models\User;
 
 class ProcesoController extends Controller
@@ -13,29 +14,17 @@ class ProcesoController extends Controller
     {
 
         $query = Proceso::query();
-     
-
 
         // Filtrar si se selecciona un proceso padre
-        if (($request->has('proceso_padre_id') && $request->proceso_padre_id != '') or ($request->has('buscar_proceso') && $request->buscar_proceso != '')) {
-            // Filtrar si se selecciona un proceso padre
-            if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
-                $query->where('cod_proceso_padre', $request->proceso_padre_id);
-            }
-    
-            // Buscar por nombre de proceso si se proporciona
-            if ($request->has('buscar_proceso') && $request->buscar_proceso != '') {
-                $query->where('proceso_nombre', 'LIKE', "%{$request->buscar_proceso}%");
-            }
-    
-            // En caso de que alguno de los dos esté presente, filtrar también por niveles 0 y 1
-            $query->whereIn('proceso_nivel', [0, 1, 2]);
-        } else {
-            // Si no se proporciona ningún filtro, solo filtrar por nivel 0
-            $query->whereIn('proceso_nivel', [0]);
+        if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
+            $query->where('cod_proceso_padre', $request->proceso_padre_id);
         }
 
-       
+        // Buscar por nombre de proceso si se proporciona
+        if ($request->has('buscar_proceso') && $request->buscar_proceso != '') {
+            $query->where('proceso_nombre', 'LIKE', "%{$request->buscar_proceso}%");
+        }
+
         $procesos = $query->get();
         // Filtrar procesos de nivel 0 como padres
         $procesos_padre = Proceso::where('proceso_nivel', 0)
@@ -68,13 +57,12 @@ class ProcesoController extends Controller
         // Filtrar procesos de nivel 0 como padres
         $proceso_padre = $proceso;
 
-        if ($procesos->count() > 0) 
-        {
+        if ($procesos->count() > 0) {
             return view('procesos.subprocesos', compact('procesos', 'proceso_padre'));
-        }else{
+        } else {
             return redirect()->back()->with('error', 'No hay subprocesos para este proceso');
         }
-      
+
     }
 
     public function create()
@@ -95,13 +83,20 @@ class ProcesoController extends Controller
         return view('procesos.edit', compact('proceso', 'procesosPadre'));
     }
 
+    public function show($proceso_id)
+    {
+        $proceso = Proceso::with('planificacion_pei')->findOrFail($proceso_id);
+
+        return response()->json($proceso);
+    }
+
     public function update(Request $request, $id)
     {
-     
+
         $proceso = Proceso::findOrFail($id);
         $proceso->update($request->all());
 
-        return redirect()->back()->with('success', 'Proceso actualizado correctamente');
+        return response()->json(['success' => 'Proceso actualizado correctamente'], 200);
 
     }
 
@@ -114,53 +109,194 @@ class ProcesoController extends Controller
 
     public function findProcesos($proceso_id = null)
     {
-        $procesos =  Proceso::find($proceso_id);   
 
         if ($proceso_id) {
-            // Si se pasa un proceso_id, obtener ese proceso específico con sus hijos y nietos
-              $resultado = $procesos->descendientes();
-            
+            $proceso = Proceso::find($proceso_id);
+            if ($proceso) {
+                $procesos = $proceso->descendientes(); // Asegúrate de que descendientes() devuelva una colección
+            } else {
+                $procesos = collect(); // Devuelve una colección vacía si no se encuentra el proceso
+            }
         } else {
-            // Si no se pasa un proceso_id, devolver todos los procesos
-            $resultado = Proceso::all();         
-
+            $procesos = Proceso::all();
         }
+
+        // Usar map para transformar cada elemento de la colección
+        $resultado = $procesos->map(function ($proceso) {
+            return [
+                'id' => $proceso->id,
+                'descripcion' => "{$proceso->cod_proceso} - {$proceso->proceso_nombre}",
+            ];
+        });
 
         return response()->json($resultado);
     }
+    public function buscar(Request $request)
+    {
+        $query = $request->query('q', '');
 
-    
+        $procesos = Proceso::where('proceso_nombre', 'LIKE', "%{$query}%")->get();
+
+       
+        $procesos = $procesos->map(function ($proceso) {
+            return [
+                'id' => $proceso->id,
+                'descripcion' => $proceso->cod_proceso . ' - ' . $proceso->proceso_nombre,
+            ];
+        });
+
+         return response()->json($procesos);
+    }
+
 
     public function listar()
     {
 
         $procesos = Proceso::all();
 
-        return response()->json($procesos);
+        $formattedProcesos = $procesos->map(function ($proceso) {
+            return [
+                'id' => $proceso->id,
+                'descripcion' => $proceso->proceso_nombre,
+            ];
+        });
+
+        return response()->json($formattedProcesos);
     }
     public function mapaProcesos()
     {
         $inventarios = Inventario::all();
         $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
-        return view('procesos.mapa', compact('inventarios','procesos'));
+        return view('procesos.mapa', compact('inventarios', 'procesos'));
 
     }
 
+    public function inventarioProcesos()
+    {
+        $inventarios = Inventario::all();
+        $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
+        return view('procesos.inventario', compact('inventarios', 'procesos'));
+
+    }
+    //Asociar OUO
     public function listarOUO($proceso_id)
     {
         // Lógica para asociar procesos, por ejemplo:
-        $proceso = Proceso::findOrFail($proceso_id);
+        $proceso = Proceso::with('ouos')->findOrFail($proceso_id);
 
-        // Aquí agregarías la lógica necesaria para asociar procesos
+        $ouos = $proceso->ouos->map(function ($ouo) {
+            // Accedemos a la data pivote directamente
+            $ouo->responsable = (bool) $ouo->pivot->responsable;
+            $ouo->delegada = (bool) $ouo->pivot->delegada;
+            $ouo->sgc = (bool) $ouo->pivot->sgc;
+            // ... repite para todos los demás flags de sistemas de gestión
+            $ouo->sgas = (bool) $ouo->pivot->sgas;
+            $ouo->sgcm = (bool) $ouo->pivot->sgcm;
+            $ouo->sgsi = (bool) $ouo->pivot->sgsi;
 
-        $ouos = $proceso->ouos->map(function ($ouo) use ($proceso_id) {
-            // Añadir el proceso_id a cada OUO para usarlo en el frontend
-            $ouo->proceso_id = $proceso_id;
+            // Retornamos el objeto para mantener el resto de la data
             return $ouo;
-        }); // Obtén las OUO asociadas al proceso
+        });
 
         return response()->json($ouos);
     }
 
-    
+    public function asociarOUO(Request $request, Proceso $proceso)
+    {
+        // Valida la solicitud para asegurar que el ouo_id está presente
+        $request->validate([
+            'ouo_id' => 'required|exists:ouos,id',
+        ]);
+
+        // Asocia la OUO al proceso con los datos de la tabla pivote
+        $proceso->ouos()->attach($request->input('ouo_id'), [
+            'responsable' => $request->boolean('responsable'),
+            'delegada' => $request->boolean('delegada'),
+            'sgc' => $request->boolean('sgc'),
+            'sgas' => $request->boolean('sgas'),
+            'sgcm' => $request->boolean('sgcm'),
+            'sgsi' => $request->boolean('sgsi'),
+        ]);
+
+        return response()->json(['message' => 'Asociación creada correctamente.']);
+    }
+    public function updateOUO(Request $request, Proceso $proceso, Ouo $ouo)
+    {
+        // Valida la solicitud para asegurar que los campos son booleanos
+        $request->validate([
+            'responsable' => 'boolean',
+            'delegada' => 'boolean',
+            'sgc' => 'boolean',
+            'sgas' => 'boolean',
+            'sgcm' => 'boolean',
+            'sgsi' => 'boolean',
+        ]);
+
+        // Actualiza la fila existente en la tabla pivote
+        $proceso->ouos()->updateExistingPivot($ouo->id, [
+            'responsable' => $request->boolean('responsable'),
+            'delegada' => $request->boolean('delegada'),
+            'sgc' => $request->boolean('sgc'),
+            'sgas' => $request->boolean('sgas'),
+            'sgcm' => $request->boolean('sgcm'),
+            'sgsi' => $request->boolean('sgsi'),
+        ]);
+
+        return response()->json(['message' => 'Flags actualizados correctamente.']);
+    }
+    public function disociarOUO(Proceso $proceso, Ouo $ouo)
+    {
+        // Usa el método detach() para eliminar el registro de la tabla pivote
+        $proceso->ouos()->detach($ouo->id);
+
+        return response()->json(['message' => 'Asociación eliminada correctamente.']);
+    }
+    //Asociar Documentos
+    public function listarDocumentos($proceso_id)
+    {
+        $proceso = Proceso::with('documentos')->findOrFail($proceso_id);
+        // Carga la relación 'documentos' de forma anticipada y retorna la colección
+        return response()->json($proceso->documentos()->with('ultimaVersion')->get());
+    }
+
+    public function asociarDocumentos(Request $request, Proceso $proceso)
+    {
+        $request->validate(['documento_id' => 'required|exists:documentos,id']);
+
+        $proceso->documentos()->attach($request->input('documento_id'));
+
+        return response()->json(['message' => 'Documento asociado correctamente.']);
+    }
+    public function updateDocumentos(Request $request, Proceso $proceso, Ouo $ouo)
+    {
+        // Valida la solicitud para asegurar que los campos son booleanos
+        $request->validate([
+            'responsable' => 'boolean',
+            'delegada' => 'boolean',
+            'sgc' => 'boolean',
+            'sgas' => 'boolean',
+            'sgcm' => 'boolean',
+            'sgsi' => 'boolean',
+        ]);
+
+        // Actualiza la fila existente en la tabla pivote
+        $proceso->ouos()->updateExistingPivot($ouo->id, [
+            'responsable' => $request->boolean('responsable'),
+            'delegada' => $request->boolean('delegada'),
+            'sgc' => $request->boolean('sgc'),
+            'sgas' => $request->boolean('sgas'),
+            'sgcm' => $request->boolean('sgcm'),
+            'sgsi' => $request->boolean('sgsi'),
+        ]);
+
+        return response()->json(['message' => 'Flags actualizados correctamente.']);
+    }
+    public function disociarDocumentos(Proceso $proceso, Documento $documento)
+    {
+        // Usa el método detach() para eliminar el registro de la tabla pivote
+        $proceso->documentos()->detach($documento->id);
+
+        return response()->json(['message' => 'Asociación eliminada correctamente.']);
+    }
+
 }

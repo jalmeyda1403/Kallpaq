@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('ouo', function (Blueprint $table) {
-            $table->id('id');
+            $table->id();
             $table->string('nombre');
             $table->string('codigo')->unique();
             $table->unsignedBigInteger('ouo_padre')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key to self
-            $table->foreign('ouo_padre')->references('id_ouo')->on('ouo')->onDelete('cascade');
+            $table->foreign('ouo_padre')->references('id')->on('ouo')->onDelete('cascade');
             // Foreign key to users
             $table->foreign('subgerente_id')->references('id')->on('users')->onDelete('cascade');
         });
