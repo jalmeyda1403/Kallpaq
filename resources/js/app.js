@@ -4,7 +4,7 @@ import 'select2'; // Import Select2 after jQuery is made global
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import App from './components/App.vue';
+import App from './components/App.vue'; // This is the root component for the SPA
 
 // Componentes
 import ProcesoModal from './components/procesos/ProcesoModal.vue';
@@ -15,7 +15,7 @@ import RequerimientoAsignacionModal from './components/requerimientos/Requerimie
 import RequerimientoEvaluacionModal from './components/requerimientos/RequerimientoEvaluacionModal.vue';
 import RequerimientoSeguimientoModal from './components/requerimientos/RequerimientoSeguimientoModal.vue';
 import RequerimientoAvanceModal from './components/requerimientos/RequerimientoAvanceModal.vue';
-import RequerimientoFormWizard from './components/requerimientos/RequerimientoFormWizard.vue';
+// import RequerimientoFormWizard from './components/requerimientos/RequerimientoFormWizard.vue'; // This is used as a route component, not global
 import EvidenciasModal from './components/requerimientos/EvidenciasModal.vue';
 import ResumenGeneral from './components/dashboard/ResumenGeneral.vue';
 import ResumenGrafico from './components/dashboard/ResumenGrafico.vue';
@@ -25,26 +25,38 @@ import DetalleEspecialistaModal from './components/dashboard/DetalleEspecialista
 
 import router from './router/index.js';
 
-const app = createApp(App);
 const pinia = createPinia();
+const rootAppElement = document.getElementById('app');
 
-// Registrar componentes
-app.component('proceso-modal', ProcesoModal);
-app.component('documento-modal', DocumentoModal);
-app.component('hallazgo-modal', HallazgoModal);
-app.component('pdf-modal', PdfModal);
-app.component('requerimiento-asignacion-modal', RequerimientoAsignacionModal);
-app.component('requerimiento-evaluacion-modal', RequerimientoEvaluacionModal);
-app.component('requerimiento-seguimiento-modal', RequerimientoSeguimientoModal);
-app.component('requerimiento-avance-modal', RequerimientoAvanceModal);
+if (rootAppElement) {
+    let vueApp;
 
-app.component('evidencias-modal', EvidenciasModal);
-app.component('resumen-general', ResumenGeneral);
-app.component('resumen-grafico', ResumenGrafico);
-app.component('resumen-alertas', ResumenAlertas);
-app.component('resumen-especialistas', ResumenEspecialistas);
-app.component('detalle-especialista-modal', DetalleEspecialistaModal);
+    if (rootAppElement.hasAttribute('data-spa')) {
+        // Full SPA mode: mount the root App component and use the router
+        vueApp = createApp(App);
+        vueApp.use(router);
+    } else {
+        // Component-only mode: mount an empty root component, no router
+        vueApp = createApp({});
+    }
 
-app.use(router);
-app.use(pinia);
-app.mount('#app');
+    vueApp.use(pinia);
+
+    // Register global components
+    vueApp.component('proceso-modal', ProcesoModal);
+    vueApp.component('documento-modal', DocumentoModal);
+    vueApp.component('hallazgo-modal', HallazgoModal);
+    vueApp.component('pdf-modal', PdfModal);
+    vueApp.component('requerimiento-asignacion-modal', RequerimientoAsignacionModal);
+    vueApp.component('requerimiento-evaluacion-modal', RequerimientoEvaluacionModal);
+    vueApp.component('requerimiento-seguimiento-modal', RequerimientoSeguimientoModal);
+    vueApp.component('requerimiento-avance-modal', RequerimientoAvanceModal);
+    vueApp.component('evidencias-modal', EvidenciasModal);
+    vueApp.component('resumen-general', ResumenGeneral);
+    vueApp.component('resumen-grafico', ResumenGrafico);
+    vueApp.component('resumen-alertas', ResumenAlertas);
+    vueApp.component('resumen-especialistas', ResumenEspecialistas);
+    vueApp.component('detalle-especialista-modal', DetalleEspecialistaModal);
+
+    vueApp.mount('#app');
+}

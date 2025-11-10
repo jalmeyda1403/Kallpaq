@@ -147,9 +147,6 @@ export default {
     },
     closeModal() {
       this.modalInstance.hide();
-      if (this.isAsignacionExitosa) {
-        location.reload();
-      }
     }
   },
   mounted() {

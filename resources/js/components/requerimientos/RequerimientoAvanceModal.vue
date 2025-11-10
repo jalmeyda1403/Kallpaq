@@ -259,7 +259,7 @@ export default {
       axios.post(route('requerimientos.guardarAvance', { id: this.currentRequerimientoId }, false, Ziggy), data)
         .then(response => {
           this.closeModal();
-          location.reload();
+          this.$emit('avance-guardado');
         })
         .catch(error => {
           console.error('Error al guardar el avance:', error);
@@ -314,7 +314,7 @@ export default {
       })
         .then(() => {
           this.closeModal();
-          location.reload();
+          this.$emit('avance-guardado');
         })
         .catch(error => {
           console.error('Error al desestimar el requerimiento:', error);
@@ -330,7 +330,7 @@ export default {
         axios.post(route('requerimientos.finalizar', { id: this.currentRequerimientoId }, false, Ziggy))
           .then(() => {
             this.closeModal();
-            location.reload();
+            this.$emit('avance-guardado');
           })
           .catch(error => {
             if (error.response && error.response.data && error.response.data.message) {

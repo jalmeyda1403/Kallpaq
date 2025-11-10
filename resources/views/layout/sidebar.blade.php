@@ -104,7 +104,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/mis-requerimientos" class="nav-link">
+                                    <a href="/vue/mis-requerimientos" class="nav-link">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </a>
@@ -127,7 +127,7 @@
                             {{-- Bandejas para Especialista --}}
                             @if ($rol === 'especialista')
                                 <li class="nav-item">
-                                    <a href="/mis-requerimientos" class="nav-link">
+                                    <a href="/vue/mis-requerimientos" class="nav-link">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </a>
@@ -150,13 +150,13 @@
                             {{-- Bandejas para Supervisor y Admin --}}
                             @if (in_array($rol, ['supervisor', 'admin']))
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.index') }}" class="nav-link">
+                                    <a href="{{ url('/vue/requerimientos/index') }}" class="nav-link">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/mis-requerimientos" class="nav-link">
+                                    <a href="/vue/mis-requerimientos" class="nav-link">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </a>
@@ -236,7 +236,7 @@
                             <!-- Bandejas para Supervisor y Admin -->
                             @if (in_array($rol, ['supervisor', 'admin']))
                                 <li class="nav-item">
-                                    <a href="{{ route('mejora.listar') }}"
+                                    <a href="{{ url('/vue/mejora') }}"
                                         class="nav-link {{ request()->segment(3) == 'Ncm' ? 'active' : '' }}">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de SMP</p>

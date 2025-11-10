@@ -157,10 +157,10 @@
             </div>
         </div>
         <!-- Existing Vue Modals (ensure they are imported and registered) -->
-        <requerimiento-asignacion-modal :especialistas="especialistas"></requerimiento-asignacion-modal>
-        <requerimiento-evaluacion-modal></requerimiento-evaluacion-modal>
+        <requerimiento-asignacion-modal :especialistas="especialistas" @asignacion-guardada="fetchRequerimientos"></requerimiento-asignacion-modal>
+        <requerimiento-evaluacion-modal @evaluacion-guardada="fetchRequerimientos"></requerimiento-evaluacion-modal>
         <requerimiento-seguimiento-modal></requerimiento-seguimiento-modal>
-        <requerimiento-avance-modal></requerimiento-avance-modal>
+        <requerimiento-avance-modal @avance-guardado="fetchRequerimientos"></requerimiento-avance-modal>
         <evidencias-modal></evidencias-modal>
     </div>
 </template>

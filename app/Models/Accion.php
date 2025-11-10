@@ -14,7 +14,6 @@ class Accion extends Model
         'hallazgo_id',
         'proceso_id',
         'accion_cod',
-        'tipo_accion',
         'accion_descripcion',
         'accion_comentario',
         'accion_fecha_inicio',

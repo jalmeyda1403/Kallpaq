@@ -30,16 +30,6 @@
               <span>{{ mensaje }}</span>
             </div>
           </div>
-          <!-- Documentos Adjuntos -->
-          <div v-if="uploadedFiles.length > 0" class="mb-4">
-              <h6><strong>Documentos Adjuntos:</strong></h6>
-              <ul class="list-group">
-                  <li v-for="(file, index) in uploadedFiles" :key="index" class="list-group-item">
-                      <i class="fas fa-file-pdf mr-2"></i>
-                      <a :href="file.path" target="_blank">{{ file.name }}</a>
-                  </li>
-              </ul>
-          </div>
           <!-- Formulario de Evaluación -->
           <div>
             <h6><strong>Instrucciones:</strong></h6>
@@ -122,10 +112,28 @@
               </div>
             </div>
           </div>
+
+          <!-- Documentos Adjuntos -->
+          <transition name="fade">
+            <div v-if="uploadedFiles.length > 0" class="mt-4">
+              <h6 class="mb-3"><i class="fas fa-paperclip mr-2"></i><strong>Documentos Adjuntos</strong></h6>
+              <div class="list-group">
+                <a v-for="(file, index) in uploadedFiles" :key="index" :href="file.path" target="_blank"
+                  class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fas fa-file-alt text-secondary mr-2"></i>
+                    <span>{{ file.name }}</span>
+                  </div>
+                  <span class="badge badge-danger badge-pill"><i class="fas fa-download mr-1"></i> Ver</span>
+                </a>
+              </div>
+            </div>
+          </transition>
+
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="closeModal">Cerrar</button>
-          <button v-if="isEvaluacionPermitida" type="button" @click="guardarEvaluacion" class="btn btn-danger"
+          <button type="button" class="btn btn-secondary bt-sm" @click="closeModal">Cerrar</button>
+          <button v-if="isEvaluacionPermitida" type="button btn-sm" @click="guardarEvaluacion" class="btn btn-danger"
             :disabled="puntajeTotal < 5 || isLoading">
             <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span v-if="isLoading">Guardando...</span>
@@ -137,36 +145,27 @@
   </div>
 </template>
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .alert-custom {
   border: 1px solid transparent;
   border-left-width: 5px;
   background-color: #fff;
 }
-
-.alert-custom-success {
-  border-left-color: #007bff;
-  color: #004085;
-}
-
-.alert-custom-success .fas {
-  color: #007bff;
-}
-
-.alert-custom-danger {
-  border-left-color: #dc3545;
-  color: #721c24;
-}
-
-.alert-custom-danger .fas {
-  color: #dc3545;
-}
-
 .loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
@@ -217,46 +216,45 @@ export default {
       this.isFetchingData = true;
       const estadosPermitidos = ['aprobado', 'evaluado'];
       this.isEvaluacionPermitida = estadosPermitidos.includes(requerimiento.estado.toLowerCase());
-      
-      // Fetch evaluation data
-      axios.get(route('requerimiento.evaluacion', { id: requerimiento.id }, false, Ziggy))
-        .then(response => {
-          if (response.data && response.data.id) {
+
+      const evaluacionPromise = axios.get(route('requerimiento.evaluacion', { id: requerimiento.id }, false, Ziggy));
+      const requerimientoPromise = axios.get(route('requerimientos.show', { id: requerimiento.id }, false, Ziggy));
+
+      Promise.all([evaluacionPromise, requerimientoPromise])
+        .then(([evaluacionResponse, requerimientoResponse]) => {
+          // Procesar datos de evaluación
+          if (evaluacionResponse.data && evaluacionResponse.data.id) {
             this.evaluacionExistente = true;
-            this.form.actividades = response.data.num_actividades;
-            this.form.areas = response.data.num_areas;
-            this.form.requisitos = response.data.num_requisitos;
-            this.form.documentacion = response.data.nivel_documentacion;
-            this.form.impacto = response.data.impacto_requerimiento;
+            this.form.actividades = evaluacionResponse.data.num_actividades;
+            this.form.areas = evaluacionResponse.data.num_areas;
+            this.form.requisitos = evaluacionResponse.data.num_requisitos;
+            this.form.documentacion = evaluacionResponse.data.nivel_documentacion;
+            this.form.impacto = evaluacionResponse.data.impacto_requerimiento;
+          }
+
+          // Procesar datos de requerimiento (archivos)
+          if (requerimientoResponse.data && requerimientoResponse.data.ruta_archivo_requerimiento) {
+            try {
+              const files = JSON.parse(requerimientoResponse.data.ruta_archivo_requerimiento);
+              if (Array.isArray(files)) {
+                this.uploadedFiles = files.map(file => ({
+                  name: file.name,
+                  path: file.path.startsWith('/storage/') ? file.path : '/storage/' + file.path
+                }));
+              }
+            } catch (error) {
+              console.error('Error parsing ruta_archivo_requerimiento:', error);
+            }
           }
         })
         .catch(error => {
-          console.error('Error al cargar la evaluación existente:', error);
+          console.error('Error al cargar los datos del requerimiento:', error);
+          // Opcional: mostrar un mensaje de error al usuario
         })
         .finally(() => {
           this.isFetchingData = false;
         });
 
-      // Fetch requirement data to get the files
-      axios.get(route('requerimientos.show', { id: requerimiento.id }, false, Ziggy))
-        .then(response => {
-            if (response.data && response.data.ruta_archivo_requerimiento) {
-                try {
-                    const files = JSON.parse(response.data.ruta_archivo_requerimiento);
-                    if (Array.isArray(files)) {
-                        this.uploadedFiles = files.map(file => ({
-                            name: file.name,
-                            path: file.path.startsWith('/storage/') ? file.path : '/storage/' + file.path
-                        }));
-                    }
-                } catch (error) {
-                    console.error('Error parsing ruta_archivo_requerimiento:', error);
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error al cargar los detalles del requerimiento:', error);
-        });
 
       if (this.modalInstance) {
         this.modalInstance.show();
@@ -321,11 +319,6 @@ export default {
   },
   mounted() {
     this.modalInstance = new Modal(this.$refs.modal);
-    this.$refs.modal.addEventListener('hidden.bs.modal', () => {
-      if (this.isGuardadoExitoso) {
-        location.reload();
-      }
-    });
     document.addEventListener('mostrarEvaluacion', (event) => {
       this.mostrarEvaluacion(event.detail);
     });

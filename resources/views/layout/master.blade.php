@@ -5,7 +5,6 @@
     @include('layout.header')
     @vite(['resources/css/custom.css'])
     @stack('styles')
-    @routes
 </head>
 
 <body class="sidebar-mini layout-fixed">
@@ -21,7 +20,7 @@
 
         <!-- Main content -->
         <div class="content-wrapper">
-            <div id="app"></div>
+            @yield('content')
         </div>
 
         <!-- Control Sidebar

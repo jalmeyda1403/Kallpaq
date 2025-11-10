@@ -50,9 +50,9 @@ class Hallazgo extends Model
     {
         return $this->belongsTo(User::class, 'especialista_id');
     }
-    public function historialAsignaciones()
+    public function movimientos()
     {
-        return $this->hasMany(HallazgoAsignacion::class);
+        return $this->hasMany(HallazgoMovimientos::class);
     }
 
     public function usuario_asigna()

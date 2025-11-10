@@ -58,6 +58,7 @@ Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
     Route::get('/dashboard/resumen-general', [DashboardController::class, 'getResumenGeneral'])->name('dashboard.resumenGeneral');
     Route::get('/dashboard/resumen-grafico', [DashboardController::class, 'getResumenGrafico'])->name('dashboard.resumenGrafico');
     Route::get('/dashboard/alertas', [DashboardController::class, 'getResumenAlertas'])->name('dashboard.alertas');
@@ -168,7 +169,7 @@ Route::delete('/riesgos/eliminar/{riesgo}', [RiesgoController::class, 'destroy']
 Route::get('riesgos/{proceso_id?}/listar', [RiesgoController::class, 'listar'])->name('riesgos.listar');
 
 //hallazgos
-Route::get('/mejora', [HallazgoController::class, 'listar'])->name('mejora.listar');
+// Route::get('/mejora', [HallazgoController::class, 'listar'])->name('mejora.listar');
 Route::get('/mejora/{hallazgo}/show', [HallazgoController::class, 'show'])->name('hallazgo.show');
 Route::put('/mejora/{hallazgo}/update', [HallazgoController::class, 'update'])->name('hallazgo.update');
 Route::post('/mejora/{hallazgo}/store', [HallazgoController::class, 'store'])->name('hallazgo.store');
@@ -357,7 +358,8 @@ Route::post('usuarios/asignar-procesos/{id}', [UserController::class, 'guardarPr
 Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/requerimientos/index', [RequerimientoController::class, 'index'])->name('requerimientos.index');
+// Route::get('/requerimientos/index', [RequerimientoController::class, 'index'])->name('requerimientos.index');
+// Route::get('/mis-requerimientos', [RequerimientoController::class, 'index'])->name('requerimientos.mine');
     Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
     Route::get('/requerimiento/{id}/evaluacion', [RequerimientoController::class, 'getEvaluacion'])->name('requerimiento.evaluacion');
     Route::post('/requerimiento/{id}/evaluacion', [RequerimientoController::class, 'storeEvaluacion'])->name('requerimiento.grabarEvaluacion');
@@ -419,6 +421,7 @@ Route::get('/test-styles', function () {
     return view('test');
 });
 
-Route::get('/{any}', function () {
+// Route to handle Vue SPA pages, prefixed with /vue/
+Route::get('/vue/{any}', function () {
     return view('app');
-})->where('any', '.*');
+})->where('any', '.*')->name('vue.app');
