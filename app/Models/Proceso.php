@@ -55,7 +55,13 @@ class Proceso extends Model
     }
     public function hallazgos()
     {
-        return $this->hasMany(Hallazgo::class, 'proceso_id', 'id');
+        return $this->belongsToMany(Hallazgo::class, 'hallazgo_proceso', 'proceso_id', 'hallazgo_id')
+                    ->using(HallazgoProceso::class);
+    }
+
+    public function hallazgoProcesos()
+    {
+        return $this->hasMany(HallazgoProceso::class);
     }
 
     public function ouos()

@@ -36,6 +36,7 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'),
             ziggy: path.resolve(__dirname, 'vendor/tightenco/ziggy/dist/vue.es.js'),
             ziggyJs: path.resolve(__dirname, 'vendor/tightenco/ziggy/dist/index.es.js'),
+            'primeicons': path.resolve(__dirname, 'node_modules/primeicons'),
         },
     },
     build: {

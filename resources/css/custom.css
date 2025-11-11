@@ -289,3 +289,116 @@
     font-size: 13px !important;
     color: gray !important
 }
+
+/* PrimeVue DataTable Custom Styles for RequerimientosIndex */
+
+/* Overall table compactness and font size */
+.p-datatable {
+    font-size: 12px !important; /* Slightly larger base font size */
+}
+
+/* Table Header Styling (Red background, white text) */
+.p-datatable .p-datatable-thead > tr > th {
+    background-color: #d60000 !important; /* Red background from .table-header */
+    color: #ffffff !important; /* White text from .table-header */
+    font-weight: bold !important;
+    vertical-align: middle !important; /* Center text vertically */
+    padding: 0.2rem 0.3rem !important; /* Very small padding */
+    text-align: center !important; /* Center header text */
+    border-left: #ffffff 1px solid !important; /* From .table-header, now white */
+    border-bottom: 1px solid #fff !important; /* From .table-header */
+}
+
+/* Filter Icon White */
+.p-column-filter-menu-button {
+    color: #ffffff !important;
+}
+
+/* Sort Icon White */
+.p-sortable-column .p-sortable-column-icon {
+    color: #ffffff !important;
+}
+
+/* Table Body Cells */
+.p-datatable .p-datatable-tbody > tr > td {
+    font-size: 11px !important; /* Apply to body cells */
+    padding: 0.2rem 0.3rem !important; /* Very small padding */
+    line-height: 1.2 !important; /* Reduce line height for compactness */
+    border-top: 1px solid #e9ecef !important; /* Subtle top border */
+}
+
+/* Odd Rows Background */
+.p-datatable .p-datatable-tbody > tr:nth-child(odd) {
+    background-color: #f8f9fa !important; /* Very light gray */
+}
+
+/* Action Column Centering */
+.p-datatable .p-datatable-tbody > tr > td:last-child {
+    text-align: center !important;
+}
+
+/* Global Filter Input */
+.p-inputtext {
+    font-size: 11px !important;
+    padding: 0.3rem 0.5rem !important;
+}
+
+/* Buttons in Header */
+.p-button {
+    font-size: 11px !important;
+    padding: 0.3rem 0.5rem !important;
+}
+
+/* Paginator */
+.p-paginator {
+    font-size: 11px !important;
+    padding: 0.3rem 0.5rem !important;
+}
+
+/* Column Filter Inputs */
+.p-column-filter {
+    font-size: 11px !important;
+    padding: 0.1rem 0.3rem !important;
+}
+
+/* Progress bar within cells */
+.p-datatable .progress {
+    height: 0.4rem !important; /* Even smaller progress bar */
+    margin-bottom: 0 !important;
+}
+
+/* Remove default PrimeVue borders if they are too strong */
+.p-datatable .p-datatable-gridlines .p-datatable-tbody > tr > td,
+.p-datatable .p-datatable-gridlines .p-datatable-thead > tr > th {
+    border: none !important; /* Remove default borders, rely on custom ones */
+}
+
+/* Force width for "Acciones" column */
+.p-datatable .p-datatable-thead > tr > th:last-child,
+.p-datatable .p-datatable-tbody > tr > td:last-child {
+    width: 12% !important; /* Revert to 12% as preferred */
+    white-space: nowrap !important; /* Prevent content from wrapping */
+    flex-shrink: 0 !important; /* Prevent column from shrinking */
+    text-align: center !important; /* Ensure header content is centered */
+}
+
+/* Custom subtle gray button style */
+.p-button.p-button-secondary {
+    background: #f0f0f0 !important; /* Very light gray background */
+    color: #6c757d !important; /* Darker gray text */
+    border: none !important; /* No border */
+    border-radius: 4px !important; /* Rounded corners */
+}
+
+.p-button.p-button-secondary:hover {
+    background: #e2e6ea !important; /* Slightly darker on hover */
+    color: #5a6268 !important;
+    border-color: #dae0e5 !important;
+}
+
+.custom-card-body-padding {
+    padding-top: 0.5rem !important; /* Reduce top padding */
+    padding-bottom: 0.5rem !important; /* Reduce bottom padding */
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}

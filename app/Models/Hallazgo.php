@@ -3,47 +3,82 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Hallazgo extends Model
 {
+    use HasFactory;
     protected $table = 'hallazgos';
     protected $fillable = [
         'hallazgo_cod',
         'informe_id',
         'especialista_id',
         'auditor_id',
-        'user_asigna_id',
+        'emisor',
+        'facilitador_id',
         'hallazgo_resumen',
+        'hallazgo_sig',
         'hallazgo_descripcion',
         'hallazgo_criterio',
+        'hallazgo_evidencia',
         'hallazgo_clasificacion',
         'hallazgo_origen',
-        'hallazgo_hallazgo_tipo_cierre',
-        'hallazgo_evidencia',
+        'hallazgo_origen_ot',
         'hallazgo_avance',
+        'hallazgo_tipo_cierre',
         'hallazgo_estado',
         'hallazgo_fecha_identificacion',
-        'hallazgo_fecha_aprobacion',
         'hallazgo_fecha_asignacion',
+        'hallazgo_fecha_desestimacion',
         'hallazgo_fecha_conclusion',
+        'hallazgo_fecha_evaluacion',
         'hallazgo_fecha_cierre',
-        'hallazgo_sig',
+        'hallazgo_ciclo', // Added hallazgo_ciclo
     ];
 
     protected $casts = [
         'hallazgo_sig' => 'array',
         'hallazgo_fecha_identificacion' => 'date',
-        'hallazgo_fecha_aprobacion' => 'date',
         'hallazgo_fecha_asignacion' => 'date',
+        'hallazgo_fecha_desestimacion' => 'date',
         'hallazgo_fecha_conclusion' => 'date',
-        'hallazgo_fecha_cierre' => 'date', // Si no lo tenías, es buena práctica para fechas
+        'hallazgo_fecha_evaluacion' => 'date',
+        'hallazgo_fecha_cierre' => 'date',
     ];
 
     public function procesos()
     {
-       
-         return $this->belongsToMany(Proceso::class, 'hallazgo_proceso', 'hallazgo_id', 'proceso_id');
-       
+
+        return $this->belongsToMany(Proceso::class, 'hallazgo_proceso', 'hallazgo_id', 'proceso_id');
+
+    }
+    public function hallazgoProcesos()
+    {
+        return $this->hasMany(HallazgoProceso::class);
+    }
+    public function evaluaciones()
+    {
+        return $this->hasMany(HallazgoEvaluacion::class);
+    }
+
+    // Última evaluación registrada
+    public function ultimaEvaluacion()
+    {
+        return $this->hasOne(HallazgoEvaluacion::class)->latestOfMany();
+    }
+
+    /* 🔧 Métodos auxiliares */
+
+    // Obtener resultado actual de eficacia
+    public function getResultadoActualAttribute()
+    {
+        return optional($this->ultimaEvaluacion)->resultado ?? $this->hallazgo_tipo_cierre;
+    }
+
+    // Saber si el hallazgo requiere reevaluación
+    public function requiereReevaluacion(): bool
+    {
+        return $this->hallazgo_estado === 'reevaluacion';
     }
 
     public function especialista()
@@ -53,11 +88,6 @@ class Hallazgo extends Model
     public function movimientos()
     {
         return $this->hasMany(HallazgoMovimientos::class);
-    }
-
-    public function usuario_asigna()
-    {
-        return $this->belongsTo(User::class, 'user_asigna_id');
     }
 
     public function causa()

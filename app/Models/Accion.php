@@ -12,8 +12,9 @@ class Accion extends Model
     protected $table = 'acciones';
     protected $fillable = [
         'hallazgo_id',
-        'proceso_id',
+        'hallazgo_proceso_id',
         'accion_cod',
+        'accion_tipo',
         'accion_descripcion',
         'accion_comentario',
         'accion_fecha_inicio',
@@ -26,11 +27,12 @@ class Accion extends Model
         'accion_responsable',
         'accion_responsable_correo',
         'accion_estado',
+        'accion_ciclo', // Added accion_ciclo
     ];
 
-    public function proceso()
+    public function hallazgoProceso()
     {
-        return $this->belongsTo(Proceso::class);
+        return $this->belongsTo(HallazgoProceso::class);
     }
     public function hallazgo()
     {

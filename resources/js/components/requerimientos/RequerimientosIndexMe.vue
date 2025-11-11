@@ -31,11 +31,11 @@
                                         <div class="col">
                                             <input type="text" name="buscar_requerimiento" id="buscar_requerimiento"
                                                 class="form-control" placeholder="Buscar por Requerimiento"
-                                                v-model="filters.buscar_requerimiento">
+                                                v-model="serverFilters.buscar_requerimiento">
                                         </div>
                                         <div class="col">
                                             <select name="estado" id="estado" class="form-control"
-                                                v-model="filters.estado">
+                                                v-model="serverFilters.estado">
                                                 <option value="">Todos los estados</option>
                                                 <option v-for="status in statuses" :key="status" :value="status">
                                                     {{ status }}
@@ -54,80 +54,119 @@
                     </div>
 
                     <div class="card-body">
-                        <table id="requerimientos"
-                            class="table table-bordered table-hover table-sm table-requerimientos" style="width:100%">
-                            <thead class="table-header">
-                                <tr>
-                                    <th>ID</th>
-                                    <th style="width:15%">Proceso</th>
-                                    <th style="width:15%">Asunto</th>
-                                    <th>Complejidad</th>
-                                    <th>Estado</th>
-                                    <th>Especialista</th>
-                                    <th>Fecha Asignación</th>
-                                    <th>Fecha Límite</th>
-                                    <th>Fecha Atención</th>
-                                    <th>Ultimo Avance</th>
-                                    <th>Avance</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="requerimiento in requerimientos" :key="requerimiento.id">
-                                    <td>{{ requerimiento.id }}</td>
-                                    <td>{{ requerimiento.proceso?.proceso_nombre }}</td>
-                                    <td>{{ requerimiento.asunto }}</td>
-                                    <td>{{ requerimiento.complejidad }}</td>
-                                    <td>{{ requerimiento.estado }}</td>
-                                    <td>{{ requerimiento.especialista?.name }}</td>
-                                    <td>{{ formatDate(requerimiento.fecha_asignacion) }}</td>
-                                    <td>{{ formatDate(requerimiento.fecha_limite) }}</td>
-                                    <td>{{ formatDate(requerimiento.fecha_fin) }}</td>
-                                    <td>{{ formatDate(requerimiento.avance?.updated_at) }}</td>
-                                    <td>
-                                        <template v-if="['creado', 'desestimado'].includes(requerimiento.estado)">
-                                            <span class="small text-muted">Sin avance</span>
-                                        </template>
-                                        <template v-else-if="requerimiento.avance">
-                                            <div class="small text-center">
-                                                {{ parseInt(requerimiento.avance.avance_registrado) }}%
-                                                <div class="progress progress-xs">
-                                                    <div class="progress-bar bg-info"
-                                                        :style="{ width: parseInt(requerimiento.avance.avance_registrado) + '%' }">
-                                                    </div>
+                        <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
+                            :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
+                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']">
+                            <template #header>
+                                <div class="d-flex align-items-center">
+                                    <Button type="button" icon="pi pi-download" label="Descargar CSV"
+                                        severity="secondary" @click="exportCSV($event)"  class="btn btn-secondary ml-auto" >
+                                    </Button>
+                                </div>
+                            </template>
+                            <Column field="id" header="ID" style="width:5%">
+                            </Column>
+                            <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:15%">
+                                <template #filter="{ filterModel, filterCallback }">
+                                    <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                                        class="p-column-filter" placeholder="Buscar por Proceso" />
+                                </template>
+                            </Column>
+                            <Column field="asunto" header="Asunto" style="width:15%">
+                            </Column>
+                            <Column field="complejidad" header="Complejidad" style="width:8%">
+                            </Column>
+                            <Column field="estado" header="Estado" style="width:8%">
+                            </Column>
+                            <Column field="especialista.name" header="Especialista" sortable style="width:10%">
+                                <template #filter="{ filterModel, filterCallback }">
+                                    <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                                        class="p-column-filter" placeholder="Buscar por Especialista" />
+                                </template>
+                            </Column>
+                            <Column field="fecha_asignacion" header="Fecha Asignación" sortable style="width:10%">
+                                <template #body="{ data }">
+                                    {{ formatDate(data.fecha_asignacion) }}
+                                </template>
+                            </Column>
+                            <Column field="fecha_limite" header="Fecha Límite" sortable style="width:10%">
+                                <template #body="{ data }">
+                                    {{ formatDate(data.fecha_limite) }}
+                                </template>
+                            </Column>
+                            <Column field="fecha_fin" header="Fecha Atención" sortable style="width:10%">
+                                <template #body="{ data }">
+                                    {{ formatDate(data.fecha_fin) }}
+                                </template>
+                            </Column>
+                            <Column field="avance.updated_at" header="Ultimo Avance" sortable style="width:10%">
+                                <template #body="{ data }">
+                                    {{ formatDate(data.avance?.updated_at) }}
+                                </template>
+                            </Column>
+                            <Column header="Avance" style="width:10%">
+                                <template #body="{ data }">
+                                    <template v-if="['creado', 'desestimado'].includes(data.estado)">
+                                        <span class="small text-muted">Sin avance</span>
+                                    </template>
+                                    <template v-else-if="data.avance">
+                                        <div class="small text-center">
+                                            {{ parseInt(data.avance.avance_registrado) }}%
+                                            <div class="progress progress-xs">
+                                                <div class="progress-bar bg-info"
+                                                    :style="{ width: parseInt(data.avance.avance_registrado) + '%' }">
                                                 </div>
                                             </div>
-                                        </template>
-                                        <template v-else>
-                                            <span class="small text-muted">Sin avance</span>
-                                        </template>
-                                    </td>
-                                    <td class="text-nowrap">
-
-
-                                        <a href="#" title="Ver Avance Requerimiento"
-                                            class="mr-2 d-inline-block btn-modal-trigger"
-                                            @click.prevent="openModal('mostrarSeguimiento', requerimiento)">
-                                            <i class="fas fa-stream text-success"></i>
-
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <span class="small text-muted">Sin avance</span>
+                                    </template>
+                                </template>
+                            </Column>
+                            <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
+                                bodyStyle="width: 15%">
+                                <template #body="{ data }">
+                                    <template v-if="!isMyRequerimientosView">
+                                        <a href="#" title="Evaluar Requerimiento"
+                                            class="mr-1 d-inline-block btn-modal-trigger"
+                                            @click.prevent="openModal('mostrarEvaluacion', data)">
+                                            <i class="fas fa-clipboard-check text-primary"></i>
                                         </a>
-                                        <a href="#" title="Editar Requerimiento"
-                                            class="mr-2 d-inline-block btn-modal-trigger"
-                                            @click.prevent="requerimiento.estado === 'creado' && editRequerimiento(requerimiento.id)"
-                                            :class="{ 'disabled': requerimiento.estado !== 'creado' }">
-                                            <i class="fas fa-pencil-alt" :class="{ 'text-warning': requerimiento.estado === 'creado', 'text-secondary': requerimiento.estado !== 'creado' }"></i>
+                                        <a href="#" title="Asignar Requerimiento"
+                                            class="mr-1 d-inline-block btn-modal-trigger"
+                                            @click.prevent="openModal('mostrarAsignacion', data)">
+                                            <i class="fas fa-user-check text-dark"></i>
                                         </a>
+                                        <a href="#" title="Registrar Avance Requerimiento"
+                                            class="mr-1 d-inline-block btn-modal-trigger"
+                                            @click.prevent="openModal('abrirAvanceRequerimientoModal', data)">
 
-                                        <a href="#" title="Eliminar Requerimiento"
-                                            class="mr-2 d-inline-block btn-modal-trigger"
-                                            @click.prevent="requerimiento.estado === 'creado' && confirmDelete(requerimiento.id)"
-                                            :class="{ 'disabled': requerimiento.estado !== 'creado' }">
-                                            <i class="fas fa-trash-alt" :class="{ 'text-danger': requerimiento.estado === 'creado', 'text-secondary': requerimiento.estado !== 'creado' }"></i>
+                                            <i class="fas fa-list-alt text-dark"></i>
                                         </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </template>
+                                    <a href="#" title="Ver Avance Requerimiento"
+                                        class="mr-1 d-inline-block btn-modal-trigger"
+                                        @click.prevent="openModal('mostrarSeguimiento', data)">
+                                        <i class="fas fa-stream text-success"></i>
+                                    </a>
+                                    <a href="#" title="Editar Requerimiento"
+                                        class="mr-1 d-inline-block btn-modal-trigger"
+                                        @click.prevent="data.estado === 'creado' && editRequerimiento(data.id)"
+                                        :class="{ 'disabled': data.estado !== 'creado' }">
+                                        <i class="fas fa-pencil-alt"
+                                            :class="{ 'text-warning': data.estado === 'creado', 'text-secondary': data.estado !== 'creado' }"></i>
+                                    </a>
+                                    <a href="#" title="Eliminar Requerimiento"
+                                        class="mr-1 d-inline-block btn-modal-trigger"
+                                        @click.prevent="data.estado === 'creado' && confirmDelete(data.id)"
+                                        :class="{ 'disabled': data.estado !== 'creado' }">
+                                        <i class="fas fa-trash-alt"
+                                            :class="{ 'text-danger': data.estado === 'creado', 'text-secondary': data.estado !== 'creado' }"></i>
+                                    </a>
+                                </template>
+                            </Column>
+                        </DataTable>
                     </div>
                 </div>
             </div>
@@ -141,32 +180,57 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import { useRouter } from 'vue-router';
 
+// PrimeVue Imports
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
+import Dropdown from 'primevue/dropdown';
+import { FilterMatchMode } from 'primevue/api';
+
 const router = useRouter();
 
 const requerimientos = ref([]);
+const especialistas = ref([]); // Keep this as it might be used in modals or future filters
 const statuses = ref([]);
-
-
+const complejidadOptions = ref(['Baja', 'Media', 'Alta', 'Muy Alta']);
+const dt = ref(null); // Reference to the DataTable component
+const selectedRequerimientoId = ref(null); // Declare selectedRequerimientoId
 
 const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    id: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    'proceso.proceso_nombre': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    asunto: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    complejidad: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    'especialista.name': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+});
+
+const serverFilters = ref({
     buscar_requerimiento: '',
+    especialista_id: '', // Keep this for consistency, even if not used in form
     estado: '',
 });
 
+const isMyRequerimientosView = computed(() => true); // Always true for this component
+
 const fetchRequerimientos = async () => {
+    console.log('fetchRequerimientos called');
+    console.log('serverFilters.value:', serverFilters.value);
     try {
         const response = await axios.get(route('web.requerimientos.data'), {
-            params: { ...filters.value, mine: true }
+            params: { ...serverFilters.value, mine: true }
         });
         requerimientos.value = response.data.requerimientos;
+        // especialistas.value = response.data.especialistas; // This component doesn't use specialists in its form
         statuses.value = response.data.statuses;
-
-
+        console.log('Fetched requerimientos:', requerimientos.value);
     } catch (error) {
         console.error('Error fetching requerimientos:', error);
     }
@@ -208,23 +272,11 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
+const exportCSV = () => {
+    dt.value.exportCSV();
+};
+
 onMounted(() => {
-    filters.value.user_id = window.App.user.id;
     fetchRequerimientos();
 });
 </script>
-
-<style scoped>
-#requerimientos.table-requerimientos {
-    font-size: 12px !important;
-}
-
-#requerimientos.table-requerimientos thead th {
-    vertical-align: top !important;
-}
-
-.table-active {
-    background-color: #e2e6ea;
-    /* Bootstrap's light gray for active row */
-}
-</style>

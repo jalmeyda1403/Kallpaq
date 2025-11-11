@@ -6,6 +6,12 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './components/App.vue'; // This is the root component for the SPA
 
+// PrimeVue Imports
+import PrimeVue from 'primevue/config';
+import 'primevue/resources/themes/saga-blue/theme.css'; // Choose a theme
+import 'primevue/resources/primevue.min.css'; // Core CSS
+import 'primeicons/primeicons.css'; // Icons
+
 // Componentes
 import ProcesoModal from './components/procesos/ProcesoModal.vue';
 import DocumentoModal from './components/documentos/DocumentoModal.vue';
@@ -41,6 +47,7 @@ if (rootAppElement) {
     }
 
     vueApp.use(pinia);
+    vueApp.use(PrimeVue); // Add this line
 
     // Register global components
     vueApp.component('proceso-modal', ProcesoModal);
