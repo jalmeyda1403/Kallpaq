@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ouo_user', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('ouo_id')->constrained('ouos')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('role_in_ouo')->default('member'); // e.g., 'owner', 'titular', 'suplente', 'facilitador'
+            $table->enum('role_in_ouo', ['titular', 'suplente', 'facilitador','miembro']); // e.g., 'owner', 'titular', 'suplente', 'facilitador'
+            $table->boolean('activo')->default(true);
             $table->timestamps();
 
             $table->unique(['ouo_id', 'user_id']); // Composite unique key

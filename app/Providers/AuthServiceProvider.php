@@ -8,6 +8,8 @@ use App\Models\Proceso; // Import the Proceso model
 use App\Policies\ProcesoPolicy; // Import the ProcesoPolicy
 use App\Models\Hallazgo; // Import the Hallazgo model
 use App\Policies\HallazgoPolicy; // Import the HallazgoPolicy
+use App\Models\Requerimiento; // Import the Requerimiento model
+use App\Policies\RequerimientoPolicy; // Import the RequerimientoPolicy
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Proceso::class => ProcesoPolicy::class,
         Hallazgo::class => HallazgoPolicy::class,
+        Requerimiento::class => RequerimientoPolicy::class,
     ];
 
     /**
