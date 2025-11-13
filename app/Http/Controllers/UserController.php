@@ -5,6 +5,7 @@ use App\Models\User;
 Use App\Models\Proceso;
 Use App\Models\Especialista;
 Use App\Models\Auditor;
+use App\Models\OUO; // Added OUO model
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Hash;
@@ -197,4 +198,64 @@ public function showAuditores()
         return response()->json($users);
     }
 
+    /**
+     * List users assigned to a specific OUO.
+     *
+     * @param  \App\Models\OUO  $ouo
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function listOuoUsers(OUO $ouo)
+    {
+        $ouoUsers = $ouo->users()->withPivot('role_in_ouo')->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role_in_ouo' => $user->pivot->role_in_ouo,
+            ];
+        });
+
+        return response()->json($ouoUsers);
+    }
+
+    /**
+     * Attach a user to an OUO with a specific role.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\OUO  $ouo
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function attachOuoUser(Request $request, OUO $ouo)
+    {
+        $validatedData = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'role_in_ouo' => ['required', 'string', 'in:owner,titular,suplente,facilitador,member'], // Define your roles
+        ]);
+
+        // Check if the user is already attached to this OUO
+        if ($ouo->users()->where('user_id', $validatedData['user_id'])->exists()) {
+            return response()->json(['message' => 'El usuario ya está asociado a esta OUO.'], 409);
+        }
+
+        $ouo->users()->attach($validatedData['user_id'], [
+            'role_in_ouo' => $validatedData['role_in_ouo'],
+        ]);
+
+        return response()->json(['message' => 'Usuario asociado a la OUO con éxito.'], 200);
+    }
+
+    /**
+     * Detach a user from an OUO.
+     *
+     * @param  \App\Models\OUO  $ouo
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function detachOuoUser(OUO $ouo, User $user)
+    {
+        $ouo->users()->detach($user->id);
+
+        return response()->json(['message' => 'Usuario desasociado de la OUO con éxito.'], 200);
+    }
 }
+

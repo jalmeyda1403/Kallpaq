@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Route;
 Use App\Http\Controllers\DocumentoController;
 Use App\Http\Controllers\RequerimientoController;
 Use App\Http\Controllers\HallazgoController;
-// Removed UserController and EspecialistaController imports
+use App\Http\Controllers\UserController; // Added UserController
+use App\Http\Controllers\OUOController; // Added OUOController
 
 /*
 |--------------------------------------------------------------------------
@@ -23,5 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
    
-    // User related API routes (now empty or moved)
+    // OUO-User Management Routes
+    Route::get('ouos/{ouo}/users', [UserController::class, 'listOuoUsers'])->name('api.ouos.users.list');
+    Route::post('ouos/{ouo}/users', [UserController::class, 'attachOuoUser'])->name('api.ouos.users.attach');
+    Route::delete('ouos/{ouo}/users/{user}', [UserController::class, 'detachOuoUser'])->name('api.ouos.users.detach');
 });
