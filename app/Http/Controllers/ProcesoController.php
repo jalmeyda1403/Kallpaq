@@ -7,13 +7,31 @@ use App\Models\Proceso;
 use App\Models\OUO;
 use App\Models\Documento;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth; // Added Auth facade
 
 class ProcesoController extends Controller
 {
     public function index(Request $request)
     {
-
         $query = Proceso::query();
+        $user = Auth::user();
+
+        // If the user is not an admin, filter processes based on their OUO roles
+        if (!$user->hasRole('admin')) {
+            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
+
+            $query->whereHas('ouos', function ($q) use ($accessibleOuoIds) {
+                $q->whereIn('ouos.id', $accessibleOuoIds)
+                  ->where(function ($subQuery) {
+                      $subQuery->wherePivot('responsable', true)
+                               ->orWherePivot('delegada', true)
+                               ->orWherePivot('sgc', true)
+                               ->orWherePivot('sgas', true)
+                               ->orWherePivot('sgcm', true)
+                               ->orWherePivot('sgsi', true);
+                  });
+            });
+        }
 
         // Filtrar si se selecciona un proceso padre
         if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
@@ -86,6 +104,26 @@ class ProcesoController extends Controller
     public function show($proceso_id)
     {
         $proceso = Proceso::with('planificacion_pei')->findOrFail($proceso_id);
+        $user = Auth::user();
+
+        // If the user is not an admin, check if they have access to this specific process
+        if (!$user->hasRole('admin')) {
+            $hasAccess = $user->ouos()->whereHas('procesos', function ($q) use ($proceso_id) {
+                $q->where('procesos.id', $proceso_id)
+                  ->where(function ($subQuery) {
+                      $subQuery->wherePivot('responsable', true)
+                               ->orWherePivot('delegada', true)
+                               ->orWherePivot('sgc', true)
+                               ->orWherePivot('sgas', true)
+                               ->orWherePivot('sgcm', true)
+                               ->orWherePivot('sgsi', true);
+                  });
+            })->exists();
+
+            if (!$hasAccess) {
+                abort(403, 'No tiene permisos para ver este proceso.');
+            }
+        }
 
         return response()->json($proceso);
     }
