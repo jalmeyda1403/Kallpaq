@@ -5,6 +5,7 @@ import { route } from 'ziggy-js';
 export const useFacilitadorStore = defineStore('facilitador', {
     state: () => ({
         facilitadores: [],
+        users: [], // For the user selection dropdown
         form: {
             id: null,
             user_id: '',
@@ -22,10 +23,10 @@ export const useFacilitadorStore = defineStore('facilitador', {
     },
 
     actions: {
-        async fetchFacilitadores() {
+        async fetchFacilitadores(filters = {}) {
             this.loading = true;
             try {
-                const response = await axios.get(route('facilitadores.index'));
+                const response = await axios.get(route('facilitadores.index'), { params: filters });
                 this.facilitadores = response.data;
             } catch (error) {
                 console.error('Error fetching facilitadores:', error);
@@ -35,11 +36,21 @@ export const useFacilitadorStore = defineStore('facilitador', {
             }
         },
 
+        async fetchUsers() {
+            // Avoid re-fetching if already populated
+            if (this.users.length > 0) return;
+            try {
+                const response = await axios.get(route('api.users.list'));
+                this.users = response.data;
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+
         openFormModal(facilitador = null) {
             this.resetForm();
             if (facilitador) {
                 this.form = { ...facilitador };
-                // Asegurarse de que procesos sea un array si viene nulo
                 this.form.procesos = facilitador.procesos || [];
             }
             this.isFormModalOpen = true;
@@ -106,7 +117,6 @@ export const useFacilitadorStore = defineStore('facilitador', {
                 const facilitador = this.facilitadores.find(f => f.id === facilitadorId);
                 if (facilitador) {
                     const proceso = await axios.get(route('procesos.show', { proceso_id: procesoId })); // Fetch full proceso data
-                    facilitador.procesos.push(proceso.data);
                     this.form.procesos.push(proceso.data); // Also update form's processes
                 }
                 return response.data;

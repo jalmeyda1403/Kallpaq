@@ -381,45 +381,8 @@
                         </ul>
                     </li>
 
-                    <!-- Administración de Usuarios -->
-                    <li class="nav-item has-treeview {{ request()->routeIs('usuarios.*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>
-                                Gestionar Usuarios
-                                <i class="fas fa-angle-left right"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{{ route('usuarios.index') }}" class="nav-link">
-                                    <i class="nav-icon fas fa-users"></i>
-                                    <p>Listado de Usuarios</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>Roles y Permisos</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>Listado de Roles</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>Listado de Permisos</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
                     <!-- Nueva sección de Administración -->
-                    <li class="nav-item has-treeview {{ request()->is('vue/facilitadores*') || request()->is('vue/mis-mejoras-facilitador*') ? 'menu-open' : '' }}">
+                    <li class="nav-item has-treeview {{ request()->is('vue/facilitadores*') || request()->is('vue/mis-mejoras-facilitador*') || request()->routeIs('usuarios.*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cogs"></i>
                             <p>
@@ -428,6 +391,12 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('usuarios.index') }}" class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>Gestionar Usuarios</p>
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a href="/vue/facilitadores" class="nav-link {{ request()->is('vue/facilitadores*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users-cog"></i>

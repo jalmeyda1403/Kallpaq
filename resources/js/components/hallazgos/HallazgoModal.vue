@@ -108,7 +108,7 @@ onMounted(() => {
     $(modal.value).on('shown.bs.modal', () => {
 
         if (hallazgoStore.currentTab === 'HallazgoForm' && hallazgoFormRef.value) {
-            console.log("HallazgoForm is active, calling reInitializeSelect2.");
+           
             hallazgoFormRef.value.reInitializeSelect2(); // Llama a un método expuesto por HallazgoForm
         }
     });

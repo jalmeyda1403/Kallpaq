@@ -10,9 +10,22 @@ use Illuminate\Validation\Rule;
 
 class FacilitadorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $facilitadores = Facilitador::with('user', 'procesos')->get();
+        $query = Facilitador::with('user', 'procesos');
+
+        // Server-side filtering
+        if ($request->has('name') && $request->name) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->name . '%');
+            });
+        }
+
+        if ($request->has('estado') && $request->estado) {
+            $query->where('estado', $request->estado);
+        }
+
+        $facilitadores = $query->get();
         return response()->json($facilitadores);
     }
 

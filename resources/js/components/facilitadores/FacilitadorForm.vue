@@ -1,6 +1,5 @@
 <template>
-    <div class="modal fade" tabindex="-1" aria-labelledby="facilitadorModalLabel" aria-hidden="true" ref="modal"
-        id="facilitadorModal" data-backdrop="static" data-keyboard="false">
+    <div class="modal fade" id="facilitadorModal" ref="modalEl" tabindex="-1" aria-labelledby="facilitadorModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
@@ -15,7 +14,7 @@
                             <label for="user_id">Usuario</label>
                             <select id="user_id" class="form-control" v-model="facilitadorStore.form.user_id" required>
                                 <option value="">Seleccione un usuario</option>
-                                <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                                <option v-for="user in facilitadorStore.users" :key="user.id" :value="user.id">{{ user.name }}</option>
                             </select>
                             <div v-if="facilitadorStore.errors.user_id" class="text-danger">{{ facilitadorStore.errors.user_id[0] }}</div>
                         </div>
@@ -79,70 +78,87 @@
             </div>
         </div>
     </div>
-    <!-- <modal-hijo ref="procesoModal" :fetch-url="proceso_route" target-id="id" target-desc="proceso_nombre"
-        @update-target="handleProcesoSelection" /> -->
+    <modal-hijo ref="procesoModal" fetch-url="/buscarProcesos" target-id="id" target-desc="proceso_nombre"
+        @update-target="handleProcesoSelection" />
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useFacilitadorStore } from '@/stores/facilitadorStore';
-import axios from 'axios';
-import { route } from 'ziggy-js';
-// import ModalHijo from '../generales/ModalHijo.vue'; // Commented out
+import ModalHijo from '../generales/ModalHijo.vue';
+import * as bootstrap from 'bootstrap';
 
 const facilitadorStore = useFacilitadorStore();
-const users = ref([]);
 const selectedProceso = ref({ id: null, descripcion: '' });
-// const procesoModal = ref(null); // Commented out
-// const proceso_route = route('procesos.buscar'); // Commented out
+const procesoModal = ref(null);
+const modalEl = ref(null);
+let modalInstance = null;
 
-onMounted(async () => {
-    await fetchUsers();
+onMounted(() => {
+    facilitadorStore.fetchUsers();
+    if (modalEl.value) {
+        modalInstance = new bootstrap.Modal(modalEl.value, {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        facilitadorStore.$subscribe((mutation, state) => {
+            if (state.isFormModalOpen) {
+                modalInstance.show();
+            } else {
+                modalInstance.hide();
+            }
+        });
+
+        modalEl.value.addEventListener('hidden.bs.modal', () => {
+            facilitadorStore.closeFormModal();
+        });
+
+        // WORKAROUND: When the child modal closes, focus returns to this parent modal.
+        // We re-add the 'modal-open' class to the body to fix the scrollbar issue.
+        modalEl.value.addEventListener('focusin', () => {
+            document.body.classList.add('modal-open');
+        });
+    }
 });
 
-const fetchUsers = async () => {
-    try {
-        const response = await axios.get(route('api.users.list'));
-        users.value = response.data;
-    } catch (error) {
-        console.error('Error fetching users:', error);
+onUnmounted(() => {
+    if (modalInstance) {
+        modalInstance.dispose();
     }
-};
+});
 
 const handleSubmit = () => {
     facilitadorStore.saveFacilitador();
 };
 
 const openProcesoModal = () => {
-    // facilitadorStore.closeFormModal(); // Hide FacilitadorForm.vue
-    // procesoModal.value.open(); // Open ModalHijo.vue
-    console.log('ModalHijo would open here'); // Placeholder
+    procesoModal.value.open();
 };
 
 const handleProcesoSelection = ({ idValue, descValue }) => {
     selectedProceso.value.id = idValue;
     selectedProceso.value.descripcion = descValue;
-    // facilitadorStore.openFormModal(); // Re-show FacilitadorForm.vue
 };
 
-const attachProceso = async () => {
+const attachProceso = () => {
     if (!selectedProceso.value.id || !facilitadorStore.form.id) return;
-    try {
-        await facilitadorStore.attachProceso(facilitadorStore.form.id, selectedProceso.value.id);
-        selectedProceso.value = { id: null, descripcion: '' }; // Limpiar selección
-    } catch (error) {
-        console.error('Error attaching proceso:', error);
-    }
+    facilitadorStore.attachProceso(facilitadorStore.form.id, selectedProceso.value.id);
+    selectedProceso.value = { id: null, descripcion: '' };
 };
 
-const detachProceso = async (procesoId) => {
-    if (!facilitadorStore.form.id || !procesoStore.form.id) return;
+const detachProceso = (procesoId) => {
+    if (!facilitadorStore.form.id) return;
     if (confirm('¿Está seguro de que desea desasociar este proceso?')) {
-        try {
-            await facilitadorStore.detachProceso(facilitadorStore.form.id, procesoId);
-        } catch (error) {
-            console.error('Error detaching proceso:', error);
-        }
+        facilitadorStore.detachProceso(facilitadorStore.form.id, procesoId);
     }
 };
 </script>
+<style scoped>
+
+.modal-body-scrollable {
+    height: 90vh !important;
+    /* Ajusta este valor según lo necesites */
+    overflow-y: auto;
+}
+</style>
