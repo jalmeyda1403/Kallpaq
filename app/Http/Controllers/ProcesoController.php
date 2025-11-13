@@ -7,14 +7,16 @@ use App\Models\Proceso;
 use App\Models\OUO;
 use App\Models\Documento;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth; // Added Auth facade
+use Illuminate\Support\Facades\Gate; // Added Gate facade
 
 class ProcesoController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Proceso::class); // Authorize using the policy
+
         $query = Proceso::query();
-        $user = Auth::user();
+        $user = auth()->user(); // Get authenticated user
 
         // If the user is not an admin, filter processes based on their OUO roles
         if (!$user->hasRole('admin')) {
@@ -85,18 +87,21 @@ class ProcesoController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Proceso::class); // Authorize using the policy
         $procesos = Proceso::all();
         return view('procesos.create', compact('procesos'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Proceso::class); // Authorize using the policy
         $proceso = Proceso::create($request->all());
         return redirect()->route('procesos.index')->with('success', 'Proceso creado correctamente');
     }
 
     public function edit(Proceso $proceso)
     {
+        $this->authorize('update', $proceso); // Authorize using the policy
         $procesosPadre = Proceso::where('cod_proceso_padre', '=', null)->get();
         return view('procesos.edit', compact('proceso', 'procesosPadre'));
     }
@@ -104,34 +109,15 @@ class ProcesoController extends Controller
     public function show($proceso_id)
     {
         $proceso = Proceso::with('planificacion_pei')->findOrFail($proceso_id);
-        $user = Auth::user();
-
-        // If the user is not an admin, check if they have access to this specific process
-        if (!$user->hasRole('admin')) {
-            $hasAccess = $user->ouos()->whereHas('procesos', function ($q) use ($proceso_id) {
-                $q->where('procesos.id', $proceso_id)
-                  ->where(function ($subQuery) {
-                      $subQuery->wherePivot('responsable', true)
-                               ->orWherePivot('delegada', true)
-                               ->orWherePivot('sgc', true)
-                               ->orWherePivot('sgas', true)
-                               ->orWherePivot('sgcm', true)
-                               ->orWherePivot('sgsi', true);
-                  });
-            })->exists();
-
-            if (!$hasAccess) {
-                abort(403, 'No tiene permisos para ver este proceso.');
-            }
-        }
+        $this->authorize('view', $proceso); // Authorize using the policy
 
         return response()->json($proceso);
     }
 
     public function update(Request $request, $id)
     {
-
         $proceso = Proceso::findOrFail($id);
+        $this->authorize('update', $proceso); // Authorize using the policy
         $proceso->update($request->all());
 
         return response()->json(['success' => 'Proceso actualizado correctamente'], 200);
@@ -141,6 +127,7 @@ class ProcesoController extends Controller
     public function destroy($id)
     {
         $proceso = Proceso::findOrFail($id);
+        $this->authorize('delete', $proceso); // Authorize using the policy
         $proceso->delete();
         return response()->json(['success' => true, 'message' => 'Proceso eliminado exitosamente.']);
     }
