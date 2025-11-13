@@ -12,8 +12,8 @@ use App\Notifications\ActionApprovedNotificacion;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate; // Changed from Auth to Gate
-use App\Models\User; // Add this line
+use Illuminate\Support\Facades\Auth;
+
 class HallazgoController extends Controller
 {
     /**
@@ -21,8 +21,6 @@ class HallazgoController extends Controller
      */
     public function index(Request $request, $clasificacion)
     {
-        $this->authorize('viewAny', Hallazgo::class); // Authorize using the policy
-
         $breadcrumb = [];
         $clasificacionArray = explode(',', $clasificacion);
         $query = Hallazgo::query()
@@ -30,24 +28,6 @@ class HallazgoController extends Controller
             ->filterByInformeId($request->informe_id)
             ->filterByYear($request->year)
             ->filterByClasificacion($clasificacionArray);
-
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $query->whereHas('procesos', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
 
         $hallazgos = $query->get();
 
@@ -71,13 +51,11 @@ class HallazgoController extends Controller
 
     public function listar(Request $request)
     {
-        $this->authorize('viewAny', Hallazgo::class); // Authorize using the policy
         return view('smp.index');
     }
 
     public function create($clasificacion = null)
     {
-        $this->authorize('create', Hallazgo::class); // Authorize using the policy
         if ($clasificacion == 'Ncm') {
             $breadcrumb['nombre'] = "Listado de SMP";
             $breadcrumb['codigo'] = "Ncm";
@@ -95,29 +73,9 @@ class HallazgoController extends Controller
     }
     public function apiListar(Request $request)
     {
-        $this->authorize('viewAny', Hallazgo::class); // Authorize using the policy
-
         // Inicia la consulta base, cargando la relación con 'proceso' 
         // para tener acceso al nombre del proceso en el frontend.
         $query = Hallazgo::with('procesos')->latest(); // `latest()` ordena por fecha de creación descendente
-
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $query->whereHas('procesos', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
 
         // --- Aplicación de Filtros Dinámicos ---
 
@@ -155,7 +113,6 @@ class HallazgoController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Hallazgo::class); // Authorize using the policy
         // Generar el valor para smp_cod
         $proceso = Proceso::find($request->proceso_id);
         $ultimoHallazgo = Hallazgo::where('proceso_id', $request->proceso_id)->latest()->first();
@@ -180,7 +137,6 @@ class HallazgoController extends Controller
      */
     public function show(Hallazgo $hallazgo)
     {
-        $this->authorize('view', $hallazgo); // Authorize using the policy
         // Devuelve el hallazgo como JSON
         return response()->json($hallazgo->load('procesos'));
     }
@@ -191,7 +147,6 @@ class HallazgoController extends Controller
     public function edit($hallazgo_id)
     {
         $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $this->authorize('update', $hallazgo); // Authorize using the policy
     }
 
     /**
@@ -199,7 +154,6 @@ class HallazgoController extends Controller
      */
     public function update(Request $request, Hallazgo $hallazgo)
     {
-        $this->authorize('update', $hallazgo); // Authorize using the policy
         // 1. Validar los datos de entrada (en update, 'unique' debe ignorar el registro actual)
         $validatedData = $request->validate([
             'hallazgo_cod' => [
@@ -233,7 +187,6 @@ class HallazgoController extends Controller
 
     public function destroy(Hallazgo $hallazgo)
     {
-        $this->authorize('delete', $hallazgo); // Authorize using the policy
         //
     }
 
@@ -241,7 +194,6 @@ class HallazgoController extends Controller
     public function imprimir(Request $request, $id)
     {
         $hallazgo = Hallazgo::findOrFail($id);
-        $this->authorize('view', $hallazgo); // Authorize using the policy
 
         $planesAccion = Accion::where('hallazgo_id', $id)->get();
         $correctivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 1)->count();
@@ -268,7 +220,6 @@ class HallazgoController extends Controller
     public function aprobar(Request $request, $id)
     {
         $hallazgo = Hallazgo::findOrFail($id);
-        $this->authorize('update', $hallazgo); // Authorize using the policy
         // Actualizar el estado a 'enviado'
         $hallazgo->estado = 'Aprobado';
         $hallazgo->fecha_aprobacion = Carbon::now()->format('Y-m-d');
@@ -291,7 +242,6 @@ class HallazgoController extends Controller
     {
 
         $hallazgo = Hallazgo::with('causa')->findOrFail($id);
-        $this->authorize('view', $hallazgo); // Authorize using the policy
 
         $planesAccion = Accion::where('hallazgo_id', $id)->get();
         $correctivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 1)->count();
@@ -315,7 +265,6 @@ class HallazgoController extends Controller
 
     public function dashboard(Request $request)
     {
-        $this->authorize('viewAny', Hallazgo::class); // Authorize using the policy
         $sig = $request->sig;
         // Crear una consulta base con el filtro de clasificación para grafico pie
         $classifications = ['Ncme', 'NCM'];
@@ -466,29 +415,9 @@ class HallazgoController extends Controller
 
     public function porProceso($id, $clasificacion)
     {
-        $this->authorize('viewAny', Hallazgo::class); // Authorize using the policy
-
         $proceso = Proceso::with('hallazgos')->findOrFail($id);
         $clasificacionArray = explode(',', $clasificacion);
         $query = $proceso->hallazgos()->filterByClasificacion($clasificacionArray);
-
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $query->whereHas('procesos', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
 
         $hallazgos = $query->get();
 
@@ -504,14 +433,12 @@ class HallazgoController extends Controller
     //Methodo Asociar Procesos
     public function listarProcesosAsociados(Hallazgo $hallazgo)
     {
-        $this->authorize('view', $hallazgo); // Authorize using the policy
         // Gracias a la relación definida en el modelo, esto es todo lo que se necesita.
         // Se devuelven los procesos con todos sus campos.
         return response()->json($hallazgo->procesos);
     }
     public function asociarProceso(Request $request, Hallazgo $hallazgo)
     {
-        $this->authorize('update', $hallazgo); // Authorize using the policy
         // Validación para asegurar que el proceso_id es enviado y válido.
         $request->validate([
             'proceso_id' => 'required|exists:procesos,id',
@@ -524,7 +451,6 @@ class HallazgoController extends Controller
     }
     public function disociarProceso(Hallazgo $hallazgo, Proceso $proceso)
     {
-        $this->authorize('update', $hallazgo); // Authorize using the policy
         // Usamos detach() para eliminar el registro de la tabla pivote.
         $hallazgo->procesos()->detach($proceso->id);
 
@@ -534,7 +460,6 @@ class HallazgoController extends Controller
     //Methodo Asignar Especialista
     public function listarAsignaciones(Hallazgo $hallazgo)
     {
-        $this->authorize('view', $hallazgo); // Authorize using the policy
         return response()->json([
             // Cargamos la relación 'especialista' para obtener los datos del usuario actual
             'actual' => $hallazgo->load('especialista')->especialista,
@@ -545,7 +470,6 @@ class HallazgoController extends Controller
     }
     public function asignarEspecialista(Request $request, Hallazgo $hallazgo)
     {
-        $this->authorize('update', $hallazgo); // Authorize using the policy
         $validatedData = $request->validate([
             'especialista_id' => 'required|exists:users,id',
             'assigned_by_user_id' => 'required|exists:users,id', // Validate the user who made the assignment

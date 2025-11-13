@@ -3,18 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Requerimiento;
 use App\Models\Especialista;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\RequerimientoMovimiento;
 use App\Models\RequerimientoEvaluacion;
-use App\Models\Proceso;
-use App\Models\OUO;
 
 use App\Models\RequerimientoAvance;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -29,8 +27,6 @@ class RequerimientoController extends Controller
     // Método para mostrar la lista de requerimientos como Web API
     public function webApiIndex(Request $request)
     {
-        $this->authorize('viewAny', Requerimiento::class); // Authorize using the policy
-
         $especialistas = Especialista::with('user')
             ->where('estado', 1)
             ->get();
@@ -42,7 +38,7 @@ class RequerimientoController extends Controller
             $statuses = $allPossibleStatuses; // Include 'creado' for 'mine' view
         }
 
-        $requerimientosQuery = Requerimiento::with('proceso', 'especialista', 'avance', 'movimientos')
+        $requerimientos = Requerimiento::with('proceso', 'especialista', 'avance', 'movimientos')
             ->whereIn('estado', $statuses)
             ->orderByRaw("FIELD(estado, 'creado', 'aprobado', 'desestimado', 'asignado', 'atendido')")
             ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
@@ -55,28 +51,9 @@ class RequerimientoController extends Controller
                 return $query->where('estado', $request->estado);
             })
             ->when($request->filled('mine') && $request->mine === 'true', function ($query) {
-                return $query->where('facilitador_id', auth()->id());
-            });
-        
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $requerimientosQuery->whereHas('proceso', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
-
-        $requerimientos = $requerimientosQuery->get();
+                return $query->where('facilitador_id', Auth::id());
+            })
+            ->get();
 
         return response()->json(compact('requerimientos', 'especialistas', 'statuses'));
     }
@@ -84,13 +61,11 @@ class RequerimientoController extends Controller
     // Método para mostrar la lista de requerimientos
     public function index(Request $request)
     {
-        $this->authorize('viewAny', Requerimiento::class); // Authorize using the policy
-
         $especialistas = Especialista::with('user') // Carga la relación (para {{ especialista.nombres }})
             ->where('estado', 1)
             ->get();
         $statuses = ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'];
-        $requerimientosQuery = Requerimiento::whereIn('estado', ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'])
+        $requerimientos = Requerimiento::whereIn('estado', ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'])
             ->orderByRaw("FIELD(estado, 'aprobado', 'desestimado', 'asignado', 'atendido')")
             ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
                 return $query->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%');
@@ -100,27 +75,8 @@ class RequerimientoController extends Controller
             })
             ->when($request->filled('estado'), function ($query) use ($request) {
                 return $query->where('estado', $request->estado);
-            });
-        
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $requerimientosQuery->whereHas('proceso', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
-
-        $requerimientos = $requerimientosQuery->get();
+            })
+            ->get();
         return view('requerimientos.index', compact('requerimientos', 'especialistas', 'statuses'));
     }
 
@@ -128,7 +84,6 @@ class RequerimientoController extends Controller
     // Método para almacenar un nuevo requerimiento
     public function store(Request $request)
     {
-        $this->authorize('create', Requerimiento::class); // Authorize using the policy
         try {
             $request->validate([
                 'asunto' => 'required|string',
@@ -140,7 +95,7 @@ class RequerimientoController extends Controller
             $requerimiento = new Requerimiento();
             $requerimiento->asunto = $request->asunto;
             $requerimiento->proceso_id = $request->proceso_id;
-            $requerimiento->facilitador_id = auth()->id();
+            $requerimiento->facilitador_id = Auth::id();
             $requerimiento->justificacion = $request->justificacion;
             $requerimiento->descripcion = $request->descripcion;
             $requerimiento->estado = 'creado';
@@ -159,7 +114,7 @@ class RequerimientoController extends Controller
                 'error' => $e->getMessage(),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'request_data' => $request->all()
             ]);
 
@@ -174,8 +129,6 @@ class RequerimientoController extends Controller
     // Método para actualizar un requerimiento existente
     public function update(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         try {
             $request->validate([
                 'asunto' => 'required|string',
@@ -184,8 +137,10 @@ class RequerimientoController extends Controller
                 'descripcion' => 'required|string'
             ]);
 
+            $requerimiento = Requerimiento::findOrFail($id);
+
             // Ensure only the facilitator who created it can update it (optional, but good for security)
-            if ($requerimiento->facilitador_id !== auth()->id()) {
+            if ($requerimiento->facilitador_id !== Auth::id()) {
                 return response()->json(['message' => 'No autorizado para actualizar este requerimiento.'], 403);
             }
 
@@ -206,7 +161,7 @@ class RequerimientoController extends Controller
                 'error' => $e->getMessage(),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'request_data' => $request->all()
             ]);
             return response()->json([
@@ -218,8 +173,6 @@ class RequerimientoController extends Controller
 
     public function uploadDocument(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         $request->validate([
             'file' => 'required|file|max:10240', // Max 10MB
             'document_type' => 'required|string', // e.g., 'signed_requerimiento', 'other_document'
@@ -254,7 +207,6 @@ class RequerimientoController extends Controller
     public function submitForEvaluation($id)
     {
         $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         $requerimiento->estado = 'aprobado';
         $requerimiento->save();
 
@@ -267,7 +219,6 @@ class RequerimientoController extends Controller
     public function printRequerimiento($id)
     {
         $requerimiento = Requerimiento::with('proceso', 'especialista.user', 'solicitante', 'evaluacion')->findOrFail($id);
-        $this->authorize('view', $requerimiento); // Authorize using the policy
         $pdf = PDF::loadView('requerimientos.print', compact('requerimiento'));
         return $pdf->stream('requerimiento-' . $id . '.pdf');
     }
@@ -276,72 +227,41 @@ class RequerimientoController extends Controller
 
     public function asignados($rol)
     {
-        $this->authorize('viewAny', Requerimiento::class); // Authorize using the policy
-        $user = auth()->user();
-
-        $requerimientosQuery = Requerimiento::query();
+        $user = Auth::user();
 
         if ($rol === 'especialista') {
-            $requerimientosQuery->where('especialista_id', $user->id)
-                ->where('estado', 'en_proceso');
+            $requerimientos = Requerimiento::where('especialista_id', $user->id)
+                ->where('estado', 'en_proceso')->get();
         } elseif (in_array($rol, ['facilitador', 'subgerente'])) {
-            $procesoIds = $user->ouos()->whereHas('procesos', function($q) {
-                $q->where(function ($subQuery) {
-                    $subQuery->wherePivot('responsable', true)
-                             ->orWherePivot('delegada', true)
-                             ->orWherePivot('sgc', true)
-                             ->orWherePivot('sgas', true)
-                             ->orWherePivot('sgcm', true)
-                             ->orWherePivot('sgsi', true);
-                         });
-            })->with('procesos')->get()->pluck('procesos.*.id')->flatten()->unique()->toArray();
-            
-            $requerimientosQuery->whereIn('proceso_id', $procesoIds)
-                ->whereIn('estado', ['asignado', 'en proceso']);
+            $procesoIds = $user->procesos->pluck('id');
+            $requerimientos = Requerimiento::whereIn('proceso_id', $procesoIds)
+                ->whereIn('estado', ['asignado', 'en proceso'])->get();
         } elseif (in_array($rol, ['supervisor', 'admin'])) {
-            $requerimientosQuery->whereIn('estado', ['asignado', 'en proceso']);
+            $requerimientos = Requerimiento::whereIn('estado', ['asignado', 'en proceso'])->get();
         }
-
-        $requerimientos = $requerimientosQuery->get();
 
         return view('requerimientos.index', compact('requerimientos'));
     }
     public function atendidos($rol)
     {
-        $this->authorize('viewAny', Requerimiento::class); // Authorize using the policy
-        $user = auth()->user();
-
-        $requerimientosQuery = Requerimiento::query();
+        $user = Auth::user();
 
         if ($rol === 'especialista') {
-            $requerimientosQuery->where('especialista_id', $user->id)
-                ->where('estado', 'finalizado');
+            $requerimientos = Requerimiento::where('especialista_id', $user->id)
+                ->where('estado', 'finalizado')->get();
         } elseif (in_array($rol, ['facilitador', 'subgerente'])) {
-            $procesoIds = $user->ouos()->whereHas('procesos', function($q) {
-                $q->where(function ($subQuery) {
-                    $subQuery->wherePivot('responsable', true)
-                             ->orWherePivot('delegada', true)
-                             ->orWherePivot('sgc', true)
-                             ->orWherePivot('sgas', true)
-                             ->orWherePivot('sgcm', true)
-                             ->orWherePivot('sgsi', true);
-                         });
-            })->with('procesos')->get()->pluck('procesos.*.id')->flatten()->unique()->toArray();
-            $requerimientosQuery->whereIn('proceso_id', $procesoIds)
-                ->where('estado', 'finalizado');
+            $procesoIds = $user->procesos->pluck('id');
+            $requerimientos = Requerimiento::whereIn('proceso_id', $procesoIds)
+                ->where('estado', 'finalizado')->get();
         } elseif (in_array($rol, ['supervisor', 'admin'])) {
-            $requerimientosQuery->where('estado', 'finalizado');
+            $requerimientos = Requerimiento::where('estado', 'finalizado')->get();
         }
-
-        $requerimientos = $requerimientosQuery->get();
 
         return view('requerimientos.atendidos', compact('requerimientos'));
     }
 
     public function desestimar(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         $request->validate([
             'comentario' => 'required|string',
             'file' => 'required|file|max:10240', // 10MB Max
@@ -362,7 +282,6 @@ class RequerimientoController extends Controller
     public function finalizar($id)
     {
         $requerimiento = Requerimiento::with('avance')->findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
 
         if ($requerimiento->estado !== 'asignado') {
             return response()->json(['message' => 'El requerimiento no se puede finalizar porque no está en el estado "asignado".'], 422);
@@ -381,7 +300,7 @@ class RequerimientoController extends Controller
 
             $requerimiento->movimientos()->create([
                 'estado' => 'atendido',
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'comentario' => 'El requerimiento ha sido finalizado.',
             ]);
 
@@ -398,68 +317,27 @@ class RequerimientoController extends Controller
 
     public function creados(Request $request)
     {
-        $this->authorize('viewAny', Requerimiento::class); // Authorize using the policy
         $especialistas = User::role('Especialista')->get();
         $statuses = Requerimiento::select('estado')->distinct()->get();
-        $requerimientosQuery = Requerimiento::whereIn('estado', ['aprobado', 'evaluado'])
+        $requerimientos = Requerimiento::whereIn('estado', ['aprobado', 'evaluado'])
             ->when($request->especialista_id, function ($query, $especialista_id) {
                 return $query->where('especialista_id', $especialista_id);
             })
             ->when($request->estado, function ($query, $estado) {
                 return $query->where('estado', $estado);
-            });
-        
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $requerimientosQuery->whereHas('proceso', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
-
-        $requerimientos = $requerimientosQuery->get();
+            })
+            ->get();
         return view('requerimientos.index', compact('requerimientos', 'especialistas', 'statuses'));
     }
     public function seguimiento()
     {
-        $this->authorize('viewAny', Requerimiento::class); // Authorize using the policy
-        $requerimientosQuery = Requerimiento::query();
-
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $requerimientosQuery->whereHas('proceso', function ($q) use ($accessibleOuoIds) {
-                $q->whereHas('ouos', function ($subQ) use ($accessibleOuoIds) {
-                    $subQ->whereIn('ouos.id', $accessibleOuoIds)
-                         ->where(function ($pivotQ) {
-                             $pivotQ->wherePivot('responsable', true)
-                                    ->orWherePivot('delegada', true)
-                                    ->orWherePivot('sgc', true)
-                                    ->orWherePivot('sgas', true)
-                                    ->orWherePivot('sgcm', true)
-                                    ->orWherePivot('sgsi', true);
-                         });
-                });
-            });
-        }
-        $requerimientos = $requerimientosQuery->get();
+        $requerimientos = Requerimiento::all();
         return view('requerimientos.seguimiento', compact('requerimientos'));
     }
 
     public function asignarEspecialista(Request $request, $id)
     {
         $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         // Regla de negocio: Solo permitir asignación en estados específicos
         $estadosPermitidos = ['evaluado', 'asignado'];
         if (!in_array($requerimiento->estado, $estadosPermitidos)) {
@@ -506,7 +384,7 @@ class RequerimientoController extends Controller
 
             $requerimiento->movimientos()->create([
                 'estado' => 'asignado',
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'comentario' => 'Asignación del requerimiento al especialista ID: ' . $request->especialista_id,
             ]);
 
@@ -523,7 +401,6 @@ class RequerimientoController extends Controller
     public function getAvance($id)
     {
         $requerimiento = Requerimiento::with('avance')->findOrFail($id);
-        $this->authorize('view', $requerimiento); // Authorize using the policy
         $avance = $requerimiento->avance;
         return response()->json($avance);
     }
@@ -532,7 +409,6 @@ class RequerimientoController extends Controller
     {
         Log::info('guardarAvance request data: ', $request->all());
         $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
 
         $requerimiento->avance()->updateOrCreate(
             ['requerimiento_id' => $id],
@@ -544,8 +420,6 @@ class RequerimientoController extends Controller
 
     public function listarEvidencias($id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('view', $requerimiento); // Authorize using the policy
         $avance = RequerimientoAvance::where('requerimiento_id', $id)->first();
 
         if ($avance && $avance->ruta_evidencias) {
@@ -557,8 +431,6 @@ class RequerimientoController extends Controller
 
     public function subirEvidencia(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB Max
         ]);
@@ -583,8 +455,6 @@ class RequerimientoController extends Controller
 
     public function eliminarEvidencia(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         $request->validate([
             'file_path' => 'required|string',
         ]);
@@ -605,8 +475,6 @@ class RequerimientoController extends Controller
 
     public function descargarEvidencia(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('view', $requerimiento); // Authorize using the policy
         $request->validate([
             'file_path' => 'required|string',
         ]);
@@ -625,8 +493,6 @@ class RequerimientoController extends Controller
 
     public function getEvaluacion($id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('view', $requerimiento); // Authorize using the policy
         $evaluacion = RequerimientoEvaluacion::where('requerimiento_id', $id)->latest()->first();
         return response()->json($evaluacion);
     }
@@ -637,7 +503,6 @@ class RequerimientoController extends Controller
             DB::beginTransaction();
 
             $requerimiento = Requerimiento::findOrFail($id);
-            $this->authorize('update', $requerimiento); // Authorize using the policy
             $isFromWizard = $request->input('from_wizard', false);
 
             // Regla de negocio: Permitir evaluación en 'aprobado' o 'evaluado',
@@ -673,7 +538,7 @@ class RequerimientoController extends Controller
 
                 $requerimiento->movimientos()->create([
                     'estado' => 'evaluado',
-                    'user_id' => auth()->id(),
+                    'user_id' => Auth::id(),
                     'comentario' => 'Evaluación de complejidad registrada con puntaje: ' . $request->complejidad_valor . ' y nivel: ' . $request->complejidad_nivel,
                 ]);
             } else {
@@ -698,14 +563,11 @@ class RequerimientoController extends Controller
     public function show($id)
     {
         $requerimiento = Requerimiento::with(['avance', 'evaluacion'])->findOrFail($id);
-        $this->authorize('view', $requerimiento); // Authorize using the policy
         return response()->json($requerimiento);
     }
 
     public function deleteDocument(Request $request, $id)
     {
-        $requerimiento = Requerimiento::findOrFail($id);
-        $this->authorize('update', $requerimiento); // Authorize using the policy
         $request->validate([
             'path' => 'required|string',
         ]);
