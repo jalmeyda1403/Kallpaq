@@ -398,6 +398,12 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a href="{{ route('vue.ouo-user-assignment') }}" class="nav-link {{ request()->routeIs('vue.ouo-user-assignment') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-user-tag"></i>
+                                    <p>Asignación OUO-Usuario</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="/vue/facilitadores" class="nav-link {{ request()->is('vue/facilitadores*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users-cog"></i>
                                     <p>Gestionar Facilitadores</p>

@@ -433,3 +433,8 @@ Route::get('/test-styles', function () {
 Route::get('/vue/{any}', function () {
     return view('app');
 })->where('any', '.*')->name('vue.app');
+
+// New route for OuoUserAssignment component
+Route::get('/vue/ouo-user-assignment', function () {
+    return view('app');
+})->name('vue.ouo-user-assignment');
