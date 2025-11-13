@@ -25,14 +25,6 @@
                             title="Nuevo Hallazgo">
                             <i class="fas fa-plus-circle"></i> Agregar
                         </a>
-                        <button class="btn btn-warning btn-sm mr-1" :disabled="!selectedHallazgo"
-                            @click.prevent="editHallazgo" title="Editar Hallazgo">
-                            <i class="fas fa-pencil-alt"></i> Editar
-                        </button>
-                        <button class="btn btn-danger btn-sm" :disabled="!selectedHallazgo"
-                            @click.prevent="deleteHallazgo" title="Eliminar Hallazgo">
-                            <i class="fas fa-trash-alt"></i> Eliminar
-                        </button>
                     </div>
                 </div>
                 <hr>
@@ -157,7 +149,6 @@ import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const hallazgos = ref([]);
-const selectedHallazgo = ref(null);
 const successMessage = ref('');
 const errorMessage = ref('');
 const hallazgoStore = useHallazgoStore();
@@ -218,10 +209,8 @@ const openNewHallazgoModal = () => {
     hallazgoStore.openModal();
 };
 
-const editHallazgo = () => {
-    if (selectedHallazgo.value) {
-        hallazgoStore.openModal(selectedHallazgo.value);
-    }
+const editHallazgo = (hallazgo) => {
+    hallazgoStore.openModal(hallazgo);
 };
 
 const deleteHallazgo = async () => {
@@ -231,9 +220,11 @@ const deleteHallazgo = async () => {
 // --- CICLO DE VIDA ---
 onMounted(() => {
     fetchHallazgos();
+    window.addEventListener('hallazgos-actualizados', fetchHallazgos); // Add event listener
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener('hallazgos-actualizados', fetchHallazgos); // Remove event listener
     // No specific cleanup needed for PrimeVue DataTable beyond component unmount
 });
 

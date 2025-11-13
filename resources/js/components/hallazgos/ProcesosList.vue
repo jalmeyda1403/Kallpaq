@@ -12,7 +12,7 @@
         <h6 class="mb-1" style="font-weight: bold;">
             ASOCIACIÓN DE PROCESOS
         </h6>
-        <p class="mb-3 text-muted" style="font-size: 0.875rem;">
+        <p class="small text-muted">
             Este módulo permite registrar y visualizar las relaciones entre los hallazgos y los procesos para asegurar
             una mejor
             trazabilidad y gestión.
@@ -84,19 +84,11 @@ import { useHallazgoStore } from '@/stores/hallazgoStore';
 import { route } from 'ziggy-js';
 import ModalHijo from '../generales/ModalHijo.vue';
 
-// El store es ahora la ÚNICA fuente de verdad para los datos
 const hallazgoStore = useHallazgoStore();
-
-// Las referencias para el modal y la selección siguen siendo locales al componente
-const procesoModal = ref(null);
 const selectedProceso = ref({ id: null, descripcion: '' });
-
-// La ruta para el buscador sigue siendo una constante local
+const procesoModal = ref(null); // Re-added ref
 const proceso_route = route('procesos.buscar');
 
-// --- SIMPLIFICACIÓN DE LA LÓGICA ---
-
-// Las funciones ahora son simples delegaciones a las acciones del store
 const openProcesoModal = () => {
     procesoModal.value.open();
 };
@@ -106,22 +98,18 @@ const handleProcesoSelection = ({ idValue, descValue }) => {
     selectedProceso.value.descripcion = descValue;
 };
 
-
-// Esta función ahora solo llama a la acción del store y limpia el estado local
 const handleAssociate = async () => {
     if (!selectedProceso.value.id) return;
     await hallazgoStore.asociarProceso(selectedProceso.value.id);
-    selectedProceso.value = { id: null, descripcion: '' }; // Limpiar selección local
+    selectedProceso.value = { id: null, descripcion: '' };
 };
 
-// Al montar el componente, le pedimos al store que cargue los datos
 onMounted(() => {
     hallazgoStore.fetchAssociatedProcesos();
 });
 </script>
 
 <style scoped>
-/* Puedes copiar los estilos de tu componente de ejemplo o personalizarlos */
 .form-overlay-container {
     position: relative;
     min-height: 150px;

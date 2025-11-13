@@ -6,6 +6,8 @@ import HallazgosIndex from '@/components/hallazgos/HallazgoIndex.vue';
 import RequerimientosIndex from '@/components/requerimientos/RequerimientosIndex.vue';
 import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosIndexMe.vue';
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
+import FacilitadorIndex from '@/components/facilitadores/FacilitadorIndex.vue'; // Import new component
+import MisMejorasFacilitador from '@/components/hallazgos/MisMejorasFacilitador.vue'; // Import new component
 
 const routes = [
     {
@@ -38,6 +40,16 @@ const routes = [
         path: '/mis-requerimientos',
         name: 'requerimientos.mine',
         component: RequerimientosIndexMe,
+    },
+    {
+        path: '/facilitadores', // New route for facilitator management
+        name: 'facilitadores.index',
+        component: FacilitadorIndex,
+    },
+    {
+        path: '/mis-mejoras-facilitador', // New route for facilitator's hallazgos
+        name: 'facilitador.mis-mejoras',
+        component: MisMejorasFacilitador,
     }
 ]
 

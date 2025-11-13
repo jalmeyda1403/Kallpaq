@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 Use App\Http\Controllers\DocumentoController;
 Use App\Http\Controllers\RequerimientoController;
 Use App\Http\Controllers\HallazgoController;
+// Removed UserController and EspecialistaController imports
 
 /*
 |--------------------------------------------------------------------------
@@ -22,4 +23,5 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
    
+    // User related API routes (now empty or moved)
 });

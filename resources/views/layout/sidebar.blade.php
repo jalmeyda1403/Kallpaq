@@ -418,6 +418,31 @@
                         </ul>
                     </li>
 
+                    <!-- Nueva sección de Administración -->
+                    <li class="nav-item has-treeview {{ request()->is('vue/facilitadores*') || request()->is('vue/mis-mejoras-facilitador*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-cogs"></i>
+                            <p>
+                                Administración
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/vue/facilitadores" class="nav-link {{ request()->is('vue/facilitadores*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>Gestionar Facilitadores</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/vue/mis-mejoras-facilitador" class="nav-link {{ request()->is('vue/mis-mejoras-facilitador*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>Mis Mejoras (Facilitador)</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                 @endif
 
 

@@ -1,70 +1,63 @@
-# Project Overview
+# 🧩 Sistema de Administración del Sistema de Gestión ISO 9001 e ISO 37001
 
-This is a **Laravel 10 web application** built with PHP 8.1+. It features a modern frontend stack utilizing **Vue.js 3**, **Vite** for asset bundling, **Bootstrap**, **TailwindCSS**, and the **AdminLTE** theme for its administrative interface. The application incorporates **Livewire 3** for dynamic, server-rendered components, enhancing interactivity without extensive JavaScript.
+Este es un **software web desarrollado en Laravel 10** con **PHP 8.1+**, diseñado para implementar la **Administración del Sistema de Gestión ISO 9001 e ISO 37001** dentro de una organización.  
+El sistema permite gestionar los componentes clave del sistema de gestión de calidad y antisoborno, promoviendo la mejora continua, el control documental, la trazabilidad, y la gestión de riesgos y obligaciones.
 
-For authentication and authorization, it uses Laravel's built-in system alongside **Spatie/laravel-permission** for robust role and permission management. Other key features include PDF generation via **barryvdh/laravel-dompdf** and seamless JavaScript routing with **tightenco/ziggy**.
+---
 
-Based on the extensive routes and models (e.g., `Proceso`, `Indicador`, `Hallazgo`, `Documento`, `Riesgo`, `Obligacion`, `Requerimiento`, `OUO`), this application appears to be a comprehensive management system, likely for compliance, quality management, or a similar domain, focusing on processes, indicators, audit findings, actions, risks, documents, and user management.
+## ⚙️ Tecnologías y Arquitectura
 
-## Building and Running
+El sistema está construido con una arquitectura moderna que combina:
 
-To set up and run this project locally, follow these steps:
+- **Framework Backend:** Laravel 10 (PHP 8.1+)
+- **Frontend:** Vue.js 3, Vite, Bootstrap, TailwindCSS, AdminLTE
+- **Componentes dinámicos:** Livewire 3
+- **Gestión de estado (Vue):** Pinia
+- **Enrutamiento (Vue):** Vue Router
+- **Autenticación y Autorización:** Laravel Auth, Spatie/laravel-permission
+- **PDF Generation:** barryvdh/laravel-dompdf
+- **Routing JS:** tightenco/ziggy
+- **ORM:** Eloquent (Migrations, Seeders)
 
-### Backend (PHP/Laravel)
+---
 
-1.  **Install PHP Dependencies:**
-    ```bash
-    composer install
-    ```
-2.  **Generate Application Key:**
-    ```bash
-    php artisan key:generate
-    ```
-3.  **Run Database Migrations:**
-    ```bash
-    php artisan migrate
-    ```
-    *If you have seeders to populate the database with initial data, run:*
-    ```bash
-    php artisan db:seed
-    ```
-4.  **Start Local Server:**
-    ```bash
-    php artisan serve
-    ```
+## 🧭 Módulos del Sistema
 
-### Frontend (JavaScript/Vite)
+El software consta de los siguientes módulos principales:
 
-1.  **Install Node.js Dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-2.  **Compile Assets for Development (with hot-reloading):**
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    ```
-3.  **Compile Assets for Production:**
-    ```bash
-    npm run build
-    # or
-    yarn build
-    ```
+### 1. Documentación por Proceso
+Acceso libre para consulta de la documentación del sistema (mapa de procesos, procedimientos, instructivos, formatos, entre otros).
 
-The application should then be accessible at the URL provided by `php artisan serve` (typically `http://127.0.0.1:8000`).
+### 2. Gestión de Requerimientos
+Permite registrar, asignar, evaluar y dar seguimiento a requerimientos internos.  
+**Roles involucrados:** Administrador, Especialistas, Propietarios de procesos y Facilitadores.
 
-## Development Conventions
+### 3. Gestión por Procesos
+Administra la caracterización y seguimiento de los procesos institucionales.  
+**Roles:** Administrador y Especialistas.
 
-*   **Framework:** Laravel 10 (PHP).
-*   **Frontend:** Vue.js 3, Vite, Bootstrap, TailwindCSS, AdminLTE.
-*   **Dynamic Components:** Livewire 3.
-*   **State Management (Vue):** Pinia.
-*   **Routing (Vue):** Vue Router.
-*   **Authentication & Authorization:** Laravel Auth, Spatie/laravel-permission.
-*   **Database:** Eloquent ORM, Migrations.
-*   **Testing:** PHPUnit for backend tests (Unit and Feature).
-*   **Code Style:** Likely follows Laravel's conventions, potentially enforced by `laravel/pint` (a dev dependency).
-*   **Helpers:** Custom helper functions are located in `app/Helpers/`.
+### 4. Gestión de la Mejora
+Gestiona no conformidades, acciones correctivas, oportunidades de mejora y propuestas internas.  
+**Roles:** Administrador, Especialistas, Propietarios de procesos y Facilitadores.
+
+### 5. Gestión de Obligaciones
+Permite el registro, evaluación y seguimiento del cumplimiento de obligaciones normativas y contractuales.
+
+### 6. Gestión de Riesgos
+Administra la identificación, evaluación, tratamiento y monitoreo de riesgos asociados a los procesos institucionales.
+
+### 7. Administración
+Incluye las siguientes funcionalidades:
+- **Gestión de Usuarios:** creación, asignación de roles y control de accesos.  
+- **Gestión de Facilitadores:** administración de usuarios con rol de apoyo técnico o metodológico.  
+- **Parámetros:** configuración general del sistema (periodos, tipos, niveles, umbrales, etc.).
+
+---
+
+## 🚀 Instalación y Ejecución
+
+### 🔹 Backend (PHP/Laravel)
+
+1. **Instalar dependencias de PHP:**
+   ```bash
+   composer install

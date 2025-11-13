@@ -64,4 +64,9 @@ class User extends Authenticatable
         // Corregido: Ahora apunta al modelo 'HallazgoAsignacion' y a la clave foránea correcta.
         return $this->hasMany(HallazgoAsignacion::class, 'user_asigna_id');
     }
+
+    public function facilitador()
+    {
+        return $this->hasOne(Facilitador::class);
+    }
 }

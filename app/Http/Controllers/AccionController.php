@@ -7,6 +7,7 @@ use App\Models\Proceso;
 use App\Models\Accion;
 use App\Models\Causa;
 use App\Models\User;
+use App\Models\HallazgoProceso; // Import HallazgoProceso model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -18,65 +19,92 @@ class AccionController extends Controller
 
     public function listarAcciones(Hallazgo $hallazgo, Proceso $proceso)
     {
+        // Find the HallazgoProceso entry
+        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
+                                        ->where('proceso_id', $proceso->id)
+                                        ->first();
+
+        if (!$hallazgoProceso) {
+            return response()->json([]); // No actions if no HallazgoProceso link exists
+        }
+
         $acciones = Accion::where('hallazgo_id', $hallazgo->id)
-            ->where('proceso_id', $proceso->id)
+            ->where('hallazgo_proceso_id', $hallazgoProceso->id) // Filter by hallazgo_proceso_id
             ->get();
         return response()->json($acciones);
     }
 
     public function storeAccion(Request $request, Hallazgo $hallazgo, Proceso $proceso)
     {
+        // Find the HallazgoProceso entry
+        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
+                                        ->where('proceso_id', $proceso->id)
+                                        ->firstOrFail(); // Ensure the link exists
+
         // Validación actualizada según tu nuevo SQL
         $validatedData = $request->validate([
-            'tipo_accion' => 'required|in:1,2', // Asumiendo 1=inmediata, 2=correctiva para TINYINT
             'accion_descripcion' => 'required|string',
-            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada',
+            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada,programado',
             'accion_cod' => 'nullable|string|max:255',
             'accion_comentario' => 'nullable|string',
-            'accion_fecha_inicio' => 'nullable|date',
-            'accion_fecha_fin_planificada' => 'nullable|date',
-            'accion_responsable' => 'nullable|string|max:255',
+            'accion_fecha_inicio' => 'required|date',
+            'accion_fecha_fin_planificada' => 'required|date',
+            'accion_responsable' => 'required|string|max:255',
             'accion_responsable_correo' => 'nullable|email|max:255',
         ]);
 
         try {
             $data = array_merge($validatedData, [
                 'hallazgo_id' => $hallazgo->id,
-                'proceso_id' => $proceso->id,
+                'hallazgo_proceso_id' => $hallazgoProceso->id, // Use hallazgo_proceso_id
             ]);
+
+            // Apply default values based on hallazgo_ciclo
+            if ($hallazgo->hallazgo_ciclo == 1) {
+                $data['accion_estado'] = 'programado';
+                $data['accion_ciclo'] = 1;
+            }
+
             $accion = Accion::create($data);
             return response()->json($accion, 201);
         } catch (\Throwable $e) {
-            Log::error('Error al crear acción: ' . $e->getMessage());
+            Log::error('Error al crear acción: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return response()->json(['message' => 'Ocurrió un error al crear la acción.'], 500);
         }
     }
 
     public function updateAccion(Request $request, Accion $accion)
     {
+        Log::info('updateAccion called for accion ID: ' . $accion->id); // Add this log
         $validatedData = $request->validate([
-            'tipo_accion' => 'required|in:1,2',
             'accion_descripcion' => 'required|string',
-            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada',
+            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada,programado',
             'accion_cod' => 'nullable|string|max:255',
             'accion_comentario' => 'nullable|string',
-            'accion_fecha_inicio' => 'nullable|date',
-            'accion_fecha_fin_planificada' => 'nullable|date',
+            'accion_fecha_inicio' => 'required|date',
+            'accion_fecha_fin_planificada' => 'required|date',
             'accion_fecha_fin_reprogramada' => 'nullable|date',
             'accion_fecha_cancelada' => 'nullable|date',
             'accion_fecha_fin_real' => 'nullable|date',
             'accion_justificacion' => 'nullable|string',
-            'accion_responsable' => 'nullable|string|max:255',
+            'accion_responsable' => 'required|string|max:255',
             'accion_responsable_correo' => 'nullable|email|max:255',
         ]);
+        Log::info('Validation passed for update. Validated data:', $validatedData); // Add this log
         $accion->update($validatedData);
+        Log::info('Accion updated successfully: ' . $accion->id); // Add this log
         return response()->json($accion);
     }
 
     public function destroyAccion(Accion $accion)
     {
-        $accion->delete();
-        return response()->json(['message' => 'Acción eliminada con éxito.'], 200);
+        try {
+            $accion->delete();
+            return response()->json(['message' => 'Acción eliminada con éxito.'], 200);
+        } catch (\Throwable $e) {
+            Log::error('Error al eliminar acción: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            return response()->json(['message' => 'Ocurrió un error al eliminar la acción.'], 500);
+        }
     }
 
     //METODO SEGUIMIENTO DE ACCIONES
@@ -174,7 +202,7 @@ class AccionController extends Controller
 
     public function listarCausaRaiz(Hallazgo $hallazgo)
     {
-        return response()->json($hallazgo->causaRaiz);
+        return response()->json($hallazgo->causa);
     }
 
     public function storeOrUpdateCausaRaiz(Request $request, Hallazgo $hallazgo)
@@ -196,7 +224,7 @@ class AccionController extends Controller
         ]);
 
         try {
-            $causaRaiz = $hallazgo->causaRaiz()->updateOrCreate(
+            $causaRaiz = $hallazgo->causa()->updateOrCreate(
                 ['hallazgo_id' => $hallazgo->id],
                 $validatedData
             );

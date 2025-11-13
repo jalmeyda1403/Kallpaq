@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User; // Add this line
 class HallazgoController extends Controller
 {
     /**
@@ -171,6 +172,7 @@ class HallazgoController extends Controller
             'hallazgo_origen' => 'required|string',
             'hallazgo_fecha_identificacion' => 'required|date',
             'hallazgo_evidencia' => 'nullable|string',
+            'hallazgo_sig' => 'nullable|array', // Add validation for hallazgo_sig
 
             // Añade aquí el resto de validaciones
         ]);
@@ -460,40 +462,45 @@ class HallazgoController extends Controller
             'actual' => $hallazgo->load('especialista')->especialista,
 
             // Cargamos el historial y las relaciones anidadas para obtener los nombres
-            'historial' => $hallazgo->historialAsignaciones()->with('especialista:id,name', 'asignadoPor:id,name')->latest()->get()
+            'historial' => $hallazgo->movimientos()->with('usuario:id,name')->latest()->get()
         ]);
     }
     public function asignarEspecialista(Request $request, Hallazgo $hallazgo)
     {
         $validatedData = $request->validate([
-            'especialista_id' => 'required|exists:users,id'
+            'especialista_id' => 'required|exists:users,id',
+            'assigned_by_user_id' => 'required|exists:users,id', // Validate the user who made the assignment
+            'assigned_by_user_name' => 'required|string',
         ]);
 
         try {
-
             $nuevoEspecialista = DB::transaction(function () use ($hallazgo, $validatedData) {
-
+                // Update the Hallazgo's specialist
                 $hallazgo->update([
                     'especialista_id' => $validatedData['especialista_id']
                 ]);
 
+                // Get the name of the newly assigned specialist
+                $specialistName = User::find($validatedData['especialista_id'])->name;
 
-                $hallazgo->historialAsignaciones()->create([
-                    'especialista_id' => $validatedData['especialista_id'],
-                    'user_asigna_id' => Auth::id() // El usuario que está realizando la acción
+                // Create a HallazgoMovimientos record
+                $hallazgo->movimientos()->create([ // Assuming 'movimientos' is the relationship to HallazgoMovimientos
+                    'estado' => 'asignado',
+                    'comentario' => "Hallazgo asignado a {$specialistName} por {$validatedData['assigned_by_user_name']}.",
+                    'user_id' => $validatedData['assigned_by_user_id'], // The user who made the assignment
                 ]);
 
                 return $hallazgo->fresh()->load('especialista');
             });
 
-
             return response()->json([
                 'actual' => $nuevoEspecialista->especialista,
-                'historial' => $hallazgo->historialAsignaciones()->with('especialista:id,name', 'asignadoPor:id,name')->latest()->get()
+                'historial' => $hallazgo->movimientos()->with('usuario:id,name')->latest()->get() // Load 'usuario' relationship for HallazgoMovimientos
             ]);
 
         } catch (\Throwable $e) {
-            return response()->json(['message' => 'Ocurrió un error al asignar el especialista.'], 500);
+            \Log::error("Error al asignar especialista: " . $e->getMessage() . " en " . $e->getFile() . " línea " . $e->getLine());
+            return response()->json(['message' => 'Ocurrió un error al asignar el especialista.', 'error' => $e->getMessage()], 500);
         }
     }
 

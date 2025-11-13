@@ -30,10 +30,10 @@
                     <label for="hallazgo_origen">Origen</label>
                     <select v-model="hallazgoStore.hallazgoForm.hallazgo_origen" class="form-control"
                       :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_origen }" id="hallazgo_origen" required>
-                      <option value="IN">Auditoría Interna</option>
-                      <option value="EX">Auditoría Externa</option>
-                      <option value="OF">Hallazgo de Oficio MODER</option>
-                      <option value="PR">Hallazgo de Personal o Proceso</option>
+                      <option value="" disabled>Seleccione un origen...</option>
+                      <option v-for="option in hallazgoOrigenOptions" :key="option.value" :value="option.value">
+                        {{ option.text }}
+                      </option>
                     </select>
                     <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_origen">
                       {{ hallazgoStore.errors.hallazgo_origen[0] }}
@@ -220,6 +220,17 @@ import { useHallazgoStore } from '@/stores/hallazgoStore';
 const hallazgoStore = useHallazgoStore();
 const sigSelectElementRef = ref(null);
 const localLoading = ref(false);
+
+const hallazgoOrigenOptions = [
+    { value: 'RD', text: 'RD - Revisión por la Dirección' },
+    { value: 'IN', text: 'IN - Resultados de Auditorías Internas' },
+    { value: 'EX', text: 'EX - Resultados de Auditorías Externas' },
+    { value: 'SN', text: 'SN - Resultado de la detección de Salidas No Conformes' },
+    { value: 'GI', text: 'GI - Resultado del análisis de la Gestión de indicadores / objetivos de la calidad' },
+    { value: 'GR', text: 'GR - Resultado de la gestión de riesgos' },
+    { value: 'SC', text: 'SC - Satisfacción, reclamos y quejas de los clientes' },
+    { value: 'OT', text: 'OT - Otros' },
+];
 
 // Función para inicializar o re-inicializar Select2
 const initializeSelect2 = () => {

@@ -95,6 +95,11 @@ class Proceso extends Model
         return $this->belongsToMany(Documento::class, 'documento_proceso', 'proceso_id', 'documento_id');
     }
 
+    public function facilitadores()
+    {
+        return $this->belongsToMany(Facilitador::class, 'proceso_facilitador')->using(ProcesoFacilitador::class);
+    }
+
     public function ouo_responsable()
     {
         return $this->ouos()->wherePivot('responsable', 1)->pluck('ouo_nombre')->first();

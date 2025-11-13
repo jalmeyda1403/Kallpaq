@@ -41,7 +41,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
         especialistaActual: null,
         historialAsignaciones: [],
         loadingAsignaciones: false,
-        isHistorialModalOpen: false,
+        especialistas: [],
 
         //Estado Planes de Acción
         isGestionPlanModalOpen: false,
@@ -52,6 +52,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
         causaRaiz: {
             causa_metodo: 'cinco_porques',
         },
+        isCausaRaizModalOpen: false, // New state property
         accionesDelPlan: [],
 
     }),
@@ -83,12 +84,13 @@ export const useHallazgoStore = defineStore('hallazgo', {
 
         // Carga los datos necesarios para los selects del formulario
         async loadGlobalData() {
-            if (this.procesos.length > 0) return; // Evita recargar si ya existen datos
+            if (this.procesos.length > 0 && this.especialistas.length > 0 && this.auditores.length > 0) return; // Evita recargar si ya existen datos
             this.loading = true;
             try {
-                const auditoresResponse = await axios.get(route('usuario.auditores'));
-                this.auditores = auditoresResponse.data;
-                console.log(this.auditores);
+               const especialistasResponse = await axios.get(route('especialistas.index')); // Fetch specialists
+                this.especialistas = especialistasResponse.data; // Store specialists
+
+                               console.log(this.especialistas); // Log specialists
                 this.errors = {};
             } catch (error) {
                 this.errors.global = 'No se pudieron cargar los datos necesarios.';
@@ -246,13 +248,19 @@ export const useHallazgoStore = defineStore('hallazgo', {
             if (!this.hallazgoForm.id) return;
             this.loadingAsignaciones = true;
             try {
-                const response = await axios.post(
-                    route('hallazgo.asignaciones.asignar', { hallazgo: this.hallazgoForm.id }),
-                    { especialista_id: especialistaId }
-                );
-                this.especialistaActual = response.data.actual;
-                this.historialAsignaciones = response.data.historial;
-            } catch (error) {
+                                    const response = await axios.post(
+                                        route('hallazgo.asignaciones.asignar', { hallazgo: this.hallazgoForm.id }),
+                                        {
+                                            especialista_id: especialistaId,
+                                            assigned_by_user_id: window.App.user.id, // Pass the current user's ID
+                                            assigned_by_user_name: window.App.user.name // Pass the current user's name
+                                        }
+                                    );
+                                    this.especialistaActual = response.data.actual;
+                                    this.historialAsignaciones = response.data.historial;
+                
+                                // IMPORTANT: Update hallazgoForm.especialista_id to reflect the new assignment
+                                this.hallazgoForm.especialista_id = especialistaId;            } catch (error) {
                 console.error("Error al asignar el especialista:", error);
             } finally {
                 this.loadingAsignaciones = false;
@@ -287,26 +295,36 @@ export const useHallazgoStore = defineStore('hallazgo', {
         },
 
         async saveAccion(accionData) {
-            this.loadingPlan = true;
             try {
-                await axios.post(
-                    route('hallazgos.acciones.store', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }),
-                    accionData
-                );
+                let response;
+                if (accionData.id) { // If accionData has an ID, it's an update
+                    response = await axios.put(
+                        route('acciones.update', { accion: accionData.id }),
+                        accionData
+                    );
+                } else { // Otherwise, it's a new action
+                    response = await axios.post(
+                        route('hallazgos.acciones.store', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }),
+                        accionData
+                    );
+                }
+                
                 // Refrescamos solo la lista de acciones para una respuesta más rápida
-                const response = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
-                this.accionesDelPlan = response.data;
+                const responseList = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
+                this.accionesDelPlan = responseList.data;
             } catch (error) {
                 console.error("Error al guardar la acción:", error);
+                if (error.response) {
+                    console.error("Error response data:", error.response.data);
+                    console.error("Error response status:", error.response.status);
+                }
                 alert("Ocurrió un error al guardar la acción.");
             } finally {
-                this.loadingPlan = false;
             }
         },
 
         async deleteAccion(accionId) {
             if (!confirm("¿Está seguro de que desea eliminar esta acción?")) return;
-            this.loadingPlan = true;
             try {
                 await axios.delete(route('acciones.destroy', { accion: accionId }));
                 // Refrescamos la lista después de eliminar
@@ -314,9 +332,12 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 this.accionesDelPlan = response.data;
             } catch (error) {
                 console.error("Error al eliminar la acción:", error);
+                if (error.response) {
+                    console.error("Error response data:", error.response.data);
+                    console.error("Error response status:", error.response.status);
+                }
                 alert("Ocurrió un error al eliminar la acción.");
             } finally {
-                this.loadingPlan = false;
             }
         },
 
@@ -339,8 +360,6 @@ export const useHallazgoStore = defineStore('hallazgo', {
         },
 
         //Modales
-        openHistorialModal() { this.isHistorialModalOpen = true; },
-        closeHistorialModal() { this.isHistorialModalOpen = false; },
         openGestionPlanModal(proceso) {
             this.procesoParaGestionar = proceso;
             this.isGestionPlanModalOpen = true;
@@ -349,6 +368,12 @@ export const useHallazgoStore = defineStore('hallazgo', {
         closeGestionPlanModal() {
             this.isGestionPlanModalOpen = false;
             this.procesoParaGestionar = null; // Limpiar el contexto
+        },
+        openCausaRaizModal() { // New action
+            this.isCausaRaizModalOpen = true;
+        },
+        closeCausaRaizModal() { // New action
+            this.isCausaRaizModalOpen = false;
         },
 
 
@@ -378,9 +403,9 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.especialistaActual = null;
             this.historialAsignaciones = [];
             this.loadingAsignaciones = false;
-            this.isHistorialModalOpen = false;
             this.isGestionPlanModalOpen = false;
             this.procesoParaGestionar = null;
+            this.isCausaRaizModalOpen = false; // Reset new state property
             this.causaRaiz = { causa_metodo: 'cinco_porques' };
             this.accionesDelPlan = [];
             this.loadingPlan = false;

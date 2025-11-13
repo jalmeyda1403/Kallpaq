@@ -18,19 +18,19 @@ class AccionObserver
         if ($hallazgo) {
             // Obtener la última fecha de cierre de las acciones asociadas al hallazgo
             $ultimaFecha = Accion::where('hallazgo_id', $accion->hallazgo_id)
-                                ->max('fecha_fin');
+                                ->max('accion_fecha_fin_planificada');
 
             // Actualizar la fecha de cierre de acciones en el hallazgo
-            $hallazgo->fecha_cierre_acciones = $ultimaFecha;
+            $hallazgo->hallazgo_fecha_cierre = $ultimaFecha;
 
             $totalAcciones = $hallazgo->acciones()->count();
-            $accionesCompletadas = $hallazgo->acciones()->where('estado', 'Cerrada')->count();
+            $accionesCompletadas = $hallazgo->acciones()->where('accion_estado', 'Cerrada')->count();
 
             // Calcular el porcentaje de avance
             $avance = ($accionesCompletadas / $totalAcciones) * 100;
 
             // Actualizar el campo avance del hallazgo
-            $hallazgo->avance = $avance;
+            $hallazgo->hallazgo_avance = $avance;
             
             $hallazgo->save();
         }

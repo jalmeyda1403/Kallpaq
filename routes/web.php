@@ -29,9 +29,27 @@ use App\Http\Controllers\DocumentoVersionController;
 use App\Http\Controllers\ParteInteresadaController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FacilitadorController;
+use App\Http\Controllers\EspecialistaController;
+use App\Http\Controllers\FacilitadorDashboardController;
 
+// ... existing routes ...
 
+// Rutas para Facilitadores
+Route::middleware(['auth'])->group(function () {
+    Route::resource('facilitadores', FacilitadorController::class);
+    Route::post('facilitadores/{facilitador}/procesos/attach', [FacilitadorController::class, 'attachProceso'])->name('facilitadores.procesos.attach');
+    Route::delete('facilitadores/{facilitador}/procesos/{proceso}/detach', [FacilitadorController::class, 'detachProceso'])->name('facilitadores.procesos.detach');
+    Route::get('facilitadores/{facilitador}/procesos', [FacilitadorController::class, 'listProcesos'])->name('facilitadores.procesos.list');
 
+    // Rutas para el Dashboard del Facilitador
+    Route::get('facilitador-dashboard/hallazgos', [FacilitadorDashboardController::class, 'getHallazgos'])->name('facilitador.dashboard.hallazgos');
+
+    // New route for listing users (for FacilitadorForm.vue)
+    Route::get('users/list', [UserController::class, 'listUsers'])->name('api.users.list');
+});
+
+// ... rest of the existing routes ...
 
 
 
@@ -68,13 +86,16 @@ Route::middleware('auth')->group(function () {
     // Requerimientos Edit and Update routes
     Route::put('/requerimientos/{id}', [RequerimientoController::class, 'update'])->name('requerimientos.update');
 
+    // Especialistas
+    Route::get('/especialistas', [EspecialistaController::class, 'index'])->name('especialistas.index');
+
 });
 
 Route::resource('procesos', ProcesoController::class);
 Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::resource('smp', HallazgoController::class);
-Route::resource('acciones', AccionController::class);
+Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
 Route::resource('obligaciones', ObligacionController::class);
 Route::resource('riesgos', RiesgoController::class);
 Route::resource('ouos', OUOController::class);

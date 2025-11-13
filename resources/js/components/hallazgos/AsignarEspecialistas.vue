@@ -15,87 +15,124 @@
             </div>
 
             <!-- Sección para Asignar/Cambiar Especialista -->
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title font-weight-bold mb-0">Especialista Responsable</h5>
-                        <button class="btn btn-outline-secondary btn-sm" @click="hallazgoStore.openHistorialModal">
-                            <i class="fas fa-history"></i> Ver Historial
+
+            <h6 class="mb-1" style="font-weight: bold;">
+                ASIGNAR ESPECIALISTA DE APOYO
+            </h6>
+            <p class="small text-muted">
+                Este módulo permite asignar a un especialista para apoyar con la gestión del hallazgo y acompñar en la identificación de acciones de mejora.
+            </p>
+            <!-- Mostrar Especialista Actual -->
+            <div v-if="hallazgoStore.especialistaActual"
+                class="d-flex align-items-center bg-light border rounded p-2 mb-3">
+                <i class="fas fa-info-circle text-primary mr-2"></i>
+                <p class="mb-0 small">
+                    Actualmente asignado a: <strong class="text-dark">{{ hallazgoStore.especialistaActual.name
+                    }}</strong>.
+                </p>
+
+            </div>
+            <div v-else class="alert alert-warning border-0 small">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Aún no se ha asignado un especialista a este hallazgo.
+            </div>
+
+            <!-- Formulario para Cambiar Asignación -->
+            <label class="form-label small font-weight-bold text-secondary mt-3">
+                {{ hallazgoStore.especialistaActual ? 'Reasignar a un nuevo especialista:' : 'Asignar especialista:' }}
+            </label>
+            <div class="d-flex align-items-center my-4">
+                <div class="input-group mr-3">
+                    <select v-if="hallazgoStore.especialistas.length > 0" v-model="especialistaSeleccionado.id"
+                        class="form-control">
+                        <option value="" disabled>Seleccionar Especialista</option>
+                        <option v-for="especialista in hallazgoStore.especialistas" :key="especialista.id"
+                            :value="especialista.id">
+                            {{ especialista.descripcion }}
+                        </option>
+                    </select>
+                    <span v-else class="form-control text-muted">Cargando especialistas...</span>
+                    <div class="input-group-append">
+                        <!-- Asignar Button -->
+                        <button type="button" class="btn btn-danger btn-sm" @click="confirmarAsignacion"
+                            :disabled="!especialistaSeleccionado.id">
+                            <i class="fas fa-save"></i> Asignar
                         </button>
-                    </div>
 
-                    <!-- Mostrar Especialista Actual -->
-                    <div v-if="hallazgoStore.especialistaActual"
-                        class="alert alert-info d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-user-check mr-2"></i>
-                            <strong>{{ hallazgoStore.especialistaActual.name }}</strong>
-                        </span>
-                    </div>
-                    <div v-else class="alert alert-warning border-0 small">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        Aún no se ha asignado un especialista a este hallazgo.
-                    </div>
-
-                    <!-- Formulario para Cambiar Asignación -->
-                    <label class="form-label small font-weight-bold text-secondary mt-3">
-                        {{ hallazgoStore.especialistaActual ? 'Reasignar a un nuevo especialista:' : 'Asignar especialista:' }}
-                    </label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Haga clic en buscar para seleccionar..."
-                            :value="especialistaSeleccionado.descripcion" readonly>
-                        <div class="input-group-append">
-                            <button class="btn btn-dark" @click="abrirModalBusqueda" title="Buscar especialista">
-                                <i class="fas fa-search"></i>
-                            </button>
-                            <button class="btn btn-danger" @click="confirmarAsignacion"
-                                :disabled="!especialistaSeleccionado.id">
-                                <i class="fas fa-save"></i> Asignar
-                            </button>
-                        </div>
+                        <!-- Ver Historial Button -->
+                        <button type="button" class="btn btn-secondary btn-sm" @click="showHistory = !showHistory">
+                            <i class="fas fa-history"></i> {{ showHistory ? 'Ocultar Historial' : 'Historial' }}
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Modales de Apoyo -->
-        <modal-hijo ref="modalBusqueda" :fetch-url="especialista_route" target-id="id" target-desc="name"
-            @update-target="handleSeleccion" />
-        <HistorialAsignacionesModal v-if="hallazgoStore.isHistorialModalOpen" />
     </div>
+
+    <!-- Modales de Apoyo -->
+    <!-- Historial de Asignaciones (colapsable) -->
+    <div v-if="showHistory" class="card mt-4">
+        <div class="card-header bg-secondary d-flex align-items-center">
+            <i class="fas fa-history mr-2"></i>
+            <h6 class="text-white mb-0">Historial de Asignaciones</h6>
+        </div>
+        <div class="card-body">
+            <div v-if="hallazgoStore.historialAsignaciones.length > 0">
+                <ul class="list-group list-group-flush">
+                    <li v-for="movimiento in hallazgoStore.historialAsignaciones" :key="movimiento.id"
+                        class="list-group-item d-flex justify-content-between align-items-center history-item">
+                        <div>
+                            <i class="fas fa-user-tag mr-2 text-dark"></i>
+                            <span class="text-dark">{{ movimiento.comentario }}</span>
+                            <small class="text-muted d-block ml-4 history-date">
+                                <i class="fas fa-clock mr-1"></i> {{ formatDate(movimiento.created_at) }}
+                            </small>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div v-else class="alert alert-secondary small">
+                <i class="fas fa-info-circle mr-2"></i>
+                No se han registrado asignaciones para este hallazgo.
+            </div>
+        </div>
+    </div>
+
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore';
 import { route } from 'ziggy-js';
-import ModalHijo from '../generales/ModalHijo.vue';
-import HistorialAsignacionesModal from './AsignacionesHistorial.vue';
 
 const hallazgoStore = useHallazgoStore();
 
 // Estado local para la selección
-const modalBusqueda = ref(null);
-const especialistaSeleccionado = ref({ id: null, descripcion: '' });
-
-// Asume que tienes una ruta para buscar usuarios. Ajústala si es necesario.
-const especialista_route = route('usuario.especialistas');
-
-const abrirModalBusqueda = () => modalBusqueda.value.open();
-
-const handleSeleccion = ({ idValue, descValue }) => {
-    especialistaSeleccionado.value = { id: idValue, descripcion: descValue };
-};
+const especialistaSeleccionado = ref({ id: null, name: '' });
+const showHistory = ref(false);
 
 const confirmarAsignacion = () => {
     if (especialistaSeleccionado.value.id) {
         hallazgoStore.asignarEspecialista(especialistaSeleccionado.value.id);
-        especialistaSeleccionado.value = { id: null, descripcion: '' }; // Limpiar
+        especialistaSeleccionado.value = { id: null, name: '' }; // Limpiar
     }
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) {
+        return '';
+    }
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
 };
 
 onMounted(() => {
     hallazgoStore.fetchAsignaciones();
+    console.log('Especialistas cargados en el store:', hallazgoStore.especialistas);
 });
 </script>
 
@@ -126,5 +163,14 @@ onMounted(() => {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     border-left: 0.5rem solid #ff851b;
     display: flex;
+}
+
+.history-item {
+    padding: 0.5rem 0.75rem; /* Reduced padding */
+    font-size: 0.85rem; /* Smaller text */
+}
+
+.history-item .history-date {
+    font-size: 0.75rem; /* Even smaller date text */
 }
 </style>

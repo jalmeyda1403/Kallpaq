@@ -176,19 +176,6 @@ public function guardarPermisos(Request $request, $id)
 }
 
 //Mostrar Especialistas
-public function showEspecialistas()
-{
-   // $role = Role::findById(2);
-    //$especialistas = $role->users()->get();
-    $especialistas = Especialista::all();
-     $especialistas = $especialistas->map(function ($especialista) {
-            return [
-                'id' => $especialista->user_id,
-                'descripcion' => $especialista->nombres . '  ' . $especialista->apellido_paterno . '  ' . $especialista->apellido_materno,
-            ];
-        });
-    return response()->json($especialistas);
-}
 
 public function showAuditores()
 {
@@ -201,7 +188,13 @@ public function showAuditores()
                 'descripcion' => $auditor->nombres . '  ' . $auditor->apellido_paterno . '  ' . $auditor->apellido_materno,
             ];
         });
-    return response()->json($auditores);
-}
+        return response()->json($auditores);
+    }
+
+    public function listUsers()
+    {
+        $users = User::select('id', 'name')->get();
+        return response()->json($users);
+    }
 
 }

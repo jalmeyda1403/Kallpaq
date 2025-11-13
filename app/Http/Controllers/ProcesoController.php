@@ -134,10 +134,22 @@ class ProcesoController extends Controller
     public function buscar(Request $request)
     {
         $query = $request->query('q', '');
+        $facilitadorId = $request->query('facilitador_id');
 
-        $procesos = Proceso::where('proceso_nombre', 'LIKE', "%{$query}%")->get();
+        $procesosQuery = Proceso::where('proceso_nombre', 'LIKE', "%{$query}%");
 
-       
+        if ($facilitadorId) {
+            // Obtener los IDs de los procesos ya asociados a este facilitador
+            $associatedProcesoIds = \DB::table('proceso_facilitador')
+                                        ->where('facilitador_id', $facilitadorId)
+                                        ->pluck('proceso_id');
+
+            // Excluir estos procesos de la búsqueda
+            $procesosQuery->whereNotIn('id', $associatedProcesoIds);
+        }
+
+        $procesos = $procesosQuery->get();
+
         $procesos = $procesos->map(function ($proceso) {
             return [
                 'id' => $proceso->id,
