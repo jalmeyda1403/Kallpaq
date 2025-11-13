@@ -67,6 +67,7 @@ class Proceso extends Model
     public function ouos()
     {
         return $this->belongsToMany(Ouo::class, 'procesos_ouo', 'id_proceso', 'id_ouo')
+            ->using(ProcesoOuo::class) // Use the pivot model
             ->withPivot('responsable', 'delegada','sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
     }
     public function obligaciones()
@@ -95,10 +96,7 @@ class Proceso extends Model
         return $this->belongsToMany(Documento::class, 'documento_proceso', 'proceso_id', 'documento_id');
     }
 
-    public function facilitadores()
-    {
-        return $this->belongsToMany(Facilitador::class, 'proceso_facilitador')->using(ProcesoFacilitador::class);
-    }
+    // Removed facilitadores() and users() relationships as per new architecture
 
     public function ouo_responsable()
     {

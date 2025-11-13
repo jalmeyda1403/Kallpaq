@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class OUO extends Model
 {
@@ -25,10 +26,30 @@ class OUO extends Model
         'inactive_at',
     ];
 
-    // Relación con proceso (muchos a muchos)
-    public function procesos()
+    /**
+     * The users that belong to the OUO.
+     */
+    public function users(): BelongsToMany
     {
+        return $this->belongsToMany(User::class, 'ouo_user')
+                    ->using(OuoUser::class)
+                    ->withPivot('role_in_ouo');
+    }
+
+    /**
+     * Get the OuoUser records associated with the OUO.
+     */
+    public function ouoUsers()
+    {
+        return $this->hasMany(OuoUser::class);
+    }
+
+    // Relación con proceso (muchos a muchos)
+    public function procesos(): BelongsToMany
+    {
+        // Assuming ProcesoOuo model exists for the 'procesos_ouo' pivot table
         return $this->belongsToMany(Proceso::class, 'procesos_ouo', 'id_ouo', 'id_proceso')
+        ->using(ProcesoOuo::class) // Assuming ProcesoOuo model exists
         ->withPivot('responsable', 'delegada');
     }
 

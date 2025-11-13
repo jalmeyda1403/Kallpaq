@@ -47,11 +47,25 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    //Obtiene los procesos del usuario
-    public function procesos(): BelongsToMany
+
+    /**
+     * The OUOs that belong to the user.
+     */
+    public function ouos(): BelongsToMany
     {
-        return $this->belongsToMany(Proceso::class);
+        return $this->belongsToMany(OUO::class, 'ouo_user')
+                    ->using(OuoUser::class)
+                    ->withPivot('role_in_ouo');
     }
+
+    /**
+     * Get the OuoUser records associated with the user.
+     */
+    public function ouoUsers()
+    {
+        return $this->hasMany(OuoUser::class);
+    }
+
     //Obtiene los hallazgos donde este usuario es el especialista ACTUALMENTE asignado
     public function hallazgosAsignados()
     {
@@ -63,10 +77,5 @@ class User extends Authenticatable
     {
         // Corregido: Ahora apunta al modelo 'HallazgoAsignacion' y a la clave foránea correcta.
         return $this->hasMany(HallazgoAsignacion::class, 'user_asigna_id');
-    }
-
-    public function facilitador()
-    {
-        return $this->hasOne(Facilitador::class);
     }
 }
