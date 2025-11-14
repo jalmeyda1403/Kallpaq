@@ -1,6 +1,6 @@
 <template>
   <div class="modal fade" tabindex="-1" ref="modalEl" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
           <h6 class="modal-title">Seleccionar Registro</h6>
@@ -42,7 +42,7 @@
         </div>
 
         <div class="modal-footer">
-           
+            <slot name="footer"></slot>
         </div>
       </div>
     </div>

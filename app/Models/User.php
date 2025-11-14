@@ -53,9 +53,9 @@ class User extends Authenticatable
      */
     public function ouos(): BelongsToMany
     {
-        return $this->belongsToMany(OUO::class, 'ouo_user')
+        return $this->belongsToMany(OUO::class, 'ouo_user', 'user_id', 'ouo_id')
                     ->using(OuoUser::class)
-                    ->withPivot('role_in_ouo');
+                    ->withPivot('role_in_ouo', 'activo', 'deleted_at');
     }
 
     /**

@@ -70,6 +70,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/resumen-especialistas', [DashboardController::class, 'getResumenEspecialistas'])->name('dashboard.resumenEspecialistas');
     Route::get('/dashboard/detalle-especialista', [DashboardController::class, 'getDetalleEspecialista'])->name('dashboard.detalleEspecialista');
 
+    // New route for OUOs for assignment purposes (moved from api.php)
+    Route::get('/asignacion-ouos', [OUOController::class, 'indexForAssignment'])->name('api.asignacion-ouos.index');
+
+    // New route for fetching OUOs with nivel_jerarquico 1 or 2 for dropdowns
+    Route::get('/ouos-padres-dropdown', [OUOController::class, 'getOuoPadresForDropdown'])->name('api.ouos.padres.dropdown');
+
     // Requerimientos Edit and Update routes
     Route::put('/requerimientos/{id}', [RequerimientoController::class, 'update'])->name('requerimientos.update');
 
@@ -86,6 +92,20 @@ Route::resource('acciones', AccionController::class)->except(['destroy', 'update
 Route::resource('obligaciones', ObligacionController::class);
 Route::resource('riesgos', RiesgoController::class);
 Route::resource('ouos', OUOController::class);
+
+// New routes for OUO-Process assignment
+Route::get('/ouos/{ouo}/procesos', [OUOController::class, 'getAssignedProcesses'])->name('ouos.procesos.index');
+Route::post('/ouos/{ouo}/procesos', [OUOController::class, 'syncProcesses'])->name('ouos.procesos.sync');
+Route::put('/ouos/{ouo}/procesos/{proceso}', [OUOController::class, 'updateProcessPivot'])->name('ouos.procesos.updatePivot');
+
+// New routes for OUO-User assignment
+Route::get('/users/gestores', [OUOController::class, 'getGestorUsersForDropdown'])->name('users.gestores');
+Route::get('/ouos/{ouo}/users', [OUOController::class, 'getAssignedUsers'])->name('ouos.users.index');
+Route::get('/ouos/{ouo}/users/deleted', [OUOController::class, 'getSoftDeletedUsers'])->name('ouos.users.deleted');
+Route::put('/ouos/{ouo}/users/{user}', [OUOController::class, 'updateUserPivot'])->name('ouos.users.updatePivot');
+Route::delete('/ouos/{ouo}/users/{user}', [OUOController::class, 'detachUser'])->name('ouos.users.detach');
+Route::post('/ouos/{ouo}/users', [OUOController::class, 'attachUser'])->name('ouos.users.attach');
+
 Route::resource('documentos', DocumentoController::class);
 Route::resource('sipoc', SipocController::class);
 
@@ -343,6 +363,7 @@ Route::get('/api/documentos', [DocumentoController::class, 'apiListar'])->name('
 Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
 Route::post('admin/usuarios', [UserController::class, 'store'])->name('usuarios.store');
 Route::get('admin/usuarios/', [UserController::class, 'index'])->name('usuarios.index');
+Route::get('api/admin/usuarios', [UserController::class, 'apiIndex'])->name('api.admin.usuarios.index');
 
 Route::get('usuarios/asignar-permisos/{id}', [UserController::class, 'asignarPermisos'])->name('usuarios.asignar-permisos');
 Route::post('usuarios/asignar-permisos/{id}', [UserController::class, 'guardarPermisos'])->name('usuarios.guardar-permisos');
@@ -435,6 +456,6 @@ Route::get('/vue/{any}', function () {
 })->where('any', '.*')->name('vue.app');
 
 // New route for OuoUserAssignment component
-Route::get('/vue/ouo-user-assignment', function () {
+Route::get('/vue/ouos/user-assignment', function () {
     return view('app');
-})->name('vue.ouo-user-assignment');
+})->name('vue.ouos.user-assignment');

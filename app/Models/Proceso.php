@@ -68,7 +68,7 @@ class Proceso extends Model
     {
         return $this->belongsToMany(Ouo::class, 'procesos_ouo', 'id_proceso', 'id_ouo')
             ->using(ProcesoOuo::class) // Use the pivot model
-            ->withPivot('responsable', 'delegada','sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
+            ->withPivot('propietario', 'delegado','ejecutor','sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
     }
     public function obligaciones()
     {
@@ -100,7 +100,7 @@ class Proceso extends Model
 
     public function ouo_responsable()
     {
-        return $this->ouos()->wherePivot('responsable', 1)->pluck('ouo_nombre')->first();
+        return $this->ouos()->wherePivot('propietario', 1)->pluck('ouo_nombre')->first();
     }
     public function descendientes()
     {

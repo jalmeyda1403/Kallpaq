@@ -14,8 +14,9 @@ class ProcesoOuo extends Pivot // Extend Pivot
     protected $fillable = [
         'id_ouo',
         'id_proceso',
-        'responsable',
-        'delegada',
+        'propietario',
+        'delegado',
+        'ejecutor',
         'sgc',
         'sgas',
         'sgcm',

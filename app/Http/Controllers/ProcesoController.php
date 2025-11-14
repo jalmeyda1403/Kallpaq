@@ -7,13 +7,13 @@ use App\Models\Proceso;
 use App\Models\OUO;
 use App\Models\Documento;
 use App\Models\User;
-use Illuminate\Support\Facades\Gate; // Added Gate facade
+
 
 class ProcesoController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('viewAny', Proceso::class); // Authorize using the policy
+
 
         $query = Proceso::query();
         $user = auth()->user(); // Get authenticated user
@@ -25,12 +25,14 @@ class ProcesoController extends Controller
             $query->whereHas('ouos', function ($q) use ($accessibleOuoIds) {
                 $q->whereIn('ouos.id', $accessibleOuoIds)
                   ->where(function ($subQuery) {
-                      $subQuery->wherePivot('responsable', true)
-                               ->orWherePivot('delegada', true)
+                      $subQuery->wherePivot('propietario', true)
+                               ->orWherePivot('delegado', true)
+                               ->orWherePivot('ejecutor', true)
                                ->orWherePivot('sgc', true)
                                ->orWherePivot('sgas', true)
                                ->orWherePivot('sgcm', true)
-                               ->orWherePivot('sgsi', true);
+                               ->orWherePivot('sgsi', true)
+                               ->orWherePivot('sgco', true);
                   });
             });
         }
@@ -87,21 +89,19 @@ class ProcesoController extends Controller
 
     public function create()
     {
-        $this->authorize('create', Proceso::class); // Authorize using the policy
         $procesos = Proceso::all();
         return view('procesos.create', compact('procesos'));
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create', Proceso::class); // Authorize using the policy
+
         $proceso = Proceso::create($request->all());
         return redirect()->route('procesos.index')->with('success', 'Proceso creado correctamente');
     }
 
     public function edit(Proceso $proceso)
     {
-        $this->authorize('update', $proceso); // Authorize using the policy
         $procesosPadre = Proceso::where('cod_proceso_padre', '=', null)->get();
         return view('procesos.edit', compact('proceso', 'procesosPadre'));
     }
@@ -109,7 +109,7 @@ class ProcesoController extends Controller
     public function show($proceso_id)
     {
         $proceso = Proceso::with('planificacion_pei')->findOrFail($proceso_id);
-        $this->authorize('view', $proceso); // Authorize using the policy
+
 
         return response()->json($proceso);
     }
@@ -117,7 +117,7 @@ class ProcesoController extends Controller
     public function update(Request $request, $id)
     {
         $proceso = Proceso::findOrFail($id);
-        $this->authorize('update', $proceso); // Authorize using the policy
+
         $proceso->update($request->all());
 
         return response()->json(['success' => 'Proceso actualizado correctamente'], 200);
@@ -127,7 +127,7 @@ class ProcesoController extends Controller
     public function destroy($id)
     {
         $proceso = Proceso::findOrFail($id);
-        $this->authorize('delete', $proceso); // Authorize using the policy
+
         $proceso->delete();
         return response()->json(['success' => true, 'message' => 'Proceso eliminado exitosamente.']);
     }
@@ -223,8 +223,9 @@ class ProcesoController extends Controller
 
         $ouos = $proceso->ouos->map(function ($ouo) {
             // Accedemos a la data pivote directamente
-            $ouo->responsable = (bool) $ouo->pivot->responsable;
-            $ouo->delegada = (bool) $ouo->pivot->delegada;
+            $ouo->propietario = (bool) $ouo->pivot->propietario;
+            $ouo->delegado = (bool) $ouo->pivot->delegado;
+            $ouo->ejecutor = (bool) $ouo->pivot->ejecutor;
             $ouo->sgc = (bool) $ouo->pivot->sgc;
             // ... repite para todos los demás flags de sistemas de gestión
             $ouo->sgas = (bool) $ouo->pivot->sgas;
@@ -247,12 +248,14 @@ class ProcesoController extends Controller
 
         // Asocia la OUO al proceso con los datos de la tabla pivote
         $proceso->ouos()->attach($request->input('ouo_id'), [
-            'responsable' => $request->boolean('responsable'),
-            'delegada' => $request->boolean('delegada'),
+            'propietario' => $request->boolean('propietario'),
+            'delegado' => $request->boolean('delegado'),
+            'ejecutor' => $request->boolean('ejecutor'),
             'sgc' => $request->boolean('sgc'),
             'sgas' => $request->boolean('sgas'),
             'sgcm' => $request->boolean('sgcm'),
             'sgsi' => $request->boolean('sgsi'),
+            'sgco' => $request->boolean('sgco'),
         ]);
 
         return response()->json(['message' => 'Asociación creada correctamente.']);
@@ -261,22 +264,26 @@ class ProcesoController extends Controller
     {
         // Valida la solicitud para asegurar que los campos son booleanos
         $request->validate([
-            'responsable' => 'boolean',
-            'delegada' => 'boolean',
+            'propietario' => 'boolean',
+            'delegado' => 'boolean',
+            'ejecutor' => 'boolean',
             'sgc' => 'boolean',
             'sgas' => 'boolean',
             'sgcm' => 'boolean',
             'sgsi' => 'boolean',
+            'sgco' => 'boolean',           
         ]);
 
         // Actualiza la fila existente en la tabla pivote
         $proceso->ouos()->updateExistingPivot($ouo->id, [
-            'responsable' => $request->boolean('responsable'),
-            'delegada' => $request->boolean('delegada'),
+            'propietario' => $request->boolean('propietario'),
+            'delegado' => $request->boolean('delegado'),
+            'ejecutor' => $request->boolean('ejecutor'),
             'sgc' => $request->boolean('sgc'),
             'sgas' => $request->boolean('sgas'),
             'sgcm' => $request->boolean('sgcm'),
             'sgsi' => $request->boolean('sgsi'),
+            'sgco' => $request->boolean('sgco'),
         ]);
 
         return response()->json(['message' => 'Flags actualizados correctamente.']);
@@ -308,22 +315,26 @@ class ProcesoController extends Controller
     {
         // Valida la solicitud para asegurar que los campos son booleanos
         $request->validate([
-            'responsable' => 'boolean',
-            'delegada' => 'boolean',
+             'propietario' => 'boolean',
+            'delegado' => 'boolean',
+            'ejecutor' => 'boolean',
             'sgc' => 'boolean',
             'sgas' => 'boolean',
             'sgcm' => 'boolean',
             'sgsi' => 'boolean',
+            'sgco' => 'boolean',   
         ]);
 
         // Actualiza la fila existente en la tabla pivote
         $proceso->ouos()->updateExistingPivot($ouo->id, [
-            'responsable' => $request->boolean('responsable'),
-            'delegada' => $request->boolean('delegada'),
+             'propietario' => $request->boolean('propietario'),
+            'delegado' => $request->boolean('delegado'),
+            'ejecutor' => $request->boolean('ejecutor'),
             'sgc' => $request->boolean('sgc'),
             'sgas' => $request->boolean('sgas'),
             'sgcm' => $request->boolean('sgcm'),
             'sgsi' => $request->boolean('sgsi'),
+            'sgco' => $request->boolean('sgco'),
         ]);
 
         return response()->json(['message' => 'Flags actualizados correctamente.']);

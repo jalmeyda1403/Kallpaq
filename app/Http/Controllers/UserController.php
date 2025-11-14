@@ -199,6 +199,48 @@ public function showAuditores()
     }
 
     /**
+     * API endpoint for fetching paginated user data with roles and permissions.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiIndex(Request $request)
+    {
+        $query = User::query();
+
+        // Apply search filter
+        if ($request->has('search') && $request->input('search') != '') {
+            $searchTerm = $request->input('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        // Eager load roles and permissions
+        $query->with('roles', 'permissions');
+
+        // Pagination
+        $perPage = $request->input('per_page', 10);
+        $users = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->roles->pluck('name'),
+                    'permissions' => $user->permissions->pluck('name'),
+                ];
+            })->values(),
+            'current_page' => $users->currentPage(),
+            'last_page' => $users->lastPage(),
+            'total' => $users->total(),
+        ]);
+    }
+
+    /**
      * List users assigned to a specific OUO.
      *
      * @param  \App\Models\OUO  $ouo

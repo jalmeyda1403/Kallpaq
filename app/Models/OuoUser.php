@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot; // Import Pivot
+use Illuminate\Database\Eloquent\SoftDeletes; // Import SoftDeletes
 
 class OuoUser extends Pivot // Extend Pivot
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'ouo_user'; // Specify the pivot table name
 
@@ -15,6 +16,7 @@ class OuoUser extends Pivot // Extend Pivot
         'ouo_id',
         'user_id',
         'role_in_ouo',
+        'activo', // Add activo to fillable
     ];
 
     /**

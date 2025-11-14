@@ -31,9 +31,9 @@ class OUO extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'ouo_user')
+        return $this->belongsToMany(User::class, 'ouo_user', 'ouo_id', 'user_id')
                     ->using(OuoUser::class)
-                    ->withPivot('role_in_ouo');
+                    ->withPivot('role_in_ouo', 'activo', 'deleted_at');
     }
 
     /**
@@ -50,7 +50,7 @@ class OUO extends Model
         // Assuming ProcesoOuo model exists for the 'procesos_ouo' pivot table
         return $this->belongsToMany(Proceso::class, 'procesos_ouo', 'id_ouo', 'id_proceso')
         ->using(ProcesoOuo::class) // Assuming ProcesoOuo model exists
-        ->withPivot('responsable', 'delegada');
+        ->withPivot('propietario', 'delegado', 'ejecutor', 'sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
     }
 
     // Relación con ouo_padre (uno a muchos)

@@ -58,7 +58,7 @@
 
                         <li class="nav-item">
 
-                            <a href="{{ route('documento.buscar') }}" class="nav-link">
+                            <a href="{{ url('/vue/documentos') }}" class="nav-link">
                                 <i class="nav-icon fas fa-clipboard-list"></i>
                                 <p> Listado de documentos </p>
                             </a>
@@ -382,7 +382,7 @@
                     </li>
 
                     <!-- Nueva sección de Administración -->
-                    <li class="nav-item has-treeview {{ request()->is('vue/facilitadores*') || request()->is('vue/mis-mejoras-facilitador*') || request()->routeIs('usuarios.*') ? 'menu-open' : '' }}">
+                    <li class="nav-item has-treeview {{ request()->is('vue/administracion*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cogs"></i>
                             <p>
@@ -392,29 +392,18 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{{ route('usuarios.index') }}" class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+                                <a href="{{ url('/vue/administracion/usuarios') }}" class="nav-link {{ request()->is('vue/administracion/usuarios*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users"></i>
                                     <p>Gestionar Usuarios</p>
                                 </a>
                             </li>
+                            
                             <li class="nav-item">
-                                <a href="{{ route('vue.ouo-user-assignment') }}" class="nav-link {{ request()->routeIs('vue.ouo-user-assignment') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-user-tag"></i>
-                                    <p>Asignación OUO-Usuario</p>
+                                <a href="{{ url('/vue/administracion/asignacion-ouos') }}" class="nav-link {{ request()->is('vue/administracion/asignacion-ouos*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-sitemap"></i>
+                                    <p>Asignación OUO-Procesos</p>
                                 </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/vue/facilitadores" class="nav-link {{ request()->is('vue/facilitadores*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-users-cog"></i>
-                                    <p>Gestionar Facilitadores</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/vue/mis-mejoras-facilitador" class="nav-link {{ request()->is('vue/mis-mejoras-facilitador*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-tasks"></i>
-                                    <p>Mis Mejoras (Facilitador)</p>
-                                </a>
-                            </li>
+                            </li>                   
                         </ul>
                     </li>
 

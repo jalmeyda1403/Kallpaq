@@ -8,6 +8,8 @@ import App from './components/App.vue'; // This is the root component for the SP
 
 // PrimeVue Imports
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice'; // Import ToastService
+import Toast from 'primevue/toast'; // Import Toast component
 import 'primevue/resources/themes/saga-blue/theme.css'; // Choose a theme
 import 'primevue/resources/primevue.min.css'; // Core CSS
 import 'primeicons/primeicons.css'; // Icons
@@ -48,6 +50,8 @@ if (rootAppElement) {
 
     vueApp.use(pinia);
     vueApp.use(PrimeVue); // Add this line
+    vueApp.use(ToastService); // Register ToastService
+    vueApp.component('Toast', Toast); // Register Toast component globally
 
     // Register global components
     vueApp.component('proceso-modal', ProcesoModal);

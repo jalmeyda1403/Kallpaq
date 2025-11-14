@@ -59,7 +59,7 @@
                                         </div>
                                         <div class="col-auto">
                                             <button type="submit" class="btn bg-dark">
-                                                <i class="fas fa-search"></i> Filtrar
+                                                <i class="fas fa-search"></i> Buscar
                                             </button>
                                         </div>
                                     </div>

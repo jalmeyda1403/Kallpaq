@@ -28,4 +28,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('ouos/{ouo}/users', [UserController::class, 'listOuoUsers'])->name('api.ouos.users.list');
     Route::post('ouos/{ouo}/users', [UserController::class, 'attachOuoUser'])->name('api.ouos.users.attach');
     Route::delete('ouos/{ouo}/users/{user}', [UserController::class, 'detachOuoUser'])->name('api.ouos.users.detach');
+
+    // New route for OUOs with details
+    Route::get('ouos-with-details', [OUOController::class, 'indexWithDetails'])->name('api.ouos.indexWithDetails');
+
+    // New route for listing all users
+    Route::get('users/list', [UserController::class, 'listUsers'])->name('api.users.list');
 });

@@ -6,6 +6,7 @@ import HallazgosIndex from '@/components/hallazgos/HallazgoIndex.vue';
 import RequerimientosIndex from '@/components/requerimientos/RequerimientosIndex.vue';
 import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosIndexMe.vue';
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
+import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue'; // Import the new component
 
 
 const routes = [
@@ -40,7 +41,16 @@ const routes = [
         name: 'requerimientos.mine',
         component: RequerimientosIndexMe,
     },
-   
+    {
+        path: '/administracion/asignacion-ouos', // Changed path to reflect new location
+        name: 'administracion.asignacion-ouos.index', // Changed name
+        component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'), // Updated path
+    },
+    {
+        path: '/administracion/usuarios', // New path for user management
+        name: 'administracion.usuarios.index',
+        component: UsuariosIndex,
+    },
 ]
 
 const router = createRouter({
