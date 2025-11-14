@@ -38,4 +38,9 @@ class Accion extends Model
         return $this->belongsTo(Hallazgo::class);
     }
 
+    public function responsable()
+    {
+        return $this->belongsTo(User::class, 'accion_responsable');
+    }
+
 }

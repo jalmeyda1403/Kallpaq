@@ -3,212 +3,160 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hallazgo;
-use App\Models\Proceso;
+Use App\Models\Proceso;
 use App\Models\Accion;
-use App\Models\Causa;
-use App\Models\User;
-use App\Models\HallazgoProceso; // Import HallazgoProceso model
+use App\Models\Causa; // Import the Causa model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
+use Carbon\Carbon;
 
 class AccionController extends Controller
 {
-
-    public function listarAcciones(Hallazgo $hallazgo, Proceso $proceso)
+    public function getAccionesPorHallazgo(Hallazgo $hallazgo)
     {
-        // Find the HallazgoProceso entry
-        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
-                                        ->where('proceso_id', $proceso->id)
-                                        ->first();
-
-        if (!$hallazgoProceso) {
-            return response()->json([]); // No actions if no HallazgoProceso link exists
-        }
-
-        $acciones = Accion::where('hallazgo_id', $hallazgo->id)
-            ->where('hallazgo_proceso_id', $hallazgoProceso->id) // Filter by hallazgo_proceso_id
-            ->get();
+        $acciones = $hallazgo->acciones()->with('responsable.ouos', 'hallazgoProceso.proceso')->get();
         return response()->json($acciones);
     }
 
-    public function storeAccion(Request $request, Hallazgo $hallazgo, Proceso $proceso)
+    public function reprogramar(Request $request, Accion $accion)
     {
-        // Find the HallazgoProceso entry
-        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
-                                        ->where('proceso_id', $proceso->id)
-                                        ->firstOrFail(); // Ensure the link exists
-
-        // Validación actualizada según tu nuevo SQL
-        $validatedData = $request->validate([
-            'accion_descripcion' => 'required|string',
-            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada,programado',
-            'accion_cod' => 'nullable|string|max:255',
-            'accion_comentario' => 'nullable|string',
-            'accion_fecha_inicio' => 'required|date',
-            'accion_fecha_fin_planificada' => 'required|date',
-            'accion_responsable' => 'required|string|max:255',
-            'accion_responsable_correo' => 'nullable|email|max:255',
-        ]);
-
-        try {
-            $data = array_merge($validatedData, [
-                'hallazgo_id' => $hallazgo->id,
-                'hallazgo_proceso_id' => $hallazgoProceso->id, // Use hallazgo_proceso_id
-            ]);
-
-            // Apply default values based on hallazgo_ciclo
-            if ($hallazgo->hallazgo_ciclo == 1) {
-                $data['accion_estado'] = 'programado';
-                $data['accion_ciclo'] = 1;
-            }
-
-            $accion = Accion::create($data);
-            return response()->json($accion, 201);
-        } catch (\Throwable $e) {
-            Log::error('Error al crear acción: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-            return response()->json(['message' => 'Ocurrió un error al crear la acción.'], 500);
-        }
-    }
-
-    public function updateAccion(Request $request, Accion $accion)
-    {
-        Log::info('updateAccion called for accion ID: ' . $accion->id); // Add this log
-        $validatedData = $request->validate([
-            'accion_descripcion' => 'required|string',
-            'accion_estado' => 'required|in:pendiente,en ejecucion,finalizada,cancelada,programado',
-            'accion_cod' => 'nullable|string|max:255',
-            'accion_comentario' => 'nullable|string',
-            'accion_fecha_inicio' => 'required|date',
-            'accion_fecha_fin_planificada' => 'required|date',
-            'accion_fecha_fin_reprogramada' => 'nullable|date',
-            'accion_fecha_cancelada' => 'nullable|date',
-            'accion_fecha_fin_real' => 'nullable|date',
-            'accion_justificacion' => 'nullable|string',
-            'accion_responsable' => 'required|string|max:255',
-            'accion_responsable_correo' => 'nullable|email|max:255',
-        ]);
-        Log::info('Validation passed for update. Validated data:', $validatedData); // Add this log
-        $accion->update($validatedData);
-        Log::info('Accion updated successfully: ' . $accion->id); // Add this log
-        return response()->json($accion);
-    }
-
-    public function destroyAccion(Accion $accion)
-    {
-        try {
-            $accion->delete();
-            return response()->json(['message' => 'Acción eliminada con éxito.'], 200);
-        } catch (\Throwable $e) {
-            Log::error('Error al eliminar acción: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-            return response()->json(['message' => 'Ocurrió un error al eliminar la acción.'], 500);
-        }
-    }
-
-    //METODO SEGUIMIENTO DE ACCIONES
-    public function update_seguimiento(Request $request, $hallazgo_id, $id)
-    {
-
-        $accion = Accion::findOrFail($id);
-
-        // Validar la solicitud
         $request->validate([
-            'estado' => 'required|string',
+            'actionType' => 'required|string|in:reprogramar,desestimar',
+            'accion_justificacion' => 'required|string',
+            'accion_fecha_fin_reprogramada' => 'required_if:actionType,reprogramar|date',
         ]);
 
-        // Actualizar los campos
-        $accion->comentario = $request->comentario;
-        $accion->estado = $request->estado;
-        $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $smp_cod = $hallazgo->smp_cod;
+        $accion->accion_justificacion = $request->accion_justificacion;
 
-        // Crear la carpeta SMP si no existe
-        $folderPath = 'evidencias/' . $smp_cod;
-        if (!Storage::disk('public')->exists($folderPath)) {
-            Storage::disk('public')->makeDirectory($folderPath);
-        }
-        // Crear la carpeta Accion si no existe
-        $folderPath = 'evidencias/' . $smp_cod . '/' . $accion->accion_cod;
-        if (!Storage::disk('public')->exists($folderPath)) {
-            Storage::disk('public')->makeDirectory($folderPath);
-        }
-
-
-        // Manejar la subida de archivos
-        if ($request->hasFile('archivos')) {
-
-            foreach ($request->file('archivos') as $archivo) {
-                $filename = $smp_cod . '-' . sprintf('%03d', $id) . '_' . now()->format('YmdHis') . '_' . uniqid() . '.' . $archivo->getClientOriginalExtension();
-                $archivo->storeAs($folderPath, $filename, 'public');
-            }
+        if ($request->actionType === 'reprogramar') {
+            $accion->accion_fecha_fin_reprogramada = $request->accion_fecha_fin_reprogramada;
+        } else { // desestimar
+            $accion->accion_estado = 'desestimada';
         }
 
         $accion->save();
 
-        return back()->with('success', '¡La acción ha sido actualizada correctamente!');
-
+        return response()->json(['message' => 'Acción gestionada con éxito.']);
     }
 
-    public function listarArchivos($hallazgo_id, $id)
+    public function concluir(Request $request, Accion $accion)
     {
-        $hallazgo = Hallazgo::findOrFail($hallazgo_id);
-        $accion = Accion::findOrFail($id);
-        $smp_cod = $hallazgo->smp_cod;
-        $folderPath = 'evidencias/' . $smp_cod . '/' . $accion->accion_cod;
-
-        // Obtiene todos los archivos en la carpeta
-        $files = Storage::disk('public')->files($folderPath);
-
-        $fileData = [];
-        foreach ($files as $file) {
-            $fileData[] = [
-                'name' => basename($file),
-                'url' => Storage::url($file),
-                'size' => Storage::disk('public')->size($file),
-                'lastModified' => Storage::disk('public')->lastModified($file),
-            ];
+        // Files are now uploaded via uploadEvidencia.
+        // This method just finalizes the action.
+        
+        // Optional: Check if there is at least one evidence file before concluding.
+        $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
+        if (empty($existingFiles)) {
+            return response()->json(['message' => 'Debe adjuntar al menos un archivo de evidencia para poder concluir la acción.'], 422);
         }
 
-        return response()->json($fileData);
+        $accion->accion_estado = 'finalizada';
+        $accion->accion_fecha_fin_real = Carbon::now();
+        $accion->save();
+
+        return response()->json(['message' => 'Acción concluida con éxito.']);
     }
 
-    public function eliminarArchivo(Request $request, $hallazgo_id, $id)
+    public function downloadEvidencia($path)
     {
-        $fileUrl = $request->input('fileUrl');
-        // Extraer la ruta del archivo del URL
-        $filePath = parse_url($fileUrl, PHP_URL_PATH);
-
-        // Transformar la URL pública a una ruta del sistema de archivos
-        $filePath = str_replace('/storage/', '', $filePath);
-        $filePath = 'public/' . $filePath;
-
-        // Depuración: Verificar la ruta completa del archivo
-        $fullPath = storage_path('app/' . $filePath);
-        \Log::info('Ruta completa del archivo a eliminar: ' . $fullPath);
-
-        if (Storage::exists($filePath)) {
-            Storage::delete($filePath);
-            return redirect()->back()->with('success', 'Archivo eliminado correctamente');
-        } else {
-            \Log::error('Archivo no encontrado en la ruta: ' . $fullPath);
-            return redirect()->back()->with('error', 'Archivo no encontrado');
+        // Ensure the path is secure and exists
+        if (!Storage::disk('public')->exists($path)) {
+            abort(404, 'File not found.');
         }
+
+        return Storage::disk('public')->download($path);
     }
 
+    public function uploadEvidencia(Request $request, Accion $accion)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240', // Max 10MB
+        ]);
 
-    // --- MÉTODOS PARA EL ANÁLISIS DE CAUSA RAÍZ ---
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+
+        $hallazgoCod = $accion->hallazgo->hallazgo_cod;
+        $accionCod = $accion->accion_cod;
+        $pathPrefix = "hallazgos/{$hallazgoCod}/acciones/{$accionCod}";
+
+        $path = $file->store($pathPrefix, 'public');
+
+        $newFile = [
+            'path' => $path,
+            'name' => $originalName,
+        ];
+
+        $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
+        if (!is_array($existingFiles)) {
+            $existingFiles = [];
+        }
+        
+        $existingFiles[] = $newFile;
+
+        $accion->accion_ruta_evidencia = json_encode($existingFiles);
+        $accion->save();
+
+        return response()->json($newFile);
+    }
+
+    public function deleteEvidencia(Request $request, Accion $accion)
+    {
+        $request->validate([
+            'path' => 'required|string',
+        ]);
+
+        $pathToDelete = $request->input('path');
+
+        // 1. Delete from storage
+        if (Storage::disk('public')->exists($pathToDelete)) {
+            Storage::disk('public')->delete($pathToDelete);
+        }
+
+        // 2. Update the JSON column
+        $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
+        if (!is_array($existingFiles)) {
+            $existingFiles = [];
+        }
+
+        $updatedFiles = array_filter($existingFiles, function ($file) use ($pathToDelete) {
+            return $file['path'] !== $pathToDelete;
+        });
+
+        // Re-index the array to prevent it from becoming an object on empty
+        $accion->accion_ruta_evidencia = json_encode(array_values($updatedFiles));
+        $accion->save();
+
+        return response()->json(['message' => 'Archivo eliminado con éxito.']);
+    }
 
     public function listarCausaRaiz(Hallazgo $hallazgo)
     {
-        return response()->json($hallazgo->causa);
+        // A Hallazgo has one Causa, so we can use the 'causa' relationship
+        // The 'first()' method will return the related Causa model or null if it doesn't exist.
+        $causa = $hallazgo->causa()->first();
+
+        return response()->json($causa);
+    }
+
+    public function listarAcciones(Hallazgo $hallazgo, Proceso $proceso)
+    {
+        // Fetch actions related to the specific hallazgo and process
+        // Eager load necessary relationships for the frontend display
+        $acciones = Accion::where('hallazgo_id', $hallazgo->id)
+                            ->whereHas('hallazgoProceso', function ($query) use ($proceso) {
+                                $query->where('proceso_id', $proceso->id);
+                            })
+                            ->with('responsable.ouos', 'hallazgoProceso.proceso')
+                            ->get();
+
+        return response()->json($acciones);
     }
 
     public function storeOrUpdateCausaRaiz(Request $request, Hallazgo $hallazgo)
     {
         $validatedData = $request->validate([
-            'causa_metodo' => 'required|in:ishikawa,cinco_porques',
+            'causa_metodo' => 'required|string',
             'causa_por_que1' => 'nullable|string',
             'causa_por_que2' => 'nullable|string',
             'causa_por_que3' => 'nullable|string',
@@ -223,16 +171,36 @@ class AccionController extends Controller
             'causa_resultado' => 'nullable|string',
         ]);
 
-        try {
-            $causaRaiz = $hallazgo->causa()->updateOrCreate(
-                ['hallazgo_id' => $hallazgo->id],
-                $validatedData
-            );
-            return response()->json($causaRaiz, 200);
-        } catch (\Throwable $e) {
-            Log::error('Error al guardar análisis de causa: ' . $e->getMessage());
-            return response()->json(['message' => 'Ocurrió un error al guardar el análisis de causa.'], 500);
-        }
+        // Find existing Causa or create a new one
+        $causa = Causa::firstOrNew(['hallazgo_id' => $hallazgo->id]);
+
+        // Fill and save the data
+        $causa->fill($validatedData);
+        $causa->hallazgo_id = $hallazgo->id; // Ensure hallazgo_id is set
+        $causa->save();
+
+        return response()->json($causa);
     }
 
+    public function updateAccion(Request $request, Accion $accion)
+    {
+        $validatedData = $request->validate([
+            'accion_descripcion' => 'required|string',
+            'accion_responsable' => 'required|string',
+            'accion_fecha_inicio' => 'required|date',
+            'accion_fecha_fin_planificada' => 'required|date',
+            // Add other fields that can be updated
+        ]);
+
+        $accion->update($validatedData);
+
+        return response()->json($accion);
+    }
+
+    public function destroyAccion(Accion $accion)
+    {
+        $accion->delete();
+
+        return response()->json(['message' => 'Acción eliminada con éxito.']);
+    }
 }

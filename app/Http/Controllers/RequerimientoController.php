@@ -6,10 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Requerimiento;
 use App\Models\Especialista;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 use App\Models\RequerimientoMovimiento;
 use App\Models\RequerimientoEvaluacion;

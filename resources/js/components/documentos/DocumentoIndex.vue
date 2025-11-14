@@ -36,107 +36,111 @@
                     </div>
                 </div>
                 <br />
-                <form @submit.prevent="fetchDocumentosWithFilters">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <input type="text" v-model="filters.buscar_documento" class="form-control me-2"
-                                placeholder="Buscar por nombre documento">
+                <div id="filter-form">
+                    <!-- Filtros del Proceso-->
+                    <form @submit.prevent="fetchDocumentosWithFilters">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md">
+                                <input type="text" v-model="filters.buscar_documento" class="form-control me-2"
+                                    placeholder="Buscar por nombre documento">
+                            </div>
+                            <div class="col-md">
+                                <input type="text" v-model="filters.buscar_proceso" class="form-control me-2"
+                                    placeholder="Buscar por Proceso">
+                            </div>
+                            <div class="col-md">
+                                <select v-model="filters.fuente" class="form-control me-2">
+                                    <option value="">Buscar por fuente</option>
+                                    <option value="interno">Fuente Interna</option>
+                                    <option value="externo">Fuente Externa</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select ref="selectTipoDocumento" v-model="filters.tipo_documento" class="form-control"
+                                    multiple></select>
+                            </div>
+                            <div class="col-md-auto">
+                                <button type="submit" class="btn bg-dark btn-sm">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <input type="text" v-model="filters.buscar_proceso" class="form-control me-2"
-                                placeholder="Buscar por Proceso">
-                        </div>
-                        <div class="col-md-2">
-                            <select v-model="filters.fuente" class="form-control me-2">
-                                <option value="">Buscar por fuente</option>
-                                <option value="interno">Fuente Interna</option>
-                                <option value="externo">Fuente Externa</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select ref="selectTipoDocumento" v-model="filters.tipo_documento" class="form-control"
-                                multiple></select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn bg-dark btn-sm">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
-                        </div>
-                    </div>
-        
-        </form>
-    </div>
 
-    <div class="card-body">
-        <div v-if="isLoading" class="loading-spinner w-100 text-center my-5">
-            <div class="spinner-border text-danger" role="status">
-                <span class="sr-only">Cargando...</span>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div v-if="isLoading" class="loading-spinner w-100 text-center my-5">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="sr-only">Cargando...</span>
+                    </div>
+                </div>
+                <div v-else>
+                    <DataTable :value="documentos" selectionMode="single" v-model:selection="selectedDocumento"
+                        dataKey="id" :paginator="true" :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]">
+
+                        <Column field="cod_documento" header="Código Documento" sortable></Column>
+                        <Column field="nombre_documento" header="Nombre Documento" ></Column>
+                        <Column header="Tipo de Documento">
+                            <template #body="slotProps">
+                                {{ slotProps.data.tipo_documento ?
+                                    slotProps.data.tipo_documento.nombre_tipodocumento :
+                                    '' }}
+                            </template>
+                        </Column>
+                        <Column header="Fuente" class="text-center">
+                            <template #body="slotProps">
+                                {{ slotProps.data.fuente_documento ? slotProps.data.fuente_documento : '' }}
+
+                            </template>
+                        </Column>
+                        <Column header="Estado" class="text-center">
+                            <template #body="slotProps">
+                                {{ slotProps.data.estado_documento ? slotProps.data.estado_documento : '' }}
+
+                            </template>
+                        </Column>
+                        <Column header="Versión" class="text-center">
+                            <template #body="slotProps">
+                                {{ slotProps.data.usa_versiones_documento && slotProps.data.ultima_version &&
+                                    slotProps.data.ultima_version.dv_version ?
+                                    String(slotProps.data.ultima_version.dv_version).padStart(2, '0') : '00' }}
+                            </template>
+                        </Column>
+                        <Column header="Vigencia" class="text-center">
+                            <template #body="slotProps">
+                                {{ slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version ? new
+                                    Intl.DateTimeFormat('es-PE', {
+                                        year: 'numeric', month: '2-digit', day: '2-digit'
+                                    }).format(new Date(slotProps.data.ultima_version.dv_fecha_vigencia)) : '') :
+                                    (slotProps.data.fecha_vigencia_documento ? new Intl.DateTimeFormat('es-PE', {
+                                        year:
+                                            'numeric', month: '2-digit', day: '2-digit'
+                                    }).format(new
+                                        Date(slotProps.data.fecha_vigencia_documento)) : '') }}
+                            </template>
+                        </Column>
+                        <Column header="Info" class="text-center">
+                            <template #body="slotProps">
+                                <i class="fas"
+                                    :class="{ 'fa-check-circle text-success': slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1) : (slotProps.data.enlace_valido === 1), 'fa-exclamation-circle text-warning': !(slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1) : (slotProps.data.enlace_valido === 1)) }"
+                                    :title="slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1 ? 'Enlace válido' : 'Enlace no válido') : (slotProps.data.enlace_valido === 1 ? 'Enlace válido' : 'Enlace no válido')"></i>
+                            </template>
+                        </Column>
+                        <Column header="Acciones" class="text-center">
+                            <template #body="slotProps">
+                                <a href="#" class="px-1" @click.prevent="openPdfModal(slotProps.data)"
+                                    title="Abrir Pdf"><i class="fas fa-file-pdf fa-lg text-danger"></i></a>
+                                <a href="#" class="px-1" @click.prevent="showRelatedDocs(slotProps.data.id)"
+                                    title="Ver Documentos Relacionados"><i class="fas fa-copy"></i></a>
+                            </template>
+                        </Column>
+
+                    </DataTable>
+                </div>
             </div>
         </div>
-        <div v-else>
-            <DataTable :value="documentos" selectionMode="single" v-model:selection="selectedDocumento" dataKey="id"
-                :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 25, 50]">
-
-                <Column field="cod_documento" header="Código Documento" sortable></Column>
-                <Column field="nombre_documento" header="Nombre Documento" sortable></Column>
-                <Column header="Tipo de Documento">
-                    <template #body="slotProps">
-                        {{ slotProps.data.tipo_documento ? slotProps.data.tipo_documento.nombre_tipodocumento :
-                            '' }}
-                    </template>
-                </Column>
-                <Column header="Fuente" class="text-center">
-                    <template #body="slotProps">
-                        {{ slotProps.data.fuente_documento ? slotProps.data.fuente_documento : '' }}
-
-                    </template>
-                </Column>
-                <Column header="Estado" class="text-center">
-                    <template #body="slotProps">
-                        {{ slotProps.data.estado_documento ? slotProps.data.estado_documento : '' }}
-
-                    </template>
-                </Column>
-                <Column header="Versión" class="text-center">
-                    <template #body="slotProps">
-                        {{ slotProps.data.usa_versiones_documento && slotProps.data.ultima_version &&
-                            slotProps.data.ultima_version.dv_version ?
-                            String(slotProps.data.ultima_version.dv_version).padStart(2, '0') : '00' }}
-                    </template>
-                </Column>
-                <Column header="Vigencia" class="text-center">
-                    <template #body="slotProps">
-                        {{ slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version ? new
-                            Intl.DateTimeFormat('es-PE', {
-                                year: 'numeric', month: '2-digit', day: '2-digit'
-                            }).format(new Date(slotProps.data.ultima_version.dv_fecha_vigencia)) : '') :
-                            (slotProps.data.fecha_vigencia_documento ? new Intl.DateTimeFormat('es-PE', {
-                                year:
-                                    'numeric', month: '2-digit', day: '2-digit'
-                            }).format(new
-                                Date(slotProps.data.fecha_vigencia_documento)) : '') }}
-                    </template>
-                </Column>
-                <Column header="Info" class="text-center">
-                    <template #body="slotProps">
-                        <i class="fas"
-                            :class="{ 'fa-check-circle text-success': slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1) : (slotProps.data.enlace_valido === 1), 'fa-exclamation-circle text-warning': !(slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1) : (slotProps.data.enlace_valido === 1)) }"
-                            :title="slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1 ? 'Enlace válido' : 'Enlace no válido') : (slotProps.data.enlace_valido === 1 ? 'Enlace válido' : 'Enlace no válido')"></i>
-                    </template>
-                </Column>
-                <Column header="Acciones" class="text-center">
-                    <template #body="slotProps">
-                        <a href="#" class="px-1" @click.prevent="openPdfModal(slotProps.data)" title="Abrir Pdf"><i
-                                class="fas fa-file-pdf fa-lg text-danger"></i></a>
-                        <a href="#" class="px-1" @click.prevent="showRelatedDocs(slotProps.data.id)"
-                            title="Ver Documentos Relacionados"><i class="fas fa-copy"></i></a>
-                    </template>
-                </Column>
-
-            </DataTable>
-        </div>
-    </div>
-    </div>
     </div>
     <DocumentoModal></DocumentoModal>
 </template>
@@ -151,6 +155,7 @@ import { useDocumentoStore } from '@/stores/documentoStore'; // Importa la tiend
 // PrimeVue Components
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Tag from 'primevue/tag'; // Re-introduce Tag
 import { useToast } from 'primevue/usetoast'; // Re-introduce useToast
 
 const documentos = ref([]);

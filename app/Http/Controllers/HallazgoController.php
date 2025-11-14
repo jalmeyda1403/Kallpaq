@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Hallazgo;
 use App\Models\Proceso;
 use App\Models\Accion;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -75,7 +76,7 @@ class HallazgoController extends Controller
     {
         // Inicia la consulta base, cargando la relación con 'proceso' 
         // para tener acceso al nombre del proceso en el frontend.
-        $query = Hallazgo::with('procesos')->latest(); // `latest()` ordena por fecha de creación descendente
+        $query = Hallazgo::with('procesos', 'acciones')->latest(); // `latest()` ordena por fecha de creación descendente
 
         // --- Aplicación de Filtros Dinámicos ---
 
@@ -98,6 +99,11 @@ class HallazgoController extends Controller
         // 3. Filtrar por clasificación
         if ($request->filled('clasificacion')) {
             $query->where('hallazgo_clasificacion', $request->clasificacion);
+        }
+
+        // 4. Filtrar por estado
+        if ($request->filled('estado')) {
+            $query->where('hallazgo_estado', $request->estado);
         }
 
         // --- Ejecución y Respuesta ---

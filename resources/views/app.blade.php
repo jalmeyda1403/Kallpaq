@@ -6,4 +6,5 @@
 
 @push('scripts')
     @routes
+    @vite(['resources/js/app.js'])
 @endpush

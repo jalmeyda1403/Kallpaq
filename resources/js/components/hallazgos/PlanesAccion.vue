@@ -20,7 +20,7 @@
                     </div>
                     <div v-else>
                         <div v-if="esClasificacionNCM" class="card mb-4">
-                            <div class="card-header bg-danger text-white">
+                            <div class="card-header bg-dark text-white">
                                 <h6 class="mb-0"><i class="fas fa-search-plus mr-2"></i>Análisis de Causa Raíz (Obligatorio)</h6>
                             </div>
                             <div class="card-body">

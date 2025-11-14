@@ -58,7 +58,7 @@
 
                         <li class="nav-item">
 
-                            <a href="{{ url('/vue/documentos') }}" class="nav-link">
+                            <a href="{{ route('documento.buscar') }}" class="nav-link">                 
                                 <i class="nav-icon fas fa-clipboard-list"></i>
                                 <p> Listado de documentos </p>
                             </a>
@@ -86,7 +86,8 @@
                         $rol = auth()->user()->getRoleNames()->first();
                     @endphp
                     <!-- Configuración Requerimientos-->
-                    <li class="nav-item has-treeview {{ (request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*')) ? 'menu-open' : '' }}">
+                    <li
+                        class="nav-item has-treeview {{ request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-tasks"></i>
                             <p>
@@ -206,7 +207,7 @@
                             </li>
 
                             <li class="nav-item">
-                                <a href="{{ route('documento.listar') }}" class="nav-link">
+                                <a href="{{ url('/vue/documentos') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p> Listado de documentos </p>
                                 </a>
@@ -392,18 +393,20 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{{ url('/vue/administracion/usuarios') }}" class="nav-link {{ request()->is('vue/administracion/usuarios*') ? 'active' : '' }}">
+                                <a href="{{ url('/vue/administracion/usuarios') }}"
+                                    class="nav-link {{ request()->is('vue/administracion/usuarios*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users"></i>
                                     <p>Gestionar Usuarios</p>
                                 </a>
                             </li>
-                            
+
                             <li class="nav-item">
-                                <a href="{{ url('/vue/administracion/asignacion-ouos') }}" class="nav-link {{ request()->is('vue/administracion/asignacion-ouos*') ? 'active' : '' }}">
+                                <a href="{{ url('/vue/administracion/asignacion-ouos') }}"
+                                    class="nav-link {{ request()->is('vue/administracion/asignacion-ouos*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-sitemap"></i>
                                     <p>Asignación OUO-Procesos</p>
                                 </a>
-                            </li>                   
+                            </li>
                         </ul>
                     </li>
 

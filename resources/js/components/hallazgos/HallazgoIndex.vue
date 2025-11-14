@@ -21,37 +21,49 @@
                         <h3 class="card-title mb-0">Gestión de Solicitudes de Mejora</h3>
                     </div>
                     <div class="col-md-6 text-md-right">
-                        <a href="#" class="btn btn-primary btn-sm mr-1" @click.prevent="openNewHallazgoModal"
+                        <a href="#" class="btn btn-primary" @click.prevent="openNewHallazgoModal"
                             title="Nuevo Hallazgo">
-                            <i class="fas fa-plus-circle"></i> Agregar
+                            <i class="fas fa-plus-circle"></i> Agregar Solicitud
                         </a>
                     </div>
                 </div>
-                <hr>
+                <br></br>
                 <form @submit.prevent="fetchHallazgos">
-                    <div class="row">
-                        <div class="col-md-4">
+                    <div class="form-row">
+                        <div class="col">
                             <input type="text" v-model="serverFilters.descripcion" class="form-control"
                                 placeholder="Buscar por descripción o resumen...">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col">
                             <input type="text" v-model="serverFilters.proceso" class="form-control"
                                 placeholder="Buscar por Proceso">
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-stretch gap-1">
-                                <select v-model="serverFilters.clasificacion" class="form-control">
-                                    <option value="">Todas las Clasificaciones</option>
-                                    <option value="NCM">No Conformidad Mayor</option>
-                                    <option value="NCMe">No Conformidad Menor</option>
-                                    <option value="OBS">Observación</option>
-                                    <option value="OdM">Oportunidad de Mejora</option>
-                                </select>
-                                <button type="submit" class="btn bg-dark btn-sm">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
+                        <div class="col">
+                            <select v-model="serverFilters.clasificacion" class="form-control">
+                                <option value="">Todas las Clasificaciones</option>
+                                <option value="NCM">No Conformidad Mayor</option>
+                                <option value="Ncme">No Conformidad Menor</option>
+                                <option value="Obs">Observación</option>
+                                <option value="Odm">Oportunidad de Mejora</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select v-model="serverFilters.estado" class="form-control">
+                                <option value="">Todos los Estados</option>
+                                <option value="creado">Creado</option>
+                                <option value="asignado">Asignado</option>
+                                <option value="desestimado">Desestimado</option>
+                                <option value="en proceso">En Proceso</option>
+                                <option value="concluido">Concluido</option>
+                                <option value="evaluado">Evaluado</option>
+                                <option value="cerrado">Cerrado</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn bg-dark">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
                         </div>
                     </div>
 
@@ -71,15 +83,15 @@
                     </template>
                     <Column field="hallazgo_cod" header="Código" style="width:10%">
                     </Column>
-                    <Column field="hallazgo_clasificacion" header="Clasificación" style="width:10%">
+                    <Column field="hallazgo_clasificacion" header="Clasificación" style="width:8%">
                     </Column>
-                    <Column field="hallazgo_resumen" header="Resumen" style="width:25%" sortable>
+                    <Column field="hallazgo_resumen" header="Hallazgo" style="width:35%">
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
                                 class="p-column-filter" placeholder="Buscar por Resumen" />
                         </template>
                     </Column>
-                    <Column field="procesos" header="Proceso" style="width:15%">
+                    <Column field="procesos" header="Proceso" style="width:20%">
                         <template #body="{ data }">
                             <template v-if="data.procesos && Array.isArray(data.procesos) && data.procesos.length > 0">
                                 {{data.procesos.map(proceso => proceso.proceso_nombre).join(', ')}}
@@ -89,27 +101,51 @@
                             </template>
                         </template>
                     </Column>
-                    <Column field="hallazgo_fecha_identificacion" header="F. Identificación" style="width:10%" sortable>
+                    <Column field="hallazgo_fecha_identificacion" header="F. Identificación" style="width:10%">
                         <template #body="{ data }">
                             {{ formatDate(data.hallazgo_fecha_identificacion) }}
                         </template>
                     </Column>
-                    <Column field="hallazgo_fecha_asignacion" header="F. Asignación" style="width:10%" sortable>
+                    <Column field="hallazgo_fecha_conclusion" header="F. Conclusión" style="width:10%" sortable>
                         <template #body="{ data }">
-                            {{ formatDate(data.hallazgo_fecha_asignacion) }}
+                            {{ formatDate(data.hallazgo_fecha_conclusion) }}
                         </template>
                     </Column>
-                    <Column field="hallazgo_estado" header="Estado" style="width:10%" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <Dropdown v-model="filterModel.value"
-                                :options="['creado', 'asignado', 'desestimado', 'en proceso', 'concluido', 'evaluado', 'cerrado']"
-                                placeholder="Seleccionar" class="p-column-filter" :showClear="true"
-                                @change="filterCallback()">
-                                <template #option="slotProps">
-                                    <span :class="'customer-badge status-' + slotProps.option">{{ slotProps.option
-                                        }}</span>
-                                </template>
-                            </Dropdown>
+                    <Column field="hallazgo_estado" header="Estado" style="width:10%; text-align: center;" >
+                        <template #body="{ data }">
+                            {{ data.hallazgo_estado }}
+                        </template>
+                    </Column>
+                    <Column header="Total Acciones" style="width:10%; text-align: center;">
+                        <template #body="{ data }">
+                            {{ data.acciones ? data.acciones.length : 0 }}
+                        </template>
+                    </Column>
+                    <Column header="Acciones Pendientes" style="width:10%; text-align: center;">
+                        <template #body="{ data }">
+                            {{ getAccionesPendientes(data.acciones) }}
+                        </template>
+                    </Column>
+
+
+                    <Column field="hallazgo_avance" header="Avance" sortable>
+                        <template #body="{ data }">
+                            <template v-if="['creado', 'asignado', 'desestimado'].includes(data.hallazgo_estado)">
+                                <span class="small text-muted">Sin avance</span>
+                            </template>
+                            <template v-else-if="data.avance">
+                                <div class="small text-center">
+                                    {{ parseInt(data.hallazgo_avance) }}%
+                                    <div class="progress progress-xs">
+                                        <div class="progress-bar bg-info"
+                                            :style="{ width: parseInt(data.hallazgo_avance) + '%' }">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <span class="small text-muted">Sin avance</span>
+                            </template>
                         </template>
                     </Column>
                     <Column header="Acciones" :exportable="false" style="width:10%" headerStyle="width: 10%"
@@ -118,6 +154,10 @@
                             <a href="#" title="Editar Hallazgo" class="mr-3 d-inline-block"
                                 @click.prevent="editHallazgo(data)">
                                 <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                            </a>
+                            <a href="#" title="Planes de Acción" class="mr-3 d-inline-block"
+                                @click.prevent="verPlanesDeAccion(data.id)">
+                                <i class="fas fa-tasks text-info fa-lg"></i>
                             </a>
                             <a href="#" title="Eliminar Hallazgo" class="mr-3 d-inline-block"
                                 @click.prevent="deleteHallazgo(data.id)">
@@ -134,6 +174,7 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 
@@ -148,6 +189,7 @@ import { FilterMatchMode } from 'primevue/api';
 import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
+const router = useRouter();
 const hallazgos = ref([]);
 const successMessage = ref('');
 const errorMessage = ref('');
@@ -168,7 +210,8 @@ const filters = ref({
 const serverFilters = reactive({
     descripcion: '',
     proceso: '',
-    clasificacion: ''
+    clasificacion: '',
+    estado: ''
 });
 
 const isLoading = ref(true);
@@ -183,6 +226,11 @@ const formatDate = (dateString) => {
     const year = date.getFullYear();
 
     return `${day}/${month}/${year}`;
+};
+
+const getAccionesPendientes = (acciones) => {
+    if (!acciones) return 0;
+    return acciones.filter(accion => ['Programada', 'En Ejecución'].includes(accion.accion_estado)).length;
 };
 
 // Métodos
@@ -211,6 +259,10 @@ const openNewHallazgoModal = () => {
 
 const editHallazgo = (hallazgo) => {
     hallazgoStore.openModal(hallazgo);
+};
+
+const verPlanesDeAccion = (hallazgoId) => {
+    router.push({ name: 'acciones.index', params: { hallazgoId } });
 };
 
 const deleteHallazgo = async () => {

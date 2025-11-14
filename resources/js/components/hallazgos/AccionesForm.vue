@@ -1,6 +1,6 @@
 <template>
     <div class="card">
-        <div class="card-header bg-danger text-white">
+        <div class="card-header bg-dark text-white">
             <h6 class="mb-0">{{ titulo }}</h6>
         </div>
         <div class="card-body">
@@ -53,7 +53,8 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12 d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary btn-sm mr-2" @click="resetForm" v-if="editingAccionId">
+                        <button type="button" class="btn btn-secondary btn-sm mr-2" @click="resetForm"
+                            v-if="editingAccionId">
                             <i class="fas fa-times"></i> Cancelar Edición
                         </button>
                         <button type="submit" class="btn btn-danger btn-sm">
@@ -95,8 +96,8 @@
                             <td>{{ formatDate(accion.accion_fecha_inicio) }}</td>
                             <td>{{ formatDate(accion.accion_fecha_fin_planificada) }}</td>
                             <td><span class="badge badge-pill badge-info">{{ accion.accion_estado }}</span></td>
-                            <td>{{ accion.accion_ciclo }}</td>
-                            <td>
+                            <td style="width: 5%;">{{ accion.accion_ciclo }} </td>
+                            <td style="width: 10%;">
                                 <button class="btn btn-secondary btn-sm ml-1" @click="editAccion(accion)"><i
                                         class="fas fa-edit"></i></button>
                                 <button class="btn btn-danger btn-sm ml-1" @click="$emit('eliminar', accion.id)"><i
@@ -232,10 +233,11 @@ const formatDate = (dateString) => {
 }
 
 .table {
-    font-size: 12px; 
-    }
+    font-size: 12px;
+}
+
 .table .badge {
     font-size: 12px;
-    font-weight: 400; 
+    font-weight: 400;
 }
 </style>

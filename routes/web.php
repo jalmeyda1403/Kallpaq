@@ -89,6 +89,11 @@ Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::resource('smp', HallazgoController::class);
 Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
+Route::post('/acciones/{accion}/reprogramar', [AccionController::class, 'reprogramar'])->name('acciones.reprogramar');
+Route::post('/acciones/{accion}/concluir', [AccionController::class, 'concluir'])->name('acciones.concluir');
+Route::get('/acciones/evidencia/{path}', [AccionController::class, 'downloadEvidencia'])->name('acciones.download-evidencia')->where('path', '.*');
+Route::post('/acciones/{accion}/upload-evidencia', [AccionController::class, 'uploadEvidencia'])->name('acciones.upload-evidencia');
+Route::post('/acciones/{accion}/delete-evidencia', [AccionController::class, 'deleteEvidencia'])->name('acciones.delete-evidencia');
 Route::resource('obligaciones', ObligacionController::class);
 Route::resource('riesgos', RiesgoController::class);
 Route::resource('ouos', OUOController::class);
@@ -202,6 +207,7 @@ Route::get('/mejora/{hallazgo}/show', [HallazgoController::class, 'show'])->name
 Route::put('/mejora/{hallazgo}/update', [HallazgoController::class, 'update'])->name('hallazgo.update');
 Route::post('/mejora/{hallazgo}/store', [HallazgoController::class, 'store'])->name('hallazgo.store');
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
+Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
 //Asociar hallazgos con Procesos
 Route::controller(HallazgoController::class)
     ->prefix('hallazgos/{hallazgo}/procesos')
@@ -256,6 +262,7 @@ Route::get('/smp/create/{clasificacion?}', [HallazgoController::class, 'create']
 Route::post('/smp/{id}/aprobar', [HallazgoController::class, 'aprobar'])->name('smp.aprobar');
 Route::post('/smp/imprimir/{id}', [HallazgoController::class, 'imprimir'])->name('smp.imprimir');
 Route::get('/smp/{id}/plan', [HallazgoController::class, 'planes'])->name('smp.plan');
+Route::get('/hallazgos/{hallazgo}/acciones', [AccionController::class, 'index'])->name('acciones.index');
 Route::get('/smp/{id}/clasificacion/{clasificacion}', [HallazgoController::class, 'porProceso'])->name('proceso.hallazgos');
 Route::get('smp/dashboard/home', [HallazgoController::class, 'dashboard'])->name('smp.dashboard');
 
@@ -310,7 +317,7 @@ Route::controller(DocumentoController::class)
         Route::delete('/{relacionado}', 'disociarRelacionado')->name('disociar');
     });
 
-// Ruta Jeasrquia de Documentos
+// Ruta Jerarquia de Documentos
 
 Route::controller(DocumentoController::class)
     ->prefix('documentos/{documento}/jerarquia')

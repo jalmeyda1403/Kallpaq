@@ -51,6 +51,12 @@ const routes = [
         name: 'administracion.usuarios.index',
         component: UsuariosIndex,
     },
+    {
+        path: '/hallazgos/:hallazgoId/acciones',
+        name: 'acciones.index',
+        component: () => import('@/components/acciones/AccionesIndex.vue'),
+        props: true
+    },
 ]
 
 const router = createRouter({

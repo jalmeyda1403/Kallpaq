@@ -1,0 +1,10 @@
+feat: Refactor user management and document listing views
+
+Refactor "Gestionar Usuarios" view from Blade to Vue.js, Pinia, and PrimeVue.
+Migrate components from `asignacion` to `administracion` directory and update references.
+Update sidebar menu routes and expansion logic for administration section.
+Migrate `DocumentoIndex.vue` from jQuery DataTables to PrimeVue DataTable,
+while retaining HTML inputs/Select2 for filters.
+Apply styling improvements for PrimeVue and Select2 components, including improved DataTable row spacing.
+Update Vite and related NPM dependencies.
+Fix HTML syntax error in `DocumentoIndex.vue`.

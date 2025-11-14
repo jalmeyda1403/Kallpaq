@@ -26,7 +26,7 @@ export default defineConfig({
             ziggy: path.resolve(__dirname, 'vendor/tightenco/ziggy/dist/vue.es.js'),
             ziggyJs: path.resolve(__dirname, 'vendor/tightenco/ziggy/dist/index.es.js'),
             'primeicons': path.resolve(__dirname, 'node_modules/primeicons'),
-            'vue-router': 'vue-router/dist/vue-router.esm-bundler.js',
+            'vue-router': 'vue-router',
         },
     },
     build: {

@@ -3,7 +3,7 @@
         aria-modal="true" role="dialog">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
+                <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title">
                         <i class="fas fa-search-plus mr-2"></i> Análisis de Causa Raíz
                     </h5>
