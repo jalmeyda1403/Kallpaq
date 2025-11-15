@@ -133,7 +133,7 @@
                             <template v-if="['creado', 'asignado', 'desestimado'].includes(data.hallazgo_estado)">
                                 <span class="small text-muted">Sin avance</span>
                             </template>
-                            <template v-else-if="data.avance">
+                            <template v-else-if="data.hallazgo_avance">
                                 <div class="small text-center">
                                     {{ parseInt(data.hallazgo_avance) }}%
                                     <div class="progress progress-xs">
@@ -183,7 +183,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import Dropdown from 'primevue/dropdown';
+
 import { FilterMatchMode } from 'primevue/api';
 
 import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
@@ -230,7 +230,7 @@ const formatDate = (dateString) => {
 
 const getAccionesPendientes = (acciones) => {
     if (!acciones) return 0;
-    return acciones.filter(accion => ['Programada', 'En Ejecución'].includes(accion.accion_estado)).length;
+    return acciones.filter(accion => ['programada', 'en ejecucion'].includes(accion.accion_estado.toLowerCase())).length;
 };
 
 // Métodos

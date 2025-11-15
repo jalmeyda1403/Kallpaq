@@ -10,12 +10,12 @@
                     <div class="col-md-12 form-group">
                         <label for="accion_descripcion">Descripción de la Acción</label>
                         <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                            </div>
-                            <textarea class="form-control" id="accion_descripcion" rows="2"
-                                placeholder="Describe la acción..." v-model="nuevaAccion.accion_descripcion"
-                                required></textarea>
+                            <textarea class="form-control" id="accion_descripcion" rows="5"
+                                placeholder="Describe la acción para atacar la causa raíz..." v-model="nuevaAccion.accion_descripcion"
+                                required maxlength="200"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <small class="form-text text-muted">{{ nuevaAccion.accion_descripcion.length }} / 200</small>
                         </div>
                     </div>
                 </div>
@@ -79,7 +79,7 @@
                             <th>Acción Inmediata o Correctiva</th>
                             <th>Responsable</th>
                             <th>F. Inicio</th>
-                            <th>Plazo</th>
+                            <th>F. Fin</th>
                             <th>Estado</th>
                             <th>Ciclo</th>
                             <th>Acciones</th>
@@ -90,7 +90,7 @@
                             <td colspan="8" class="text-center text-muted">No hay acciones registradas.</td>
                         </tr>
                         <tr v-for="accion in acciones" :key="accion.id">
-                            <td>{{ accion.accion_cod }}</td>
+                            <td style="width: 10%;">{{ accion.accion_cod }}</td>
                             <td>{{ accion.accion_descripcion }}</td>
                             <td>{{ accion.accion_responsable || 'N/A' }}</td>
                             <td>{{ formatDate(accion.accion_fecha_inicio) }}</td>

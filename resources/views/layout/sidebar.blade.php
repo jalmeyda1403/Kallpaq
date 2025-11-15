@@ -335,7 +335,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="/vue/obligaciones" class="nav-link">
                                     <i class="nav-icon fas fa-exclamation-circle"></i>
                                     <p> Listado de Obligaciones</p>
                                 </a>

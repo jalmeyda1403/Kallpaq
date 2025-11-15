@@ -42,6 +42,16 @@ const routes = [
         component: RequerimientosIndexMe,
     },
     {
+        path: '/requerimientos/seguimiento',
+        name: 'requerimientos.seguimiento',
+        component: () => import('@/components/requerimientos/RequerimientosSeguimiento.vue'),
+    },
+    {
+        path: '/obligaciones',
+        name: 'obligaciones.index',
+        component: () => import('@/components/obligaciones/ObligacionesIndex.vue'),
+    },
+    {
         path: '/administracion/asignacion-ouos', // Changed path to reflect new location
         name: 'administracion.asignacion-ouos.index', // Changed name
         component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'), // Updated path

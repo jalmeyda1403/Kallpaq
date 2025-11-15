@@ -9,6 +9,7 @@ use App\Models\Causa; // Import the Causa model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\Models\HallazgoProceso;
 
 class AccionController extends Controller
 {
@@ -36,6 +37,8 @@ class AccionController extends Controller
 
         $accion->save();
 
+        $this->updateHallazgoAvance($accion->hallazgo);
+
         return response()->json(['message' => 'Acción gestionada con éxito.']);
     }
 
@@ -54,7 +57,23 @@ class AccionController extends Controller
         $accion->accion_fecha_fin_real = Carbon::now();
         $accion->save();
 
+        $this->updateHallazgoAvance($accion->hallazgo);
+
         return response()->json(['message' => 'Acción concluida con éxito.']);
+    }
+
+    private function updateHallazgoAvance(Hallazgo $hallazgo)
+    {
+        $totalAcciones = $hallazgo->acciones()->count();
+        if ($totalAcciones === 0) {
+            $hallazgo->hallazgo_avance = 0;
+        } else {
+            $accionesCompletadas = $hallazgo->acciones()
+                                            ->whereIn('accion_estado', ['finalizada', 'desestimada'])
+                                            ->count();
+            $hallazgo->hallazgo_avance = ($accionesCompletadas / $totalAcciones) * 100;
+        }
+        $hallazgo->save();
     }
 
     public function downloadEvidencia($path)
@@ -195,6 +214,40 @@ class AccionController extends Controller
         $accion->update($validatedData);
 
         return response()->json($accion);
+    }
+
+    public function storeAccion(Request $request, Hallazgo $hallazgo, Proceso $proceso)
+    {
+        $validatedData = $request->validate([
+            'accion_descripcion' => 'required|string',
+            'accion_responsable' => 'required|string',
+            'accion_fecha_inicio' => 'required|date',
+            'accion_fecha_fin_planificada' => 'required|date',
+        ]);
+
+        // Find the corresponding hallazgo_proceso pivot record
+        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
+                                          ->where('proceso_id', $proceso->id)
+                                          ->firstOrFail();
+
+        // Generate accion_cod
+        $ultimoAccion = Accion::where('hallazgo_id', $hallazgo->id)->latest('id')->first();
+        if ($ultimoAccion) {
+            $parts = explode('-', $ultimoAccion->accion_cod);
+            $correlativo = (int) end($parts) + 1;
+        } else {
+            $correlativo = 1;
+        }
+        $accionCod = $hallazgo->hallazgo_cod . '-' . sprintf('%03d', $correlativo);
+
+        $validatedData['hallazgo_id'] = $hallazgo->id;
+        $validatedData['hallazgo_proceso_id'] = $hallazgoProceso->id;
+        $validatedData['accion_cod'] = $accionCod;
+        $validatedData['accion_estado'] = 'programada'; // Set initial state to 'programada'
+        
+        $accion = Accion::create($validatedData);
+
+        return response()->json($accion, 201);
     }
 
     public function destroyAccion(Accion $accion)

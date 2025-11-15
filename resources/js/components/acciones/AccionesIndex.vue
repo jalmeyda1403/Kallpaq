@@ -2,54 +2,51 @@
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">Home</li>
-                <li class="breadcrumb-item">Solicitudes de Mejora</li>
+                <li class="breadcrumb-item"><a href="/home">Home</a></li>
+                <li class="breadcrumb-item"><router-link :to="{ name: 'hallazgos.index' }">Solicitudes de Mejora</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Planes de Acción</li>
             </ol>
         </nav>
 
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title mb-0">Planes de Acción</h3>
+                <h3 class="card-title mb-0">
+                    Planes de Acción del Hallazgo: {{ hallazgo.hallazgo_cod || 'Cargando...' }}
+                </h3>
             </div>
             <div class="card-body">
                 <DataTable :value="acciones" responsiveLayout="scroll">
-                    <Column field="accion_cod" header="Código" style="width: 10%"></Column>
-                    <Column field="Proceso" header="Proceso" style="width: 20%">
+                    <Column field="accion_cod" header="Código" style="width: 8%;"></Column>
+                    <Column field="Proceso" header="Proceso" style="width: 15%;">
                         <template #body="{ data }">
                             {{ data.hallazgo_proceso?.proceso?.proceso_nombre }}
                         </template>
                     </Column>
-                    <Column field="accion_descripcion" header="Acción inmediata o correctiva" style="width: 35%;"></Column>
-                    <Column field="accion_responsable" header="Responsable" style="width: 20%"></Column>
-                    <Column field="accion_fecha_inicio" header="Inicio">
+                    <Column field="accion_descripcion" header="Descripción" style="width: 30%;"></Column>
+                    <Column field="accion_responsable" header="Responsable" style="width: 15%;"></Column>
+                    <Column field="accion_fecha_inicio" header="F. Inicio">
                         <template #body="{ data }">
                             {{ formatDate(data.accion_fecha_inicio) }}
                         </template>
                     </Column>
-                    <Column field="accion_fecha_fin_planificada" header="Fin Prog" style="width: 10%;">
+                    <Column field="accion_fecha_fin_planificada" header="F. Fin Prog.">
                         <template #body="{ data }">
                             {{ formatDate(data.accion_fecha_fin_planificada) }}
                         </template>
                     </Column>
-                    <Column field="accion_fecha_fin_reprogramada" header="Fin Rep" style="width: 10%;">
+                    <Column field="accion_fecha_fin_reprogramada" header="F. Fin Reprog.">
                         <template #body="{ data }">
                             {{ formatDate(data.accion_fecha_fin_reprogramada) }}
                         </template>
                     </Column>
-                    <Column field="accion_estado" header="Estado" style="width: 10%;"></Column>
-                    <Column header="Acciones" style="width:10%">
+                    <Column field="accion_estado" header="Estado"></Column>
+                    <Column header="Acciones" :exportable="false">
                         <template #body="{ data }">
-                            <a href="#" class="text-warning mr-3" title="Reprogramar"
-                                :class="{ 'disabled-link': isAccionTerminada(data) }"
-                                @click.prevent="!isAccionTerminada(data) && openReprogramarModal(data)">
-                                <i class="fas fa-clock fa-lg" :class="{ 'text-secondary': isAccionTerminada(data) }"></i>
+                            <a href="#" @click.prevent="openReprogramarModal(data)" :class="['mr-2', { 'disabled': isAccionTerminada(data) }]" title="Gestionar Acción">
+                                <i class="fas fa-calendar-alt fa-lg text-warning"></i>
                             </a>
-
-                            <a href="#" class="text-success" title="Concluir"
-                                :class="{ 'disabled-link': isAccionTerminada(data) }"
-                                @click.prevent="!isAccionTerminada(data) && openConcluirModal(data)">
-                                <i class="fas fa-check-circle fa-lg"  :class="{ 'text-secondary': isAccionTerminada(data) }"></i>
+                            <a href="#" @click.prevent="openConcluirModal(data)" :class="{ 'disabled': isAccionTerminada(data) }" title="Concluir Acción">
+                                <i class="fas fa-check-circle fa-lg text-success"></i>
                             </a>
                         </template>
                     </Column>
@@ -82,6 +79,7 @@ const props = defineProps({
 });
 
 const acciones = ref([]);
+const hallazgo = ref({});
 const isLoading = ref(true);
 
 const isAccionTerminada = (accion) => {
@@ -97,14 +95,20 @@ const openConcluirModal = (accion) => {
 };
 
 const fetchAcciones = async () => {
-    isLoading.value = true;
     try {
         const response = await axios.get(route('api.acciones.por-hallazgo', { hallazgo: props.hallazgoId }));
         acciones.value = response.data;
     } catch (error) {
         console.error('Error al obtener las acciones:', error);
-    } finally {
-        isLoading.value = false;
+    }
+};
+
+const fetchHallazgoData = async () => {
+    try {
+        const response = await axios.get(route('hallazgo.show', { hallazgo: props.hallazgoId }));
+        hallazgo.value = response.data;
+    } catch (error) {
+        console.error('Error al obtener los datos del hallazgo:', error);
     }
 };
 
@@ -117,7 +121,12 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
-onMounted(() => {
-    fetchAcciones();
+onMounted(async () => {
+    isLoading.value = true;
+    await Promise.all([
+        fetchHallazgoData(),
+        fetchAcciones()
+    ]);
+    isLoading.value = false;
 });
 </script>

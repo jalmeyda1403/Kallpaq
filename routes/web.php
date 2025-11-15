@@ -88,13 +88,14 @@ Route::resource('procesos', ProcesoController::class);
 Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::resource('smp', HallazgoController::class);
+Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
 Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
 Route::post('/acciones/{accion}/reprogramar', [AccionController::class, 'reprogramar'])->name('acciones.reprogramar');
 Route::post('/acciones/{accion}/concluir', [AccionController::class, 'concluir'])->name('acciones.concluir');
 Route::get('/acciones/evidencia/{path}', [AccionController::class, 'downloadEvidencia'])->name('acciones.download-evidencia')->where('path', '.*');
 Route::post('/acciones/{accion}/upload-evidencia', [AccionController::class, 'uploadEvidencia'])->name('acciones.upload-evidencia');
 Route::post('/acciones/{accion}/delete-evidencia', [AccionController::class, 'deleteEvidencia'])->name('acciones.delete-evidencia');
-Route::resource('obligaciones', ObligacionController::class);
+
 Route::resource('riesgos', RiesgoController::class);
 Route::resource('ouos', OUOController::class);
 
@@ -191,7 +192,9 @@ Route::get('usuarios/auditores', [UserController::class, 'showAuditores'])->name
 
 //Obligaciones
 
-Route::get('obligaciones', [ObligacionController::class, 'index'])->name('obligaciones.index');
+Route::get('obligaciones', function () {
+    return view('app');
+})->name('obligaciones.index');
 Route::get('obligaciones/{proceso_id?}/listar', [ObligacionController::class, 'listar'])->name('obligaciones.listar');
 Route::get('obligaciones/{obligacion_id}/listariesgos', [ObligacionController::class, 'listariesgos'])->name('obligaciones.listariesgos');
 //Riesgos
@@ -201,12 +204,17 @@ Route::post('riesgos/update/{riesgo}', [RiesgoController::class, 'update'])->nam
 Route::delete('/riesgos/eliminar/{riesgo}', [RiesgoController::class, 'destroy'])->name('riesgos.destroy');
 Route::get('riesgos/{proceso_id?}/listar', [RiesgoController::class, 'listar'])->name('riesgos.listar');
 
-//hallazgos
-// Route::get('/mejora', [HallazgoController::class, 'listar'])->name('mejora.listar');
-Route::get('/mejora/{hallazgo}/show', [HallazgoController::class, 'show'])->name('hallazgo.show');
-Route::put('/mejora/{hallazgo}/update', [HallazgoController::class, 'update'])->name('hallazgo.update');
-Route::post('/mejora/{hallazgo}/store', [HallazgoController::class, 'store'])->name('hallazgo.store');
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
+
+// Rutas API para Obligaciones
+Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () {
+    Route::get('/', [ObligacionController::class, 'apiIndex'])->name('index');
+    Route::get('/{id}', [ObligacionController::class, 'show'])->name('show');
+    Route::post('/', [ObligacionController::class, 'store'])->name('store');
+    Route::put('/{id}', [ObligacionController::class, 'update'])->name('update');
+    Route::delete('/{id}', [ObligacionController::class, 'destroy'])->name('destroy');
+    Route::get('/{id}/riesgos', [ObligacionController::class, 'listariesgos'])->name('listariesgos');
+});
 Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
 //Asociar hallazgos con Procesos
 Route::controller(HallazgoController::class)
@@ -424,7 +432,9 @@ Route::get('/requerimientos/creados', [RequerimientoController::class, 'creados'
 Route::get('/requerimientos/asignados/{rol}', [RequerimientoController::class, 'asignados'])->name('requerimientos.asignados');
 Route::get('/requerimientos/atendidos/{rol}', [RequerimientoController::class, 'atendidos'])->name('requerimientos.atendidos');
 
-Route::get('/requerimientos/seguimiento', [RequerimientoController::class, 'seguimiento'])->name('requerimientos.seguimiento');
+Route::get('/requerimientos/seguimiento', function () {
+    return view('app');
+})->name('requerimientos.seguimiento');
 
 Route::get('/mis-requerimientos', [RequerimientoController::class, 'index'])->name('requerimientos.mine');
 
