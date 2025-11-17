@@ -85,6 +85,12 @@ class Hallazgo extends Model
     {
         return $this->belongsTo(User::class, 'especialista_id');
     }
+
+    public function auditor()
+    {
+        return $this->belongsTo(User::class, 'auditor_id');
+    }
+
     public function movimientos()
     {
         return $this->hasMany(HallazgoMovimientos::class);
@@ -127,8 +133,8 @@ class Hallazgo extends Model
     public function scopeFilterByClasificacion($query, $clasificacion)
     {
         if (is_array($clasificacion)) {
-            return $query->whereIn('clasificacion', $clasificacion);
+            return $query->whereIn('hallazgo_clasificacion', $clasificacion);
         }
-        return $query->where('clasificacion', $clasificacion);
+        return $query->where('hallazgo_clasificacion', $clasificacion);
     }
 }

@@ -32,6 +32,11 @@
                             Cerrar Sesión
                         </a>
                     </div>
+                @else
+                    <a href="{{ route('login') }}" class="d-block text-white">
+                        <i class="far fa-user nav-icon"></i>
+                        Iniciar Sesión
+                    </a>
                 @endif
             </div>
 
@@ -162,14 +167,16 @@
                                         <p>Mis Requerimientos</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
-                                        class="nav-link">
-                                        <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
-                                        <p>Dashboard Requerimientos</p>
-                                    </a>
-                                </li>
                             @endif
+
+                            {{-- Dashboard para todos los roles, al final del módulo --}}
+                            <li class="nav-item">
+                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
+                                    class="nav-link">
+                                    <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
+                                    <p>Dashboard Requerimientos</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -177,7 +184,7 @@
                     <li
                         class="nav-item has-treeview {{ request()->is('procesos*') || request()->is('documento*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-cog"></i>
+                            <i class="nav-icon fas fa-cogs"></i>
                             <p>
                                 Gestión por Procesos
                                 <i class="right fas fa-angle-left"></i>
@@ -190,33 +197,36 @@
                                     <p>Inventario de Procesos</p>
                                 </a>
                             </li>
-
-
                             <li class="nav-item">
                                 <a href="{{ route('procesos.index') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
-                                    <p> Listado de Procesos </p>
+                                    <p>Listado de Procesos</p>
                                 </a>
                             </li>
-
                             <li class="nav-item">
                                 <a href="{{ route('partes.index') }}" class="nav-link">
                                     <i class="nav-icon fas fa-users"></i>
                                     <p>Partes Interesadas</p>
                                 </a>
                             </li>
-
                             <li class="nav-item">
                                 <a href="{{ url('/vue/documentos') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
-                                    <p> Listado de documentos </p>
+                                    <p>Listado de Documentos</p>
                                 </a>
                             </li>
-
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-chart-bar"></i>
                                     <p>Listado de Indicadores</p>
+                                </a>
+                            </li>
+
+                            <!-- Dashboard al final del módulo -->
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard Procesos</p>
                                 </a>
                             </li>
                         </ul>
@@ -257,11 +267,11 @@
                                         <p>SMP Concluidas</p>
                                     </a>
                                 </li>
+                                <!-- Bandejas SMP basadas en OUO para Admin -->
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
-                                        class="nav-link">
-                                        <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
-                                        <p>Dashboard SMP</p>
+                                    <a href="/vue/smp-ouo" class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>SMP de mi Unidad</p>
                                     </a>
                                 </li>
                             @endif
@@ -286,6 +296,13 @@
                                         class="nav-link">
                                         <i class="fas fa-check-circle fa-xs nav-icon "></i>
                                         <p>SMP concluidas</p>
+                                    </a>
+                                </li>
+                                <!-- Bandejas SMP basadas en OUO para Facilitador y Subgerente -->
+                                <li class="nav-item">
+                                    <a href="/vue/smp-ouo" class="nav-link">
+                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
+                                        <p>SMP de mis Procesos</p>
                                     </a>
                                 </li>
                             @endif
@@ -314,71 +331,171 @@
                                 </li>
                             @endif
 
+                            {{-- Dashboard para todos los roles, al final del módulo --}}
+                            <li class="nav-item">
+                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
+                                    class="nav-link">
+                                    <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
+                                    <p>Dashboard SMP</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
                     <!-- Configuracion Obligaciones -->
-                    <li class="nav-item">
+                    <li class="nav-item has-treeview">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-clipboard-check"></i>
                             <p>
-                                Gestiónar Obligaciones
+                                Gestión de Obligaciones
                                 <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            @if (in_array($rol, ['admin', 'supervisor']))
+                                <li class="nav-item">
+                                    <a href="{{ url('/vue/obligaciones') }}" class="nav-link">
+                                        <i class="nav-icon fas fa-folder-open"></i>
+                                        <p>Bandeja de Obligaciones</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-plus-circle"></i>
+                                        <p>Registrar Nueva Obligación</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-chart-line"></i>
+                                        <p>Evaluación de Obligaciones</p>
+                                    </a>
+                                </li>
+                            @endif
 
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-tachometer-alt"></i>
-                                    <p> Dashboard</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/vue/obligaciones" class="nav-link">
-                                    <i class="nav-icon fas fa-exclamation-circle"></i>
-                                    <p> Listado de Obligaciones</p>
-                                </a>
-                            </li>
+                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista']))
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-user-check"></i>
+                                        <p>Mis Obligaciones Asignadas</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-tasks"></i>
+                                        <p>Seguimiento de Acciones</p>
+                                    </a>
+                                </li>
+                            @endif
+
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-flag-checkered"></i>
-                                    <p> Acciones Identificadas</p>
+                                    <p>Acciones Identificadas</p>
                                 </a>
                             </li>
 
+                            <!-- Dashboard al final del módulo -->
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard Obligaciones</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     <!-- Configuracion Riesgos -->
-                    <li class="nav-item">
+                    <li class="nav-item has-treeview">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-exclamation-triangle"></i>
                             <p>
-                                Gestionar Riesgos
+                                Gestión de Riesgos
                                 <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            @if (in_array($rol, ['admin', 'supervisor']))
+                                <li class="nav-item">
+                                    <a href="{{ url('/vue/riesgos') }}" class="nav-link">
+                                        <i class="nav-icon fas fa-folder-open"></i>
+                                        <p>Bandeja de Riesgos</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-plus-circle"></i>
+                                        <p>Registrar Nuevo Riesgo</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-chart-line"></i>
+                                        <p>Evaluación de Riesgos</p>
+                                    </a>
+                                </li>
+                            @endif
 
+                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista']))
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-user-check"></i>
+                                        <p>Mis Riesgos Asignados</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-tasks"></i>
+                                        <p>Seguimiento de Acciones</p>
+                                    </a>
+                                </li>
+                            @endif
+
+                            <!-- Dashboard al final del módulo -->
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-tachometer-alt"></i>
-                                    <p>Dashboard</p>
+                                    <p>Dashboard Riesgos</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Gestión de Continuidad -->
+                    <li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-shield-alt"></i>
+                            <p>
+                                Gestión de Continuidad
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-clipboard-list"></i>
+                                    <p>Planes de Continuidad</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-exclamation-circle"></i>
-                                    <p>Riesgos Pendientes</p>
+                                    <p>Escenarios de Riesgo</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-check-circle"></i>
-                                    <p>Riesgos Cerrados</p>
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>Activos Críticos</p>
                                 </a>
                             </li>
 
+                            <!-- Dashboard al final del módulo -->
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard Continuidad</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -399,12 +516,25 @@
                                     <p>Gestionar Usuarios</p>
                                 </a>
                             </li>
-
                             <li class="nav-item">
                                 <a href="{{ url('/vue/administracion/asignacion-ouos') }}"
                                     class="nav-link {{ request()->is('vue/administracion/asignacion-ouos*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-sitemap"></i>
                                     <p>Asignación OUO-Procesos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>Configuración General</p>
+                                </a>
+                            </li>
+
+                            <!-- Dashboard al final del módulo -->
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard Administración</p>
                                 </a>
                             </li>
                         </ul>

@@ -180,17 +180,18 @@ public function guardarPermisos(Request $request, $id)
 
 public function showAuditores()
 {
-   // $role = Role::findById(2);
-    //$especialistas = $role->users()->get();
-    $auditores = Auditor::all();
-     $auditores = $auditores->map(function ($auditor) {
-            return [
-                'id' => $auditor->user_id,
-                'descripcion' => $auditor->nombres . '  ' . $auditor->apellido_paterno . '  ' . $auditor->apellido_materno,
-            ];
-        });
-        return response()->json($auditores);
-    }
+    // Obtener todos los auditores con su información de usuario
+    $auditores = Auditor::with('user')->get();
+
+    $auditores = $auditores->map(function ($auditor) {
+        return [
+            'id' => $auditor->user_id,
+            'descripcion' => $auditor->user ? $auditor->user->name : 'Usuario no encontrado', // Usar el nombre del usuario
+        ];
+    });
+
+    return response()->json($auditores);
+}
 
     public function listUsers()
     {

@@ -11,9 +11,6 @@ class Auditor extends Model
     protected $table = 'auditores';
     protected $fillable = [
         'user_id',
-        'nombres',
-        'apellido_paterno',
-        'apellido_materno',
     ];
 
     public function user()

@@ -119,16 +119,16 @@ class HallazgoController extends Controller
      */
     public function store(Request $request)
     {
-        // Generar el valor para smp_cod
+        // Generar el valor para hallazgo_cod
         $proceso = Proceso::find($request->proceso_id);
         $ultimoHallazgo = Hallazgo::where('proceso_id', $request->proceso_id)->latest()->first();
-        $correlativo = $ultimoHallazgo ? (int) explode('-', $ultimoHallazgo->smp_cod)[3] + 1 : 1;
+        $correlativo = $ultimoHallazgo ? (int) explode('-', $ultimoHallazgo->hallazgo_cod)[3] + 1 : 1;
         $clasificacion = ($request->clasificacion === 'NCM' || $request->clasificacion === 'Ncme') ? 'SMP' : $request->clasificacion;
-        $smp_cod = $clasificacion . '-' . $proceso->sigla . '-' . $request->origen . '-' . sprintf('%03d', $correlativo);
+        $hallazgo_cod = $clasificacion . '-' . $proceso->sigla . '-' . $request->origen . '-' . sprintf('%03d', $correlativo);
 
-        // Agregar smp_cod al arreglo de datos
+        // Agregar hallazgo_cod al arreglo de datos
         $data = $request->all();
-        $data['smp_cod'] = $smp_cod;
+        $data['hallazgo_cod'] = $hallazgo_cod;
 
         // Crear un nuevo hallazgo con los datos del formulario
         $hallazgo = Hallazgo::create($data);
@@ -141,10 +141,50 @@ class HallazgoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Hallazgo $hallazgo)
+    public function show($id)
     {
-        // Devuelve el hallazgo como JSON
-        return response()->json($hallazgo->load('procesos'));
+        $hallazgo = Hallazgo::find($id);
+
+        if (!$hallazgo) {
+            return response()->json(['error' => 'Hallazgo no encontrado'], 404);
+        }
+
+        // Cargamos las relaciones necesarias
+        $hallazgo->load('procesos', 'especialista', 'auditor');
+
+        // Devolvemos los atributos del modelo explícitamente
+        $data = [
+            'id' => $hallazgo->id,
+            'hallazgo_cod' => $hallazgo->hallazgo_cod,
+            'informe_id' => $hallazgo->informe_id,
+            'especialista_id' => $hallazgo->especialista_id,
+            'auditor_id' => $hallazgo->auditor_id,
+            'emisor' => $hallazgo->emisor,
+            'facilitador_id' => $hallazgo->facilitador_id,
+            'hallazgo_resumen' => $hallazgo->hallazgo_resumen,
+            'hallazgo_sig' => $hallazgo->hallazgo_sig,
+            'hallazgo_descripcion' => $hallazgo->hallazgo_descripcion,
+            'hallazgo_criterio' => $hallazgo->hallazgo_criterio,
+            'hallazgo_evidencia' => $hallazgo->hallazgo_evidencia,
+            'hallazgo_clasificacion' => $hallazgo->hallazgo_clasificacion,
+            'hallazgo_origen' => $hallazgo->hallazgo_origen,
+            'hallazgo_origen_ot' => $hallazgo->hallazgo_origen_ot,
+            'hallazgo_avance' => $hallazgo->hallazgo_avance,
+            'hallazgo_tipo_cierre' => $hallazgo->hallazgo_tipo_cierre,
+            'hallazgo_estado' => $hallazgo->hallazgo_estado,
+            'hallazgo_fecha_identificacion' => $hallazgo->hallazgo_fecha_identificacion,
+            'hallazgo_fecha_asignacion' => $hallazgo->hallazgo_fecha_asignacion,
+            'hallazgo_fecha_desestimacion' => $hallazgo->hallazgo_fecha_desestimacion,
+            'hallazgo_fecha_conclusion' => $hallazgo->hallazgo_fecha_conclusion,
+            'hallazgo_fecha_evaluacion' => $hallazgo->hallazgo_fecha_evaluacion,
+            'hallazgo_fecha_cierre' => $hallazgo->hallazgo_fecha_cierre,
+            'hallazgo_ciclo' => $hallazgo->hallazgo_ciclo,
+            'procesos' => $hallazgo->procesos,
+            'especialista' => $hallazgo->especialista,
+            'auditor' => $hallazgo->auditor
+        ];
+
+        return response()->json($data);
     }
 
     /**
@@ -219,7 +259,7 @@ class HallazgoController extends Controller
         });
 
         //return view('smp.planPDF', compact('planesAccion', 'hallazgo', 'correctivas', 'preventivas'));
-        return $pdf->stream('hallazgo_' . $hallazgo->smp_cod . '.pdf');
+        return $pdf->stream('hallazgo_' . $hallazgo->hallazgo_cod . '.pdf');
 
     }
 
@@ -253,15 +293,15 @@ class HallazgoController extends Controller
         $correctivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 1)->count();
         $preventivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 0)->count();
 
-        $clasificacion = $hallazgo->clasificacion;
+        $clasificacion = $hallazgo->hallazgo_clasificacion;
 
         if ($clasificacion == 'NCM' || $clasificacion == "Ncme") {
             $breadcrumb['nombre'] = "Listado de SMP";
             $breadcrumb['codigo'] = "Ncm";
-        } elseif ($hallazgo->clasificacion == 'Obs') {
+        } elseif ($hallazgo->hallazgo_clasificacion == 'Obs') {
             $breadcrumb['nombre'] = "Listado de Observaciones";
             $breadcrumb['codigo'] = "Obs";
-        } elseif ($hallazgo->clasificacion == 'Odm') {
+        } elseif ($hallazgo->hallazgo_clasificacion == 'Odm') {
             $breadcrumb['nombre'] = "Listado de Oportunidades de mejora";
             $breadcrumb['codigo'] = "Odm";
         }
@@ -275,7 +315,7 @@ class HallazgoController extends Controller
         // Crear una consulta base con el filtro de clasificación para grafico pie
         $classifications = ['Ncme', 'NCM'];
 
-        $query = Hallazgo::whereIn('clasificacion', $classifications);
+        $query = Hallazgo::whereIn('hallazgo_clasificacion', $classifications);
         $queryBase = $query->filterBySig($sig);
 
 
@@ -298,7 +338,7 @@ class HallazgoController extends Controller
         // Crear una consulta de clasificacion para tabla proceso 
 
         $clasificacionFiltro = function ($query) {
-            $query->whereIn('clasificacion', ['Ncme', 'NCM']);
+            $query->whereIn('hallazgo_clasificacion', ['Ncme', 'NCM']);
         };
 
         $estadoSmpData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
@@ -348,11 +388,11 @@ class HallazgoController extends Controller
             foreach ($estados as $estado) {
                 if ($estado == 'En implementación') {
                     // Combina las cuentas de 'Aprobado' y 'En implementación'
-                    $smp[$clasificacion]['En implementación'] = $hallazgos->where('clasificacion', $clasificacion)
+                    $smp[$clasificacion]['En implementación'] = $hallazgos->where('hallazgo_clasificacion', $clasificacion)
                         ->whereIn('estado', ['En implementación', 'Aprobado'])->count();
 
                 } else {
-                    $smp[$clasificacion][$estado] = $hallazgos->where('clasificacion', $clasificacion)
+                    $smp[$clasificacion][$estado] = $hallazgos->where('hallazgo_clasificacion', $clasificacion)
                         ->where('estado', $estado)->count();
 
                 }
@@ -361,7 +401,7 @@ class HallazgoController extends Controller
 
         // Crear consulta para la tabla observaciones.
         $clasificacionFiltro = function ($query) {
-            $query->whereIn('clasificacion', ['Obs', 'Odm']);
+            $query->whereIn('hallazgo_clasificacion', ['Obs', 'Odm']);
         };
         $estadoObsData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
             ->withCount([
@@ -461,6 +501,60 @@ class HallazgoController extends Controller
         $hallazgo->procesos()->detach($proceso->id);
 
         return response()->json(['message' => 'Asociación eliminada con éxito.']);
+    }
+
+    //Método para obtener hallazgos basados en la OUO del usuario
+    public function getSmpByUserOuo(Request $request)
+    {
+        $user = Auth::user();
+
+        // Obtener las OUOs del usuario con sus roles
+        $userOuos = $user->ouos()->withPivot('role_in_ouo', 'activo')->get();
+
+        // Obtener los IDs de OUOs del usuario
+        $ouoIds = $userOuos->pluck('id');
+
+        // Obtener los procesos asociados a esas OUOs
+        $procesoIds = ProcesoOuo::whereIn('id_ouo', $ouoIds)->pluck('id_proceso')->unique();
+
+        // Filtrar hallazgos relacionados con esos procesos
+        $query = Hallazgo::with('procesos', 'acciones');
+
+        if ($procesoIds->isNotEmpty()) {
+            $query->whereHas('procesos', function ($q) use ($procesoIds) {
+                $q->whereIn('procesos.id', $procesoIds);
+            });
+        } else {
+            // Si no hay procesos asociados, retornar colección vacía
+            $query->whereRaw('1 = 0');
+        }
+
+        // Aplicar filtros adicionales si existen
+        if ($request->filled('descripcion')) {
+            $searchTerm = '%' . $request->descripcion . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('hallazgo_resumen', 'like', $searchTerm)
+                  ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+            });
+        }
+
+        if ($request->filled('proceso')) {
+            $query->whereHas('procesos', function ($q) use ($request) {
+                $q->where('proceso_nombre', 'like', '%' . $request->proceso . '%');
+            });
+        }
+
+        if ($request->filled('clasificacion')) {
+            $query->where('hallazgo_clasificacion', $request->clasificacion);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('hallazgo_estado', $request->estado);
+        }
+
+        $hallazgos = $query->get();
+
+        return response()->json($hallazgos);
     }
 
     //Methodo Asignar Especialista

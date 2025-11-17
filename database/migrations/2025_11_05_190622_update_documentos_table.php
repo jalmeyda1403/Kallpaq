@@ -26,10 +26,10 @@ return new class extends Migration
             }
 
             if (!Schema::hasColumn('documentos', 'area_compliance_id')) {
-                $table->foreignId('area_compliance_id')->nullable()->constrained('area_compliances');
+                $table->foreignId('area_compliance_id')->nullable()->constrained();
             }
             if (!Schema::hasColumn('documentos', 'subarea_compliance_id')) {
-                $table->foreignId('subarea_compliance_id')->nullable()->constrained('sub_area_compliances');
+                $table->foreignId('subarea_compliance_id')->nullable()->constrained();
             }
             if (!Schema::hasColumn('documentos', 'documento_padre_id')) {
                 $table->foreignId('documento_padre_id')->nullable()->constrained('documentos');

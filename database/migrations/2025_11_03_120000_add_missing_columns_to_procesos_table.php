@@ -40,7 +40,7 @@ return new class extends Migration
                 $table->boolean('sgce')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'planificacion_pei_id')) {
-                $table->foreignId('planificacion_pei_id')->nullable()->constrained('planificacion_pei');
+                $table->foreignId('planificacion_pei_id')->nullable()->constrained();
             }
         });
     }

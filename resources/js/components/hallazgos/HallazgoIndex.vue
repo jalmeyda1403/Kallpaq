@@ -173,8 +173,8 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, onBeforeUnmount, ref, reactive, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 
@@ -190,6 +190,7 @@ import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const router = useRouter();
+const routeData = useRoute(); // Get current route
 const hallazgos = ref([]);
 const successMessage = ref('');
 const errorMessage = ref('');
@@ -233,13 +234,28 @@ const getAccionesPendientes = (acciones) => {
     return acciones.filter(accion => ['programada', 'en ejecucion'].includes(accion.accion_estado.toLowerCase())).length;
 };
 
+// Determinar si estamos en la bandeja basada en OUO
+const isFromOuo = computed(() => {
+    // Verificar si la ruta actual es 'smp.ouo.index' o si hay un parámetro especial
+    return routeData.name === 'smp.ouo.index' || routeData.params.fromOuo === 'true';
+});
+
 // Métodos
 const fetchHallazgos = async () => {
     isLoading.value = true;
     try {
-        const response = await axios.get(route('api.hallazgos'), {
-            params: serverFilters
-        });
+        let response;
+        if (isFromOuo.value) {
+            // Usar la nueva ruta para obtener hallazgos basados en OUO del usuario
+            response = await axios.get(route('smp.ouo'), {
+                params: serverFilters
+            });
+        } else {
+            // Usar la ruta original para obtener todos los hallazgos
+            response = await axios.get(route('api.hallazgos'), {
+                params: serverFilters
+            });
+        }
         hallazgos.value = response.data;
     } catch (error) {
         console.error('Error al obtener los hallazgos:', error);

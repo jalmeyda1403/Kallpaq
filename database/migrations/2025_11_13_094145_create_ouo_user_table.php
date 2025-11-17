@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('ouo_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ouo_id')->constrained('ouos')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('ouo_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('role_in_ouo', ['titular', 'suplente', 'facilitador','miembro']); // e.g., 'owner', 'titular', 'suplente', 'facilitador'
             $table->boolean('activo')->default(true);
             $table->timestamps();

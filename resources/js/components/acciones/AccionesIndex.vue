@@ -105,7 +105,7 @@ const fetchAcciones = async () => {
 
 const fetchHallazgoData = async () => {
     try {
-        const response = await axios.get(route('hallazgo.show', { hallazgo: props.hallazgoId }));
+        const response = await axios.get(route('smp.show', { smp: props.hallazgoId }));
         hallazgo.value = response.data;
     } catch (error) {
         console.error('Error al obtener los datos del hallazgo:', error);

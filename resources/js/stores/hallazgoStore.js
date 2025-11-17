@@ -87,10 +87,13 @@ export const useHallazgoStore = defineStore('hallazgo', {
             if (this.procesos.length > 0 && this.especialistas.length > 0 && this.auditores.length > 0) return; // Evita recargar si ya existen datos
             this.loading = true;
             try {
-               const especialistasResponse = await axios.get(route('especialistas.index')); // Fetch specialists
-                this.especialistas = especialistasResponse.data; // Store specialists
+                const [especialistasResponse, auditoresResponse] = await Promise.all([
+                    axios.get(route('especialistas.index')), // Fetch specialists
+                    axios.get(route('usuario.auditores')) // Fetch auditors
+                ]);
 
-                               console.log(this.especialistas); // Log specialists
+                this.especialistas = especialistasResponse.data; // Store specialists
+                this.auditores = auditoresResponse.data; // Store auditors
                 this.errors = {};
             } catch (error) {
                 this.errors.global = 'No se pudieron cargar los datos necesarios.';
@@ -133,6 +136,12 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 this.hallazgoForm.hallazgo_fecha_identificacion = this.formatDateForInput(data.hallazgo_fecha_identificacion);
                 this.hallazgoForm.hallazgo_fecha_asignacion = this.formatDateForInput(data.hallazgo_fecha_asignacion);
                 this.hallazgoForm.hallazgo_sig = data.hallazgo_sig || [];
+
+                // Verifica si el campo auditor está en la respuesta y actualiza el ID
+                if (data.auditor && data.auditor.id) {
+                    this.hallazgoForm.auditor_id = data.auditor.id;
+                }
+
                 this.errors = {};
 
             } catch (error) {

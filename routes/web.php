@@ -106,6 +106,8 @@ Route::put('/ouos/{ouo}/procesos/{proceso}', [OUOController::class, 'updateProce
 
 // New routes for OUO-User assignment
 Route::get('/users/gestores', [OUOController::class, 'getGestorUsersForDropdown'])->name('users.gestores');
+// Ruta para obtener SMPs basados en la OUO del usuario
+Route::get('/smp/ouo', [HallazgoController::class, 'getSmpByUserOuo'])->name('smp.ouo');
 Route::get('/ouos/{ouo}/users', [OUOController::class, 'getAssignedUsers'])->name('ouos.users.index');
 Route::get('/ouos/{ouo}/users/deleted', [OUOController::class, 'getSoftDeletedUsers'])->name('ouos.users.deleted');
 Route::put('/ouos/{ouo}/users/{user}', [OUOController::class, 'updateUserPivot'])->name('ouos.users.updatePivot');
@@ -216,6 +218,20 @@ Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () 
     Route::get('/{id}/riesgos', [ObligacionController::class, 'listariesgos'])->name('listariesgos');
 });
 Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
+
+// Rutas API para Hallazgos
+Route::controller(HallazgoController::class)
+    ->prefix('hallazgos')
+    ->middleware('auth')
+    ->group(function () {
+        Route::get('/show/{hallazgo}', 'show')->name('hallazgo.show');
+        Route::post('/store', 'show')->name('hallazgo.store');
+        Route::put('/update/{hallazgo}', 'update')->name('hallazgo.update');
+     
+     
+    });
+
+
 //Asociar hallazgos con Procesos
 Route::controller(HallazgoController::class)
     ->prefix('hallazgos/{hallazgo}/procesos')
@@ -265,20 +281,6 @@ Route::controller(AccionController::class) // <-- CAMBIO
         Route::post('/', 'storeOrUpdateCausaRaiz')->name('storeOrUpdate');
     });
 
-Route::get('/smp/class/{clasificacion?}', [HallazgoController::class, 'index'])->name('smp.index');
-Route::get('/smp/create/{clasificacion?}', [HallazgoController::class, 'create'])->name('smp.create');
-Route::post('/smp/{id}/aprobar', [HallazgoController::class, 'aprobar'])->name('smp.aprobar');
-Route::post('/smp/imprimir/{id}', [HallazgoController::class, 'imprimir'])->name('smp.imprimir');
-Route::get('/smp/{id}/plan', [HallazgoController::class, 'planes'])->name('smp.plan');
-Route::get('/hallazgos/{hallazgo}/acciones', [AccionController::class, 'index'])->name('acciones.index');
-Route::get('/smp/{id}/clasificacion/{clasificacion}', [HallazgoController::class, 'porProceso'])->name('proceso.hallazgos');
-Route::get('smp/dashboard/home', [HallazgoController::class, 'dashboard'])->name('smp.dashboard');
-
-//acciones
-Route::get('/smp/{hallazgo_id}/acciones/seguimiento', [AccionController::class, 'index'])->name('smp.acciones.seguimiento');
-Route::put('/smp/{hallazgo_id}/acciones/seguimiento/{id}', [AccionController::class, 'update_seguimiento'])->name('smp.acciones.update');
-Route::get('/smp/{hallazgo_id}/acciones/{id}/archivos', [AccionController::class, 'listarArchivos'])->name('smp.acciones.archivos');
-Route::delete('/smp/{hallazgo_id}/acciones/{id}/eliminar-archivo', [AccionController::class, 'eliminarArchivo'])->name('smp.acciones.eliminarArchivo');
 
 //analisis causas
 Route::prefix('hallazgos/{hallazgo_id}')->group(function () {
@@ -402,8 +404,7 @@ Route::post('usuarios/asignar-procesos/{id}', [UserController::class, 'guardarPr
 Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
 
 Route::middleware('auth')->group(function () {
-// Route::get('/requerimientos/index', [RequerimientoController::class, 'index'])->name('requerimientos.index');
-// Route::get('/mis-requerimientos', [RequerimientoController::class, 'index'])->name('requerimientos.mine');
+
     Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
     Route::get('/requerimiento/{id}/evaluacion', [RequerimientoController::class, 'getEvaluacion'])->name('requerimiento.evaluacion');
     Route::post('/requerimiento/{id}/evaluacion', [RequerimientoController::class, 'storeEvaluacion'])->name('requerimiento.grabarEvaluacion');

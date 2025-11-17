@@ -217,19 +217,16 @@ class OUOController extends Controller
      */
     public function getGestorUsersForDropdown()
     {
-        $gestorRole = \Spatie\Permission\Models\Role::where('name', 'gestor')->first();
-
-        if (!$gestorRole) {
-            return response()->json([], 404); // Or handle as appropriate
-        }
-
-        $users = $gestorRole->users()->select('id', 'name', 'email')->orderBy('name', 'asc')->get();
+        $users = User::role(['gestor', 'admin'])
+            ->select('id', 'name', 'email')
+            ->orderBy('name', 'asc')
+            ->get();
 
         // Transform the users to match ModalHijo's expected format
         $formattedUsers = $users->map(function ($user) {
             return [
                 'id' => $user->id,
-                'descripcion' => $user->name . ' - ' . $user->email,
+                'descripcion' => $user->name,
             ];
         });
 

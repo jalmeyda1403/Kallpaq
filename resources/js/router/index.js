@@ -67,6 +67,12 @@ const routes = [
         component: () => import('@/components/acciones/AccionesIndex.vue'),
         props: true
     },
+    {
+        path: '/smp-ouo',
+        name: 'smp.ouo.index',
+        component: () => import('@/components/hallazgos/HallazgoIndex.vue'), // Reutilizando el componente existente (en singular)
+        props: { fromOuo: true } // Prop para indicar que se está accediendo desde OUO
+    },
 ]
 
 const router = createRouter({
