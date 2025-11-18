@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia';
+import axios from 'axios';
+import { route } from 'ziggy-js';
 
 export const useInventarioStore = defineStore('inventario', {
   state: () => ({
@@ -16,6 +18,14 @@ export const useInventarioStore = defineStore('inventario', {
     },
     currentTab: 'InventarioForm',
     isEditing: false,
+    availableProcesses: [],
+    allProcesos: [],
+    selectedProceso: null,
+    displayNewProcessModal: false,
+    displayAssignProcessModal: false,
+    displayModifyOwnerModal: false,
+    localLoading: true,
+    users: [],
   }),
 
   getters: {
@@ -38,19 +48,124 @@ export const useInventarioStore = defineStore('inventario', {
       return `${year}-${month}-${day}`;
     },
 
+    async fetchAvailableProcesses() {
+      if (!this.currentInventario?.id) return;
+      try {
+        const response = await axios.get(route('api.inventarios.procesos.disponibles', this.currentInventario.id));
+        this.availableProcesses = response.data;
+      } catch (error) {
+        console.error('Error al cargar procesos disponibles:', error);
+      }
+    },
+
+    async loadProcesos() {
+      if (!this.currentInventario?.id) return;
+      this.localLoading = true;
+      try {
+        const response = await axios.get(route('api.inventario.procesos', this.currentInventario.id));
+        this.allProcesos = response.data;
+      } catch (error) {
+        console.error('Error al cargar procesos asociados:', error);
+      } finally {
+        this.localLoading = false;
+      }
+    },
+
+    async handleProcesoCreado(nuevoProceso) {
+      try {
+        await axios.post(route('api.inventarios.procesos.asociar', this.currentInventario.id), {
+            proceso_id: nuevoProceso.id
+        });
+        this.loadProcesos();
+        this.closeNewProcessModal();
+      } catch (error) {
+        console.error('Error al asociar el nuevo proceso:', error);
+      }
+    },
+
+    async disassociateProcess(proceso) {
+      try {
+        await axios.delete(route('api.inventario-proceso.destroy', { inventario: this.currentInventario.id, proceso: proceso.id }));
+        // Remove the disassociated proceso from the allProcesos array directly
+        this.allProcesos = this.allProcesos.filter(p => p.id !== proceso.id);
+      } catch (error) {
+        console.error('Error al desasociar el proceso:', error);
+      }
+    },
+
+    async loadUsers() {
+        try {
+            const response = await axios.get(route('api.users.index'));
+            this.users = response.data;
+        } catch (error) {
+            console.error('Error al cargar usuarios:', error);
+        }
+    },
+
+    async savePropietario() {
+        if (!this.selectedProceso) return;
+        try {
+            await axios.put(route('api.procesos.propietario', this.selectedProceso.id), {
+                propietario_id: this.selectedProceso.id_ouo_propietario
+            });
+            this.loadProcesos();
+            this.closeModifyOwnerModal();
+        } catch (error) {
+            console.error('Error al modificar el propietario:', error);
+        }
+    },
+    
+    async assignProcesos(selectedProcesos) {
+        try {
+            const procesosIds = selectedProcesos.map(p => p.id);
+            await axios.post(route('api.inventarios.procesos.add', this.currentInventario.id), {
+                procesos_ids: procesosIds
+            });
+            // Add the newly assigned processes to the allProcesos array directly
+            this.allProcesos = [...this.allProcesos, ...selectedProcesos];
+            this.closeAssignProcessModal();
+        } catch (error) {
+            console.error('Error al asignar procesos:', error);
+        }
+    },
+
+    openNewProcessModal() {
+        this.displayNewProcessModal = true;
+    },
+
+    closeNewProcessModal() {
+        this.displayNewProcessModal = false;
+    },
+
+    openAssignProcessModal() {
+        this.fetchAvailableProcesses();
+        this.displayAssignProcessModal = true;
+    },
+
+    closeAssignProcessModal() {
+        this.displayAssignProcessModal = false;
+    },
+
+    openModifyOwnerModal(proceso) {
+        this.selectedProceso = proceso;
+        this.loadUsers();
+        this.displayModifyOwnerModal = true;
+    },
+
+    closeModifyOwnerModal() {
+        this.displayModifyOwnerModal = false;
+    },
+
     openModal(inventario = null) {
       this.resetForm();
 
       if (inventario) {
-        // Clonar el inventario y formatear las fechas adecuadamente
         this.currentInventario = { ...inventario };
-        // Formatear la fecha de vigencia para que funcione con el input date
         if (this.currentInventario.vigencia) {
           this.currentInventario.vigencia = this.formatDateForInput(this.currentInventario.vigencia);
         }
         this.isEditing = true;
       } else {
-        // Inicializar con valores por defecto
         this.currentInventario = {
           id: null,
           nombre: '',
@@ -58,7 +173,7 @@ export const useInventarioStore = defineStore('inventario', {
           documento_aprueba: null,
           documento_aprueba_nombre: '',
           enlace: '',
-          vigencia: new Date().toISOString().slice(0, 10), // Fecha actual en formato YYYY-MM-DD
+          vigencia: new Date().toISOString().slice(0, 10),
           estado_flujo: 'borrador',
           estado: 1
         };
@@ -66,7 +181,7 @@ export const useInventarioStore = defineStore('inventario', {
       }
 
       this.isModalOpen = true;
-      this.currentTab = 'InventarioForm'; // Default tab when opening
+      this.currentTab = 'InventarioForm';
     },
 
     closeModal() {
@@ -74,7 +189,6 @@ export const useInventarioStore = defineStore('inventario', {
     },
 
     setCurrentTab(tabName) {
-      // Only allow switching tabs if in edit mode or if it's the default form tab
       if (this.isEditing || tabName === 'InventarioForm') {
         this.currentTab = tabName;
       }
@@ -94,6 +208,10 @@ export const useInventarioStore = defineStore('inventario', {
       };
       this.isEditing = false;
       this.currentTab = 'InventarioForm';
+      this.allProcesos = [];
+      this.availableProcesses = [];
+      this.selectedProceso = null;
+      this.localLoading = true;
     },
   },
 });

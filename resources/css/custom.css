@@ -332,11 +332,6 @@
     background-color: #f8f9fa !important; /* Very light gray */
 }
 
-/* Action Column Centering */
-.p-datatable .p-datatable-tbody > tr > td:last-child {
-    text-align: center !important;
-}
-
 /* Global Filter Input */
 .p-inputtext {
     font-size: 11px !important;
@@ -379,7 +374,7 @@
     width: 12% !important; /* Revert to 12% as preferred */
     white-space: nowrap !important; /* Prevent content from wrapping */
     flex-shrink: 0 !important; /* Prevent column from shrinking */
-    text-align: center !important; /* Ensure header content is centered */
+
 }
 
 /* Custom subtle gray button style */

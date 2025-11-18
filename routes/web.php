@@ -63,10 +63,10 @@ Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 //Otros
- Route::get('/api/inventarios', [App\Http\Controllers\InventarioController::class,
+ Route::get('/api/inventarios',[InventarioController::class,
       'apiInventarios'])->name('api.inventarios.index');
- Route::get('/api/procesos/macro', [App\Http\Controllers\ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
- Route::get('/api/inventario/{id}/procesos-con-ouos', [App\Http\Controllers\InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos.ouos');
+ Route::get('/procesos/macro', [ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
+ Route::get('/inventario/{id}/procesos-con-ouos', [InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos');
 
 // Gestion del Inventario (Nuevas Rutas API)
 // Rutas CRUD para la gestión de inventarios (listar, crear, actualizar, eliminar)
@@ -75,12 +75,12 @@ Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 // Grupo para rutas de inventario
 Route::prefix('api/inventarios')->name('api.inventarios.')->group(function () {
     // CRUD principal
-    Route::get('/', [App\Http\Controllers\InventarioController::class, 'indexApi'])->name('index');
-    Route::post('/', [App\Http\Controllers\InventarioController::class, 'storeApi'])->name('store');
-    Route::put('/{inventario}', [App\Http\Controllers\InventarioController::class, 'updateApi'])->name('update');
-    Route::patch('/{inventario}', [App\Http\Controllers\InventarioController::class, 'updateApi'])->name('update.patch');
-    Route::delete('/{inventario}', [App\Http\Controllers\InventarioController::class, 'destroyApi'])->name('destroy');
-
+    Route::get('/', [InventarioController::class, 'indexApi'])->name('index');
+    Route::post('/', [InventarioController::class, 'storeApi'])->name('store');
+    Route::put('/{inventario}', [InventarioController::class, 'updateApi'])->name('update');
+    Route::patch('/{inventario}', [InventarioController::class, 'updateApi'])->name('update.patch');
+    Route::delete('/{inventario}', [InventarioController::class, 'destroyApi'])->name('destroy');
+    
     // Rutas específicas para un inventario
     Route::prefix('/{inventario}')->group(function () {
         // Gestión de procesos
@@ -94,6 +94,8 @@ Route::prefix('api/inventarios')->name('api.inventarios.')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::delete('inventarios/{inventario}/procesos/{proceso}', [InventarioController::class, 'disassociateProcess'])->name('api.inventario-proceso.destroy');
+    Route::post('inventarios/{inventario}/procesos/add', [InventarioController::class, 'addProcesos'])->name('api.inventarios.procesos.add');
     Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
     Route::get('/dashboard/resumen-general', [DashboardController::class, 'getResumenGeneral'])->name('dashboard.resumenGeneral');
     Route::get('/dashboard/resumen-grafico', [DashboardController::class, 'getResumenGrafico'])->name('dashboard.resumenGrafico');

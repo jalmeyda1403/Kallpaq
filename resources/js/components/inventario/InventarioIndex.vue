@@ -64,7 +64,7 @@
               </span>
             </template>
           </Column>
-          <Column field="procesos_count" header="# Procesos" sortable>
+          <Column field="procesos_count" header="# Procesos" class="text-center">
             <template #body="slotProps">
               {{ slotProps.data.procesos_count || 0 }}
             </template>
@@ -196,7 +196,3 @@ onBeforeUnmount(() => {
   window.removeEventListener('inventarios-actualizados', fetchInventarios); // Remove event listener
 });
 </script>
-
-<style scoped>
-/* Puedes agregar estilos específicos para este componente aquí */
-</style>

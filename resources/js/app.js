@@ -30,7 +30,6 @@ import ResumenGrafico from './components/dashboard/ResumenGrafico.vue';
 import ResumenAlertas from './components/dashboard/ResumenAlertas.vue';
 import ResumenEspecialistas from './components/dashboard/ResumenEspecialistas.vue';
 import DetalleEspecialistaModal from './components/dashboard/DetalleEspecialistaModal.vue';
-import InventarioProcesos from './components/inventario/InventarioProcesos.vue';
 
 import router from './router/index.js';
 

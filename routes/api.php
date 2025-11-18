@@ -6,6 +6,7 @@ Use App\Http\Controllers\DocumentoController;
 Use App\Http\Controllers\RequerimientoController;
 Use App\Http\Controllers\HallazgoController;
 use App\Http\Controllers\UserController; // Added UserController
+use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\OUOController; // Added OUOController
 
 /*
@@ -34,4 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // New route for listing all users
     Route::get('users/list', [UserController::class, 'listUsers'])->name('api.users.list');
+
+    
 });

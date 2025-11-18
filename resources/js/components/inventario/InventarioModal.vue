@@ -25,26 +25,28 @@
                             <h6 class="text-secondary mx-3 mt-3" v-if="inventarioStore.isEditing">PROCESOS</h6>
                             <div :class="{ 'disabled-links': !inventarioStore.isEditing }">
                                 <a class="nav-link"
+                                    :class="{ 'text-danger active': inventarioStore.currentTab === 'AsociarProcesos' }"
+                                    @click="inventarioStore.setCurrentTab('AsociarProcesos')" role="tab" v-if="inventarioStore.isEditing">
+                                    <i class="fas fa-tasks"></i> Asociar Procesos
+                                </a>
+                                <a class="nav-link"
                                     :class="{ 'text-danger active': inventarioStore.currentTab === 'GestionarProcesos' }"
                                     @click="inventarioStore.setCurrentTab('GestionarProcesos')" role="tab" v-if="inventarioStore.isEditing">
                                     <i class="fas fa-tasks"></i> Gestionar Procesos
-                                </a>
-                                <a class="nav-link"
-                                    :class="{ 'text-danger active': inventarioStore.currentTab === 'VerProcesos' }"
-                                    @click="inventarioStore.setCurrentTab('VerProcesos')" role="tab" v-if="inventarioStore.isEditing">
-                                    <i class="fas fa-list"></i> Ver Procesos
                                 </a>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-9 px-4">
-                        <component :is="tabs[inventarioStore.currentTab]" :key="inventarioStore.currentTab"
-                            :inventario-data="inventarioStore.currentInventario"
-                            :is-editing="inventarioStore.isEditing"
-                            @saved="onInventarioSaved"
-                            @cancelled="inventarioStore.closeModal">
-                        </component>
+                        <KeepAlive>
+                            <component :is="tabs[inventarioStore.currentTab]" :key="inventarioStore.currentTab"
+                                :inventario-data="inventarioStore.currentInventario"
+                                :is-editing="inventarioStore.isEditing"
+                                @saved="onInventarioSaved"
+                                @cancelled="inventarioStore.closeModal">
+                            </component>
+                        </KeepAlive>
                     </div>
                 </div>
             </div>
@@ -58,8 +60,8 @@ import { useInventarioStore } from '@/stores/inventarioStore';
 
 // Importa todos tus componentes de las pestañas
 import InventarioForm from './InventarioForm.vue';
+import AsignarProceso from './AsignarProceso.vue'; // Re-import AsignarProceso
 import GestionarProcesos from './GestionarProcesos.vue';
-import VerProcesos from './VerProcesos.vue';
 
 import axios from 'axios';
 
@@ -69,8 +71,8 @@ const modal = ref(null); // Ref para el elemento modal de Bootstrap
 // Componentes disponibles para las pestañas
 const tabs = {
     InventarioForm,
-    GestionarProcesos,
-    VerProcesos
+    AsociarProcesos: AsignarProceso, // Add AsociarProcesos
+    GestionarProcesos
 };
 
 const onInventarioSaved = async (inventarioData) => {
@@ -114,7 +116,8 @@ const onInventarioSaved = async (inventarioData) => {
             response = await axios.post(`/api/inventarios/${inventarioData.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-        } else {
+        }
+        else {
             // Create
             console.log('Creando nuevo inventario');
             response = await axios.post('/api/inventarios', formData, {
@@ -128,7 +131,8 @@ const onInventarioSaved = async (inventarioData) => {
 
         // Opcional: Mostrar mensaje de éxito
         alert('Inventario guardado correctamente.');
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error completo al guardar inventario:', error);
         console.error('Error response:', error.response);
         console.error('Error request:', error.request);
@@ -144,9 +148,11 @@ const onInventarioSaved = async (inventarioData) => {
                 Object.values(error.response.data.errors).forEach(messages => {
                     messages.forEach(msg => errorMessage += `\n- ${msg}`);
                 });
-            } else if (error.response.data.message) {
+            }
+            else if (error.response.data.message) {
                 errorMessage = error.response.data.message;
-            } else {
+            }
+            else {
                 // Mostrar cualquier otro contenido del error
                 errorMessage = JSON.stringify(error.response.data);
             }
@@ -170,14 +176,17 @@ onMounted(() => {
             if (!inventarioStore.currentTab) {
                 inventarioStore.setCurrentTab('InventarioForm');
             }
-        } else {
+        }
+        else {
             $(modal.value).modal('hide');
         }
     });
 
     // Manejar el evento 'hidden.bs.modal' para limpiar el store
-    $(modal.value).on('hidden.bs.modal', () => {
-        inventarioStore.resetForm();
+    $(modal.value).on('hidden.bs.modal', (event) => {
+        if (event.target === modal.value) {
+            inventarioStore.resetForm();
+        }
     });
 });
 </script>

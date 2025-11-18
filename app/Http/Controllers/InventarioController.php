@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventario;
 use App\Models\InventarioProceso; // Asegúrate de que este modelo exista
+use App\Models\ProcesoOuo;
+use App\Models\Proceso;
 use Illuminate\Http\Request;
 
 class InventarioController extends Controller
@@ -65,7 +67,7 @@ class InventarioController extends Controller
     public function indexApi(Request $request)
     {
         // Opcional: Agregar paginación, búsqueda, etc.
-        $inventarios = Inventario::select('id', 'nombre', 'descripcion', 'documento_aprueba', 'enlace', 'vigencia', 'estado', 'estado_flujo', 'inventario_cierre', 'fecha_cierre', 'created_at', 'updated_at')
+        $inventarios = Inventario::withCount('procesos')
                                   ->orderBy('created_at', 'desc') // O por vigencia
                                   ->get();
 
@@ -217,29 +219,25 @@ class InventarioController extends Controller
         if (empty($procesosPadreIds)) {
             return [];
         }
-        $resultado = $procesosPadreIds;
-
-        // Usar una cola (queue) para iterar recursivamente
-        $cola = $procesosPadreIds;
+        
+        $procesos = \App\Models\Proceso::whereIn('id', $procesosPadreIds)->get();
+        $resultado = $procesos->pluck('id')->toArray();
+        $cola = $procesos->pluck('cod_proceso')->toArray();
+        $procesados = [];
 
         while (!empty($cola)) {
-            // Obtener hijos directos de los IDs en la cola actual
-            $hijosDirectos = \App\Models\Proceso::whereIn('cod_proceso_padre', $cola)
-                                              ->pluck('id')
-                                              ->toArray();
+            $procesados = array_merge($procesados, $cola);
+            $hijos = \App\Models\Proceso::whereIn('cod_proceso_padre', $cola)->get();
 
-            if (empty($hijosDirectos)) {
-                // Si no hay más hijos, salir del bucle
+            if ($hijos->isEmpty()) {
                 break;
             }
 
-            // Añadir hijos al resultado y a la cola para buscar sus hijos
-            $resultado = array_merge($resultado, $hijosDirectos);
-            // Limpiar cola y usar nuevos hijos como cola para la siguiente iteración
-            $cola = $hijosDirectos;
+            $resultado = array_merge($resultado, $hijos->pluck('id')->toArray());
+            $nuevos_codigos = $hijos->pluck('cod_proceso')->toArray();
+            $cola = array_diff($nuevos_codigos, $procesados);
         }
 
-        // Devolver sin duplicados
         return array_unique($resultado);
     }
 
@@ -319,19 +317,24 @@ class InventarioController extends Controller
             if (!empty($idsAgregar)) {
                 $procesosParaSync = [];
                 foreach ($idsAgregar as $id) {
+                    $procesoOuos = ProcesoOuo::where('id_proceso', $id)->get();
+                    $id_ouo_propietario = $procesoOuos->where('propietario', 1)->first()->id_ouo ?? null;
+                    $id_ouo_delegado = $procesoOuos->where('delegado', 1)->first()->id_ouo ?? null;
+                    $id_ouo_ejecutor = $procesoOuos->where('ejecutor', 1)->first()->id_ouo ?? null;
+
                     $procesosParaSync[] = [
                         'id_inventario' => $inventario->id,
                         'id_proceso' => $id,
-                        'id_ouo_propietario' => null, // Se rellenará en la aprobación
-                        'id_ouo_ejecutor' => null,
-                        'id_ouo_delegado' => null,
-                        'estado' => 1, // Activo en este inventario
+                        'id_ouo_propietario' => $id_ouo_propietario,
+                        'id_ouo_ejecutor' => $id_ouo_ejecutor,
+                        'id_ouo_delegado' => $id_ouo_delegado,
+                        'estado' => 1,
                         'inactive_at' => null,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
                 }
-                InventarioProceso::insert($procesosParaSync); // Inserción en bloque más eficiente
+                InventarioProceso::insert($procesosParaSync);
             }
 
             \DB::commit();
@@ -344,6 +347,93 @@ class InventarioController extends Controller
         }
     }
 
+    public function addProcesos(Request $request, Inventario $inventario)
+    {
+        // Validar que solo se pueda editar si está en borrador
+        if ($inventario->estado_flujo !== 'borrador') {
+             return response()->json(['error' => 'No se puede modificar un inventario que no está en borrador'], 400);
+        }
+
+        $validator = \Validator::make($request->all(), [
+            'procesos_ids' => 'required|array',
+            'procesos_ids.*' => 'integer|exists:procesos,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $nuevosProcesosIdsNivelBase = $request->procesos_ids; // Los IDs seleccionados (nivel 0 y 1)
+
+        // Calcular la lista completa de IDs de procesos (padres + hijos) a asociar
+        $nuevosProcesosIdsCompletos = $this->calcularProcesosConHijos($nuevosProcesosIdsNivelBase);
+
+        // Obtener lista completa de IDs de procesos (padres + hijos) actualmente asociados a este inventario
+        $procesosActualesIdsCompletos = $this->obtenerProcesosAsociadosConHijosArray($inventario->id);
+
+        // Calcular diferencias
+        $idsAgregar = array_diff($nuevosProcesosIdsCompletos, $procesosActualesIdsCompletos);
+
+        \DB::beginTransaction();
+        try {
+            // Agregar procesos nuevos (padres e hijos calculados)
+            if (!empty($idsAgregar)) {
+                $procesosParaSync = [];
+                foreach ($idsAgregar as $id) {
+                    $procesoOuos = ProcesoOuo::where('id_proceso', $id)->get();
+                    $id_ouo_propietario = $procesoOuos->where('propietario', 1)->first()->id_ouo ?? null;
+                    $id_ouo_delegado = $procesoOuos->where('delegado', 1)->first()->id_ouo ?? null;
+                    $id_ouo_ejecutor = $procesoOuos->where('ejecutor', 1)->first()->id_ouo ?? null;
+
+                    $procesosParaSync[] = [
+                        'id_inventario' => $inventario->id,
+                        'id_proceso' => $id,
+                        'id_ouo_propietario' => $id_ouo_propietario,
+                        'id_ouo_ejecutor' => $id_ouo_ejecutor,
+                        'id_ouo_delegado' => $id_ouo_delegado,
+                        'estado' => 1,
+                        'inactive_at' => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                InventarioProceso::insert($procesosParaSync);
+            }
+
+            \DB::commit();
+
+            return response()->json(['message' => 'Procesos agregados correctamente'], 200);
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            return response()->json(['error' => 'Error al agregar procesos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function disassociateProcess(Inventario $inventario, Proceso $proceso)
+    {
+        try {
+            // Validar que solo se pueda editar si está en borrador
+            if ($inventario->estado_flujo !== 'borrador') {
+                 return response()->json(['error' => 'No se puede modificar un inventario que no está en borrador'], 400);
+            }
+
+            $inventarioProceso = InventarioProceso::where('id_inventario', $inventario->id)
+                                                  ->where('id_proceso', $proceso->id)
+                                                  ->first();
+
+            if ($inventarioProceso) {
+                $inventarioProceso->delete();
+                return response()->json(['message' => 'Proceso desasociado correctamente'], 200);
+            }
+
+            return response()->json(['error' => 'El proceso no está asociado a este inventario'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error al desasociar el proceso: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al desasociar el proceso: ' . $e->getMessage()], 500);
+        }
+    }
+
     // Actualizar 'procesosDisponibles' (método)
     public function procesosDisponibles(Inventario $inventario)
     {
@@ -353,14 +443,14 @@ class InventarioController extends Controller
         if (empty($procesosAsociadosIds)) {
             // Si no hay procesos asociados, devolver todos los de nivel 0 y 1
             $procesosDisponibles = \App\Models\Proceso::where('proceso_nivel', '<=', 1)
-                                            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'cod_proceso_padre')
+                                            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'cod_proceso_padre', 'proceso_estado')
                                             ->orderBy('cod_proceso')
                                             ->get();
         } else {
             // Si hay procesos asociados, excluirlos (y sus hijos) de la lista de disponibles
             $procesosDisponibles = \App\Models\Proceso::where('proceso_nivel', '<=', 1)
                                             ->whereNotIn('id', $procesosAsociadosIds)
-                                            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'cod_proceso_padre')
+                                            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'cod_proceso_padre', 'proceso_estado')
                                             ->orderBy('cod_proceso')
                                             ->get();
         }

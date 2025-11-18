@@ -4,7 +4,7 @@
       <div class="card-header">
         <div class="row align-items-center">
           <div class="col-md-6 text-md-left">
-            <h3 class="card-title mb-0">Inventario de Procesos</h3>
+            <h3 class="card-title mb-0">Inventario Público de Procesos</h3>
           </div>
           <div class="col-md-6 text-md-right">
             <!-- Botón de refresco eliminado -->
@@ -79,7 +79,7 @@
 
       <div class="card-body">
         <h2 class="text-xl font-semibold mb-4" v-if="selectedInventarioId">
-          <h4 class="card-title mb-0">Inventario de Procesos {{ selectedInventarioNombre || 'Cargando...' }}</h4>
+          <h4 class="card-title mb-0">Inventario Público de Procesos {{ selectedInventarioNombre || 'Cargando...' }}</h4>
         </h2>
         <br></br>
 
@@ -133,27 +133,32 @@
             <template #body="slotProps">
               <div class="dropdown">
                 <button class="btn btn-light btn-sm dropdown-toggle" type="button"
-                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                  :disabled="!selectedInventarioId">
                   <i class="fas fa-link"></i> Asociaciones
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
                   <a class="dropdown-item"
-                    :href="`/procesos/${slotProps.data.id}/caracterizacion`">
+                    :href="ziggyRoute('procesos.caracterizacion', { proceso: slotProps.data.id })"
+                    :class="{ 'disabled-link': !selectedInventarioId }">
                     <i class="fas fa-file-alt fa-fw mr-2"></i>Documentación
                   </a>
                   <a class="dropdown-item"
-                    :href="`/indicadores?proceso_id=${slotProps.data.id}`">
+                    :href="ziggyRoute('indicadores.index') + '?proceso_id=' + slotProps.data.id"
+                    :class="{ 'disabled-link': !selectedInventarioId }">
                     <i class="fas fa-chart-bar fa-fw mr-2"></i>Indicadores
                   </a>
                   <a class="dropdown-item"
-                    :href="`/obligaciones?proceso_id=${slotProps.data.id}`">
+                    :href="ziggyRoute('obligaciones.index') + '?proceso_id=' + slotProps.data.id"
+                    :class="{ 'disabled-link': !selectedInventarioId }">
                     <i class="fas fa-list-ul fa-fw mr-2"></i>Obligaciones
                   </a>
                   <a class="dropdown-item"
-                    :href="`/riesgos?proceso_id=${slotProps.data.id}`">
+                    :href="ziggyRoute('riesgos.index') + '?proceso_id=' + slotProps.data.id"
+                    :class="{ 'disabled-link': !selectedInventarioId }">
                     <i class="fas fa-exclamation-triangle fa-fw mr-2"></i>Riesgos
                   </a>
-                  <a class="dropdown-item" href="#">
+                  <a class="dropdown-item" href="#" :class="{ 'disabled-link': !selectedInventarioId }">
                     <i class="fas fa-fire fa-fw mr-2"></i>Hallazgos
                   </a>
                 </div>
@@ -181,9 +186,11 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
+import { route as ziggyRoute } from 'ziggy-js';
 // Importar componentes de PrimeVue (solo DataTable y Column)
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+
 
 // Instancias del router y route
 const router = useRouter();
@@ -205,7 +212,7 @@ const parentProcessFilter = ref(null);
 const fetchInventarios = async () => {
   loading.value = true;
   try {
-    const response = await axios.get('/api/inventarios');
+    const response = await axios.get(ziggyRoute('api.inventarios.index'));
     inventarios.value = response.data;
 
     // Si hay un inventario en la URL, lo seleccionamos
@@ -232,7 +239,7 @@ const fetchProcesos = async (inventarioId) => {
 
   loading.value = true;
   try {
-    const response = await axios.get(`/api/inventario/${inventarioId}/procesos-con-ouos`);
+    const response = await axios.get(ziggyRoute('api.inventario.procesos', { id: inventarioId }));
     procesos.value = response.data;
   } catch (error) {
     console.error('Error fetching procesos:', error);
@@ -334,7 +341,7 @@ onMounted(async () => {
 
   // Cargar macroprocesos
   try {
-    const response = await axios.get('/procesos/macro');
+    const response = await axios.get(ziggyRoute('api.procesos.macro'));
     macroprocesos.value = response.data.data || response.data;
   } catch (error) {
     console.error('Error fetching macroprocesos:', error);
@@ -410,5 +417,12 @@ watch(() => route.query.parent_process_id, (newParentId) => {
 .p-datatable .p-datatable-tbody > tr > td button.btn-subprocesos:hover {
   opacity: 0.8; /* O cualquier efecto de hover deseado */
   text-decoration: underline; /* Asegurar subrayado en hover si se quitó por herencia */
+}
+
+/* Estilo para enlaces deshabilitados */
+.dropdown-item.disabled-link {
+  pointer-events: none;
+  opacity: 0.5;
+  color: gray;
 }
 </style>

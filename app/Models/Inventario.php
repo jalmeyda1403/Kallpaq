@@ -21,6 +21,11 @@ class Inventario extends Model
         'fecha_cierre' // Nuevo campo
     ];
 
+    public function procesos()
+    {
+        return $this->belongsToMany(Proceso::class, 'inventario_procesos', 'id_inventario', 'id_proceso');
+    }
+
     // Si quieres que el campo 'vigencia' sea tratado como una fecha
     protected $casts = [
         'vigencia' => 'datetime',

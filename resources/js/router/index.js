@@ -7,7 +7,7 @@ import RequerimientosIndex from '@/components/requerimientos/RequerimientosIndex
 import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosIndexMe.vue';
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
 import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue'; // Import the new component
-import InventarioProcesos from '@/components/inventario/InventarioProcesos.vue'; // Importa el nuevo componente
+import InventarioPublico from '@/components/inventario/InventarioPublico.vue'; // Importa el componente público del inventario
 import InventarioIndex from '@/components/inventario/InventarioIndex.vue'; // Importa el componente de Gestión del Inventario
 
 
@@ -75,10 +75,11 @@ const routes = [
         component: () => import('@/components/hallazgos/HallazgoIndex.vue'), // Reutilizando el componente existente (en singular)
         props: { fromOuo: true } // Prop para indicar que se está accediendo desde OUO
     },
+   
     {
-        path: '/inventario/:id',
-        name: 'inventario.procesos',
-        component: InventarioProcesos,
+        path: '/inventario-publico/:id',
+        name: 'inventario.publico',
+        component: InventarioPublico,
         props: true // Permitir que el ID del inventario llegue como prop
     },
     {
