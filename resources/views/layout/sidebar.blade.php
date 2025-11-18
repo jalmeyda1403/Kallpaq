@@ -193,43 +193,46 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            <!-- 1. Gestión del Inventario -->
+                            <li class="nav-item">
+                                <a href="/vue/inventario-gestion" class="nav-link">
+                                    <i class="nav-icon fas fa-cubes"></i>
+                                    <p>Gestión del Inventario</p>
+                                </a>
+                            </li>
+                            <!-- 2. Gestión de Procesos (listado de procesos) -->
                             <li class="nav-item">
                                 <a href="{{ route('procesos.index') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de Procesos</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="{{ route('partes.index') }}" class="nav-link">
-                                    <i class="nav-icon fas fa-users"></i>
-                                    <p>Partes Interesadas</p>
-                                </a>
-                            </li>
+                            <!-- 3. Gestión de Documentos (listado de documentos) -->
                             <li class="nav-item">
                                 <a href="{{ url('/vue/documentos') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de Documentos</p>
                                 </a>
                             </li>
+                            <!-- 4. Gestión del Desempeño (indicadores) -->
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-chart-bar"></i>
                                     <p>Listado de Indicadores</p>
                                 </a>
                             </li>
-
-                            <!-- Dashboard al final del módulo -->
+                            <!-- 5. Partes Interesadas -->
+                            <li class="nav-item">
+                                <a href="{{ route('partes.index') }}" class="nav-link">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>Partes Interesadas</p>
+                                </a>
+                            </li>
+                            <!-- 6. Dashboard -->
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-tachometer-alt"></i>
                                     <p>Dashboard Procesos</p>
-                                </a>
-                            </li>
-                            <!-- Nueva entrada: Gestión del Inventario -->
-                            <li class="nav-item">
-                                <a href="/vue/inventario-gestion" class="nav-link">
-                                    <i class="nav-icon fas fa-cubes"></i> <!-- Icono de ejemplo -->
-                                    <p>Gestión del Inventario</p>
                                 </a>
                             </li>
                         </ul>

@@ -1,127 +1,99 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
 
 export const useInventarioStore = defineStore('inventario', {
   state: () => ({
-    inventarios: [],
-    procesos: [], // Procesos del inventario seleccionado (ya filtrados por estado 1)
-    procesosFiltrados: [], // Procesos filtrados por busqueda local (nombre, macro)
-    selectedInventarioId: null,
-    filters: {
-      buscar_proceso: '',
-      proceso_padre_id: '',
-      cod_proceso_padre_seleccionado: null, // Nuevo filtro
-      // estado: 1 // Filtro fijo aplicado al cargar
+    isModalOpen: false,
+    currentInventario: {
+      id: null,
+      nombre: '',
+      descripcion: '',
+      documento_aprueba: null,
+      documento_aprueba_nombre: '',
+      enlace: '',
+      vigencia: '',
+      estado_flujo: 'borrador',
+      estado: 1
     },
-    loading: false,
-    error: null,
+    currentTab: 'InventarioForm',
+    isEditing: false,
   }),
 
   getters: {
-    // Procesos del inventario seleccionado con estado 1 por defecto (sin filtros locales)
-    procesosOriginales: (state) => state.procesos,
-    ultimoInventario: (state) => state.inventarios.length > 0 ? state.inventarios[0] : null,
+    modalTitle: (state) => {
+      return state.isEditing
+        ? `Editar Inventario - ${state.currentInventario ? state.currentInventario.nombre : ''}`
+        : 'Crear Nuevo Inventario';
+    },
   },
 
   actions: {
-    async fetchInventarios() {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.get('/api/inventarios');
-        // Asegurar que estén ordenados por vigencia descendente (backend lo hace)
-        this.inventarios = response.data;
-      } catch (error) {
-        console.error('Error fetching inventarios:', error);
-        this.error = error.message;
-      } finally {
-        this.loading = false;
-      }
+    // Helper para formatear fechas para los inputs de tipo "date"
+    formatDateForInput(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return ''; // Si no es una fecha válida, devolver vacío
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     },
 
-    async fetchProcesos(inventarioId) {
-      if (!inventarioId) {
-        this.procesos = [];
-        this.procesosFiltrados = [];
-        return;
-      }
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.get(`/api/inventario/${inventarioId}/procesos-con-ouos`);
-        // Asegurarse de que response.data es un array antes de filtrar
-        const rawData = Array.isArray(response.data) ? response.data : [];
-        this.procesos = rawData.filter(p => p.pivot_estado === 1);
-        // Inicializar procesosFiltrados con todos los procesos del estado 1
-        this.procesosFiltrados = this.procesos;
-      } catch (error) {
-        console.error('Error fetching procesos:', error);
-        this.error = error.message;
-        this.procesos = [];
-        this.procesosFiltrados = [];
-      } finally {
-        this.loading = false;
-      }
-    },
+    openModal(inventario = null) {
+      this.resetForm();
 
-    // Aplicar filtros locales (nombre, macro, proceso padre) a procesosFiltrados
-    applyFiltrosLocales() {
-        // Asegurar que parte de un array
-        let filtered = Array.isArray(this.procesos) ? this.procesos : [];
-
-        if (this.filters.buscar_proceso) {
-          const term = this.filters.buscar_proceso.toLowerCase();
-          filtered = filtered.filter(p =>
-            (p.proceso_nombre && p.proceso_nombre.toLowerCase().includes(term)) ||
-            (p.cod_proceso && p.cod_proceso.toLowerCase().includes(term))
-          );
+      if (inventario) {
+        // Clonar el inventario y formatear las fechas adecuadamente
+        this.currentInventario = { ...inventario };
+        // Formatear la fecha de vigencia para que funcione con el input date
+        if (this.currentInventario.vigencia) {
+          this.currentInventario.vigencia = this.formatDateForInput(this.currentInventario.vigencia);
         }
+        this.isEditing = true;
+      } else {
+        // Inicializar con valores por defecto
+        this.currentInventario = {
+          id: null,
+          nombre: '',
+          descripcion: '',
+          documento_aprueba: null,
+          documento_aprueba_nombre: '',
+          enlace: '',
+          vigencia: new Date().toISOString().slice(0, 10), // Fecha actual en formato YYYY-MM-DD
+          estado_flujo: 'borrador',
+          estado: 1
+        };
+        this.isEditing = false;
+      }
 
-        if (this.filters.proceso_padre_id) {
-          const parentId = parseInt(this.filters.proceso_padre_id, 10);
-          filtered = filtered.filter(p => p.proceso_padre_id == parentId); // Comparación flexible
-        }
-
-        // Nuevo filtro: filtrar por proceso padre seleccionado (cod_proceso_padre)
-        if (this.filters.cod_proceso_padre_seleccionado !== null) {
-            const parentIdFilter = parseInt(this.filters.cod_proceso_padre_seleccionado, 10);
-            filtered = filtered.filter(p => p.cod_proceso_padre == parentIdFilter); // Comparación con el campo devuelto por API
-        }
-
-        this.procesosFiltrados = filtered;
+      this.isModalOpen = true;
+      this.currentTab = 'InventarioForm'; // Default tab when opening
     },
 
-    selectInventario(id) {
-      this.selectedInventarioId = id;
+    closeModal() {
+      this.isModalOpen = false;
     },
 
-    async loadUltimoInventarioYProcesos() {
-      await this.fetchInventarios();
-      if (this.ultimoInventario) {
-        this.selectedInventarioId = this.ultimoInventario.id;
-        await this.fetchProcesos(this.ultimoInventario.id);
+    setCurrentTab(tabName) {
+      // Only allow switching tabs if in edit mode or if it's the default form tab
+      if (this.isEditing || tabName === 'InventarioForm') {
+        this.currentTab = tabName;
       }
     },
 
-    setParentProcessFilter(id) {
-        this.filters.cod_proceso_padre_seleccionado = id;
-        this.applyFiltrosLocales();
-    },
-
-    clearParentProcessFilter() {
-        this.filters.cod_proceso_padre_seleccionado = null;
-        this.applyFiltrosLocales();
-    },
-
-    // Resetear filtros
-    resetFilters() {
-      this.filters = {
-        buscar_proceso: '',
-        proceso_padre_id: '',
-        cod_proceso_padre_seleccionado: null, // Asegurar que se reinicie este filtro también
+    resetForm() {
+      this.currentInventario = {
+        id: null,
+        nombre: '',
+        descripcion: '',
+        documento_aprueba: null,
+        documento_aprueba_nombre: '',
+        enlace: '',
+        vigencia: '',
+        estado_flujo: 'borrador',
+        estado: 1
       };
-      // Opcional: volver a aplicar los filtros locales para limpiar tabla
-      this.applyFiltrosLocales();
+      this.isEditing = false;
+      this.currentTab = 'InventarioForm';
     },
   },
 });

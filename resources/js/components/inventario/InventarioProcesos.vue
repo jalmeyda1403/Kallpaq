@@ -17,14 +17,14 @@
               <!-- Filtro por Inventario (Bootstrap) -->
               <div class="col">
                 <select
-                  v-model="store.selectedInventarioId"
+                  v-model="selectedInventarioId"
                   class="form-control"
                   :disabled="loading"
                   @change="onInventarioChange"
                 >
                   <option value="" selected disabled>Selecciona un inventario...</option>
                   <option
-                    v-for="inventario in store.inventarios"
+                    v-for="inventario in inventarios"
                     :key="inventario.id"
                     :value="inventario.id"
                   >
@@ -37,19 +37,19 @@
               <div class="col">
                 <input
                   type="text"
-                  v-model="store.filters.buscar_proceso"
+                  v-model="filters.buscar_proceso"
                   placeholder="Buscar por Proceso"
                   class="form-control"
-                  :disabled="!store.selectedInventarioId || loading"
+                  :disabled="!selectedInventarioId || loading"
                 />
               </div>
 
               <!-- Filtro por Macroproceso (Bootstrap) -->
               <div class="col">
                 <select
-                  v-model="store.filters.proceso_padre_id"
+                  v-model="filters.proceso_padre_id"
                   class="form-control"
-                  :disabled="!store.selectedInventarioId || loading"
+                  :disabled="!selectedInventarioId || loading"
                 >
                   <option value="">Todos los macroprocesos</option>
                   <option
@@ -62,14 +62,12 @@
                 </select>
               </div>
 
-              <!-- Botón Buscar (Bootstrap con PrimeVue Button para icono) -->
-              <!-- OJO: El botón ahora es PrimeVue pero el estilo puede ajustarse -->
-              <!-- Para mantenerlo como botón Bootstrap estándar, usar <button type="submit" class="btn btn-dark">Buscar</button> -->
+              <!-- Botón Buscar (Bootstrap) -->
               <div class="col-auto">
                 <button
                   type="submit"
                   class="btn bg-dark"
-                  :disabled="!store.selectedInventarioId || loading"
+                  :disabled="!selectedInventarioId || loading"
                 >
                     <i class="fas fa-search"></i> Buscar
                 </button>
@@ -80,15 +78,14 @@
       </div>
 
       <div class="card-body">
-        <h2 class="text-xl font-semibold mb-4" v-if="store.selectedInventarioId">
+        <h2 class="text-xl font-semibold mb-4" v-if="selectedInventarioId">
           <h4 class="card-title mb-0">Inventario de Procesos {{ selectedInventarioNombre || 'Cargando...' }}</h4>
         </h2>
         <br></br>
 
-
         <!-- DataTable de PrimeVue para mostrar los datos -->
         <DataTable
-          :value="store.procesosFiltrados"
+          :value="procesosFiltrados"
           :loading="loading"
           stripedRows
           :rowClass="rowClass"
@@ -166,13 +163,13 @@
         </DataTable>
 
         <!-- Mensajes -->
-        <div class="p-4 bg-gray-50 text-sm text-gray-500 mt-3" v-if="!store.selectedInventarioId">
+        <div class="p-4 bg-gray-50 text-sm text-gray-500 mt-3" v-if="!selectedInventarioId">
           Selecciona una versión de inventario para ver sus procesos.
         </div>
-        <div class="p-4 bg-gray-50 text-sm text-gray-500 mt-3" v-else-if="store.procesos && store.procesos.length > 0 && store.procesosFiltrados && store.procesosFiltrados.length === 0 && !loading">
+        <div class="p-4 bg-gray-50 text-sm text-gray-500 mt-3" v-else-if="procesos && procesos.length > 0 && procesosFiltrados && procesosFiltrados.length === 0 && !loading">
           No se encontraron procesos con los filtros aplicados.
         </div>
-        <div class="p-4 bg-gray-50 text-sm text-gray-500 mt-3" v-else-if="store.selectedInventarioId && store.procesos && store.procesos.length === 0 && !loading">
+        <div class="p-4 bg-gray-50 text-sm text-gray-500 mt-3" v-else-if="selectedInventarioId && procesos && procesos.length === 0 && !loading">
           No hay procesos disponibles para este inventario.
         </div>
       </div>
@@ -181,56 +178,113 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'; // Añadido watch
-import { useInventarioStore } from '@/stores/inventarioStore.js';
-import { useRouter, useRoute } from 'vue-router'; // Importar useRouter y useRoute
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
-// Importar componentes de PrimeVue (solo DataTable y elementos relacionados)
+// Importar componentes de PrimeVue (solo DataTable y Column)
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-// No es necesario importar InputText, Button, ProgressBar si solo se usan en la tabla o componentes específicos
-// import InputText from 'primevue/inputtext';
-// import Button from 'primevue/button'; // Ya no se usa para el botón de buscar
-import ProgressBar from 'primevue/progressbar';
-import { FilterMatchMode } from 'primevue/api'; // Importante para los filtros de PrimeVue
-
-const store = useInventarioStore();
 
 // Instancias del router y route
 const router = useRouter();
 const route = useRoute();
 
-// Watch para ver cambios en procesosFiltrados
-watch(() => store.procesosFiltrados, (newVal) => {
-  console.log("procesosFiltrados actualizados:", newVal, "Longitud:", newVal.length);
-}, { deep: true }); // Profundidad para arrays/objetos
-
 // Refs locales
+const inventarios = ref([]);
+const procesos = ref([]);
 const macroprocesos = ref([]);
-// No necesitamos dtFilters si usamos la lógica del store
-// const dtFilters = ref({ ... });
-const loading = computed(() => store.loading);
+const loading = ref(false);
+const selectedInventarioId = ref(null);
+const filters = ref({
+  buscar_proceso: '',
+  proceso_padre_id: ''
+});
+const parentProcessFilter = ref(null);
+
+// Funciones para cargar datos
+const fetchInventarios = async () => {
+  loading.value = true;
+  try {
+    const response = await axios.get('/api/inventarios');
+    inventarios.value = response.data;
+
+    // Si hay un inventario en la URL, lo seleccionamos
+    const inventarioIdFromUrl = route.query.inventario_id;
+    if (inventarioIdFromUrl) {
+      const parsedId = parseInt(inventarioIdFromUrl, 10);
+      if (!isNaN(parsedId)) {
+        selectedInventarioId.value = parsedId;
+      }
+    } else if (inventarios.value.length > 0) {
+      // Seleccionar el último inventario si no hay ninguno en la URL
+      selectedInventarioId.value = inventarios.value[inventarios.value.length - 1].id;
+    }
+  } catch (error) {
+    console.error('Error fetching inventarios:', error);
+    inventarios.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchProcesos = async (inventarioId) => {
+  if (!inventarioId) return;
+
+  loading.value = true;
+  try {
+    const response = await axios.get(`/api/inventario/${inventarioId}/procesos-con-ouos`);
+    procesos.value = response.data;
+  } catch (error) {
+    console.error('Error fetching procesos:', error);
+    procesos.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
 // Computed para nombre del inventario seleccionado
 const selectedInventarioNombre = computed(() => {
-  if (!store.selectedInventarioId || store.inventarios.length === 0) return '';
-  const inventario = store.inventarios.find(inv => inv.id == store.selectedInventarioId);
+  if (!selectedInventarioId.value || inventarios.value.length === 0) return '';
+  const inventario = inventarios.value.find(inv => inv.id == selectedInventarioId.value);
   return inventario ? inventario.nombre : '';
 });
 
-// Función para obtener nombre de OUO (opcional)
-const getNombreOUO = (id) => {
-  // Placeholder
-  return `OUO-${id}`;
-};
+// Computed para procesos filtrados
+const procesosFiltrados = computed(() => {
+  if (!procesos.value || procesos.value.length === 0) {
+    return [];
+  }
+
+  let filtered = procesos.value;
+
+  // Filtrar por nombre/código de proceso
+  if (filters.value.buscar_proceso) {
+    const search = filters.value.buscar_proceso.toLowerCase();
+    filtered = filtered.filter(proceso =>
+      proceso.cod_proceso.toLowerCase().includes(search) ||
+      proceso.proceso_nombre.toLowerCase().includes(search)
+    );
+  }
+
+  // Filtrar por macroproceso
+  if (filters.value.proceso_padre_id) {
+    filtered = filtered.filter(proceso =>
+      proceso.proceso_padre_id == filters.value.proceso_padre_id
+    );
+  }
+
+  // Filtrar por proceso padre (usado para ver subprocesos)
+  if (parentProcessFilter.value) {
+    filtered = filtered.filter(proceso =>
+      proceso.proceso_padre_id == parentProcessFilter.value
+    );
+  }
+
+  return filtered;
+});
 
 // Función para clase de fila
 const rowClass = (rowData) => {
-  console.log("rowClass rowData:", rowData); // Log temporal (opcional, puedes quitarlo después)
-  if(rowData) {
-    console.log("- proceso_anterior_id:", rowData.proceso_anterior_id, "Tipo:", typeof rowData.proceso_anterior_id); // Log temporal (opcional, puedes quitarlo después)
-    console.log("- proceso_estado:", rowData.proceso_estado, "Tipo:", typeof rowData.proceso_estado); // Log temporal (opcional, puedes quitarlo después)
-  }
   return {
     'row-celeste-bajo': rowData && rowData.proceso_anterior_id === null, // Color si es nuevo (no tiene anterior)
     'row-beige': rowData && rowData.proceso_anterior_id !== null, // Color si proviene de otro proceso
@@ -240,73 +294,65 @@ const rowClass = (rowData) => {
 
 // Funciones de evento
 const onInventarioChange = async () => {
-  if (store.selectedInventarioId) {
-    await store.fetchProcesos(store.selectedInventarioId);
+  if (selectedInventarioId.value) {
+    await fetchProcesos(selectedInventarioId.value);
   } else {
-    store.procesos = [];
+    procesos.value = [];
   }
 };
 
-// Actualizar procesosFiltrados en el store cuando se pulse "Buscar"
+// Actualizar procesos filtrados cuando se pulse "Buscar"
 const applyFilters = () => {
-    store.applyFiltrosLocales(); // Llama a la acción en el store
-    console.log('Filtros locales aplicados desde el botón Buscar.');
-};
-
-const refreshData = async () => {
-  if (store.selectedInventarioId) {
-    await store.fetchProcesos(store.selectedInventarioId);
-  } else if (store.ultimoInventario) {
-    await store.loadUltimoInventarioYProcesos();
-  }
+  // Los filtros se aplican automáticamente con el computed
+  console.log('Filtros locales aplicados desde el botón Buscar.');
 };
 
 // Función para navegar a subprocesos
 const navigateToSubprocesses = (processId) => {
-  console.log(`Navigating to sub-processes for process ID: ${processId}`); // Log temporal
+  console.log(`Navigating to sub-processes for process ID: ${processId}`);
   // Cambiar URL y aplicar filtro
   router.push({
     name: route.name, // Mantiene el nombre de la ruta actual
-    params: { ...route.params }, // Mantiene los params actuales (ej. id inventario)
+    params: { ...route.params }, // Mantiene los params actuales
     query: { ...route.query, parent_process_id: processId } // Añade el nuevo query param
   });
-  // El onMounted o un watch de route.query se encargará de aplicar el filtro en la nueva carga.
 };
 
-// Cargar inventarios y procesos del último al montar
+// Función para establecer filtro de proceso padre
+const setParentProcessFilter = (processId) => {
+  parentProcessFilter.value = processId;
+};
+
+// Función para limpiar filtro de proceso padre
+const clearParentProcessFilter = () => {
+  parentProcessFilter.value = null;
+};
+
+// Cargar inventarios y procesos al montar
 onMounted(async () => {
-  // Leer inventario_id de la URL al montar
-  const inventarioIdFromUrl = route.query.inventario_id;
-  console.log("Inventario ID desde URL:", inventarioIdFromUrl); // Log temporal
-  if (inventarioIdFromUrl) {
-    const parsedId = parseInt(inventarioIdFromUrl, 10);
-    if (!isNaN(parsedId)) {
-      store.selectedInventarioId = parsedId;
-      await store.fetchProcesos(parsedId);
-    } else {
-      await store.loadUltimoInventarioYProcesos();
-    }
-  } else {
-    await store.loadUltimoInventarioYProcesos();
-  }
+  await fetchInventarios();
 
-  // Leer parent_process_id de la URL al montar (esta lógica ahora está redundante con el watch, pero no hace mal)
-  const initialParentId = route.query.parent_process_id;
-  console.log("Parent ID desde URL:", initialParentId); // Log temporal
-  if (initialParentId) {
-    const parsedId = parseInt(initialParentId, 10);
-    if (!isNaN(parsedId)) {
-      store.setParentProcessFilter(parsedId);
-    }
-  }
-
-  console.log("Procesos filtrados iniciales:", store.procesosFiltrados); // Log temporal
+  // Cargar macroprocesos
   try {
-    const response = await axios.get('/api/procesos/macro');
+    const response = await axios.get('/procesos/macro');
     macroprocesos.value = response.data.data || response.data;
   } catch (error) {
     console.error('Error fetching macroprocesos:', error);
     macroprocesos.value = [];
+  }
+
+  // Si hay un inventario seleccionado, cargar sus procesos
+  if (selectedInventarioId.value) {
+    await fetchProcesos(selectedInventarioId.value);
+  }
+
+  // Leer parent_process_id de la URL al montar
+  const initialParentId = route.query.parent_process_id;
+  if (initialParentId) {
+    const parsedId = parseInt(initialParentId, 10);
+    if (!isNaN(parsedId)) {
+      setParentProcessFilter(parsedId);
+    }
   }
 });
 
@@ -316,16 +362,15 @@ watch(() => route.query.parent_process_id, (newParentId) => {
     const parsedId = parseInt(newParentId, 10);
     if (!isNaN(parsedId)) {
       console.log("Watch: Aplicando filtro de proceso padre:", parsedId);
-      store.setParentProcessFilter(parsedId);
+      setParentProcessFilter(parsedId);
     }
   } else {
     // Si la URL ya no tiene parent_process_id, limpiar el filtro
     console.log("Watch: Limpiando filtro de proceso padre");
-    store.clearParentProcessFilter();
+    clearParentProcessFilter();
   }
 }, { immediate: true }); // immediate: true asegura que se ejecute una vez al inicio
 </script>
-
 
 <style scoped>
 :deep(.row-celeste-bajo) td {
