@@ -2,21 +2,22 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 // Importa los componentes de tus vistas
 import DocumentoIndex from '@/components/documentos/DocumentoIndex.vue';
-import HallazgosIndex from '@/components/hallazgos/HallazgoIndex.vue'; 
+import HallazgosIndex from '@/components/hallazgos/HallazgoIndex.vue';
 import RequerimientosIndex from '@/components/requerimientos/RequerimientosIndex.vue';
 import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosIndexMe.vue';
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
 import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue'; // Import the new component
+import InventarioProcesos from '@/components/inventario/InventarioProcesos.vue'; // Importa el nuevo componente
 
 
 const routes = [
     {
-        path: '/documentos', 
+        path: '/documentos',
         name: 'documentos.index',
         component: DocumentoIndex,
     },
      {
-        path: '/mejora', 
+        path: '/mejora',
         name: 'hallazgos.index',
         component: HallazgosIndex,
     },
@@ -72,6 +73,12 @@ const routes = [
         name: 'smp.ouo.index',
         component: () => import('@/components/hallazgos/HallazgoIndex.vue'), // Reutilizando el componente existente (en singular)
         props: { fromOuo: true } // Prop para indicar que se está accediendo desde OUO
+    },
+    {
+        path: '/inventario/:id',
+        name: 'inventario.procesos',
+        component: InventarioProcesos,
+        props: true // Permitir que el ID del inventario llegue como prop
     },
 ]
 

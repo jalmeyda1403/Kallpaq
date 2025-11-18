@@ -53,6 +53,13 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+
+                         <li class="nav-item">
+                            <a href="/vue/inventario/0" class="nav-link"> <!-- Nueva línea -->
+                                <i class="nav-icon fas fa-book"></i> <!-- O el ícono que prefieras -->
+                                <p>Inventario de Procesos</p>
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ route('procesos.mapa') }}" class="nav-link">
                                 <i class="nav-icon fas fa-sitemap"></i>
@@ -69,12 +76,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('obligaciones.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-exclamation-circle"></i>
-                                <p> Listado de Obligaciones</p>
-                            </a>
-                        </li>
+                       
                         <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-chart-bar"></i>

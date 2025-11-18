@@ -30,6 +30,7 @@ use App\Http\Controllers\ParteInteresadaController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EspecialistaController;
+Use App\Http\Controllers\InventarioController;
 
 // ... existing routes ...
 
@@ -61,6 +62,11 @@ Route::get('home', [HomeController::class, 'index'])->name('home');
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
+//Otros
+ Route::get('/api/inventarios', [App\Http\Controllers\InventarioController::class,
+      'apiInventarios'])->name('api.inventarios.index');
+ Route::get('/api/procesos/macro', [App\Http\Controllers\ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
+ Route::get('/api/inventario/{id}/procesos-con-ouos', [App\Http\Controllers\InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos.ouos');
 
 Route::middleware('auth')->group(function () {
     Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');

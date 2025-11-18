@@ -215,6 +215,20 @@ class ProcesoController extends Controller
         return view('procesos.inventario', compact('inventarios', 'procesos'));
 
     }
+
+      public function apiMacroProcesos()
+    {
+        
+            // Obtener procesos donde proceso_nivel = 0 (macroprocesos)
+            // Asegúrate de que 'cod_proceso', 'proceso_nombre', 'proceso_padre_id', 'proceso_nivel' estén en $fillable del modelo Proceso
+            $macroprocesos = Proceso::where('proceso_nivel', 0)
+                                  ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel') // Selecciona solo los campos necesarios
+                                  ->orderBy('cod_proceso') // Ordena si es necesario
+                                  ->get();
+
+            return response()->json($macroprocesos);
+      
+    }
     //Asociar OUO
     public function listarOUO($proceso_id)
     {
