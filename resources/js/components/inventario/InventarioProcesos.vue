@@ -124,7 +124,7 @@
               <button
                 v-if="slotProps.data.subprocesos_count > 0"
                 @click="navigateToSubprocesses(slotProps.data.id)"
-                class="btn btn-link text-primary text-decoration-underline p-0 border-0"
+                class="btn-subprocesos btn btn-link text-primary text-decoration-underline p-0 border-0"
                 title="Ver Subprocesos"
               >
                 {{ slotProps.data.subprocesos_count }}
@@ -275,9 +275,22 @@ const navigateToSubprocesses = (processId) => {
 
 // Cargar inventarios y procesos del último al montar
 onMounted(async () => {
-  await store.loadUltimoInventarioYProcesos();
+  // Leer inventario_id de la URL al montar
+  const inventarioIdFromUrl = route.query.inventario_id;
+  console.log("Inventario ID desde URL:", inventarioIdFromUrl); // Log temporal
+  if (inventarioIdFromUrl) {
+    const parsedId = parseInt(inventarioIdFromUrl, 10);
+    if (!isNaN(parsedId)) {
+      store.selectedInventarioId = parsedId;
+      await store.fetchProcesos(parsedId);
+    } else {
+      await store.loadUltimoInventarioYProcesos();
+    }
+  } else {
+    await store.loadUltimoInventarioYProcesos();
+  }
 
-  // Leer parent_process_id de la URL al montar
+  // Leer parent_process_id de la URL al montar (esta lógica ahora está redundante con el watch, pero no hace mal)
   const initialParentId = route.query.parent_process_id;
   console.log("Parent ID desde URL:", initialParentId); // Log temporal
   if (initialParentId) {
@@ -296,6 +309,21 @@ onMounted(async () => {
     macroprocesos.value = [];
   }
 });
+
+// Watch para detectar cambios en parent_process_id en la URL
+watch(() => route.query.parent_process_id, (newParentId) => {
+  if (newParentId) {
+    const parsedId = parseInt(newParentId, 10);
+    if (!isNaN(parsedId)) {
+      console.log("Watch: Aplicando filtro de proceso padre:", parsedId);
+      store.setParentProcessFilter(parsedId);
+    }
+  } else {
+    // Si la URL ya no tiene parent_process_id, limpiar el filtro
+    console.log("Watch: Limpiando filtro de proceso padre");
+    store.clearParentProcessFilter();
+  }
+}, { immediate: true }); // immediate: true asegura que se ejecute una vez al inicio
 </script>
 
 
@@ -311,5 +339,31 @@ onMounted(async () => {
 /* Nuevo estilo para proceso_estado = 0 */
 :deep(.row-rosado-suficiente) td {
   background-color: #f8d7da !important; /* Rosado suave */
+}
+
+/* Estilo para el botón de subprocesos para que se vea como texto plano en la celda */
+:deep(.row-celeste-bajo) td button.btn-subprocesos,
+:deep(.row-beige) td button.btn-subprocesos,
+:deep(.row-rosado-suficiente) td button.btn-subprocesos,
+.p-datatable .p-datatable-tbody > tr > td button.btn-subprocesos {
+  /* Heredar estilos de fuente de la celda */
+  font-family: inherit;
+  font-size: inherit; /* Muy importante */
+  line-height: inherit; /* Muy importante */
+  color: inherit; /* Mantiene color de texto de la celda o usa el color de enlace */
+  text-decoration: underline; /* Si se quiere subrayado como enlace */
+  background: none; /* Elimina fondo */
+  border: none; /* Elimina borde */
+  padding: 0; /* Puede ser necesario mantenerlo o ajustarlo */
+  cursor: pointer; /* Muestra que es cliqueable */
+  /* Opcional: Ajustar color y subrayado específicos para botón */
+  /* color: #007bff; */
+  /* text-decoration-color: #007bff; */
+}
+
+/* Opcional: Estilo en hover */
+.p-datatable .p-datatable-tbody > tr > td button.btn-subprocesos:hover {
+  opacity: 0.8; /* O cualquier efecto de hover deseado */
+  text-decoration: underline; /* Asegurar subrayado en hover si se quitó por herencia */
 }
 </style>

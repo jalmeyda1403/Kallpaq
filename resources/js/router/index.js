@@ -8,6 +8,7 @@ import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosInd
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
 import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue'; // Import the new component
 import InventarioProcesos from '@/components/inventario/InventarioProcesos.vue'; // Importa el nuevo componente
+import InventarioIndex from '@/components/inventario/InventarioIndex.vue'; // Importa el componente de Gestión del Inventario
 
 
 const routes = [
@@ -79,6 +80,11 @@ const routes = [
         name: 'inventario.procesos',
         component: InventarioProcesos,
         props: true // Permitir que el ID del inventario llegue como prop
+    },
+    {
+        path: '/inventario-gestion',
+        name: 'inventario.gestion',
+        component: InventarioIndex,
     },
 ]
 

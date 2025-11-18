@@ -68,6 +68,31 @@ Route::get('logout', [LoginController::class, 'logout'])->name('logout');
  Route::get('/api/procesos/macro', [App\Http\Controllers\ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
  Route::get('/api/inventario/{id}/procesos-con-ouos', [App\Http\Controllers\InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos.ouos');
 
+// Gestion del Inventario (Nuevas Rutas API)
+// Rutas CRUD para la gestión de inventarios (listar, crear, actualizar, eliminar)
+// Rutas específicas para la gestión de procesos dentro de un inventario y su aprobación
+
+// Grupo para rutas de inventario
+Route::prefix('api/inventarios')->name('api.inventarios.')->group(function () {
+    // CRUD principal
+    Route::get('/', [App\Http\Controllers\InventarioController::class, 'indexApi'])->name('index');
+    Route::post('/', [App\Http\Controllers\InventarioController::class, 'storeApi'])->name('store');
+    Route::put('/{inventario}', [App\Http\Controllers\InventarioController::class, 'updateApi'])->name('update');
+    Route::patch('/{inventario}', [App\Http\Controllers\InventarioController::class, 'updateApi'])->name('update.patch');
+    Route::delete('/{inventario}', [App\Http\Controllers\InventarioController::class, 'destroyApi'])->name('destroy');
+
+    // Rutas específicas para un inventario
+    Route::prefix('/{inventario}')->group(function () {
+        // Gestión de procesos
+        Route::get('/procesos-disponibles', [App\Http\Controllers\InventarioController::class, 'procesosDisponibles'])->name('procesos.disponibles');
+        Route::get('/procesos-asociados', [App\Http\Controllers\InventarioController::class, 'procesosAsociados'])->name('procesos.asociados');
+        Route::post('/procesos/sync', [App\Http\Controllers\InventarioController::class, 'syncProcesos'])->name('procesos.sync');
+
+        // Aprobación
+        Route::post('/aprobar', [App\Http\Controllers\InventarioController::class, 'aprobar'])->name('aprobar');
+    });
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
     Route::get('/dashboard/resumen-general', [DashboardController::class, 'getResumenGeneral'])->name('dashboard.resumenGeneral');

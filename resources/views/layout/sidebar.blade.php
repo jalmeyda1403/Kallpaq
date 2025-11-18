@@ -194,12 +194,6 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{{ route('procesos.inventario') }}" class="nav-link">
-                                    <i class="nav-icon fas fa-sitemap"></i>
-                                    <p>Inventario de Procesos</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a href="{{ route('procesos.index') }}" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de Procesos</p>
@@ -229,6 +223,13 @@
                                 <a href="#" class="nav-link">
                                     <i class="nav-icon fas fa-tachometer-alt"></i>
                                     <p>Dashboard Procesos</p>
+                                </a>
+                            </li>
+                            <!-- Nueva entrada: Gestión del Inventario -->
+                            <li class="nav-item">
+                                <a href="/vue/inventario-gestion" class="nav-link">
+                                    <i class="nav-icon fas fa-cubes"></i> <!-- Icono de ejemplo -->
+                                    <p>Gestión del Inventario</p>
                                 </a>
                             </li>
                         </ul>

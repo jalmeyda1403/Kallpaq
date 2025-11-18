@@ -15,12 +15,16 @@ class Inventario extends Model
         'documento_aprueba',
         'vigencia',
         'enlace',
-        'estado'
+        'estado',
+        'estado_flujo', // Nuevo campo
+        'inventario_cierre', // Nuevo campo
+        'fecha_cierre' // Nuevo campo
     ];
 
     // Si quieres que el campo 'vigencia' sea tratado como una fecha
     protected $casts = [
         'vigencia' => 'datetime',
+        'fecha_cierre' => 'datetime', // Añadir cast para fecha_cierre
     ];
 
     // Si la tabla tiene un campo 'created_at' y 'updated_at', puedes usar las fechas automáticamente

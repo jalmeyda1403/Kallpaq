@@ -208,11 +208,25 @@ class ProcesoController extends Controller
 
     }
 
-    public function inventarioProcesos()
+    public function inventarioProcesos(Request $request)
     {
         $inventarios = Inventario::all();
+
+        // Obtener el ID del inventario de la solicitud
+        $inventarioId = $request->query('inventario_id');
+
+        // Si se proporciona un ID de inventario, filtrar los procesos basados en este inventario
+        if ($inventarioId) {
+            // Primero verificar que el inventario exista
+            $inventario = Inventario::find($inventarioId);
+            if (!$inventario) {
+                // Si no existe, usar el último inventario o mostrar todos
+                $inventarioId = null;
+            }
+        }
+
         $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
-        return view('procesos.inventario', compact('inventarios', 'procesos'));
+        return view('procesos.inventario', compact('inventarios', 'procesos', 'inventarioId'));
 
     }
 

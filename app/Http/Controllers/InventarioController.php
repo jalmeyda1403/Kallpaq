@@ -59,4 +59,345 @@ class InventarioController extends Controller
 
         return response()->json($inventarios);
     }
+
+
+     // 1. Listar inventarios (indexApi)
+    public function indexApi(Request $request)
+    {
+        // Opcional: Agregar paginación, búsqueda, etc.
+        $inventarios = Inventario::select('id', 'nombre', 'descripcion', 'documento_aprueba', 'enlace', 'vigencia', 'estado', 'estado_flujo', 'inventario_cierre', 'fecha_cierre', 'created_at', 'updated_at')
+                                  ->orderBy('created_at', 'desc') // O por vigencia
+                                  ->get();
+
+        return response()->json($inventarios);
+    }
+
+    // 2. Crear inventario (storeApi)
+    public function storeApi(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'documento_aprueba' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,rtf,odt,ods,odp|max:10240', // Máx 10MB, tipos comunes
+            'enlace' => 'nullable|url',
+            'vigencia' => 'required|date',
+            // 'estado' => 'sometimes|boolean', // O dejarlo como 1 por defecto en DB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $inventario = new Inventario();
+        $inventario->nombre = $request->nombre;
+        $inventario->descripcion = $request->descripcion;
+        $inventario->enlace = $request->enlace;
+        $inventario->vigencia = $request->vigencia;
+        // Archivo: Guardar y asignar ruta
+        if ($request->hasFile('documento_aprueba')) {
+            $path = $request->file('documento_aprueba')->store('documentos_inventario', 'public');
+            $inventario->documento_aprueba = \Storage::url($path);
+        }
+        $inventario->estado = 1; // Nuevo inventario, estado 1 (activo/vigente)
+        $inventario->estado_flujo = 'borrador'; // Estado inicial del flujo
+        $inventario->save();
+
+        return response()->json($inventario, 201);
+    }
+
+    // 3. Actualizar inventario (updateApi) - Limitado a borradores
+    public function updateApi(Request $request, Inventario $inventario)
+    {
+        // Validar que solo se pueda editar si está en borrador
+        if ($inventario->estado_flujo !== 'borrador') {
+             return response()->json(['error' => 'No se puede editar un inventario que no está en borrador'], 400);
+        }
+
+        $validator = \Validator::make($request->all(), [
+            'nombre' => 'sometimes|required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'documento_aprueba' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,rtf,odt,ods,odp|max:10240',
+            'enlace' => 'nullable|url',
+            'vigencia' => 'sometimes|required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Archivo: Si se sube uno nuevo, reemplazar el anterior
+        if ($request->hasFile('documento_aprueba')) {
+            // Opcional: Borrar archivo anterior si existe y no se usa en otro lado
+            // if ($inventario->documento_aprueba) {
+            //      // \Storage::disk('public')->delete(str_replace(\Storage::url(''), '', $inventario->documento_aprueba));
+            //      // No lo borramos ahora por simplicidad.
+            // }
+            $path = $request->file('documento_aprueba')->store('documentos_inventario', 'public');
+            $inventario->documento_aprueba = \Storage::url($path);
+        }
+
+        $inventario->fill($request->only(['nombre', 'descripcion', 'enlace', 'vigencia']));
+        $inventario->save();
+
+        return response()->json($inventario, 200);
+    }
+
+    // 4. Eliminar inventario (destroyApi) - Solo borradores
+    public function destroyApi(Inventario $inventario)
+    {
+        if ($inventario->estado_flujo !== 'borrador') {
+             return response()->json(['error' => 'No se puede eliminar un inventario que no está en borrador'], 400);
+        }
+
+        // Opcional: Borrar archivo asociado
+        // if ($inventario->documento_aprueba) { ... }
+
+        $inventario->delete();
+
+        return response()->json(['message' => 'Inventario eliminado'], 200);
+    }
+
+
+    // 7. Sincronizar Procesos (syncProcesos) - implementación anterior eliminada para evitar redeclaración;
+    // Se utiliza la implementación actualizada más abajo en este controlador.
+
+    // 8. Aprobar Inventario (aprobar)
+    public function aprobar(Request $request, Inventario $inventario)
+    {
+         // Validar que solo se pueda aprobar si está en borrador
+        if ($inventario->estado_flujo !== 'borrador') {
+             return response()->json(['error' => 'No se puede aprobar un inventario que no está en borrador'], 400);
+        }
+
+        // Validar que tenga procesos asociados
+        if ($inventario->procesos()->count() === 0) {
+             return response()->json(['error' => 'No se puede aprobar un inventario sin procesos asociados'], 400);
+        }
+
+        \DB::beginTransaction();
+        try {
+            // a. Obtener el último inventario aprobado (si existe)
+            $ultimoInventarioAprobado = Inventario::where('estado_flujo', 'aprobado')->latest('vigencia')->first(); // O por ID si vigencia no es confiable para ordenar versiones
+
+            // b. Marcar el inventario actual como aprobado
+            $inventario->estado_flujo = 'aprobado';
+            $inventario->save();
+
+            // c. Si existía un inventario anterior aprobado
+            if ($ultimoInventarioAprobado) {
+                // i. Marcarlo como cerrado
+                $ultimoInventarioAprobado->estado_flujo = 'cerrado';
+                $ultimoInventarioAprobado->inventario_cierre = $inventario->id; // Este nuevo lo cierra
+                $ultimoInventarioAprobado->fecha_cierre = \Carbon\Carbon::now();
+                $ultimoInventarioAprobado->save();
+
+                // ii. Desactivar sus procesos en inventario_procesos
+                InventarioProceso::where('id_inventario', $ultimoInventarioAprobado->id)
+                                  ->update(['estado' => 0, 'inactive_at' => \Carbon\Carbon::now()]);
+            }
+
+            // d. Confirmar transacción
+            \DB::commit();
+
+            return response()->json(['message' => 'Inventario aprobado correctamente'], 200);
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            return response()->json(['error' => 'Error al aprobar el inventario'], 500);
+        }
+    }
+
+    /**
+     * Calcula recursivamente todos los procesos hijos (nivel 2+) dados una lista de IDs de procesos padres (nivel 0/1).
+     * @param array $procesosPadreIds
+     * @return array
+     */
+    private function calcularProcesosConHijos(array $procesosPadreIds): array
+    {
+        if (empty($procesosPadreIds)) {
+            return [];
+        }
+        $resultado = $procesosPadreIds;
+
+        // Usar una cola (queue) para iterar recursivamente
+        $cola = $procesosPadreIds;
+
+        while (!empty($cola)) {
+            // Obtener hijos directos de los IDs en la cola actual
+            $hijosDirectos = \App\Models\Proceso::whereIn('proceso_padre_id', $cola)
+                                              ->pluck('id')
+                                              ->toArray();
+
+            if (empty($hijosDirectos)) {
+                // Si no hay más hijos, salir del bucle
+                break;
+            }
+
+            // Añadir hijos al resultado y a la cola para buscar sus hijos
+            $resultado = array_merge($resultado, $hijosDirectos);
+            // Limpiar cola y usar nuevos hijos como cola para la siguiente iteración
+            $cola = $hijosDirectos;
+        }
+
+        // Devolver sin duplicados
+        return array_unique($resultado);
+    }
+
+    /**
+     * Obtiene todos los IDs de procesos (padres e hijos calculados) asociados a un inventario.
+     * @param int $inventarioId
+     * @return \Illuminate\Support\Collection
+     */
+    private function obtenerProcesosAsociadosConHijos(int $inventarioId)
+    {
+        // Obtiene solo los IDs de procesos ya asociados a este inventario
+        $procesosDirectosIds = InventarioProceso::where('id_inventario', $inventarioId)
+                                                   ->pluck('id_proceso')
+                                                   ->toArray();
+
+        // Calcular hijos de los procesos directos
+        $procesosIdsConHijos = $this->calcularProcesosConHijos($procesosDirectosIds);
+
+        // Devolver una colección de objetos con solo el ID (simula el comportamiento de pluck)
+        // En realidad, devolvemos un array directamente para la comparación
+        return collect($procesosIdsConHijos)->map(function ($id) {
+            return (object)['id' => $id]; // Convierte a objeto con propiedad 'id'
+        });
+    }
+
+    // Método 'obtenerProcesosAsociadosConHijos' (alternativa que devuelve solo array)
+    private function obtenerProcesosAsociadosConHijosArray(int $inventarioId): array
+    {
+        // Obtiene solo los IDs de procesos ya asociados a este inventario
+        $procesosDirectosIds = InventarioProceso::where('id_inventario', $inventarioId)
+                                                   ->pluck('id_proceso')
+                                                   ->toArray();
+
+        // Calcular hijos de los procesos directos
+        return $this->calcularProcesosConHijos($procesosDirectosIds);
+    }
+
+    // Actualizar 'syncProcesos' (método principal)
+    public function syncProcesos(Request $request, Inventario $inventario)
+    {
+        // Validar que solo se pueda editar si está en borrador
+        if ($inventario->estado_flujo !== 'borrador') {
+             return response()->json(['error' => 'No se puede modificar un inventario que no está en borrador'], 400);
+        }
+
+        $validator = \Validator::make($request->all(), [
+            'procesos_ids' => 'required|array',
+            'procesos_ids.*' => 'integer|exists:procesos,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $nuevosProcesosIdsNivelBase = $request->procesos_ids; // Los IDs seleccionados (nivel 0 y 1)
+
+        // Calcular la lista completa de IDs de procesos (padres + hijos) a asociar
+        $nuevosProcesosIdsCompletos = $this->calcularProcesosConHijos($nuevosProcesosIdsNivelBase);
+
+        // Obtener lista completa de IDs de procesos (padres + hijos) actualmente asociados a este inventario
+        $procesosActualesIdsCompletos = $this->obtenerProcesosAsociadosConHijosArray($inventario->id);
+
+        // Calcular diferencias
+        $idsAgregar = array_diff($nuevosProcesosIdsCompletos, $procesosActualesIdsCompletos);
+        $idsRemover = array_diff($procesosActualesIdsCompletos, $nuevosProcesosIdsCompletos);
+
+        \DB::beginTransaction();
+        try {
+            // Remover procesos (padres e hijos calculados)
+            if (!empty($idsRemover)) {
+                InventarioProceso::where('id_inventario', $inventario->id)
+                                 ->whereIn('id_proceso', $idsRemover)
+                                 ->delete(); // Elimina la relación
+            }
+
+            // Agregar procesos nuevos (padres e hijos calculados)
+            if (!empty($idsAgregar)) {
+                $procesosParaSync = [];
+                foreach ($idsAgregar as $id) {
+                    $procesosParaSync[] = [
+                        'id_inventario' => $inventario->id,
+                        'id_proceso' => $id,
+                        'id_ouo_propietario' => null, // Se rellenará en la aprobación
+                        'id_ouo_ejecutor' => null,
+                        'id_ouo_delega' => null,
+                        'estado' => 1, // Activo en este inventario
+                        'inactive_at' => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                InventarioProceso::insert($procesosParaSync); // Inserción en bloque más eficiente
+            }
+
+            \DB::commit();
+
+            return response()->json(['message' => 'Procesos sincronizados correctamente'], 200);
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            return response()->json(['error' => 'Error al sincronizar procesos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // Actualizar 'procesosDisponibles' (método)
+    public function procesosDisponibles(Inventario $inventario)
+    {
+        // Obtener IDs de procesos ya asociados (y sus hijos) a este inventario
+        $procesosAsociadosIds = $this->obtenerProcesosAsociadosConHijosArray($inventario->id);
+
+        if (empty($procesosAsociadosIds)) {
+            // Si no hay procesos asociados, devolver todos los de nivel 0 y 1
+            $procesosDisponibles = \App\Models\Proceso::where('proceso_nivel', '<=', 1)
+                                            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'proceso_padre_id')
+                                            ->orderBy('cod_proceso')
+                                            ->get();
+        } else {
+            // Si hay procesos asociados, excluirlos (y sus hijos) de la lista de disponibles
+            $procesosDisponibles = \App\Models\Proceso::where('proceso_nivel', '<=', 1)
+                                            ->whereNotIn('id', $procesosAsociadosIds)
+                                            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'proceso_padre_id')
+                                            ->orderBy('cod_proceso')
+                                            ->get();
+        }
+
+        return response()->json($procesosDisponibles);
+    }
+
+    // Actualizar 'procesosAsociados' (método)
+    public function procesosAsociados(Inventario $inventario)
+    {
+        // Obtener IDs de procesos asociados a este inventario (ya tiene hijos incluidos si se usó syncProcesos correctamente)
+        $procesosIdsAsociados = $this->obtenerProcesosAsociadosConHijosArray($inventario->id);
+
+        if (empty($procesosIdsAsociados)) {
+            return response()->json([]);
+        }
+
+        // Obtener los detalles de los procesos asociados (incluyendo hijos)
+        // Incluimos los campos de OUO de la tabla pivote `inventario_procesos`
+        $procesosAsociados = \App\Models\Proceso::whereIn('id', $procesosIdsAsociados)
+                                           ->join('inventario_procesos', 'procesos.id', '=', 'inventario_procesos.id_proceso')
+                                           ->select(
+                                               'procesos.*', // Todos los campos del proceso
+                                               // Campos de la tabla pivote `inventario_procesos`
+                                               'inventario_procesos.id_ouo_propietario',
+                                               'inventario_procesos.id_ouo_ejecutor',
+                                               'inventario_procesos.id_ouo_delega',
+                                               'inventario_procesos.estado',
+                                               'inventario_procesos.inactive_at',
+                                               'inventario_procesos.created_at as ip_created_at',
+                                               'inventario_procesos.updated_at as ip_updated_at'
+                                           )
+                                           ->where('inventario_procesos.id_inventario', $inventario->id) // Asegurar filtro por inventario
+                                           ->orderBy('procesos.cod_proceso') // O el orden deseado
+                                           ->get();
+
+        return response()->json($procesosAsociados);
+    }
+
 }
