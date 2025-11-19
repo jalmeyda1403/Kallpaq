@@ -19,7 +19,7 @@ class InventarioController extends Controller
         // Asumiendo que el modelo Proceso existe y la tabla es 'procesos'
         // Asumiendo que el modelo OUO existe y la tabla es 'ouos'
         // Construir la consulta con joins para obtener los nombres de las OUOs y el conteo de subprocesos
-        $procesosConOuos = \App\Models\Proceso::join('inventario_procesos', 'procesos.id', '=', 'inventario_procesos.id_proceso')
+        $procesosConOuos = Proceso::join('inventario_procesos', 'procesos.id', '=', 'inventario_procesos.id_proceso')
             ->leftJoin('ouos as ouo_p', 'inventario_procesos.id_ouo_propietario', '=', 'ouo_p.id') // Join para Propietario
             ->leftJoin('ouos as ouo_d', 'inventario_procesos.id_ouo_delegado', '=', 'ouo_d.id')   // Join para Delegado
             ->leftJoin('ouos as ouo_e', 'inventario_procesos.id_ouo_ejecutor', '=', 'ouo_e.id')   // Join para Ejecutor
@@ -220,14 +220,14 @@ class InventarioController extends Controller
             return [];
         }
         
-        $procesos = \App\Models\Proceso::whereIn('id', $procesosPadreIds)->get();
+        $procesos = Proceso::whereIn('id', $procesosPadreIds)->get();
         $resultado = $procesos->pluck('id')->toArray();
         $cola = $procesos->pluck('cod_proceso')->toArray();
         $procesados = [];
 
         while (!empty($cola)) {
             $procesados = array_merge($procesados, $cola);
-            $hijos = \App\Models\Proceso::whereIn('cod_proceso_padre', $cola)->get();
+            $hijos = Proceso::whereIn('cod_proceso_padre', $cola)->get();
 
             if ($hijos->isEmpty()) {
                 break;
@@ -442,13 +442,13 @@ class InventarioController extends Controller
 
         if (empty($procesosAsociadosIds)) {
             // Si no hay procesos asociados, devolver todos los de nivel 0 y 1
-            $procesosDisponibles = \App\Models\Proceso::where('proceso_nivel', '<=', 1)
+            $procesosDisponibles = Proceso::where('proceso_nivel', '<=', 1)
                                             ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'cod_proceso_padre', 'proceso_estado')
                                             ->orderBy('cod_proceso')
                                             ->get();
         } else {
             // Si hay procesos asociados, excluirlos (y sus hijos) de la lista de disponibles
-            $procesosDisponibles = \App\Models\Proceso::where('proceso_nivel', '<=', 1)
+            $procesosDisponibles = Proceso::where('proceso_nivel', '<=', 1)
                                             ->whereNotIn('id', $procesosAsociadosIds)
                                             ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel', 'cod_proceso_padre', 'proceso_estado')
                                             ->orderBy('cod_proceso')
@@ -470,7 +470,7 @@ class InventarioController extends Controller
 
         // Obtener los detalles de los procesos asociados (incluyendo hijos)
         // Incluimos los campos de OUO de la tabla pivote `inventario_procesos`
-        $procesosAsociados = \App\Models\Proceso::whereIn('procesos.id', $procesosIdsAsociados)
+        $procesosAsociados = Proceso::whereIn('procesos.id', $procesosIdsAsociados)
                                            ->join('inventario_procesos', 'procesos.id', '=', 'inventario_procesos.id_proceso')
                                            ->select(
                                                'procesos.*', // Todos los campos del proceso

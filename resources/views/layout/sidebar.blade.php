@@ -55,7 +55,7 @@
                     <ul class="nav nav-treeview">
 
                          <li class="nav-item">
-                            <a href="/vue/inventario/0" class="nav-link"> <!-- Nueva línea -->
+                            <a href="/vue/inventario-publico/0" class="nav-link"> <!-- Nueva línea -->
                                 <i class="nav-icon fas fa-book"></i> <!-- O el ícono que prefieras -->
                                 <p>Inventario de Procesos</p>
                             </a>
@@ -250,99 +250,49 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <!-- Bandejas para Supervisor y Admin -->
-                            @if (in_array($rol, ['supervisor', 'admin']))
+                            @if (in_array($rol, ['admin']))
                                 <li class="nav-item">
                                     <a href="{{ url('/vue/mejora') }}"
-                                        class="nav-link {{ request()->segment(3) == 'Ncm' ? 'active' : '' }}">
+                                        class="nav-link">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>Bandeja de SMP</p>
+                                        <p>Bandeja de Hallazgos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                    <a href="{{ route('hallazgos.mine') }}"
                                         class="nav-link">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
-                                        <p>SMP Asignadas</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
-                                        class="nav-link">
-                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
-                                        <p>SMP Concluidas</p>
-                                    </a>
-                                </li>
-                                <!-- Bandejas SMP basadas en OUO para Admin -->
-                                <li class="nav-item">
-                                    <a href="/vue/smp-ouo" class="nav-link">
-                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>SMP de mi Unidad</p>
+                                        <p>Mis Hallazgos</p>
                                     </a>
                                 </li>
                             @endif
 
-                            {{-- Bandejas para Facilitador y Subgerente --}}
-                            @if (in_array($rol, ['facilitador', 'subgerente']))
+                            @if (in_array($rol, ['gestor']))
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.crear') }}" class="nav-link">
-                                        <i class="far fa-edit nav-icon"></i>
-                                        <p>Bandeja SMP</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                    <a href="{{ route('hallazgos.mine') }}"
                                         class="nav-link">
-                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>SMP aprobadas</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
-                                        class="nav-link">
-                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
-                                        <p>SMP concluidas</p>
-                                    </a>
-                                </li>
-                                <!-- Bandejas SMP basadas en OUO para Facilitador y Subgerente -->
-                                <li class="nav-item">
-                                    <a href="/vue/smp-ouo" class="nav-link">
-                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>SMP de mis Procesos</p>
+                                        <i class="fas fa-user-check nav-icon fa-xs"></i>
+                                        <p>Mis Hallazgos</p>
                                     </a>
                                 </li>
                             @endif
-                            {{-- Bandejas para Especialista --}}
-                            @if ($rol === 'especialista')
+
+                            @if (in_array($rol, ['auditor']))
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                    <a href="{{ url('/vue/mejora?evaluacion=true') }}"
                                         class="nav-link">
-                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>Asignados a Mí</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
-                                        class="nav-link">
-                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
-                                        <p>SMP Concluidas</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
-                                        class="nav-link">
-                                        <i class="fas fa-check-circle fa-xs nav-icon "></i>
-                                        <p>SMP para verificar</p>
+                                        <i class="fas fa-check-double nav-icon fa-xs"></i>
+                                        <p>Evaluación de Eficacia</p>
                                     </a>
                                 </li>
                             @endif
 
                             {{-- Dashboard para todos los roles, al final del módulo --}}
                             <li class="nav-item">
-                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
+                                <a href="#"
                                     class="nav-link">
                                     <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
-                                    <p>Dashboard SMP</p>
+                                    <p>Dashboard de Mejora</p>
                                 </a>
                             </li>
                         </ul>

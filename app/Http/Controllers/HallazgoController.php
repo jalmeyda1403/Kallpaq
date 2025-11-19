@@ -114,6 +114,59 @@ class HallazgoController extends Controller
         // Devuelve los resultados en formato JSON
         return response()->json($hallazgos);
     }
+    public function apiMyHallazgos(Request $request)
+    {
+        $user = Auth::user();
+
+        // Obtener las OUOs del usuario con sus roles
+        $userOuos = $user->ouos()->withPivot('role_in_ouo', 'activo')->get();
+
+        // Obtener los IDs de OUOs del usuario
+        $ouoIds = $userOuos->pluck('id');
+
+        // Obtener los procesos asociados a esas OUOs
+        $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $ouoIds)->pluck('id_proceso')->unique();
+
+        // Filtrar hallazgos relacionados con esos procesos
+        $query = Hallazgo::with('procesos', 'acciones');
+
+        if ($procesoIds->isNotEmpty()) {
+            $query->whereHas('procesos', function ($q) use ($procesoIds) {
+                $q->whereIn('procesos.id', $procesoIds);
+            });
+        } else {
+            // Si no hay procesos asociados, retornar colección vacía
+            $query->whereRaw('1 = 0');
+        }
+
+        // Aplicar filtros adicionales si existen
+        if ($request->filled('descripcion')) {
+            $searchTerm = '%' . $request->descripcion . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('hallazgo_resumen', 'like', $searchTerm)
+                  ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+            });
+        }
+
+        if ($request->filled('proceso_id')) {
+            $query->whereHas('procesos', function ($q) use ($request) {
+                $q->where('procesos.id', $request->proceso_id);
+            });
+        }
+
+        if ($request->filled('clasificacion')) {
+            $query->where('hallazgo_clasificacion', $request->clasificacion);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('hallazgo_estado', $request->estado);
+        }
+
+        $hallazgos = $query->get();
+
+        return response()->json($hallazgos);
+    }
+
     /**
      * Store a newly created resource in storage.
      */

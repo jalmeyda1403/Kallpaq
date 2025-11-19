@@ -94,6 +94,7 @@ Route::prefix('api/inventarios')->name('api.inventarios.')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('hallazgos/mine', [HallazgoController::class, 'apiMyHallazgos'])->name('hallazgos.mine');
     Route::delete('inventarios/{inventario}/procesos/{proceso}', [InventarioController::class, 'disassociateProcess'])->name('api.inventario-proceso.destroy');
     Route::post('inventarios/{inventario}/procesos/add', [InventarioController::class, 'addProcesos'])->name('api.inventarios.procesos.add');
     Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');

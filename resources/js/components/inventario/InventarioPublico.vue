@@ -78,15 +78,16 @@
       </div>
 
       <div class="card-body">
-        <h2 class="text-xl font-semibold mb-4" v-if="selectedInventarioId">
-          <h4 class="card-title mb-0">Inventario Público de Procesos {{ selectedInventarioNombre || 'Cargando...' }}</h4>
-        </h2>
-        <br></br>
+        
 
         <!-- DataTable de PrimeVue para mostrar los datos -->
-        <DataTable
+        <div v-if="loading" class="loading-spinner">
+          <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+        <DataTable v-else
           :value="procesosFiltrados"
-          :loading="loading"
           stripedRows
           :rowClass="rowClass"
           paginator
@@ -210,7 +211,6 @@ const parentProcessFilter = ref(null);
 
 // Funciones para cargar datos
 const fetchInventarios = async () => {
-  loading.value = true;
   try {
     const response = await axios.get(ziggyRoute('api.inventarios.index'));
     inventarios.value = response.data;
@@ -229,23 +229,18 @@ const fetchInventarios = async () => {
   } catch (error) {
     console.error('Error fetching inventarios:', error);
     inventarios.value = [];
-  } finally {
-    loading.value = false;
   }
 };
 
 const fetchProcesos = async (inventarioId) => {
   if (!inventarioId) return;
 
-  loading.value = true;
   try {
     const response = await axios.get(ziggyRoute('api.inventario.procesos', { id: inventarioId }));
     procesos.value = response.data;
   } catch (error) {
     console.error('Error fetching procesos:', error);
     procesos.value = [];
-  } finally {
-    loading.value = false;
   }
 };
 
@@ -337,6 +332,7 @@ const clearParentProcessFilter = () => {
 
 // Cargar inventarios y procesos al montar
 onMounted(async () => {
+  loading.value = true;
   await fetchInventarios();
 
   // Cargar macroprocesos
@@ -361,6 +357,7 @@ onMounted(async () => {
       setParentProcessFilter(parsedId);
     }
   }
+  loading.value = false;
 });
 
 // Watch para detectar cambios en parent_process_id en la URL
@@ -380,6 +377,12 @@ watch(() => route.query.parent_process_id, (newParentId) => {
 </script>
 
 <style scoped>
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
 :deep(.row-celeste-bajo) td {
   background-color: #e6f7ff !important;
 }
