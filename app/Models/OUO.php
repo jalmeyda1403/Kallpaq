@@ -33,7 +33,7 @@ class OUO extends Model
     {
         return $this->belongsToMany(User::class, 'ouo_user', 'ouo_id', 'user_id')
                     ->using(OuoUser::class)
-                    ->withPivot('role_in_ouo', 'activo', 'deleted_at');
+                    ->withPivot('role_in_ouo', 'activo');
     }
 
     /**

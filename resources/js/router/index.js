@@ -9,7 +9,7 @@ import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFo
 import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue'; // Import the new component
 import InventarioPublico from '@/components/inventario/InventarioPublico.vue'; // Importa el componente público del inventario
 import InventarioIndex from '@/components/inventario/InventarioIndex.vue'; // Importa el componente de Gestión del Inventario
-
+import MisHallazgos from '@/components/hallazgos/MisHallazgos.vue'; // Import MisHallazgos
 
 const routes = [
     {
@@ -17,10 +17,15 @@ const routes = [
         name: 'documentos.index',
         component: DocumentoIndex,
     },
-     {
+    {
         path: '/mejora',
         name: 'hallazgos.index',
         component: HallazgosIndex,
+    },
+    {
+        path: '/mis-hallazgos', // New route for Mis Hallazgos
+        name: 'hallazgos.mine.vue',
+        component: MisHallazgos,
     },
     {
         path: '/requerimientos/index',
@@ -75,7 +80,7 @@ const routes = [
         component: () => import('@/components/hallazgos/HallazgoIndex.vue'), // Reutilizando el componente existente (en singular)
         props: { fromOuo: true } // Prop para indicar que se está accediendo desde OUO
     },
-   
+
     {
         path: '/inventario-publico/:id',
         name: 'inventario.publico',

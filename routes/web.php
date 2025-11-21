@@ -311,7 +311,7 @@ Route::controller(AccionController::class) // <-- CAMBIO
     ->middleware('auth')
     ->group(function () {
         // CAMBIO: Se renombra el método a 'listarCausaRaiz'
-        Route::get('/', 'listarCausaRaiz')->name('listar');
+        Route::get('/listar', 'listarCausaRaiz')->name('listar');
         Route::post('/', 'storeOrUpdateCausaRaiz')->name('storeOrUpdate');
     });
 

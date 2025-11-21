@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; // Import SoftDeletes
 
 class OuoUser extends Pivot // Extend Pivot
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $table = 'ouo_user'; // Specify the pivot table name
 

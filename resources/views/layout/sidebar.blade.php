@@ -259,7 +259,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('hallazgos.mine') }}"
+                                    <a href="/vue/mis-hallazgos"
                                         class="nav-link">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Hallazgos</p>
@@ -269,7 +269,7 @@
 
                             @if (in_array($rol, ['gestor']))
                                 <li class="nav-item">
-                                    <a href="{{ route('hallazgos.mine') }}"
+                                    <a href="/vue/mis-hallazgos"
                                         class="nav-link">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Hallazgos</p>
