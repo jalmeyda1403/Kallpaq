@@ -45,6 +45,96 @@ class RiesgoController extends Controller
     }
 
 
+    // Obtener riesgos del usuario actual basados en sus OUOs y Procesos
+    public function misRiesgos()
+    {
+        $user = auth()->user();
+        
+        // Si es admin, devolver todos
+        if ($user->hasRole('admin')) {
+            $riesgos = Riesgo::with(['proceso', 'factor'])->get();
+            return response()->json($riesgos);
+        }
+
+        // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs
+        // Asumiendo que la relación es User -> OUOs -> Procesos
+        $procesosIds = $user->ouos()->with('procesos')->get()->pluck('procesos')->flatten()->pluck('id')->unique();
+        
+        // También incluir procesos donde el usuario esté asignado directamente (si existe esa relación)
+        // $procesosDirectos = $user->procesos->pluck('id');
+        // $procesosIds = $procesosIds->merge($procesosDirectos)->unique();
+
+        $riesgos = Riesgo::whereIn('proceso_id', $procesosIds)
+            ->with(['proceso', 'factor'])
+            ->get();
+
+        return response()->json($riesgos);
+    }
+
+    // Obtener un riesgo con todas sus relaciones para la vista de detalle
+    public function getRiesgoCompleto(Riesgo $riesgo)
+    {
+        $riesgo->load(['proceso', 'factor', 'obligacion']);
+        return response()->json($riesgo);
+    }
+
+    // Actualizar Evaluación del Riesgo (Probabilidad e Impacto)
+    public function updateEvaluacion(Request $request, Riesgo $riesgo)
+    {
+        $validated = $request->validate([
+            'probabilidad' => 'required|integer',
+            'impacto' => 'required|integer',
+        ]);
+
+        $riesgo->update([
+            'probabilidad' => $validated['probabilidad'],
+            'impacto' => $validated['impacto'],
+            // El modelo calcula riesgo_valor y riesgo_valoracion automáticamente en el evento updating
+        ]);
+
+        return response()->json($riesgo);
+    }
+
+    // Actualizar Plan de Tratamiento
+    public function updateTratamiento(Request $request, Riesgo $riesgo)
+    {
+        $validated = $request->validate([
+            'riesgo_tratamiento' => 'required|string', // Estrategia: Reducir, Aceptar, etc.
+            'controles' => 'nullable|string',
+            // Aquí se podrían agregar campos para planes de acción específicos si se decide separar
+        ]);
+
+        $riesgo->update($validated);
+
+        return response()->json($riesgo);
+    }
+
+    // Actualizar Verificación de Eficacia (Riesgo Residual)
+    public function updateVerificacion(Request $request, Riesgo $riesgo)
+    {
+        $validated = $request->validate([
+            'probabilidad_rr' => 'required|integer',
+            'impacto_rr' => 'required|integer',
+            'fecha_valoracion_rr' => 'required|date',
+        ]);
+
+        // Calcular evaluación residual (simple multiplicación por ahora, igual que el inherente)
+        $evaluacion_rr = $validated['probabilidad_rr'] * $validated['impacto_rr'];
+        
+        // Determinar estado de eficacia (ejemplo simple)
+        $estado_eficacia = ($evaluacion_rr < $riesgo->riesgo_valor) ? 'Con Eficacia' : 'Sin eficacia';
+
+        $riesgo->update([
+            'probabilidad_rr' => $validated['probabilidad_rr'],
+            'impacto_rr' => $validated['impacto_rr'],
+            'fecha_valoracion_rr' => $validated['fecha_valoracion_rr'],
+            'evaluacion_rr' => $evaluacion_rr,
+            'estado_riesgo_rr' => $estado_eficacia
+        ]);
+
+        return response()->json($riesgo);
+    }
+
     public function store(Request $request)
     {
         // Crear el nuevo riesgo en la base de datos

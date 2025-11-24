@@ -151,7 +151,7 @@ class HallazgoController extends Controller
                 for ($i = 1; $i <= 2; $i++) {
                     // Generar código simple para prueba
                     $correlativo = Hallazgo::where('proceso_id', $procesoId)->count() + $i;
-                    $hallazgo_cod = 'SMP-' . $proceso->sigla . '-INT-' . sprintf('%03d', $correlativo);
+                    $hallazgo_cod = 'SMP-' . $proceso->proceso_sigla . '-INT-' . sprintf('%03d', $correlativo);
 
                     Hallazgo::create([
                         'hallazgo_cod' => $hallazgo_cod,
@@ -218,7 +218,7 @@ class HallazgoController extends Controller
         $ultimoHallazgo = Hallazgo::where('proceso_id', $request->proceso_id)->latest()->first();
         $correlativo = $ultimoHallazgo ? (int) explode('-', $ultimoHallazgo->hallazgo_cod)[3] + 1 : 1;
         $clasificacion = ($request->clasificacion === 'NCM' || $request->clasificacion === 'Ncme') ? 'SMP' : $request->clasificacion;
-        $hallazgo_cod = $clasificacion . '-' . $proceso->sigla . '-' . $request->origen . '-' . sprintf('%03d', $correlativo);
+        $hallazgo_cod = $clasificacion . '-' . $proceso->proceso_sigla . '-' . $request->origen . '-' . sprintf('%03d', $correlativo);
 
         // Agregar hallazgo_cod al arreglo de datos
         $data = $request->all();
@@ -237,48 +237,17 @@ class HallazgoController extends Controller
      */
     public function show($id)
     {
-        $hallazgo = Hallazgo::find($id);
+        $hallazgo = Hallazgo::with([
+            'procesos:id,proceso_nombre,proceso_sigla,cod_proceso',
+            'especialista:id,name,email',
+            'auditor:id,name,email'
+        ])->find($id);
 
         if (!$hallazgo) {
             return response()->json(['error' => 'Hallazgo no encontrado'], 404);
         }
 
-        // Cargamos las relaciones necesarias
-        $hallazgo->load('procesos', 'especialista', 'auditor');
-
-        // Devolvemos los atributos del modelo explícitamente
-        $data = [
-            'id' => $hallazgo->id,
-            'hallazgo_cod' => $hallazgo->hallazgo_cod,
-            'informe_id' => $hallazgo->informe_id,
-            'especialista_id' => $hallazgo->especialista_id,
-            'auditor_id' => $hallazgo->auditor_id,
-            'emisor' => $hallazgo->emisor,
-            'facilitador_id' => $hallazgo->facilitador_id,
-            'hallazgo_resumen' => $hallazgo->hallazgo_resumen,
-            'hallazgo_sig' => $hallazgo->hallazgo_sig,
-            'hallazgo_descripcion' => $hallazgo->hallazgo_descripcion,
-            'hallazgo_criterio' => $hallazgo->hallazgo_criterio,
-            'hallazgo_evidencia' => $hallazgo->hallazgo_evidencia,
-            'hallazgo_clasificacion' => $hallazgo->hallazgo_clasificacion,
-            'hallazgo_origen' => $hallazgo->hallazgo_origen,
-            'hallazgo_origen_ot' => $hallazgo->hallazgo_origen_ot,
-            'hallazgo_avance' => $hallazgo->hallazgo_avance,
-            'hallazgo_tipo_cierre' => $hallazgo->hallazgo_tipo_cierre,
-            'hallazgo_estado' => $hallazgo->hallazgo_estado,
-            'hallazgo_fecha_identificacion' => $hallazgo->hallazgo_fecha_identificacion,
-            'hallazgo_fecha_asignacion' => $hallazgo->hallazgo_fecha_asignacion,
-            'hallazgo_fecha_desestimacion' => $hallazgo->hallazgo_fecha_desestimacion,
-            'hallazgo_fecha_conclusion' => $hallazgo->hallazgo_fecha_conclusion,
-            'hallazgo_fecha_evaluacion' => $hallazgo->hallazgo_fecha_evaluacion,
-            'hallazgo_fecha_cierre' => $hallazgo->hallazgo_fecha_cierre,
-            'hallazgo_ciclo' => $hallazgo->hallazgo_ciclo,
-            'procesos' => $hallazgo->procesos,
-            'especialista' => $hallazgo->especialista,
-            'auditor' => $hallazgo->auditor
-        ];
-
-        return response()->json($data);
+        return response()->json($hallazgo);
     }
 
     /**
@@ -360,14 +329,23 @@ class HallazgoController extends Controller
     public function aprobar(Request $request, $id)
     {
         $hallazgo = Hallazgo::findOrFail($id);
-        // Actualizar el estado a 'enviado'
-        $hallazgo->estado = 'Aprobado';
-        $hallazgo->fecha_aprobacion = Carbon::now()->format('Y-m-d');
 
+        // Validar que solo se pueda aprobar si el estado actual es 'creado' o 'modificado'
+        $estadosPermitidos = ['creado', 'modificado'];
+        if (!in_array(strtolower($hallazgo->hallazgo_estado), $estadosPermitidos)) {
+            return response()->json([
+                'error' => 'No se puede aprobar el hallazgo. Solo se pueden aprobar hallazgos con estado: ' . implode(', ', $estadosPermitidos)
+            ], 400);
+        }
+
+        // Actualizar el estado a 'aprobado'
+        $hallazgo->hallazgo_estado = 'aprobado';
+        $hallazgo->hallazgo_fecha_aprobacion = Carbon::now()->format('Y-m-d');
 
         // Obtener las acciones relacionadas con el hallazgo
         $acciones = $hallazgo->acciones()->get();
         $hallazgo->save();
+
         // Enviar notificación a los correos de los responsables
         foreach ($acciones as $accion) {
             $responsableCorreo = $accion->responsable_correo;
@@ -375,7 +353,42 @@ class HallazgoController extends Controller
             // Enviar la notificación por correo
             Notification::route('mail', $responsableCorreo)->notify(new ActionApprovedNotificacion($accion));
         }
-        return redirect()->back()->with('success', 'Se ha aprobado el plan de acción');
+
+        return response()->json([
+            'message' => 'Se ha aprobado el plan de acción',
+            'hallazgo' => $hallazgo
+        ]);
+    }
+
+    public function subirAdjunto(Request $request, $id)
+    {
+        $request->validate([
+            'archivo' => 'required|file|mimes:pdf|max:10240', // Máximo 10MB
+        ]);
+
+        $hallazgo = Hallazgo::findOrFail($id);
+
+        // Obtener el archivo
+        $archivo = $request->file('archivo');
+
+        // Crear un nombre único para el archivo
+        $nombreArchivo = 'plan_accion_' . $hallazgo->id . '_' . time() . '.' . $archivo->getClientOriginalExtension();
+
+        // Directorio donde se guardarán los archivos
+        $rutaDirectorio = 'hallazgos/' . $hallazgo->hallazgo_cod;
+
+        // Guardar el archivo en el directorio público
+        $ruta = $archivo->storeAs($rutaDirectorio, $nombreArchivo, 'public');
+
+        // Aquí puedes guardar la ruta del archivo en la base de datos si es necesario
+        // Por ejemplo, podrías tener un campo en la tabla hallazgos o una tabla relacionada
+        $hallazgo->ruta_plan_accion = $ruta;
+        $hallazgo->save();
+
+        return response()->json([
+            'message' => 'Archivo subido exitosamente',
+            'ruta' => $ruta
+        ]);
     }
 
     public function planes($id)

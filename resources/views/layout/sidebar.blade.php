@@ -54,7 +54,7 @@
                     </a>
                     <ul class="nav nav-treeview">
 
-                         <li class="nav-item">
+                        <li class="nav-item">
                             <a href="/vue/inventario-publico/0" class="nav-link"> <!-- Nueva línea -->
                                 <i class="nav-icon fas fa-book"></i> <!-- O el ícono que prefieras -->
                                 <p>Inventario de Procesos</p>
@@ -70,13 +70,13 @@
 
                         <li class="nav-item">
 
-                            <a href="{{ route('documento.buscar') }}" class="nav-link">                 
+                            <a href="{{ route('documento.buscar') }}" class="nav-link">
                                 <i class="nav-icon fas fa-clipboard-list"></i>
                                 <p> Listado de documentos </p>
                             </a>
                         </li>
 
-                       
+
                         <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-chart-bar"></i>
@@ -173,8 +173,7 @@
 
                             {{-- Dashboard para todos los roles, al final del módulo --}}
                             <li class="nav-item">
-                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
-                                    class="nav-link">
+                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}" class="nav-link">
                                     <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
                                     <p>Dashboard Requerimientos</p>
                                 </a>
@@ -241,7 +240,7 @@
 
                     <!-- Configuración Mejora (SMP)  -->
                     <li
-                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') || request()->is('vue/mejora*') || request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') || request()->is('vue/dashboard/mejora*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-sync-alt"></i>
                             <p>
@@ -253,14 +252,14 @@
                             @if (in_array($rol, ['admin']))
                                 <li class="nav-item">
                                     <a href="{{ url('/vue/mejora') }}"
-                                        class="nav-link">
+                                        class="nav-link {{ request()->is('vue/mejora*') ? 'active' : '' }}">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Hallazgos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="/vue/mis-hallazgos"
-                                        class="nav-link">
+                                        class="nav-link {{ request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') ? 'active' : '' }}">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Hallazgos</p>
                                     </a>
@@ -270,7 +269,7 @@
                             @if (in_array($rol, ['gestor']))
                                 <li class="nav-item">
                                     <a href="/vue/mis-hallazgos"
-                                        class="nav-link">
+                                        class="nav-link {{ request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') ? 'active' : '' }}">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Hallazgos</p>
                                     </a>
@@ -279,18 +278,26 @@
 
                             @if (in_array($rol, ['auditor']))
                                 <li class="nav-item">
-                                    <a href="{{ url('/vue/mejora?evaluacion=true') }}"
-                                        class="nav-link">
+                                    <a href="{{ url('/vue/mejora?evaluacion=true') }}" class="nav-link">
                                         <i class="fas fa-check-double nav-icon fa-xs"></i>
                                         <p>Evaluación de Eficacia</p>
                                     </a>
                                 </li>
                             @endif
 
+                            {{-- Salidas No Conformes --}}
+                            <li class="nav-item">
+                                <a href="/vue/salidas-nc"
+                                    class="nav-link {{ request()->is('vue/salidas-nc*') ? 'active' : '' }}">
+                                    <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
+                                    <p>Salidas No Conformes</p>
+                                </a>
+                            </li>
+
                             {{-- Dashboard para todos los roles, al final del módulo --}}
                             <li class="nav-item">
-                                <a href="#"
-                                    class="nav-link">
+                                <a href="/vue/dashboard/mejora"
+                                    class="nav-link {{ request()->is('vue/dashboard/mejora*') ? 'active' : '' }}">
                                     <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
                                     <p>Dashboard de Mejora</p>
                                 </a>
@@ -361,7 +368,7 @@
                         </ul>
                     </li>
                     <!-- Configuracion Riesgos -->
-                    <li class="nav-item has-treeview">
+                    <li class="nav-item has-treeview {{ request()->is('vue/riesgos*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-exclamation-triangle"></i>
                             <p>
@@ -372,7 +379,8 @@
                         <ul class="nav nav-treeview">
                             @if (in_array($rol, ['admin', 'supervisor']))
                                 <li class="nav-item">
-                                    <a href="{{ url('/vue/riesgos') }}" class="nav-link">
+                                    <a href="{{ url('/vue/riesgos/index') }}"
+                                        class="nav-link {{ request()->is('vue/riesgos/index*') ? 'active' : '' }}">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Riesgos</p>
                                     </a>
@@ -391,9 +399,10 @@
                                 </li>
                             @endif
 
-                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista']))
+                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista', 'gestor']))
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link">
+                                    <a href="{{ url('/vue/riesgos/mis-riesgos') }}"
+                                        class="nav-link {{ request()->is('vue/riesgos/mis-riesgos*') ? 'active' : '' }}">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Riesgos Asignados</p>
                                     </a>

@@ -28,6 +28,11 @@ const routes = [
         component: MisHallazgos,
     },
     {
+        path: '/acciones/imprimir/:hallazgoId',
+        name: 'acciones.imprimir',
+        component: () => import('@/components/acciones/PlanAccionImprimirPage.vue'),
+    },
+    {
         path: '/requerimientos/index',
         name: 'requerimientos.index',
         component: RequerimientosIndex,
@@ -91,6 +96,26 @@ const routes = [
         path: '/inventario-gestion',
         name: 'inventario.gestion',
         component: InventarioIndex,
+    },
+    {
+        path: '/salidas-nc',
+        name: 'salidas-nc.index',
+        component: () => import('@/components/salidas-nc/SalidasNCIndex.vue'),
+    },
+    {
+        path: '/dashboard/mejora',
+        name: 'dashboard.mejora',
+        component: () => import('@/components/dashboard/DashboardMejora.vue'),
+    },
+    {
+        path: '/riesgos/index',
+        name: 'riesgos.index',
+        component: () => import('@/components/riesgos/RiesgosIndex.vue'),
+    },
+    {
+        path: '/riesgos/mis-riesgos',
+        name: 'riesgos.mine',
+        component: () => import('@/components/riesgos/MisRiesgos.vue'),
     },
 ]
 

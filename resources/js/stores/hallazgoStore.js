@@ -54,12 +54,26 @@ export const useHallazgoStore = defineStore('hallazgo', {
         },
         isCausaRaizModalOpen: false, // New state property
         accionesDelPlan: [],
+        todasLasAcciones: [], // Nueva propiedad para almacenar todas las acciones de un hallazgo
 
     }),
 
     getters: {
         // Getter para saber si estamos en modo edición
         isEditing: (state) => !!state.hallazgoForm.id,
+
+        // Getter para verificar si las acciones y el análisis de causa raíz están permitidos
+        accionesPermitidas: (state) => {
+            const estado = state.hallazgoForm.hallazgo_estado;
+            return estado === 'creado' || estado === 'modificado';
+        },
+
+        // Getter para verificar si las acciones de gestión (reprogramar y concluir) están permitidas
+        gestionAccionesPermitida: (state) => {
+            const estado = state.hallazgoForm.hallazgo_estado;
+            // Las acciones de gestión están deshabilitadas para 'creado', 'modificado' y 'desestimado'
+            return !['creado', 'modificado', 'desestimado'].includes(estado);
+        },
     },
 
     actions: {
@@ -257,19 +271,20 @@ export const useHallazgoStore = defineStore('hallazgo', {
             if (!this.hallazgoForm.id) return;
             this.loadingAsignaciones = true;
             try {
-                                    const response = await axios.post(
-                                        route('hallazgo.asignaciones.asignar', { hallazgo: this.hallazgoForm.id }),
-                                        {
-                                            especialista_id: especialistaId,
-                                            assigned_by_user_id: window.App.user.id, // Pass the current user's ID
-                                            assigned_by_user_name: window.App.user.name // Pass the current user's name
-                                        }
-                                    );
-                                    this.especialistaActual = response.data.actual;
-                                    this.historialAsignaciones = response.data.historial;
-                
-                                // IMPORTANT: Update hallazgoForm.especialista_id to reflect the new assignment
-                                this.hallazgoForm.especialista_id = especialistaId;            } catch (error) {
+                const response = await axios.post(
+                    route('hallazgo.asignaciones.asignar', { hallazgo: this.hallazgoForm.id }),
+                    {
+                        especialista_id: especialistaId,
+                        assigned_by_user_id: window.App.user.id, // Pass the current user's ID
+                        assigned_by_user_name: window.App.user.name // Pass the current user's name
+                    }
+                );
+                this.especialistaActual = response.data.actual;
+                this.historialAsignaciones = response.data.historial;
+
+                // IMPORTANT: Update hallazgoForm.especialista_id to reflect the new assignment
+                this.hallazgoForm.especialista_id = especialistaId;
+            } catch (error) {
                 console.error("Error al asignar el especialista:", error);
             } finally {
                 this.loadingAsignaciones = false;
@@ -317,7 +332,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
                         accionData
                     );
                 }
-                
+
                 // Refrescamos solo la lista de acciones para una respuesta más rápida
                 const responseList = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
                 this.accionesDelPlan = responseList.data;
@@ -423,6 +438,59 @@ export const useHallazgoStore = defineStore('hallazgo', {
             if (!this.hallazgoForm.id || !this.procesoParaGestionar) return;
             const response = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
             this.accionesDelPlan = response.data;
+        },
+        // Nueva acción para la vista general de Planes de Acción
+        async fetchTodasLasAcciones(hallazgoId) {
+            this.loading = true;
+            try {
+                const response = await axios.get(route('api.acciones.por-hallazgo', { hallazgo: hallazgoId }));
+                this.todasLasAcciones = response.data;
+            } catch (error) {
+                console.error("Error al cargar todas las acciones:", error);
+                this.errors.fetch = 'No se pudieron cargar las acciones.';
+            } finally {
+                this.loading = false;
+            }
+        },
+        async fetchCausaRaiz(hallazgoId) {
+            try {
+                const response = await axios.get(route('hallazgos.causas.listar', { hallazgo: hallazgoId }));
+                if (response.data) {
+                    this.causaRaiz = response.data;
+                } else {
+                    this.causaRaiz = { causa_metodo: 'cinco_porques' };
+                }
+            } catch (error) {
+                console.error("Error al cargar el análisis de causa:", error);
+                this.causaRaiz = { causa_metodo: 'cinco_porques' };
+            }
+        },
+        /**
+         * Método optimizado que obtiene hallazgo, acciones y causa raíz en una sola llamada
+         * Esto reduce significativamente el tiempo de carga al evitar múltiples peticiones HTTP
+         */
+        async fetchPlanesAccionCompleto(hallazgoId) {
+            this.loading = true;
+            try {
+                const response = await axios.get(route('api.hallazgos.planes-accion-completo', { hallazgo: hallazgoId }));
+
+                // Asignar los datos recibidos al estado
+                if (response.data.hallazgo) {
+                    Object.assign(this.hallazgoForm, response.data.hallazgo);
+                    this.hallazgoForm.hallazgo_fecha_identificacion = this.formatDateForInput(response.data.hallazgo.hallazgo_fecha_identificacion);
+                    this.hallazgoForm.hallazgo_fecha_asignacion = this.formatDateForInput(response.data.hallazgo.hallazgo_fecha_asignacion);
+                    this.hallazgoForm.hallazgo_sig = response.data.hallazgo.hallazgo_sig || [];
+                }
+
+                this.todasLasAcciones = response.data.acciones || [];
+                this.causaRaiz = response.data.causaRaiz || { causa_metodo: 'cinco_porques' };
+
+            } catch (error) {
+                console.error("Error al cargar los datos completos de planes de acción:", error);
+                this.errors.fetch = 'No se pudieron cargar los datos.';
+            } finally {
+                this.loading = false;
+            }
         }
     },
 });

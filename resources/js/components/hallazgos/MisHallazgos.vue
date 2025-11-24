@@ -14,17 +14,18 @@
             </ol>
         </nav>
 
+        <!-- Modal para enviar plan de acción -->
+        <EnviarPlanAccionModal
+            :visible="modalEnviarPlanVisible"
+            :hallazgoId="hallazgoIdSeleccionado"
+            @cerrar="cerrarModalEnviarPlan"
+            @plan-enviado="onPlanEnviado" />
+
         <div class="card">
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
                         <h3 class="card-title mb-0">Mis Hallazgos</h3>
-                    </div>
-                    <div class="col-md-6 text-md-right">
-                        <a href="#" class="btn btn-primary" @click.prevent="openNewHallazgoModal"
-                            title="Nuevo Hallazgo">
-                            <i class="fas fa-plus-circle"></i> Agregar Hallazgo
-                        </a>
                     </div>
                 </div>
                 <br></br>
@@ -35,9 +36,9 @@
                                 placeholder="Buscar por descripción o resumen...">
                         </div>
                         <div class="col">
-                            <select v-model="serverFilters.proceso_id" class="form-control">
+                            <select v-model="serverFilters.proceso_id" class="form-control select-truncate">
                                 <option value="">Todos los Procesos</option>
-                                <option v-for="proceso in procesos" :key="proceso.id" :value="proceso.id">
+                                <option v-for="proceso in procesos" :key="proceso.id" :value="proceso.id" :title="proceso.proceso_nombre">
                                     {{ proceso.proceso_nombre }}
                                 </option>
                             </select>
@@ -56,7 +57,7 @@
                             <select v-model="serverFilters.estado" class="form-control">
                                 <option value="">Todos los Estados</option>
                                 <option value="creado">Creado</option>
-                                <option value="asignado">Asignado</option>
+                                <option value="aprobado">Aprobado</option>
                                 <option value="desestimado">Desestimado</option>
                                 <option value="en proceso">En Proceso</option>
                                 <option value="concluido">Concluido</option>
@@ -105,12 +106,12 @@
                             </template>
                         </template>
                     </Column>
-                    <Column field="hallazgo_fecha_identificacion" header="F. Identificación" style="width:10%">
+                    <Column field="hallazgo_fecha_identificacion" header="F. Ident." style="width:10%">
                         <template #body="{ data }">
                             {{ formatDate(data.hallazgo_fecha_identificacion) }}
                         </template>
                     </Column>
-                    <Column field="hallazgo_fecha_conclusion" header="F. Conclusión" style="width:10%" sortable>
+                    <Column field="hallazgo_fecha_conclusion" header="F. Conc." style="width:10%">
                         <template #body="{ data }">
                             {{ formatDate(data.hallazgo_fecha_conclusion) }}
                         </template>
@@ -152,18 +153,20 @@
                             </template>
                         </template>
                     </Column>
-                    <Column header="Acciones" :exportable="false" style="width:10%" headerStyle="width: 10%"
-                        bodyStyle="width: 10%">
+                    <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
+                        bodyStyle="width: 15%">
                         <template #body="{ data }">
-                            <a href="#" title="Editar Hallazgo" class="mr-3 d-inline-block"
-                                @click.prevent="editHallazgo(data)">
-                                <i class="fas fa-pencil-alt text-warning fa-lg"></i>
-                            </a>
-                            <a href="#" title="Planes de Acción" class="mr-3 d-inline-block"
+                            
+                            <a href="#" title="Planes de Acción" class="mr-2 d-inline-block"
                                 @click.prevent="verPlanesDeAccion(data.id)">
                                 <i class="fas fa-tasks text-info fa-lg"></i>
                             </a>
-                            <a href="#" title="Eliminar Hallazgo" class="mr-3 d-inline-block"
+                            <a href="#" title="Enviar Plan de Acción" class="mr-2 d-inline-block"
+                                @click.prevent="abrirModalEnviarPlan(data.id)"
+                                v-if="data.hallazgo_estado === 'en proceso' || data.hallazgo_estado === 'creado'">
+                                <i class="fas fa-paper-plane text-success fa-lg"></i>
+                            </a>
+                            <a href="#" title="Eliminar Hallazgo" class="mr-2 d-inline-block"
                                 @click.prevent="deleteHallazgo(data.id)">
                                 <i class="fas fa-trash-alt text-danger fa-lg"></i>
                             </a>
@@ -175,6 +178,21 @@
     </div>
     <HallazgoModal></HallazgoModal>
 </template>
+
+<style scoped>
+.select-truncate option {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.select-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref, reactive } from 'vue';
@@ -191,6 +209,7 @@ import Button from 'primevue/button';
 import { FilterMatchMode } from 'primevue/api';
 
 import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
+import EnviarPlanAccionModal from '@/components/hallazgos/EnviarPlanAccionModal.vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const router = useRouter();
@@ -200,6 +219,10 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const hallazgoStore = useHallazgoStore();
 const dt = ref(null); // Reference to the PrimeVue DataTable component
+
+// Variables para el modal de envío de plan
+const modalEnviarPlanVisible = ref(false);
+const hallazgoIdSeleccionado = ref(null);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -267,10 +290,6 @@ const exportCSV = () => {
     dt.value.exportCSV();
 };
 
-const openNewHallazgoModal = () => {
-    hallazgoStore.openModal();
-};
-
 const editHallazgo = (hallazgo) => {
     hallazgoStore.openModal(hallazgo);
 };
@@ -281,6 +300,27 @@ const verPlanesDeAccion = (hallazgoId) => {
 
 const deleteHallazgo = async () => {
     // ...
+};
+
+const abrirModalEnviarPlan = (hallazgoId) => {
+    hallazgoIdSeleccionado.value = hallazgoId;
+    modalEnviarPlanVisible.value = true;
+};
+
+const cerrarModalEnviarPlan = () => {
+    modalEnviarPlanVisible.value = false;
+    hallazgoIdSeleccionado.value = null;
+};
+
+const onPlanEnviado = () => {
+    // Actualizar la lista de hallazgos para reflejar el cambio de estado
+    fetchHallazgos();
+    successMessage.value = 'Plan de acción enviado exitosamente. El estado del hallazgo ha sido actualizado a "Aprobado".';
+
+    // Ocultar el mensaje después de unos segundos
+    setTimeout(() => {
+        successMessage.value = '';
+    }, 5000);
 };
 
 // --- CICLO DE VIDA ---

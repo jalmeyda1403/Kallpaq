@@ -251,7 +251,6 @@ Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () 
     Route::delete('/{id}', [ObligacionController::class, 'destroy'])->name('destroy');
     Route::get('/{id}/riesgos', [ObligacionController::class, 'listariesgos'])->name('listariesgos');
 });
-Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
 
 // Rutas API para Hallazgos
 Route::controller(HallazgoController::class)
@@ -259,11 +258,35 @@ Route::controller(HallazgoController::class)
     ->middleware('auth')
     ->group(function () {
         Route::get('/show/{hallazgo}', 'show')->name('hallazgo.show');
-        Route::post('/store', 'show')->name('hallazgo.store');
+        Route::post('/store', 'store')->name('hallazgo.store');
         Route::put('/update/{hallazgo}', 'update')->name('hallazgo.update');
-     
-     
+        Route::post('/{hallazgo}/aprobar', 'aprobar')->name('hallazgo.aprobar');
+        Route::post('/{hallazgo}/adjuntos', 'subirAdjunto')->name('hallazgo.adjuntos.store');
+
+
     });
+
+// Rutas API para Riesgos (con middleware auth)
+Route::prefix('api/riesgos')
+    ->middleware('auth')
+    ->group(function () {
+        Route::get('/mis-riesgos', [RiesgoController::class, 'misRiesgos'])->name('api.riesgos.mis-riesgos');
+        Route::get('/{riesgo}/completo', [RiesgoController::class, 'getRiesgoCompleto'])->name('api.riesgos.completo');
+        Route::put('/{riesgo}/evaluacion', [RiesgoController::class, 'updateEvaluacion'])->name('api.riesgos.update-evaluacion');
+        Route::put('/{riesgo}/tratamiento', [RiesgoController::class, 'updateTratamiento'])->name('api.riesgos.update-tratamiento');
+        Route::put('/{riesgo}/verificacion', [RiesgoController::class, 'updateVerificacion'])->name('api.riesgos.update-verificacion');
+        
+        // Rutas existentes (si las hay, o nuevas CRUD)
+        Route::get('/', [RiesgoController::class, 'index'])->name('api.riesgos.index');
+        Route::post('/', [RiesgoController::class, 'store'])->name('api.riesgos.store');
+        Route::get('/{riesgo}', [RiesgoController::class, 'show'])->name('api.riesgos.show');
+        Route::put('/{riesgo}', [RiesgoController::class, 'update'])->name('api.riesgos.update');
+        Route::delete('/{riesgo}', [RiesgoController::class, 'destroy'])->name('api.riesgos.destroy');
+    });
+Route::middleware('auth')->group(function () {
+    Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
+    Route::get('/api/hallazgos/{hallazgo}/planes-accion-completo', [AccionController::class, 'getPlanesAccionCompleto'])->name('api.hallazgos.planes-accion-completo');
+});
 
 
 //Asociar hallazgos con Procesos
@@ -501,6 +524,25 @@ Route::post('/necesidades', [RequerimientoNecesidadController::class, 'store'])-
 Route::get('/test-styles', function () {
     return view('test');
 });
+
+// Ruta para imprimir plan de acción
+Route::get('/acciones/imprimir/{hallazgo}', [AccionController::class, 'imprimirPlanAccion'])->name('acciones.imprimir');
+
+// Rutas para Salidas No Conformes
+Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->group(function () {
+    Route::get('/', [App\Http\Controllers\SalidaNoConformeController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\SalidaNoConformeController::class, 'store'])->name('store');
+    Route::get('/{id}', [App\Http\Controllers\SalidaNoConformeController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\SalidaNoConformeController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\SalidaNoConformeController::class, 'destroy'])->name('destroy');
+    
+    // Rutas para acciones correctivas
+    Route::post('/{id}/acciones', [App\Http\Controllers\SalidaNoConformeController::class, 'storeAccion'])->name('acciones.store');
+    Route::put('/acciones/{accionId}', [App\Http\Controllers\SalidaNoConformeController::class, 'updateAccion'])->name('acciones.update');
+});
+
+// Ruta para el dashboard de mejora
+Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraController::class, 'index'])->name('dashboard.mejora.api');
 
 // Route to handle Vue SPA pages, prefixed with /vue/
 Route::get('/vue/{any}', function () {

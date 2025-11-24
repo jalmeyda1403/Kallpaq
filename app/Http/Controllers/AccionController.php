@@ -15,9 +15,126 @@ class AccionController extends Controller
 {
     public function getAccionesPorHallazgo(Hallazgo $hallazgo)
     {
-        $acciones = $hallazgo->acciones()->with('responsable.ouos', 'hallazgoProceso.proceso')->get();
+        $acciones = $hallazgo->acciones()
+            ->with([
+                'responsable:id,name,email',
+                'responsable.ouos:id,ouo_nombre',
+                'hallazgoProceso.proceso:id,proceso_nombre,proceso_sigla'
+            ])
+            ->select([
+                'id',
+                'hallazgo_id',
+                'hallazgo_proceso_id',
+                'accion_cod',
+                'accion_tipo',
+                'accion_descripcion',
+                'accion_responsable',
+                'accion_fecha_inicio',
+                'accion_fecha_fin_planificada',
+                'accion_fecha_fin_reprogramada',
+                'accion_estado',
+                'accion_ruta_evidencia',
+                'created_at',
+                'updated_at'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
         return response()->json($acciones);
     }
+
+    /**
+     * Obtiene todos los datos necesarios para la vista de Planes de Acción en una sola llamada
+     * Esto reduce la latencia al evitar múltiples peticiones HTTP
+     */
+    /**
+     * Obtiene todos los datos necesarios para la vista de Planes de Acción en una sola llamada
+     * Optimizado para máximo rendimiento con selects específicos y eager loading eficiente
+     */
+    public function getPlanesAccionCompleto(Hallazgo $hallazgo)
+    {
+        // Cargar el hallazgo con sus relaciones usando selects específicos
+        $hallazgo->load([
+            'procesos:id,proceso_nombre,cod_proceso',
+            'especialista:id,name,email',
+            'auditor:id,name,email'
+        ]);
+
+        // Seleccionar solo los campos necesarios del hallazgo para la respuesta
+        $hallazgoData = $hallazgo->only([
+            'id',
+            'hallazgo_cod',
+            'hallazgo_resumen',
+            'hallazgo_descripcion',
+            'hallazgo_clasificacion',
+            'hallazgo_origen',
+            'hallazgo_estado',
+            'hallazgo_fecha_identificacion',
+            'hallazgo_fecha_asignacion',
+            'hallazgo_avance',
+            'hallazgo_sig'
+        ]);
+        
+        // Añadir las relaciones cargadas
+        $hallazgoData['procesos'] = $hallazgo->procesos;
+        $hallazgoData['especialista'] = $hallazgo->especialista;
+        $hallazgoData['auditor'] = $hallazgo->auditor;
+
+        // Obtener las acciones con sus relaciones
+        $acciones = $hallazgo->acciones()
+            ->with([
+                'responsable:id,name,email',
+                'responsable.ouos:id,ouo_nombre',
+                'hallazgoProceso.proceso:id,proceso_nombre,cod_proceso'
+            ])
+            ->select([
+                'id',
+                'hallazgo_id',
+                'hallazgo_proceso_id',
+                'accion_cod',
+                'accion_tipo',
+                'accion_descripcion',
+                'accion_responsable',
+                'accion_fecha_inicio',
+                'accion_fecha_fin_planificada',
+                'accion_fecha_fin_reprogramada',
+                'accion_estado',
+                'accion_ruta_evidencia',
+                'created_at',
+                'updated_at'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Obtener la causa raíz
+        $causaRaiz = $hallazgo->causa()
+            ->select([
+                'id',
+                'hallazgo_id',
+                'causa_metodo',
+                'causa_por_que1',
+                'causa_por_que2',
+                'causa_por_que3',
+                'causa_por_que4',
+                'causa_por_que5',
+                'causa_mano_obra',
+                'causa_metodologias',
+                'causa_materiales',
+                'causa_maquinas',
+                'causa_medicion',
+                'causa_medio_ambiente',
+                'causa_resultado'
+            ])
+            ->first();
+
+        // Devolver todo en una sola respuesta optimizada
+        return response()->json([
+            'hallazgo' => $hallazgoData,
+            'acciones' => $acciones,
+            'causaRaiz' => $causaRaiz
+        ]);
+    }
+
 
     public function reprogramar(Request $request, Accion $accion)
     {
@@ -151,9 +268,25 @@ class AccionController extends Controller
 
     public function listarCausaRaiz(Hallazgo $hallazgo)
     {
-        // A Hallazgo has one Causa, so we can use the 'causa' relationship
-        // The 'first()' method will return the related Causa model or null if it doesn't exist.
-        $causa = $hallazgo->causa()->first();
+        $causa = $hallazgo->causa()
+            ->select([
+                'id',
+                'hallazgo_id',
+                'causa_metodo',
+                'causa_por_que1',
+                'causa_por_que2',
+                'causa_por_que3',
+                'causa_por_que4',
+                'causa_por_que5',
+                'causa_mano_obra',
+                'causa_metodologias',
+                'causa_materiales',
+                'causa_maquinas',
+                'causa_medicion',
+                'causa_medio_ambiente',
+                'causa_resultado'
+            ])
+            ->first();
 
         return response()->json($causa);
     }
@@ -174,6 +307,9 @@ class AccionController extends Controller
 
     public function storeOrUpdateCausaRaiz(Request $request, Hallazgo $hallazgo)
     {
+        // Validar el estado del hallazgo
+        $this->validarEstadoHallazgo($hallazgo);
+
         $validatedData = $request->validate([
             'causa_metodo' => 'required|string',
             'causa_por_que1' => 'nullable|string',
@@ -203,7 +339,11 @@ class AccionController extends Controller
 
     public function updateAccion(Request $request, Accion $accion)
     {
+        // Validar el estado del hallazgo asociado a la acción
+        $this->validarEstadoHallazgo($accion->hallazgo);
+
         $validatedData = $request->validate([
+            'accion_tipo' => 'in:inmediata,correctiva',
             'accion_descripcion' => 'required|string',
             'accion_responsable' => 'required|string',
             'accion_fecha_inicio' => 'required|date',
@@ -218,7 +358,11 @@ class AccionController extends Controller
 
     public function storeAccion(Request $request, Hallazgo $hallazgo, Proceso $proceso)
     {
+        // Validar el estado del hallazgo
+        $this->validarEstadoHallazgo($hallazgo);
+
         $validatedData = $request->validate([
+            'accion_tipo' => 'required|in:inmediata,correctiva',
             'accion_descripcion' => 'required|string',
             'accion_responsable' => 'required|string',
             'accion_fecha_inicio' => 'required|date',
@@ -244,7 +388,7 @@ class AccionController extends Controller
         $validatedData['hallazgo_proceso_id'] = $hallazgoProceso->id;
         $validatedData['accion_cod'] = $accionCod;
         $validatedData['accion_estado'] = 'programada'; // Set initial state to 'programada'
-        
+
         $accion = Accion::create($validatedData);
 
         return response()->json($accion, 201);
@@ -252,8 +396,92 @@ class AccionController extends Controller
 
     public function destroyAccion(Accion $accion)
     {
+        // Validar el estado del hallazgo asociado a la acción
+        $this->validarEstadoHallazgo($accion->hallazgo);
+
         $accion->delete();
 
         return response()->json(['message' => 'Acción eliminada con éxito.']);
+    }
+
+    /**
+     * Valida que el estado del hallazgo permita realizar acciones
+     *
+     * @param Hallazgo $hallazgo
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return void
+     */
+    private function validarEstadoHallazgo(Hallazgo $hallazgo)
+    {
+        $estadosPermitidos = ['creado', 'modificado'];
+        if (!in_array($hallazgo->hallazgo_estado, $estadosPermitidos)) {
+            abort(403, 'No se pueden crear o modificar acciones en este estado de hallazgo. El hallazgo debe estar en estado \'creado\' o \'modificado\'.');
+        }
+    }
+
+    /**
+     * Genera un PDF del plan de acción
+     *
+     * @param Hallazgo $hallazgo
+     * @return \Illuminate\Http\Response
+     */
+    public function imprimirPlanAccion(Hallazgo $hallazgo)
+    {
+        // Cargar las relaciones necesarias
+        $hallazgo->load([
+            'procesos:id,proceso_nombre,cod_proceso,proceso_sigla',
+            'especialista:id,name,email',
+            'auditor:id,name,email'
+        ]);
+
+        // Obtener las acciones del hallazgo
+        $acciones = $hallazgo->acciones()
+            ->with([
+                'responsable:id,name,email',
+                'responsable.ouos:id,ouo_nombre',
+                'hallazgoProceso.proceso:id,proceso_nombre,cod_proceso'
+            ])
+            ->select([
+                'id',
+                'hallazgo_id',
+                'hallazgo_proceso_id',
+                'accion_cod',
+                'accion_tipo',
+                'accion_descripcion',
+                'accion_responsable',
+                'accion_fecha_inicio',
+                'accion_fecha_fin_planificada',
+                'accion_fecha_fin_reprogramada',
+                'accion_estado',
+                'accion_ruta_evidencia',
+                'accion_ciclo',
+                'created_at',
+                'updated_at'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Obtener la causa raíz
+        $causaRaiz = $hallazgo->causa()
+            ->select([
+                'id',
+                'hallazgo_id',
+                'causa_metodo',
+                'causa_por_que1',
+                'causa_por_que2',
+                'causa_por_que3',
+                'causa_por_que4',
+                'causa_por_que5',
+                'causa_mano_obra',
+                'causa_metodologias',
+                'causa_materiales',
+                'causa_maquinas',
+                'causa_medicion',
+                'causa_medio_ambiente',
+                'causa_resultado'
+            ])
+            ->first();
+
+        return view('acciones.imprimir-plan-accion', compact('hallazgo', 'acciones', 'causaRaiz'));
     }
 }

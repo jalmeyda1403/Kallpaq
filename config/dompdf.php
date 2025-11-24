@@ -238,6 +238,16 @@ return array(
         "enable_php" => false,
 
         /**
+         * Enable embedded images and fonts in PDF
+         *
+         * @var bool
+         */
+        "enable_remote" => false,
+        "enable_css_float" => true,
+        "enable_javascript" => false,
+        "enable_html5_parser" => true,
+
+        /**
          * Enable inline Javascript
          *
          * If this setting is set to true then DOMPDF will automatically insert
@@ -264,7 +274,7 @@ return array(
          *
          * @var bool
          */
-        "enable_remote" => true,
+        "enable_remote" => false,
 
         /**
          * A ratio applied to the fonts height to be more like browsers' line height

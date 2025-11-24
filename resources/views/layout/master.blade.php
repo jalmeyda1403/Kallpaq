@@ -46,7 +46,7 @@
 
     <script>
         window.App = {
-            user: @json(Auth::user())
+            user: @json(array_merge(Auth::user()->toArray(), ['roles' => Auth::user()->getRoleNames()]))
         };
     </script>
 

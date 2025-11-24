@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Hallazgo extends Model
 {
     use HasFactory;
+
     protected $table = 'hallazgos';
+
     protected $fillable = [
         'hallazgo_cod',
         'informe_id',
@@ -28,18 +30,19 @@ class Hallazgo extends Model
         'hallazgo_tipo_cierre',
         'hallazgo_estado',
         'hallazgo_fecha_identificacion',
-        'hallazgo_fecha_asignacion',
+        'hallazgo_fecha_aprobacion',
         'hallazgo_fecha_desestimacion',
         'hallazgo_fecha_conclusion',
         'hallazgo_fecha_evaluacion',
         'hallazgo_fecha_cierre',
-        'hallazgo_ciclo', // Added hallazgo_ciclo
+        'hallazgo_ciclo',
+        'ruta_plan_accion',
     ];
 
     protected $casts = [
         'hallazgo_sig' => 'array',
         'hallazgo_fecha_identificacion' => 'date',
-        'hallazgo_fecha_asignacion' => 'date',
+        'hallazgo_fecha_aprobacion' => 'date',
         'hallazgo_fecha_desestimacion' => 'date',
         'hallazgo_fecha_conclusion' => 'date',
         'hallazgo_fecha_evaluacion' => 'date',
@@ -52,10 +55,12 @@ class Hallazgo extends Model
         return $this->belongsToMany(Proceso::class, 'hallazgo_proceso', 'hallazgo_id', 'proceso_id');
 
     }
+
     public function hallazgoProcesos()
     {
         return $this->hasMany(HallazgoProceso::class);
     }
+
     public function evaluaciones()
     {
         return $this->hasMany(HallazgoEvaluacion::class);
@@ -111,6 +116,7 @@ class Hallazgo extends Model
         if ($sig) {
             return $query->where('sig', $sig);
         }
+
         return $query;
     }
 
@@ -119,6 +125,7 @@ class Hallazgo extends Model
         if ($informe_id) {
             return $query->where('informe_id', $informe_id);
         }
+
         return $query;
     }
 
@@ -127,6 +134,7 @@ class Hallazgo extends Model
         if ($year) {
             return $query->whereYear('fecha_solicitud', $year);
         }
+
         return $query;
     }
 
@@ -135,6 +143,7 @@ class Hallazgo extends Model
         if (is_array($clasificacion)) {
             return $query->whereIn('hallazgo_clasificacion', $clasificacion);
         }
+
         return $query->where('hallazgo_clasificacion', $clasificacion);
     }
 }

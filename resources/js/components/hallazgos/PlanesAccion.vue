@@ -32,9 +32,22 @@
                                     <label class="font-weight-bold">Causa Raíz Identificada</label>
                                     <textarea class="form-control" rows="3" v-model="hallazgoStore.causaRaiz.causa_resultado" readonly placeholder="Describa aquí la causa raíz principal concluida del análisis."></textarea>
                                 </div>
-                                <button class="btn btn-danger btn-sm" @click="hallazgoStore.openCausaRaizModal">
+                                <button
+                                    class="btn btn-danger btn-sm"
+                                    :disabled="!hallazgoStore.accionesPermitidas"
+                                    @click="hallazgoStore.openCausaRaizModal"
+                                    :title="!hallazgoStore.accionesPermitidas ? 'No se pueden realizar análisis de causas en este estado de hallazgo' : ''"
+                                >
                                     <i class="fas fa-edit mr-1"></i> Realizar Análisis
                                 </button>
+                                <div
+                                    v-if="!hallazgoStore.accionesPermitidas"
+                                    class="alert alert-warning mt-2"
+                                    role="alert"
+                                >
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    El análisis de causa raíz está deshabilitado para este estado de hallazgo
+                                </div>
                             </div>
                         </div>
 
@@ -46,6 +59,7 @@
                             @guardar="guardarNuevaAccion"
                             @update="guardarNuevaAccion"
                             @eliminar="eliminarAccion"
+                            :disabled="!hallazgoStore.accionesPermitidas"
                             class="mt-4"
                         />
                     </div>

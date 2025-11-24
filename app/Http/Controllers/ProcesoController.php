@@ -194,7 +194,7 @@ class ProcesoController extends Controller
         $formattedProcesos = $procesos->map(function ($proceso) {
             return [
                 'id' => $proceso->id,
-                'descripcion' => $proceso->proceso_nombre,
+                'proceso_nombre' => $proceso->proceso_nombre,
             ];
         });
 

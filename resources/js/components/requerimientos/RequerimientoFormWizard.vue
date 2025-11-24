@@ -674,7 +674,7 @@ const saveEvaluation = async () => {
 
 const printRequerimiento = () => {
     if (requerimientoId.value) {
-        window.open(route('requerimientos.print', { id: requerimientoId.value }), '_blank');
+        window.open(`/vue/requerimientos/imprimir/${requerimientoId.value}`, '_blank');
     } else {
         alert('Primero debe guardar la información básica del requerimiento.');
     }
