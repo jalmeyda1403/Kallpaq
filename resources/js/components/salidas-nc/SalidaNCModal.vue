@@ -186,8 +186,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
-import axios from 'axios';
-import { route } from 'ziggy-js';
+import { useSalidasNCStore } from '@/stores/salidasNCStore';
 import { Modal } from 'bootstrap';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
 
@@ -197,6 +196,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:show', 'saved']);
+
+const salidasNCStore = useSalidasNCStore();
 
 const form = ref({
     snc_descripcion: '',
@@ -214,7 +215,7 @@ const form = ref({
     snc_fecha_cierre: null,
     snc_observaciones: '',
     proceso_id: null,
-    snc_evidencia: null
+    snc_archivos: null
 });
 
 const processName = ref('');
@@ -525,98 +526,75 @@ const removeCurrentFile = () => {
     form.value.snc_archivos = null;
 };
 
-// ... (keep other methods) ...
-
 const submitForm = async () => {
     try {
-
-        // Obtener el cookie CSRF para Sanctum antes de enviar la solicitud
-        await axios.get('/sanctum/csrf-cookie');
-
-        // Creamos un FormData para manejar la subida de archivos
-        const formData = new FormData();
-
-        // Agregamos todos los campos del formulario
-        for (const key in form.value) {
-            // Excluir snc_codigo al crear (se genera automáticamente en el backend)
-            if (key === 'snc_codigo' && !props.snc) {
-                continue; // No enviar snc_codigo en operaciones de creación
-            }
-
-            if (form.value[key] !== null && form.value[key] !== undefined) {
-                // Manejar el campo de evidencia de forma especial
-                if (key === 'snc_archivos') {
-                    // No hacemos nada aquí con snc_archivos, lo manejamos abajo con existingFiles
-                }
-                // Si es un objeto o array (pero no un File), lo convertimos a string
-                else if (typeof form.value[key] === 'object' && !(form.value[key] instanceof Date) && !(form.value[key] instanceof File)) {
-                    formData.append(key, JSON.stringify(form.value[key]));
-                }
-                // Para otros tipos (string, number, boolean, etc.), lo agregamos directamente
-                else {
-                    formData.append(key, form.value[key]);
-                }
-            }
-        }
+        // Preparar los datos a enviar
+        const formData = { ...form.value };
 
         // Agregar archivos existentes que se mantienen
         if (existingFiles.value && existingFiles.value.length > 0) {
-            existingFiles.value.forEach(file => {
-                // Enviar solo el path para que el backend sepa cuál mantener
-                formData.append('existing_archivos[]', file.path);
-            });
+            formData.existing_archivos = existingFiles.value.map(file => file.path);
         }
 
         // Agregar archivos nuevos para subir
-        filesToUpload.value.forEach((fileEntry, index) => {
-            // Agregar cada archivo como 'snc_archivos[]' para que el backend lo reciba como array
-            formData.append('snc_archivos[]', fileEntry.file, fileEntry.file.name);
-        });
+        if (filesToUpload.value.length > 0) {
+            // Creamos un FormData para manejar la subida de archivos
+            const filesFormData = new FormData();
 
-        // Asegurar que el campo snc_requiere_accion_correctiva sea un valor booleano adecuado para Laravel
-        if (form.value.snc_requiere_accion_correctiva !== undefined && form.value.snc_requiere_accion_correctiva !== null) {
-            // Convertir a booleano y luego a string '1' o '0' como espera Laravel para campos tinyint
-            const boolValue = form.value.snc_requiere_accion_correctiva === true ||
-                             form.value.snc_requiere_accion_correctiva === 'true' ||
-                             form.value.snc_requiere_accion_correctiva === '1' ||
-                             form.value.snc_requiere_accion_correctiva === 1 ||
-                             form.value.snc_requiere_accion_correctiva === 'on';
-            formData.set('snc_requiere_accion_correctiva', boolValue ? '1' : '0');
+            // Agregar todos los campos del formulario al FormData
+            for (const key in formData) {
+                if (formData[key] !== null && formData[key] !== undefined) {
+                    if (typeof formData[key] === 'object' && !(formData[key] instanceof Date) && !(formData[key] instanceof File)) {
+                        filesFormData.append(key, JSON.stringify(formData[key]));
+                    } else {
+                        filesFormData.append(key, formData[key]);
+                    }
+                }
+            }
+
+            // Agregar archivos nuevos para subir
+            filesToUpload.value.forEach((fileEntry) => {
+                filesFormData.append('snc_archivos[]', fileEntry.file, fileEntry.file.name);
+            });
+
+            // Asegurar que el campo snc_requiere_accion_correctiva sea un valor booleano adecuado para Laravel
+            if (formData.snc_requiere_accion_correctiva !== undefined && formData.snc_requiere_accion_correctiva !== null) {
+                const boolValue = formData.snc_requiere_accion_correctiva === true ||
+                                 formData.snc_requiere_accion_correctiva === 'true' ||
+                                 formData.snc_requiere_accion_correctiva === '1' ||
+                                 formData.snc_requiere_accion_correctiva === 1 ||
+                                 formData.snc_requiere_accion_correctiva === 'on';
+                filesFormData.set('snc_requiere_accion_correctiva', boolValue ? '1' : '0');
+            }
+
+            if (props.snc) {
+                // Actualizar la SNC existente
+                await salidasNCStore.updateSNC(props.snc.id, filesFormData);
+            } else {
+                // Crear nueva SNC
+                await salidasNCStore.createSNC(filesFormData);
+            }
         } else {
-            // Si es nulo, establecer como '0' (falso) para que pase la validación
-            formData.set('snc_requiere_accion_correctiva', '0');
+            // Asegurar que el campo snc_requiere_accion_correctiva sea un valor booleano adecuado
+            if (formData.snc_requiere_accion_correctiva !== undefined && formData.snc_requiere_accion_correctiva !== null) {
+                const boolValue = formData.snc_requiere_accion_correctiva === true ||
+                                 formData.snc_requiere_accion_correctiva === 'true' ||
+                                 formData.snc_requiere_accion_correctiva === '1' ||
+                                 formData.snc_requiere_accion_correctiva === 1 ||
+                                 formData.snc_requiere_accion_correctiva === 'on';
+                formData.snc_requiere_accion_correctiva = boolValue ? 1 : 0;
+            }
+
+            if (props.snc) {
+                // Actualizar la SNC existente
+                await salidasNCStore.updateSNC(props.snc.id, formData);
+            } else {
+                // Crear nueva SNC
+                await salidasNCStore.createSNC(formData);
+            }
         }
 
-        // Configurar las cabeceras para la solicitud
-        const config = {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'X-Requested-With': 'XMLHttpRequest'  // Asegura que sea reconocida como solicitud AJAX
-            },
-            withCredentials: true
-        };
-
-        // Agregar token CSRF si está disponible
-        const token = document.head.querySelector('meta[name="csrf-token"]');
-        if (token) {
-            config.headers['X-CSRF-TOKEN'] = token.content;
-        }
-
-
-        if (props.snc) {
-            // Para actualizar, usamos POST con _method=PUT (Laravel Spoofing)
-            formData.append('_method', 'PUT');
-            formData.append('update_registration', '1');
-            const response = await axios.post(route('api.salidas-nc.update', props.snc.id), formData, config);
-            console.log('[DEBUG] Respuesta update:', response);
-        } else {
-            const response = await axios.post(route('api.salidas-nc.store'), formData, config);
-            console.log('[DEBUG] Respuesta store:', response);
-        }
-
-        console.log('[DEBUG] Petición exitosa mostrando alert y cerrando modal');
-
-        // Show success feedback - using vanilla alert since toast was from PrimeVue
+        // Show success feedback
         alert('Operación completada exitosamente');
         emit('saved');
         close();

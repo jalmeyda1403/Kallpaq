@@ -108,6 +108,11 @@ const routes = [
         component: () => import('@/components/salidas-nc/SalidasNCIndex.vue'),
     },
     {
+        path: '/sugerencias',
+        name: 'sugerencias.index',
+        component: () => import('@/components/sugerencias/SugerenciasIndex.vue'),
+    },
+    {
         path: '/dashboard/mejora',
         name: 'dashboard.mejora',
         component: () => import('@/components/dashboard/DashboardMejora.vue'),
@@ -126,6 +131,16 @@ const routes = [
         path: '/indicadores',
         name: 'indicadores.index',
         component: () => import('@/components/indicadores/IndicadoresMain.vue'),
+    },
+    {
+        path: '/encuestas-satisfaccion',
+        name: 'encuestas.index',
+        component: () => import('@/components/encuestas/EncuestasIndex.vue'),
+    },
+    {
+        path: '/encuestas-satisfaccion/dashboard',
+        name: 'encuestas.dashboard',
+        component: () => import('@/components/encuestas/EncuestasDashboard.vue'),
     },
 ]
 

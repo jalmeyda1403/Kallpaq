@@ -314,7 +314,8 @@
                     </li>
 
                     <!-- Configuración Satisfacción del Cliente -->
-                    <li class="nav-item has-treeview {{ request()->is('vue/salidas-nc*') ? 'menu-open' : '' }}">
+                    <li
+                        class="nav-item has-treeview {{ request()->is('vue/salidas-nc*') || request()->is('vue/sugerencias*') || request()->is('vue/encuestas-satisfaccion*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-smile"></i>
                             <p>
@@ -329,6 +330,22 @@
                                     class="nav-link {{ request()->is('vue/salidas-nc*') ? 'active' : '' }}">
                                     <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
                                     <p>Salidas No Conformes</p>
+                                </a>
+                            </li>
+                            {{-- Consolidado de Sugerencias --}}
+                            <li class="nav-item">
+                                <a href="/vue/sugerencias"
+                                    class="nav-link {{ request()->is('vue/sugerencias*') ? 'active' : '' }}">
+                                    <i class="fas fa-lightbulb fa-xs nav-icon"></i>
+                                    <p>Consolidado Sugerencias</p>
+                                </a>
+                            </li>
+                            {{-- Encuestas de Satisfacción --}}
+                            <li class="nav-item">
+                                <a href="/vue/encuestas-satisfaccion"
+                                    class="nav-link {{ request()->is('vue/encuestas-satisfaccion*') ? 'active' : '' }}">
+                                    <i class="fas fa-poll fa-xs nav-icon"></i>
+                                    <p>Encuestas de Satisfacción</p>
                                 </a>
                             </li>
 

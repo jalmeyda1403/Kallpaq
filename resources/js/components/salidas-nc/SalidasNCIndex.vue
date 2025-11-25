@@ -127,9 +127,9 @@
                 </DataTable>
                 <!-- Modals -->
                 <SalidaNCModal :show="showCreateModal" :snc="selectedSNC" @update:show="showCreateModal = $event"
-                    @saved="fetchSalidasNC"></SalidaNCModal>
+                    @saved="onSNCSaved"></SalidaNCModal>
                 <SNCtratamientoModal :show="showTratamientoModal" :snc="selectedSNCForTratamiento"
-                    @update:show="showTratamientoModal = $event" @saved="fetchSalidasNC"></SNCtratamientoModal>
+                    @update:show="showTratamientoModal = $event" @saved="onSNCSaved"></SNCtratamientoModal>
             </div>
         </div>
     </div>
@@ -209,18 +209,13 @@ const openTratamientoModal = (snc) => {
     showTratamientoModal.value = true;
 };
 
-const confirmDelete = (id) => {
+const confirmDelete = async (id) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta Salida No Conforme?')) {
-        deleteSNC(id);
-    }
-};
-
-const deleteSNC = async (id) => {
-    try {
-        await axios.delete(route('api.salidas-nc.destroy', id));
-        fetchSalidasNC();
-    } catch (error) {
-        console.error('Error al eliminar la SNC:', error);
+        try {
+            await salidasNCStore.deleteSNC(id);
+        } catch (error) {
+            console.error('Error al eliminar la SNC:', error);
+        }
     }
 };
 
@@ -261,6 +256,11 @@ const getEstadoBadge = (estado) => {
 
 const exportCSV = () => {
     dt.value.exportCSV();
+};
+
+const onSNCSaved = () => {
+    // El store ya actualiza las salidas después de cualquier operación
+    // No es necesario hacer nada adicional aquí
 };
 
 const truncateText = (text, maxLength) => {

@@ -1,6 +1,6 @@
 <template>
   <div class="modal fade" tabindex="-1" ref="modalEl" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
           <h6 class="modal-title">Seleccionar Registro</h6>
@@ -34,7 +34,7 @@
                   <td>{{ item.descripcion }}</td>
                 </tr>
                 <tr v-if="filteredItems.length === 0 && !loading">
-                    <td colspan="2" class="text-center text-muted">No se encontraron resultados.</td>
+                  <td colspan="2" class="text-center text-muted">No se encontraron resultados.</td>
                 </tr>
               </tbody>
             </table>
@@ -42,7 +42,7 @@
         </div>
 
         <div class="modal-footer">
-            <slot name="footer"></slot>
+          <slot name="footer"></slot>
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@ export default {
       try {
         const res = await fetch(this.fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
         if (!res.ok) {
-            throw new Error(`Error al cargar los datos: ${res.statusText}`);
+          throw new Error(`Error al cargar los datos: ${res.statusText}`);
         }
         this.items = await res.json();
       } catch (e) {
@@ -118,7 +118,7 @@ export default {
     },
     close() {
       this.modalInstance.hide();
-      this.search = '';   
+      this.search = '';
     }
   }
 };

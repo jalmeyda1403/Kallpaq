@@ -568,3 +568,21 @@ Route::get('/vue/{any}', function () {
 Route::get('/vue/ouos/user-assignment', function () {
     return view('app');
 })->name('vue.ouos.user-assignment');
+
+// Rutas para Consolidado de Sugerencias
+Route::prefix('api/sugerencias')->middleware('auth')->name('api.sugerencias.')->group(function () {
+    Route::get('/', [App\Http\Controllers\SugerenciaController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\SugerenciaController::class, 'store'])->name('store');
+    Route::get('/{id}', [App\Http\Controllers\SugerenciaController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\SugerenciaController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\SugerenciaController::class, 'destroy'])->name('destroy');
+});
+
+// Rutas para Encuestas de Satisfacción
+Route::prefix('api/encuestas-satisfaccion')->middleware('auth')->name('api.encuestas-satisfaccion.')->group(function () {
+    Route::get('/', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'store'])->name('store');
+    Route::post('/{id}', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'update'])->name('update'); // Using POST for file upload update
+    Route::delete('/{id}', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'destroy'])->name('destroy');
+    Route::get('/dashboard', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'dashboard'])->name('dashboard');
+});
