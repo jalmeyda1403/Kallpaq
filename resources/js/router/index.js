@@ -122,6 +122,11 @@ const routes = [
         name: 'riesgos.mine',
         component: () => import('@/components/riesgos/MisRiesgos.vue'),
     },
+    {
+        path: '/indicadores',
+        name: 'indicadores.index',
+        component: () => import('@/components/indicadores/IndicadoresMain.vue'),
+    },
 ]
 
 const router = createRouter({

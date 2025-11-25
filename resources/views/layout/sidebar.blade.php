@@ -77,12 +77,6 @@
                         </li>
 
 
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Listado de Indicadores</p>
-                            </a>
-                        </li>
 
 
 
@@ -94,7 +88,7 @@
                     @endphp
                     <!-- Configuración Requerimientos-->
                     <li
-                        class="nav-item has-treeview {{ request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*') || request()->is('vue/requerimientos*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-tasks"></i>
                             <p>
@@ -106,26 +100,29 @@
                             {{-- Bandejas para Facilitador y Subgerente --}}
                             @if (in_array($rol, ['facilitador', 'subgerente']))
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.crear') }}" class="nav-link">
+                                    <a href="{{ route('requerimientos.crear') }}"
+                                        class="nav-link {{ request()->is('requerimientos/crear') ? 'active' : '' }}">
                                         <i class="far fa-edit nav-icon"></i>
                                         <p>Crear Requerimiento</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/vue/mis-requerimientos" class="nav-link">
+                                    <a href="/vue/mis-requerimientos"
+                                        class="nav-link {{ request()->is('vue/mis-requerimientos*') ? 'active' : '' }}">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}" class="nav-link">
+                                    <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
+                                        class="nav-link {{ request()->is('requerimientos/asignados*') ? 'active' : '' }}">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Requerimientos Asignados</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
-                                        class="nav-link">
+                                        class="nav-link {{ request()->is('requerimientos/atendidos*') ? 'active' : '' }}">
                                         <i class="fas fa-check-circle fa-xs nav-icon "></i>
                                         <p>Requerimientos Atendidos</p>
                                     </a>
@@ -135,21 +132,22 @@
                             {{-- Bandejas para Especialista --}}
                             @if ($rol === 'especialista')
                                 <li class="nav-item">
-                                    <a href="/vue/mis-requerimientos" class="nav-link">
+                                    <a href="/vue/mis-requerimientos"
+                                        class="nav-link {{ request()->is('vue/mis-requerimientos*') ? 'active' : '' }}">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('requerimientos.asignados', ['rol' => $rol]) }}"
-                                        class="nav-link">
+                                        class="nav-link {{ request()->is('requerimientos/asignados*') ? 'active' : '' }}">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Asignados a Mí</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('requerimientos.atendidos', ['rol' => $rol]) }}"
-                                        class="nav-link">
+                                        class="nav-link {{ request()->is('requerimientos/atendidos*') ? 'active' : '' }}">
                                         <i class="fas fa-check-circle fa-xs nav-icon "></i>
                                         <p>Requerimientos Atendidos</p>
                                     </a>
@@ -158,13 +156,15 @@
                             {{-- Bandejas para Supervisor y Admin --}}
                             @if (in_array($rol, ['supervisor', 'admin']))
                                 <li class="nav-item">
-                                    <a href="{{ url('/vue/requerimientos/index') }}" class="nav-link">
+                                    <a href="{{ url('/vue/requerimientos/index') }}"
+                                        class="nav-link {{ request()->is('vue/requerimientos/index*') ? 'active' : '' }}">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/vue/mis-requerimientos" class="nav-link">
+                                    <a href="/vue/mis-requerimientos"
+                                        class="nav-link {{ request()->is('vue/mis-requerimientos*') ? 'active' : '' }}">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </a>
@@ -173,7 +173,8 @@
 
                             {{-- Dashboard para todos los roles, al final del módulo --}}
                             <li class="nav-item">
-                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}" class="nav-link">
+                                <a href="{{ route('requerimientos.seguimiento', ['rol' => $rol]) }}"
+                                    class="nav-link {{ request()->is('requerimientos/seguimiento*') ? 'active' : '' }}">
                                     <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
                                     <p>Dashboard Requerimientos</p>
                                 </a>
@@ -183,7 +184,7 @@
 
                     <!-- Configuración Procesos -->
                     <li
-                        class="nav-item has-treeview {{ request()->is('procesos*') || request()->is('documento*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('procesos*') || request()->is('documento*') || request()->is('vue/inventario-gestion*') || request()->is('vue/documentos*') || request()->is('partes*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cogs"></i>
                             <p>
@@ -194,42 +195,48 @@
                         <ul class="nav nav-treeview">
                             <!-- 1. Gestión del Inventario -->
                             <li class="nav-item">
-                                <a href="/vue/inventario-gestion" class="nav-link">
+                                <a href="/vue/inventario-gestion"
+                                    class="nav-link {{ request()->is('vue/inventario-gestion*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-cubes"></i>
                                     <p>Gestión del Inventario</p>
                                 </a>
                             </li>
                             <!-- 2. Gestión de Procesos (listado de procesos) -->
                             <li class="nav-item">
-                                <a href="{{ route('procesos.index') }}" class="nav-link">
+                                <a href="{{ route('procesos.index') }}"
+                                    class="nav-link {{ request()->is('procesos*') && !request()->is('procesos.mapa') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de Procesos</p>
                                 </a>
                             </li>
                             <!-- 3. Gestión de Documentos (listado de documentos) -->
                             <li class="nav-item">
-                                <a href="{{ url('/vue/documentos') }}" class="nav-link">
+                                <a href="{{ url('/vue/documentos') }}"
+                                    class="nav-link {{ request()->is('vue/documentos*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de Documentos</p>
                                 </a>
                             </li>
                             <!-- 4. Gestión del Desempeño (indicadores) -->
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="/vue/indicadores"
+                                    class="nav-link {{ request()->is('vue/indicadores*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-chart-bar"></i>
                                     <p>Listado de Indicadores</p>
                                 </a>
                             </li>
                             <!-- 5. Partes Interesadas -->
                             <li class="nav-item">
-                                <a href="{{ route('partes.index') }}" class="nav-link">
+                                <a href="{{ route('partes.index') }}"
+                                    class="nav-link {{ request()->is('partes*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users"></i>
                                     <p>Partes Interesadas</p>
                                 </a>
                             </li>
                             <!-- 6. Dashboard -->
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="#"
+                                    class="nav-link {{ request()->is('dashboard/procesos*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-tachometer-alt"></i>
                                     <p>Dashboard Procesos</p>
                                 </a>
@@ -240,7 +247,7 @@
 
                     <!-- Configuración Mejora (SMP)  -->
                     <li
-                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') || request()->is('vue/mejora*') || request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') || request()->is('vue/dashboard/mejora*') || request()->is('vue/bandeja-eficacia*') || request()->is('vue/salidas-nc*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') || request()->is('vue/mejora*') || request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') || request()->is('vue/dashboard/mejora*') || request()->is('vue/bandeja-eficacia*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-sync-alt"></i>
                             <p>
@@ -295,6 +302,27 @@
                                 </li>
                             @endif
 
+                            {{-- Dashboard para todos los roles, al final del módulo --}}
+                            <li class="nav-item">
+                                <a href="/vue/dashboard/mejora"
+                                    class="nav-link {{ request()->is('vue/dashboard/mejora*') ? 'active' : '' }}">
+                                    <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
+                                    <p>Dashboard de Mejora</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Configuración Satisfacción del Cliente -->
+                    <li class="nav-item has-treeview {{ request()->is('vue/salidas-nc*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-smile"></i>
+                            <p>
+                                Satisfacción del Cliente
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
                             {{-- Salidas No Conformes --}}
                             <li class="nav-item">
                                 <a href="/vue/salidas-nc"
@@ -306,10 +334,9 @@
 
                             {{-- Dashboard para todos los roles, al final del módulo --}}
                             <li class="nav-item">
-                                <a href="/vue/dashboard/mejora"
-                                    class="nav-link {{ request()->is('vue/dashboard/mejora*') ? 'active' : '' }}">
+                                <a href="#" class="nav-link">
                                     <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
-                                    <p>Dashboard de Mejora</p>
+                                    <p>Dashboard Satisfacción</p>
                                 </a>
                             </li>
                         </ul>

@@ -27,7 +27,8 @@ class SalidaNoConforme extends Model
         'snc_fecha_cierre',
         'snc_observaciones',
         'proceso_id',
-        'snc_evidencia',
+        'snc_archivos',
+        'snc_evidencias',
     ];
 
     protected $casts = [

@@ -140,17 +140,22 @@
                                     </li>
                                 </ul>
 
-                                <!-- Archivo actualmente almacenado -->
-                                <div v-if="form.snc_evidencia && !filesToUpload.some(f => f.file.name === form.snc_evidencia)"
-                                    class="mt-3">
-                                    <label class="font-weight-bold">Archivo Existente:</label>
-                                    <div class="list-group">
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>{{ form.snc_evidencia }}</span>
-                                            <button @click="removeCurrentFile"
-                                                class="btn btn-danger btn-sm">Eliminar</button>
-                                        </div>
-                                    </div>
+                                <!-- Archivos actualmente almacenados -->
+                                <div v-if="existingFiles.length > 0" class="mt-3">
+                                    <label class="font-weight-bold">Archivos Existentes:</label>
+                                    <ul class="list-group">
+                                        <li v-for="(file, index) in existingFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div class="text-truncate" style="max-width: 85%;">
+                                                <i class="fas fa-paperclip mr-2 text-muted"></i>
+                                                <a :href="`/storage/${file.path}`" target="_blank" class="text-decoration-none text-dark">
+                                                    {{ file.name }}
+                                                </a>
+                                            </div>
+                                            <button type="button" @click="removeExistingFile(index)" class="btn btn-danger btn-sm" title="Eliminar archivo">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
 
@@ -217,6 +222,7 @@ const fileInput = ref(null);
 const modalRef = ref(null);
 const modalInstance = ref(null);
 const processModal = ref(null);
+const existingFiles = ref([]);
 
 // Variables para la subida de archivos de evidencia
 const isDragging = ref(false);
@@ -242,6 +248,38 @@ watch(() => props.snc, (newVal) => {
             // Asegurarnos de que snc_requiere_accion_correctiva sea booleano
             snc_requiere_accion_correctiva: newVal.snc_requiere_accion_correctiva === true || newVal.snc_requiere_accion_correctiva === '1' || newVal.snc_requiere_accion_correctiva === 1
         };
+
+        // Parsear snc_archivos para existingFiles
+        existingFiles.value = [];
+        if (newVal.snc_archivos) {
+            try {
+                // Intentar parsear como JSON
+                let parsed = JSON.parse(newVal.snc_archivos);
+                
+                // Si no es array, lo convertimos a array
+                if (!Array.isArray(parsed)) {
+                    parsed = [parsed];
+                }
+
+                // Normalizar a objetos {path, name}
+                existingFiles.value = parsed.map(item => {
+                    if (typeof item === 'string') {
+                        return {
+                            path: item,
+                            name: item.split('/').pop()
+                        };
+                    }
+                    return item; // Ya es objeto {path, name}
+                });
+
+            } catch (e) {
+                // Si falla el parseo (es un string normal de la versión vieja), lo agregamos como único elemento
+                existingFiles.value = [{
+                    path: newVal.snc_archivos,
+                    name: newVal.snc_archivos.split('/').pop()
+                }];
+            }
+        }
 
         // Formatear la fecha de detección para el input de tipo date
         if (newVal.snc_fecha_deteccion) {
@@ -274,8 +312,9 @@ watch(() => props.snc, (newVal) => {
             snc_fecha_cierre: null,
             snc_observaciones: '',
             proceso_id: null,
-            snc_evidencia: null
+            snc_archivos: null
         };
+        existingFiles.value = [];
         processName.value = '';
     }
 });
@@ -393,8 +432,8 @@ const removeFile = (fileId) => {
     filesToUpload.value = filesToUpload.value.filter(f => f.id !== fileId);
 };
 
-const removeCurrentFile = () => {
-    form.value.snc_evidencia = null;
+const removeExistingFile = (index) => {
+    existingFiles.value.splice(index, 1);
 };
 
 watch(() => props.show, async (newVal) => {
@@ -434,7 +473,7 @@ watch(() => props.show, async (newVal) => {
             snc_fecha_cierre: null,
             snc_observaciones: '',
             proceso_id: null,
-            snc_evidencia: null
+            snc_archivos: null
         };
         modalTitle.value = props.snc ? 'Editar Salida No Conforme' : 'Nueva Salida No Conforme';
     }
@@ -458,6 +497,11 @@ onUnmounted(() => {
 });
 
 const close = () => {
+    // Remove focus from the button to prevent ARIA warnings when modal hides
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
+
     if (modalInstance.value) {
         modalInstance.value.hide();
     } else {
@@ -477,6 +521,12 @@ const isValid = computed(() => {
     );
 });
 
+const removeCurrentFile = () => {
+    form.value.snc_archivos = null;
+};
+
+// ... (keep other methods) ...
+
 const submitForm = async () => {
     try {
 
@@ -495,11 +545,8 @@ const submitForm = async () => {
 
             if (form.value[key] !== null && form.value[key] !== undefined) {
                 // Manejar el campo de evidencia de forma especial
-                if (key === 'snc_evidencia') {
-                    // Solo agregamos la ruta existente si no hay nuevos archivos para subir
-                    if (typeof form.value[key] === 'string' && filesToUpload.value.length === 0) {
-                        formData.append(key, form.value[key]);
-                    }
+                if (key === 'snc_archivos') {
+                    // No hacemos nada aquí con snc_archivos, lo manejamos abajo con existingFiles
                 }
                 // Si es un objeto o array (pero no un File), lo convertimos a string
                 else if (typeof form.value[key] === 'object' && !(form.value[key] instanceof Date) && !(form.value[key] instanceof File)) {
@@ -512,10 +559,18 @@ const submitForm = async () => {
             }
         }
 
+        // Agregar archivos existentes que se mantienen
+        if (existingFiles.value && existingFiles.value.length > 0) {
+            existingFiles.value.forEach(file => {
+                // Enviar solo el path para que el backend sepa cuál mantener
+                formData.append('existing_archivos[]', file.path);
+            });
+        }
+
         // Agregar archivos nuevos para subir
         filesToUpload.value.forEach((fileEntry, index) => {
-            // Agregar cada archivo como 'snc_evidencia[]' para que el backend lo reciba como array
-            formData.append('snc_evidencia[]', fileEntry.file, fileEntry.file.name);
+            // Agregar cada archivo como 'snc_archivos[]' para que el backend lo reciba como array
+            formData.append('snc_archivos[]', fileEntry.file, fileEntry.file.name);
         });
 
         // Asegurar que el campo snc_requiere_accion_correctiva sea un valor booleano adecuado para Laravel
@@ -551,6 +606,7 @@ const submitForm = async () => {
         if (props.snc) {
             // Para actualizar, usamos POST con _method=PUT (Laravel Spoofing)
             formData.append('_method', 'PUT');
+            formData.append('update_registration', '1');
             const response = await axios.post(route('api.salidas-nc.update', props.snc.id), formData, config);
             console.log('[DEBUG] Respuesta update:', response);
         } else {

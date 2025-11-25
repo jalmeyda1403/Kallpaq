@@ -43,6 +43,9 @@ class SalidaNoConformeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -52,7 +55,7 @@ class SalidaNoConformeController extends Controller
             'snc_responsable' => 'nullable|string',
             'snc_origen' => 'required|in:cliente,auditoría interna,auditoría externa,otro',
             'snc_clasificacion' => 'required|in:crítica,mayor,menor',
-            'snc_tratamiento' => 'nullable|in:corrección,reproceso,reclasificación,rechazo,concesión,pendiente',
+            'snc_tratamiento' => 'nullable|in:corrección,concesion,reclasificación,rechazo,retención,disposición',
             'snc_descripcion_tratamiento' => 'nullable|string',
             'snc_fecha_tratamiento' => 'nullable|date',
             'snc_costo_estimado' => 'nullable|numeric',
@@ -60,39 +63,22 @@ class SalidaNoConformeController extends Controller
             'snc_requiere_accion_correctiva' => 'nullable|boolean',
             'snc_observaciones' => 'nullable|string',
             'proceso_id' => 'nullable|exists:procesos,id',
-            'snc_evidencia' => 'sometimes|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
+            'snc_archivos' => 'nullable',
+            'snc_archivos.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
         ]);
 
         DB::beginTransaction();
         try {
-            // Crear SNC primero (sin evidencia)
+            // Crear SNC primero (sin archivos)
             $snc = SalidaNoConforme::create(array_filter($validated, function ($key) {
-                return $key !== 'snc_evidencia';
+                return $key !== 'snc_archivos';
             }, ARRAY_FILTER_USE_KEY));
 
-            // Manejar la subida de archivos de evidencia si existen
-            if ($request->hasFile('snc_evidencia')) {
-                $files = $request->file('snc_evidencia');
-                $paths = [];
-
-                if (is_array($files)) {
-                    // Son múltiples archivos
-                    foreach ($files as $file) {
-                        $path = $file->store("snc/{$snc->id}", 'public');
-                        $paths[] = $path;
-                    }
-                } else {
-                    // Es un solo archivo
-                    $path = $files->store("snc/{$snc->id}", 'public');
-                    $paths[] = $path;
-                }
-
-                // Si hay múltiples archivos, almacenar como JSON
-                if (count($paths) > 1) {
-                    $snc->snc_evidencia = json_encode($paths);
-                } else {
-                    $snc->snc_evidencia = $paths[0];
-                }
+            // Manejar la subida de archivos de registro (snc_archivos)
+            if ($request->hasFile('snc_archivos')) {
+                $files = $request->file('snc_archivos');
+                $fileData = $this->processNewFiles($files, $snc->id);
+                $snc->snc_archivos = json_encode($fileData);
                 $snc->save();
             }
 
@@ -137,7 +123,7 @@ class SalidaNoConformeController extends Controller
             'snc_responsable' => 'nullable|string',
             'snc_origen' => 'sometimes|required|in:cliente,auditoría interna,auditoría externa,otro',
             'snc_clasificacion' => 'sometimes|required|in:crítica,mayor,menor',
-            'snc_tratamiento' => 'nullable|in:corrección,reproceso,reclasificación,rechazo,concesión,pendiente',
+            'snc_tratamiento' => 'nullable|in:corrección,concesion,reclasificación,rechazo,retención,disposición',
             'snc_descripcion_tratamiento' => 'nullable|string',
             'snc_fecha_tratamiento' => 'nullable|date',
             'snc_costo_estimado' => 'nullable|numeric',
@@ -146,43 +132,32 @@ class SalidaNoConformeController extends Controller
             'snc_fecha_cierre' => 'nullable|date',
             'snc_observaciones' => 'nullable|string',
             'proceso_id' => 'nullable|exists:procesos,id',
-            'snc_evidencia' => 'sometimes|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
+            
+            // Validación para archivos de registro
+            'snc_archivos' => 'nullable',
+            'snc_archivos.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
+            
+            // Validación para evidencias de tratamiento
+            'snc_evidencias' => 'nullable',
+            'snc_evidencias.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
         ]);
 
         DB::beginTransaction();
         try {
-            // Manejar la subida de archivos de evidencia si existen
-            if ($request->hasFile('snc_evidencia')) {
-                $files = $request->file('snc_evidencia');
-                $paths = [];
-
-                if (is_array($files)) {
-                    // Son múltiples archivos
-                    foreach ($files as $file) {
-                        $path = $file->store("snc/{$snc->id}", 'public');
-                        $paths[] = $path;
-                    }
-                } else {
-                    // Es un solo archivo
-                    $path = $files->store("snc/{$snc->id}", 'public');
-                    $paths[] = $path;
-                }
-
-                // Si hay múltiples archivos, almacenar como JSON
-                if (count($paths) > 1) {
-                    $validated['snc_evidencia'] = json_encode($paths);
-                } else {
-                    $validated['snc_evidencia'] = $paths[0];
-                }
-            } else {
-                // Si no hay archivo nuevo pero el campo snc_evidencia contenía un objeto File,
-                // debemos asegurarnos de eliminarlo o reemplazarlo para evitar problemas
-                if (isset($validated['snc_evidencia']) && is_object($validated['snc_evidencia'])) {
-                    unset($validated['snc_evidencia']);  // Remover el objeto File del array
-                }
+            // 1. Manejo de archivos de registro (snc_archivos)
+            if ($request->has('update_registration')) {
+                $this->handleFileUpdate($request, $snc, 'snc_archivos', 'existing_archivos');
             }
 
-            $snc->update($validated);
+            // 2. Manejo de evidencias de tratamiento (snc_evidencias)
+            if ($request->has('update_treatment')) {
+                $this->handleFileUpdate($request, $snc, 'snc_evidencias', 'existing_evidencias');
+            }
+
+            // Actualizar el resto de campos
+            $snc->update(array_filter($validated, function ($key) {
+                return !in_array($key, ['snc_archivos', 'snc_evidencias']);
+            }, ARRAY_FILTER_USE_KEY));
 
             DB::commit();
 
@@ -221,4 +196,77 @@ class SalidaNoConformeController extends Controller
         }
     }
 
+    /**
+     * Helper to process new file uploads
+     */
+    private function processNewFiles($files, $sncId)
+    {
+        $fileData = [];
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                $path = $file->store("snc/{$sncId}", 'public');
+                $fileData[] = [
+                    'path' => $path,
+                    'name' => $file->getClientOriginalName()
+                ];
+            }
+        } else {
+            $path = $files->store("snc/{$sncId}", 'public');
+            $fileData[] = [
+                'path' => $path,
+                'name' => $files->getClientOriginalName()
+            ];
+        }
+        return $fileData;
+    }
+
+    /**
+     * Helper to handle file updates (deletion and addition)
+     */
+    private function handleFileUpdate(Request $request, $snc, $dbField, $inputField)
+    {
+        $currentFiles = [];
+        if ($snc->$dbField) {
+            $decoded = json_decode($snc->$dbField, true);
+            if (is_array($decoded)) {
+                if (!empty($decoded) && isset($decoded[0]) && is_array($decoded[0])) {
+                    $currentFiles = $decoded;
+                } else {
+                    $currentFiles = array_map(function ($path) {
+                        return ['path' => $path, 'name' => basename($path)];
+                    }, $decoded);
+                }
+            } else {
+                $currentFiles = [['path' => $snc->$dbField, 'name' => basename($snc->$dbField)]];
+            }
+        }
+
+        $keptPaths = $request->input($inputField, []);
+        if (!is_array($keptPaths)) {
+            $keptPaths = [];
+        }
+
+        $finalFiles = [];
+        foreach ($currentFiles as $file) {
+            if (in_array($file['path'], $keptPaths)) {
+                $finalFiles[] = $file;
+            } else {
+                if (Storage::disk('public')->exists($file['path'])) {
+                    Storage::disk('public')->delete($file['path']);
+                }
+            }
+        }
+
+        if ($request->hasFile($dbField)) {
+            $newFiles = $this->processNewFiles($request->file($dbField), $snc->id);
+            $finalFiles = array_merge($finalFiles, $newFiles);
+        }
+
+        if (count($finalFiles) > 0) {
+            $snc->$dbField = json_encode($finalFiles);
+        } else {
+            $snc->$dbField = null;
+        }
+        $snc->save(); // Guardar cambios intermedios
+    }
 }

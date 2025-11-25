@@ -549,6 +549,16 @@ Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->gr
 // Ruta para el dashboard de mejora
 Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraController::class, 'index'])->name('dashboard.mejora.api');
 
+// Rutas para el módulo de Indicadores (Vue)
+Route::prefix('api/indicadores-vue')->middleware('auth')->name('api.indicadores-vue.')->group(function () {
+    Route::get('/procesos-gestion', [App\Http\Controllers\IndicadoresVueController::class, 'getProcesosGestion'])->name('procesos-gestion');
+    Route::get('/procesos/{procesoId}', [App\Http\Controllers\IndicadoresVueController::class, 'getIndicadoresByProceso'])->name('by-proceso');
+    Route::post('/', [App\Http\Controllers\IndicadoresVueController::class, 'storeIndicador'])->name('store');
+    Route::put('/{id}', [App\Http\Controllers\IndicadoresVueController::class, 'updateIndicador'])->name('update');
+    Route::get('/ouo-reporte', [App\Http\Controllers\IndicadoresVueController::class, 'getIndicadoresForOUO'])->name('ouo-reporte');
+    Route::post('/{id}/seguimiento', [App\Http\Controllers\IndicadoresVueController::class, 'storeSeguimiento'])->name('seguimiento');
+});
+
 // Route to handle Vue SPA pages, prefixed with /vue/
 Route::get('/vue/{any}', function () {
     return view('app');
