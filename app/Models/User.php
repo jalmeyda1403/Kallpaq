@@ -54,8 +54,8 @@ class User extends Authenticatable
     public function ouos(): BelongsToMany
     {
         return $this->belongsToMany(OUO::class, 'ouo_user', 'user_id', 'ouo_id')
-                    ->using(OuoUser::class)
-                    ->withPivot('role_in_ouo', 'activo');
+            ->using(OuoUser::class)
+            ->withPivot('role_in_ouo', 'activo');
     }
 
     /**
@@ -73,9 +73,24 @@ class User extends Authenticatable
     }
 
     //Obtiene el historial de asignaciones que este usuario ha REALIZADO a otros
-    public function asignacionesRealizadas()
+    // TODO: Descomentar cuando se cree el modelo HallazgoAsignacion
+    // public function asignacionesRealizadas()
+    // {
+    //     // Corregido: Ahora apunta al modelo 'HallazgoAsignacion' y a la clave foránea correcta.
+    //     return $this->hasMany(HallazgoAsignacion::class, 'user_asigna_id');
+    // }
+
+
+    /**
+     * Convierte el usuario a un array incluyendo sus roles.
+     *
+     * @return array
+     */
+    public function toArrayWithRoles(): array
     {
-        // Corregido: Ahora apunta al modelo 'HallazgoAsignacion' y a la clave foránea correcta.
-        return $this->hasMany(HallazgoAsignacion::class, 'user_asigna_id');
+        return array_merge(
+            $this->only(['id', 'name', 'sigla', 'foto_url', 'email']),
+            ['roles' => $this->getRoleNames()]
+        );
     }
 }

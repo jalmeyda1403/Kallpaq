@@ -81,7 +81,7 @@
                         <div>
                           <input type="checkbox" :id="'proc_' + proceso.id" :value="proceso.id"
                             v-model="selectedProcesos" @change="handleProcessSelection(proceso)"
-                            :disabled="isProcessInInventario(proceso.id)">
+                            :key="'checkbox_' + proceso.id" :disabled="isProcessInInventario(proceso.id)">
                           <label :for="'proc_' + proceso.id" class="ml-2 mb-0 small">
                             <i v-if="getNivelIcon(proceso.proceso_nivel)"
                               :class="getNivelIcon(proceso.proceso_nivel)"></i>
@@ -101,7 +101,7 @@
                       <div v-if="expandedProcesos.includes(proceso.id)" class="ml-4 mt-2">
                         <div v-for="hijo in getChildProcesos(proceso.id)" :key="hijo.id" class="mb-1">
                           <input type="checkbox" :id="'proc_' + hijo.id" :value="hijo.id" v-model="selectedProcesos"
-                            @change="handleProcessSelection(hijo)" :disabled="isProcessInInventario(hijo.id)">
+                            @change="handleProcessSelection(hijo)" :key="'checkbox_' + hijo.id" :disabled="isProcessInInventario(hijo.id)">
                           <label :for="'proc_' + hijo.id" class="ml-2 mb-0 small">
                             <i v-if="getNivelIcon(hijo.proceso_nivel)" :class="getNivelIcon(hijo.proceso_nivel)"></i>
                             <span :class="[getNivelClass(hijo.proceso_nivel), getEstadoClass(hijo.proceso_estado)]">{{

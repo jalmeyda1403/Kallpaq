@@ -17,10 +17,12 @@ class HallazgoEvaluacion extends Model
         'resultado',        // 'con eficacia' o 'sin eficacia'
         'observaciones',
         'fecha_evaluacion',
+        'evidencias',       // Added evidencias
     ];
 
     protected $casts = [
         'fecha_evaluacion' => 'date',
+        'evidencias' => 'array', // Cast evidencias as array
     ];
 
     /**
@@ -39,7 +41,7 @@ class HallazgoEvaluacion extends Model
         return $this->belongsTo(User::class, 'evaluador_id');
     }
 
-       public function setResultadoAttribute($value)
+    public function setResultadoAttribute($value)
     {
         $this->attributes['resultado'] = $value;
 

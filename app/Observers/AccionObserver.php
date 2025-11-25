@@ -18,20 +18,37 @@ class AccionObserver
         if ($hallazgo) {
             // Obtener la última fecha de cierre de las acciones asociadas al hallazgo
             $ultimaFecha = Accion::where('hallazgo_id', $accion->hallazgo_id)
-                                ->max('accion_fecha_fin_planificada');
+                ->max('accion_fecha_fin_planificada');
 
             // Actualizar la fecha de cierre de acciones en el hallazgo
             $hallazgo->hallazgo_fecha_cierre = $ultimaFecha;
 
             $totalAcciones = $hallazgo->acciones()->count();
-            $accionesCompletadas = $hallazgo->acciones()->where('accion_estado', 'Cerrada')->count();
+
+            // Contar acciones completadas (implementada o desestimada)
+            $accionesCompletadas = $hallazgo->acciones()
+                ->whereIn('accion_estado', ['implementada', 'desestimada'])
+                ->count();
 
             // Calcular el porcentaje de avance
-            $avance = ($accionesCompletadas / $totalAcciones) * 100;
+            $avance = ($totalAcciones > 0) ? ($accionesCompletadas / $totalAcciones) * 100 : 0;
 
             // Actualizar el campo avance del hallazgo
             $hallazgo->hallazgo_avance = $avance;
-            
+
+            // Verificar si todas las acciones están concluidas para cambiar el estado del hallazgo
+            if ($totalAcciones > 0 && $accionesCompletadas === $totalAcciones && $hallazgo->hallazgo_estado !== 'concluido') {
+                $hallazgo->hallazgo_estado = 'concluido';
+                $hallazgo->hallazgo_fecha_conclusion = now();
+
+                // Registrar el movimiento
+                $hallazgo->movimientos()->create([
+                    'estado' => 'concluido',
+                    'comentario' => 'Hallazgo concluido automáticamente al completarse todas las acciones.',
+                    'user_id' => auth()->id() ?? 1, // Usar el usuario actual o un ID por defecto si es una tarea programada
+                ]);
+            }
+
             $hallazgo->save();
         }
     }

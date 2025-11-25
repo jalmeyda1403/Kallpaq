@@ -28,6 +28,11 @@ const routes = [
         component: MisHallazgos,
     },
     {
+        path: '/bandeja-eficacia',
+        name: 'hallazgos.eficacia',
+        component: () => import('@/components/hallazgos/BandejaEficacia.vue'),
+    },
+    {
         path: '/acciones/imprimir/:hallazgoId',
         name: 'acciones.imprimir',
         component: () => import('@/components/acciones/PlanAccionImprimirPage.vue'),

@@ -17,10 +17,10 @@ Nombre del sistema: Kallpaq (posiblemente relacionado con "kallpa" que significa
 
 ### Tecnologías y Arquitectura
 - **Framework Backend:** Laravel 10 (PHP 8.1+)
-- **Frontend:** Vue.js 3, Vite, Bootstrap, TailwindCSS, AdminLTE
-- **Componentes dinámicos:** Livewire 3
+- **Frontend:** Vue.js 3, Vite, Bootstrap, AdminLTE3
 - **Gestión de estado (Vue):** Pinia
 - **Enrutamiento (Vue):** Vue Router
+- **UI Components:** PrimeVue (especialmente para DataTables)
 - **Autenticación y Autorización:** Laravel Auth, Spatie/laravel-permission
 - **Generación de PDF:** barryvdh/laravel-dompdf
 - **Enrutamiento JS:** tightenco/ziggy
@@ -28,7 +28,6 @@ Nombre del sistema: Kallpaq (posiblemente relacionado con "kallpa" que significa
 
 Además de tecnologías mencionadas en el documento original:
 - Chart.js (para visualización de datos)
-- PrimeVue (biblioteca de componentes UI)
 - MySQL (base de datos)
 
 ## Instalación y Ejecución
@@ -100,13 +99,15 @@ El proyecto sigue las convenciones y estándares de codificación de Laravel:
 - Las migraciones de base de datos están en `database/migrations/`
 - Los activos frontend se gestionan a través de Vite y están ubicados en `resources/js/` y `resources/css/`
 
-El proyecto utiliza Vite para la construcción de activos y Tailwind CSS para el estilo. También incorpora AdminLTE para la interfaz de administración y Vue.js para componentes interactivos.
+El proyecto utiliza Vite para la construcción de activos y AdminLTE3 con Bootstrap para el estilo. La gestión de estado se realiza con Pinia y se utilizan componentes Vue.js para la interactividad. PrimeVue se usa principalmente para DataTables y otros componentes UI.
 
 ## Notas Especiales
 
 - El proyecto incluye Laravel Sanctum para autenticación API y Laravel UI para autenticación web tradicional
 - Utiliza spatie/laravel-permission para permisos basados en roles
 - La generación de PDF se maneja con laravel-dompdf
-- El proyecto utiliza tanto Livewire como Vue.js, lo que sugiere un enfoque mixto para el desarrollo frontend
+- El proyecto utiliza principalmente Vue.js con Pinia para el desarrollo frontend, reemplazando Livewire
 - El sistema gestiona ISO 9001 e ISO 37001 según información en GEMINI.md
 - Las consultas con el agente Qwen deben realizarse siempre en español
+- Las rutas se trabajan principalmente en web.php y no en la API
+- Debes dirigirte conmigo en español

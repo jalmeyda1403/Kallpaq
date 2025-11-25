@@ -146,7 +146,7 @@ class HallazgoController extends Controller
         if ($hallazgosCount === 0 && $procesoIds->isNotEmpty()) {
             $procesoId = $procesoIds->first();
             $proceso = Proceso::find($procesoId);
-            
+
             if ($proceso) {
                 for ($i = 1; $i <= 2; $i++) {
                     // Generar código simple para prueba
@@ -185,7 +185,7 @@ class HallazgoController extends Controller
             $searchTerm = '%' . $request->descripcion . '%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('hallazgo_resumen', 'like', $searchTerm)
-                  ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+                    ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
             });
         }
 
@@ -641,7 +641,7 @@ class HallazgoController extends Controller
             $searchTerm = '%' . $request->descripcion . '%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('hallazgo_resumen', 'like', $searchTerm)
-                  ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+                    ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
             });
         }
 
@@ -714,5 +714,143 @@ class HallazgoController extends Controller
         }
     }
 
+    // Método para listar hallazgos pendientes de verificación de eficacia
+    public function apiListarEficacia(Request $request)
+    {
+        $user = Auth::user();
 
+        // Iniciar consulta con relaciones necesarias
+        $query = Hallazgo::with(['procesos', 'acciones', 'especialista', 'evaluaciones'])
+            ->where('hallazgo_estado', 'concluido');
+
+        // Si no es admin, filtrar solo los asignados al especialista
+        if (!$user->hasRole('admin')) {
+            $query->where('especialista_id', $user->id);
+        }
+
+        // Aplicar filtros adicionales si existen
+        if ($request->filled('descripcion')) {
+            $searchTerm = '%' . $request->descripcion . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('hallazgo_resumen', 'like', $searchTerm)
+                    ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+            });
+        }
+
+        if ($request->filled('proceso_id')) {
+            $query->whereHas('procesos', function ($q) use ($request) {
+                $q->where('procesos.id', $request->proceso_id);
+            });
+        }
+
+        if ($request->filled('clasificacion')) {
+            $query->where('hallazgo_clasificacion', $request->clasificacion);
+        }
+
+        return response()->json($query->latest()->get());
+    }
+
+    // Método para guardar la evaluación de eficacia
+    public function storeEvaluacion(Request $request, Hallazgo $hallazgo)
+    {
+        $validatedData = $request->validate([
+            'resultado' => 'required|in:con eficacia,sin eficacia',
+            'observaciones' => 'required|string',
+            'fecha_evaluacion' => 'required|date',
+            'evidencias' => 'nullable|array',
+        ]);
+
+        try {
+            DB::transaction(function () use ($hallazgo, $validatedData) {
+                // Buscar si ya existe una evaluación
+                $evaluacion = $hallazgo->evaluaciones()->first();
+
+                if ($evaluacion) {
+                    $evaluacion->update([
+                        'evaluador_id' => Auth::id(),
+                        'resultado' => $validatedData['resultado'],
+                        'observaciones' => $validatedData['observaciones'],
+                        'fecha_evaluacion' => $validatedData['fecha_evaluacion'],
+                        'evidencias' => $validatedData['evidencias'] ?? $evaluacion->evidencias,
+                    ]);
+                } else {
+                    $hallazgo->evaluaciones()->create([
+                        'evaluador_id' => Auth::id(),
+                        'resultado' => $validatedData['resultado'],
+                        'observaciones' => $validatedData['observaciones'],
+                        'fecha_evaluacion' => $validatedData['fecha_evaluacion'],
+                        'evidencias' => $validatedData['evidencias'] ?? [],
+                    ]);
+                }
+
+                // Determinar el nuevo estado según el resultado
+                if ($validatedData['resultado'] === 'sin eficacia') {
+                    // Incrementar el ciclo
+                    $hallazgo->hallazgo_ciclo = ($hallazgo->hallazgo_ciclo ?? 0) + 1;
+                    $hallazgo->hallazgo_estado = 'evaluado';
+                    // NO establecer fecha de cierre
+                } else { // 'con eficacia'
+                    $hallazgo->hallazgo_estado = 'cerrado';
+                    $hallazgo->hallazgo_fecha_cierre = now();
+                }
+
+                $hallazgo->save();
+
+                // El HallazgoObserver se encargará de registrar el movimiento automáticamente
+            });
+
+            return response()->json(['message' => 'Evaluación registrada correctamente.']);
+
+        } catch (\Throwable $e) {
+            \Log::error("Error al registrar evaluación: " . $e->getMessage());
+            return response()->json(['message' => 'Error al registrar la evaluación.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function uploadEvaluacionEvidencia(Request $request, Hallazgo $hallazgo)
+    {
+        $request->validate([
+            'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240', // 10MB max
+        ]);
+
+        try {
+            $paths = [];
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('evidencias_eficacia', $filename, 'public');
+                    $paths[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => '/storage/' . $path,
+                    ];
+                }
+            }
+
+            // Actualizar o crear la evaluación con las nuevas evidencias
+            $evaluacion = $hallazgo->evaluaciones()->first();
+
+            if ($evaluacion) {
+                $currentEvidencias = $evaluacion->evidencias ?? [];
+                $evaluacion->evidencias = array_merge($currentEvidencias, $paths);
+                $evaluacion->save();
+            } else {
+                $hallazgo->evaluaciones()->create([
+                    'evaluador_id' => Auth::id(), // O null si queremos
+                    'evidencias' => $paths,
+                    // resultado y observaciones son nullable ahora
+                ]);
+            }
+
+            return response()->json(['message' => 'Archivos subidos correctamente.', 'evidencias' => $paths]);
+
+        } catch (\Throwable $e) {
+            \Log::error("Error al subir evidencias: " . $e->getMessage());
+            return response()->json(['message' => 'Error al subir archivos.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getEvaluacion(Hallazgo $hallazgo)
+    {
+        return response()->json($hallazgo->evaluaciones()->first());
+    }
 }

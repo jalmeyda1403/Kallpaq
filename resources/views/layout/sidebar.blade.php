@@ -240,7 +240,7 @@
 
                     <!-- Configuración Mejora (SMP)  -->
                     <li
-                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') || request()->is('vue/mejora*') || request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') || request()->is('vue/dashboard/mejora*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('smp*') || request()->is('mejora*') || request()->is('vue/mejora*') || request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') || request()->is('vue/dashboard/mejora*') || request()->is('vue/bandeja-eficacia*') || request()->is('vue/salidas-nc*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-sync-alt"></i>
                             <p>
@@ -272,6 +272,16 @@
                                         class="nav-link {{ request()->is('vue/mis-hallazgos*') || request()->is('vue/hallazgos/*/acciones*') ? 'active' : '' }}">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Hallazgos</p>
+                                    </a>
+                                </li>
+                            @endif
+
+                            @if (in_array($rol, ['admin', 'especialista']))
+                                <li class="nav-item">
+                                    <a href="/vue/bandeja-eficacia"
+                                        class="nav-link {{ request()->is('vue/bandeja-eficacia*') ? 'active' : '' }}">
+                                        <i class="fas fa-clipboard-check nav-icon fa-xs"></i>
+                                        <p>Bandeja Eficacia</p>
                                     </a>
                                 </li>
                             @endif

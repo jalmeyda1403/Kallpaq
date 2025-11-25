@@ -15,11 +15,12 @@
         </nav>
 
         <!-- Modal para enviar plan de acción -->
-        <EnviarPlanAccionModal
-            :visible="modalEnviarPlanVisible"
-            :hallazgoId="hallazgoIdSeleccionado"
-            @cerrar="cerrarModalEnviarPlan"
-            @plan-enviado="onPlanEnviado" />
+        <EnviarPlanAccionModal :visible="modalEnviarPlanVisible" :hallazgoId="hallazgoIdSeleccionado"
+            @cerrar="cerrarModalEnviarPlan" @plan-enviado="onPlanEnviado" />
+
+        <!-- Modal para asignar especialista -->
+        <HallazgoAsignarEspecialistaModal :visible="modalAsignarVisible" :hallazgoId="hallazgoIdAsignar"
+            @cerrar="cerrarModalAsignar" @asignado="onAsignado" />
 
         <div class="card">
             <div class="card-header">
@@ -38,7 +39,8 @@
                         <div class="col">
                             <select v-model="serverFilters.proceso_id" class="form-control select-truncate">
                                 <option value="">Todos los Procesos</option>
-                                <option v-for="proceso in procesos" :key="proceso.id" :value="proceso.id" :title="proceso.proceso_nombre">
+                                <option v-for="proceso in procesos" :key="proceso.id" :value="proceso.id"
+                                    :title="proceso.proceso_nombre">
                                     {{ proceso.proceso_nombre }}
                                 </option>
                             </select>
@@ -116,7 +118,7 @@
                             {{ formatDate(data.hallazgo_fecha_conclusion) }}
                         </template>
                     </Column>
-                    <Column field="hallazgo_estado" header="Estado" style="width:10%; text-align: center;" >
+                    <Column field="hallazgo_estado" header="Estado" style="width:10%; text-align: center;">
                         <template #body="{ data }">
                             {{ data.hallazgo_estado }}
                         </template>
@@ -156,7 +158,7 @@
                     <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
                         bodyStyle="width: 15%">
                         <template #body="{ data }">
-                            
+
                             <a href="#" title="Planes de Acción" class="mr-2 d-inline-block"
                                 @click.prevent="verPlanesDeAccion(data.id)">
                                 <i class="fas fa-tasks text-info fa-lg"></i>
@@ -170,6 +172,10 @@
                                 @click.prevent="deleteHallazgo(data.id)">
                                 <i class="fas fa-trash-alt text-danger fa-lg"></i>
                             </a>
+                            <a href="#" title="Programar Verificación" class="mr-2 d-inline-block"
+                                @click.prevent="abrirModalAsignar(data.id)" v-if="data.hallazgo_estado === 'concluido'">
+                                <i class="fas fa-user-check text-warning fa-lg"></i>
+                            </a>
                         </template>
                     </Column>
                 </DataTable>
@@ -181,16 +187,16 @@
 
 <style scoped>
 .select-truncate option {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .select-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>
 
@@ -210,6 +216,7 @@ import { FilterMatchMode } from 'primevue/api';
 
 import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
 import EnviarPlanAccionModal from '@/components/hallazgos/EnviarPlanAccionModal.vue';
+import HallazgoAsignarEspecialistaModal from '@/components/hallazgos/HallazgoAsignarEspecialistaModal.vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const router = useRouter();
@@ -223,6 +230,10 @@ const dt = ref(null); // Reference to the PrimeVue DataTable component
 // Variables para el modal de envío de plan
 const modalEnviarPlanVisible = ref(false);
 const hallazgoIdSeleccionado = ref(null);
+
+// Variables para el modal de asignación
+const modalAsignarVisible = ref(false);
+const hallazgoIdAsignar = ref(null);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -318,6 +329,27 @@ const onPlanEnviado = () => {
     successMessage.value = 'Plan de acción enviado exitosamente. El estado del hallazgo ha sido actualizado a "Aprobado".';
 
     // Ocultar el mensaje después de unos segundos
+    setTimeout(() => {
+        successMessage.value = '';
+    }, 5000);
+    setTimeout(() => {
+        successMessage.value = '';
+    }, 5000);
+};
+
+const abrirModalAsignar = (hallazgoId) => {
+    hallazgoIdAsignar.value = hallazgoId;
+    modalAsignarVisible.value = true;
+};
+
+const cerrarModalAsignar = () => {
+    modalAsignarVisible.value = false;
+    hallazgoIdAsignar.value = null;
+};
+
+const onAsignado = () => {
+    fetchHallazgos();
+    successMessage.value = 'Especialista asignado correctamente.';
     setTimeout(() => {
         successMessage.value = '';
     }, 5000);

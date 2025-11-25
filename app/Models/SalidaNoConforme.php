@@ -12,14 +12,10 @@ class SalidaNoConforme extends Model
     protected $table = 'salidas_no_conformes';
 
     protected $fillable = [
-        'snc_codigo',
         'snc_descripcion',
-        'snc_producto_servicio',
         'snc_cantidad_afectada',
         'snc_fecha_deteccion',
-        'snc_detectado_por',
-        'snc_responsable_id',
-        'snc_tipo',
+        'snc_responsable',
         'snc_origen',
         'snc_clasificacion',
         'snc_tratamiento',
@@ -30,6 +26,8 @@ class SalidaNoConforme extends Model
         'snc_requiere_accion_correctiva',
         'snc_fecha_cierre',
         'snc_observaciones',
+        'proceso_id',
+        'snc_evidencia',
     ];
 
     protected $casts = [
@@ -41,27 +39,17 @@ class SalidaNoConforme extends Model
         'snc_requiere_accion_correctiva' => 'boolean',
     ];
 
-    // Relaciones
-    public function detector()
+    // Accessors
+    public function getResponsableNombreAttribute()
     {
-        return $this->belongsTo(User::class, 'snc_detectado_por');
+        return $this->snc_responsable;
     }
 
-    public function responsable()
+    public function proceso()
     {
-        return $this->belongsTo(User::class, 'snc_responsable_id');
+        return $this->belongsTo(Proceso::class);
     }
 
-    public function procesos()
-    {
-        return $this->belongsToMany(Proceso::class, 'snc_proceso', 'snc_id', 'proceso_id')
-                    ->withTimestamps();
-    }
-
-    public function acciones()
-    {
-        return $this->hasMany(SncAccion::class, 'snc_id');
-    }
 
     // Scopes para filtrado
     public function scopeFilterByEstado($query, $estado)
@@ -91,10 +79,10 @@ class SalidaNoConforme extends Model
     public function scopeFilterByDescripcion($query, $descripcion)
     {
         if ($descripcion) {
-            return $query->where(function($q) use ($descripcion) {
+            return $query->where(function ($q) use ($descripcion) {
                 $q->where('snc_codigo', 'LIKE', "%{$descripcion}%")
-                  ->orWhere('snc_descripcion', 'LIKE', "%{$descripcion}%")
-                  ->orWhere('snc_producto_servicio', 'LIKE', "%{$descripcion}%");
+                    ->orWhere('snc_descripcion', 'LIKE', "%{$descripcion}%")
+                    ->orWhere('snc_producto_servicio', 'LIKE', "%{$descripcion}%");
             });
         }
         return $query;

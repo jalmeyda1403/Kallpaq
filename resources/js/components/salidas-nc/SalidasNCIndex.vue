@@ -29,24 +29,23 @@
                             <div class="form-row">
                                 <div class="col">
                                     <input type="text" v-model="serverFilters.buscar_snc" class="form-control"
-                                        placeholder="Buscar por código, descripción o producto...">
+                                        placeholder="Buscar por ID, descripción...">
                                 </div>
                                 <div class="col">
                                     <select v-model="serverFilters.estado" class="form-control">
                                         <option value="">Todos los Estados</option>
                                         <option value="registrada">Registrada</option>
-                                        <option value="en análisis">En Análisis</option>
                                         <option value="en tratamiento">En Tratamiento</option>
                                         <option value="tratada">Tratada</option>
-                                        <option value="cerrada">Cerrada</option>
                                     </select>
                                 </div>
                                 <div class="col">
-                                    <select v-model="serverFilters.tipo" class="form-control">
-                                        <option value="">Todos los Tipos</option>
-                                        <option value="producto">Producto</option>
-                                        <option value="servicio">Servicio</option>
-                                        <option value="proceso">Proceso</option>
+                                    <select v-model="serverFilters.origen" class="form-control">
+                                        <option value="">Todos los Orígenes</option>
+                                        <option value="cliente">Cliente</option>
+                                        <option value="auditoría interna">Auditoría Interna</option>
+                                        <option value="auditoría externa">Auditoría Externa</option>
+                                        <option value="otro">Otro</option>
                                     </select>
                                 </div>
                                 <div class="col">
@@ -71,7 +70,8 @@
             <div class="card-body">
                 <DataTable ref="dt" :value="salidasNC" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                    :globalFilterFields="['snc_codigo', 'snc_descripcion', 'snc_producto_servicio', 'snc_tipo', 'snc_clasificacion', 'snc_estado']">
+                    :globalFilterFields="['id', 'snc_descripcion', 'snc_clasificacion', 'snc_estado', 'snc_origen']"
+                    class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
                     <template #header>
                         <div class="d-flex align-items-center">
                             <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
@@ -79,26 +79,28 @@
                             </Button>
                         </div>
                     </template>
-                    
-                    <Column field="snc_codigo" header="Código" style="width:10%"></Column>
-                    <Column field="snc_producto_servicio" header="Producto/Servicio" style="width:15%"></Column>
-                    <Column field="snc_tipo" header="Tipo" style="width:10%">
-                        <template #body="{ data }">
-                            <span class="badge badge-secondary">{{ data.snc_tipo }}</span>
-                        </template>
+
+                    <Column field="id" header="ID" style="width:5%">
                     </Column>
-                    <Column field="snc_clasificacion" header="Clasificación" style="width:10%">
+                    <Column field="snc_descripcion" header="Descripción" style="width:30%">
                         <template #body="{ data }">
-                            <span :class="getClasificacionBadge(data.snc_clasificacion)">
-                                {{ data.snc_clasificacion }}
+                            <span :title="data.snc_descripcion">
+                                {{ truncateText(data.snc_descripcion, 60) }}
                             </span>
                         </template>
                     </Column>
-                    <Column field="snc_estado" header="Estado" style="width:12%">
+                    <Column field="proceso.proceso_nombre" header="Proceso" style="width:15%">
                         <template #body="{ data }">
-                            <span :class="getEstadoBadge(data.snc_estado)">
-                                {{ data.snc_estado }}
-                            </span>
+                            {{ data.proceso?.proceso_nombre || 'N/A' }}
+                        </template>
+                    </Column>
+                    <Column field="snc_origen" header="Origen" style="width:10%">
+                    </Column>
+                    <Column field="snc_clasificacion" header="Clasificación" style="width:8%">
+                    </Column>
+                    <Column field="snc_estado" header="Estado" style="width:10%; text-align: center;">
+                        <template #body="{ data }">
+                            {{ data.snc_estado }}
                         </template>
                     </Column>
                     <Column field="snc_fecha_deteccion" header="F. Detección" style="width:10%">
@@ -106,22 +108,17 @@
                             {{ formatDate(data.snc_fecha_deteccion) }}
                         </template>
                     </Column>
-                    <Column field="responsable.name" header="Responsable" style="width:15%">
+                    <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
+                        bodyStyle="width: 12%">
                         <template #body="{ data }">
-                            {{ data.responsable?.name || 'Sin asignar' }}
-                        </template>
-                    </Column>
-                    <Column header="Acciones" style="width:18%">
-                        <template #body="{ data }">
-                            <a href="#" title="Ver Acciones" class="mr-2 d-inline-block"
-                                @click.prevent="openAccionesModal(data)">
+                            <a href="#" title="Editar" class="mr-3 d-inline-block" @click.prevent="openEditModal(data)">
+                                <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                            </a>
+                            <a href="#" title="Tratamiento" class="mr-3 d-inline-block"
+                                @click.prevent="openTratamientoModal(data)">
                                 <i class="fas fa-tasks text-info fa-lg"></i>
                             </a>
-                            <a href="#" title="Editar" class="mr-2 d-inline-block"
-                                @click.prevent="openEditModal(data)">
-                                <i class="fas fa-edit text-primary fa-lg"></i>
-                            </a>
-                            <a href="#" title="Eliminar" class="mr-2 d-inline-block"
+                            <a href="#" title="Eliminar" class="mr-3 d-inline-block"
                                 @click.prevent="confirmDelete(data.id)">
                                 <i class="fas fa-trash-alt text-danger fa-lg"></i>
                             </a>
@@ -129,8 +126,10 @@
                     </Column>
                 </DataTable>
                 <!-- Modals -->
-                <SalidaNCModal :show="showCreateModal" :snc="selectedSNC" @update:show="showCreateModal = $event" @saved="fetchSalidasNC"></SalidaNCModal>
-                <SNCAccionesModal :show="showAccionesModal" :snc-id="selectedSNCForAcciones?.id" @update:show="showAccionesModal = $event" @saved="fetchSalidasNC"></SNCAccionesModal>
+                <SalidaNCModal :show="showCreateModal" :snc="selectedSNC" @update:show="showCreateModal = $event"
+                    @saved="fetchSalidasNC"></SalidaNCModal>
+                <SNCtratamientoModal :show="showTratamientoModal" :snc="selectedSNCForTratamiento"
+                    @update:show="showTratamientoModal = $event" @saved="fetchSalidasNC"></SNCtratamientoModal>
             </div>
         </div>
     </div>
@@ -138,10 +137,11 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import axios from 'axios';
+import { useSalidasNCStore } from '@/stores/salidasNCStore';
+import { storeToRefs } from 'pinia';
 import { route } from 'ziggy-js';
 import SalidaNCModal from '@/components/salidas-nc/SalidaNCModal.vue';
-import SNCAccionesModal from '@/components/salidas-nc/SNCAccionesModal.vue';
+import SNCtratamientoModal from '@/components/salidas-nc/SNCtratamientoModal.vue';
 
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
@@ -149,7 +149,10 @@ import Column from 'primevue/column';
 import Button from 'primevue/button';
 import { FilterMatchMode } from 'primevue/api';
 
-const salidasNC = ref([]);
+// Usamos el store
+const salidasNCStore = useSalidasNCStore();
+const { salidas: salidasNC, loading } = storeToRefs(salidasNCStore);
+
 const dt = ref(null);
 const selectedSNCId = ref(null);
 
@@ -166,16 +169,13 @@ const filters = ref({
 const serverFilters = reactive({
     buscar_snc: '',
     estado: '',
-    tipo: '',
+    origen: '',
     clasificacion: '',
 });
 
 const fetchSalidasNC = async () => {
     try {
-        const response = await axios.get(route('api.salidas-nc.index'), {
-            params: serverFilters
-        });
-        salidasNC.value = response.data;
+        await salidasNCStore.fetchSalidasNC(serverFilters);
     } catch (error) {
         console.error('Error al obtener las salidas no conformes:', error);
     }
@@ -190,17 +190,23 @@ const openCreateModal = () => {
     showCreateModal.value = true;
 };
 
-const openEditModal = (snc) => {
-    selectedSNC.value = snc;
-    showCreateModal.value = true;
+const openEditModal = async (snc) => {
+    try {
+        // Cargamos la SNC específica en el store
+        await salidasNCStore.fetchSNCById(snc.id);
+        selectedSNC.value = salidasNCStore.getCurrentSNC;
+        showCreateModal.value = true;
+    } catch (error) {
+        console.error('Error al cargar datos de la SNC:', error);
+    }
 };
 
-const showAccionesModal = ref(false);
-const selectedSNCForAcciones = ref(null);
+const showTratamientoModal = ref(false);
+const selectedSNCForTratamiento = ref(null);
 
-const openAccionesModal = (snc) => {
-    selectedSNCForAcciones.value = snc;
-    showAccionesModal.value = true;
+const openTratamientoModal = (snc) => {
+    selectedSNCForTratamiento.value = snc;
+    showTratamientoModal.value = true;
 };
 
 const confirmDelete = (id) => {
@@ -222,6 +228,15 @@ const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 const getClasificacionBadge = (clasificacion) => {
@@ -246,6 +261,11 @@ const getEstadoBadge = (estado) => {
 
 const exportCSV = () => {
     dt.value.exportCSV();
+};
+
+const truncateText = (text, maxLength) => {
+    if (!text) return 'N/A';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 };
 
 onMounted(() => {

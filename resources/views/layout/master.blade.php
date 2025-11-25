@@ -46,7 +46,15 @@
 
     <script>
         window.App = {
-            user: @json(array_merge(Auth::user()->toArray(), ['roles' => Auth::user()->getRoleNames()]))
+            @auth
+            @php
+                /** @var \App\Models\User $user */
+                $user = Auth::user();
+            @endphp
+            user: @json($user->toArrayWithRoles())
+        @else
+            user: null
+        @endauth
         };
     </script>
 

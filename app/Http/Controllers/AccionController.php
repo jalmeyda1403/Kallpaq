@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hallazgo;
-Use App\Models\Proceso;
+use App\Models\Proceso;
 use App\Models\Accion;
 use App\Models\Causa; // Import the Causa model
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class AccionController extends Controller
             ])
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         return response()->json($acciones);
     }
 
@@ -74,7 +74,7 @@ class AccionController extends Controller
             'hallazgo_avance',
             'hallazgo_sig'
         ]);
-        
+
         // Añadir las relaciones cargadas
         $hallazgoData['procesos'] = $hallazgo->procesos;
         $hallazgoData['especialista'] = $hallazgo->especialista;
@@ -163,7 +163,7 @@ class AccionController extends Controller
     {
         // Files are now uploaded via uploadEvidencia.
         // This method just finalizes the action.
-        
+
         // Optional: Check if there is at least one evidence file before concluding.
         $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
         if (empty($existingFiles)) {
@@ -186,8 +186,8 @@ class AccionController extends Controller
             $hallazgo->hallazgo_avance = 0;
         } else {
             $accionesCompletadas = $hallazgo->acciones()
-                                            ->whereIn('accion_estado', ['finalizada', 'desestimada'])
-                                            ->count();
+                ->whereIn('accion_estado', ['finalizada', 'desestimada'])
+                ->count();
             $hallazgo->hallazgo_avance = ($accionesCompletadas / $totalAcciones) * 100;
         }
         $hallazgo->save();
@@ -227,7 +227,7 @@ class AccionController extends Controller
         if (!is_array($existingFiles)) {
             $existingFiles = [];
         }
-        
+
         $existingFiles[] = $newFile;
 
         $accion->accion_ruta_evidencia = json_encode($existingFiles);
@@ -296,11 +296,11 @@ class AccionController extends Controller
         // Fetch actions related to the specific hallazgo and process
         // Eager load necessary relationships for the frontend display
         $acciones = Accion::where('hallazgo_id', $hallazgo->id)
-                            ->whereHas('hallazgoProceso', function ($query) use ($proceso) {
-                                $query->where('proceso_id', $proceso->id);
-                            })
-                            ->with('responsable.ouos', 'hallazgoProceso.proceso')
-                            ->get();
+            ->whereHas('hallazgoProceso', function ($query) use ($proceso) {
+                $query->where('proceso_id', $proceso->id);
+            })
+            ->with('responsable.ouos', 'hallazgoProceso.proceso')
+            ->get();
 
         return response()->json($acciones);
     }
@@ -371,8 +371,8 @@ class AccionController extends Controller
 
         // Find the corresponding hallazgo_proceso pivot record
         $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
-                                          ->where('proceso_id', $proceso->id)
-                                          ->firstOrFail();
+            ->where('proceso_id', $proceso->id)
+            ->firstOrFail();
 
         // Generate accion_cod
         $ultimoAccion = Accion::where('hallazgo_id', $hallazgo->id)->latest('id')->first();
@@ -388,6 +388,7 @@ class AccionController extends Controller
         $validatedData['hallazgo_proceso_id'] = $hallazgoProceso->id;
         $validatedData['accion_cod'] = $accionCod;
         $validatedData['accion_estado'] = 'programada'; // Set initial state to 'programada'
+        $validatedData['accion_ciclo'] = $hallazgo->hallazgo_ciclo ?? 0; // Copy hallazgo_ciclo to accion_ciclo
 
         $accion = Accion::create($validatedData);
 
@@ -413,9 +414,9 @@ class AccionController extends Controller
      */
     private function validarEstadoHallazgo(Hallazgo $hallazgo)
     {
-        $estadosPermitidos = ['creado', 'modificado'];
+        $estadosPermitidos = ['creado', 'modificado', 'evaluado'];
         if (!in_array($hallazgo->hallazgo_estado, $estadosPermitidos)) {
-            abort(403, 'No se pueden crear o modificar acciones en este estado de hallazgo. El hallazgo debe estar en estado \'creado\' o \'modificado\'.');
+            abort(403, 'No se pueden crear o modificar acciones en este estado de hallazgo. El hallazgo debe estar en estado \'creado\', \'modificado\' o \'evaluado\'.');
         }
     }
 

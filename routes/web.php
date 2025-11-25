@@ -30,7 +30,7 @@ use App\Http\Controllers\ParteInteresadaController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EspecialistaController;
-Use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\InventarioController;
 
 // ... existing routes ...
 
@@ -63,10 +63,12 @@ Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 //Otros
- Route::get('/api/inventarios',[InventarioController::class,
-      'apiInventarios'])->name('api.inventarios.index');
- Route::get('/procesos/macro', [ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
- Route::get('/inventario/{id}/procesos-con-ouos', [InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos');
+Route::get('/api/inventarios', [
+    InventarioController::class,
+    'apiInventarios'
+])->name('api.inventarios.index');
+Route::get('/procesos/macro', [ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
+Route::get('/inventario/{id}/procesos-con-ouos', [InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos');
 
 // Gestion del Inventario (Nuevas Rutas API)
 // Rutas CRUD para la gestión de inventarios (listar, crear, actualizar, eliminar)
@@ -80,7 +82,7 @@ Route::prefix('api/inventarios')->name('api.inventarios.')->group(function () {
     Route::put('/{inventario}', [InventarioController::class, 'updateApi'])->name('update');
     Route::patch('/{inventario}', [InventarioController::class, 'updateApi'])->name('update.patch');
     Route::delete('/{inventario}', [InventarioController::class, 'destroyApi'])->name('destroy');
-    
+
     // Rutas específicas para un inventario
     Route::prefix('/{inventario}')->group(function () {
         // Gestión de procesos
@@ -263,9 +265,12 @@ Route::controller(HallazgoController::class)
         Route::post('/{hallazgo}/aprobar', 'aprobar')->name('hallazgo.aprobar');
         Route::post('/{hallazgo}/adjuntos', 'subirAdjunto')->name('hallazgo.adjuntos.store');
 
-
+        // Rutas para Verificación de Eficacia
+        Route::get('/eficacia/listar', 'apiListarEficacia')->name('hallazgo.eficacia.listar');
+        Route::post('/{hallazgo}/evaluacion', 'storeEvaluacion')->name('hallazgo.evaluacion.store');
+        Route::post('/{hallazgo}/evaluacion/upload', 'uploadEvaluacionEvidencia')->name('hallazgo.evaluacion.upload');
+        Route::get('/{hallazgo}/evaluacion', 'getEvaluacion')->name('hallazgo.evaluacion.get');
     });
-
 // Rutas API para Riesgos (con middleware auth)
 Route::prefix('api/riesgos')
     ->middleware('auth')
@@ -275,7 +280,7 @@ Route::prefix('api/riesgos')
         Route::put('/{riesgo}/evaluacion', [RiesgoController::class, 'updateEvaluacion'])->name('api.riesgos.update-evaluacion');
         Route::put('/{riesgo}/tratamiento', [RiesgoController::class, 'updateTratamiento'])->name('api.riesgos.update-tratamiento');
         Route::put('/{riesgo}/verificacion', [RiesgoController::class, 'updateVerificacion'])->name('api.riesgos.update-verificacion');
-        
+
         // Rutas existentes (si las hay, o nuevas CRUD)
         Route::get('/', [RiesgoController::class, 'index'])->name('api.riesgos.index');
         Route::post('/', [RiesgoController::class, 'store'])->name('api.riesgos.store');
@@ -535,7 +540,7 @@ Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->gr
     Route::get('/{id}', [App\Http\Controllers\SalidaNoConformeController::class, 'show'])->name('show');
     Route::put('/{id}', [App\Http\Controllers\SalidaNoConformeController::class, 'update'])->name('update');
     Route::delete('/{id}', [App\Http\Controllers\SalidaNoConformeController::class, 'destroy'])->name('destroy');
-    
+
     // Rutas para acciones correctivas
     Route::post('/{id}/acciones', [App\Http\Controllers\SalidaNoConformeController::class, 'storeAccion'])->name('acciones.store');
     Route::put('/acciones/{accionId}', [App\Http\Controllers\SalidaNoConformeController::class, 'updateAccion'])->name('acciones.update');

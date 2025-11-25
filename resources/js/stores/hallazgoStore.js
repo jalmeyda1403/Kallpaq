@@ -65,7 +65,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
         // Getter para verificar si las acciones y el análisis de causa raíz están permitidos
         accionesPermitidas: (state) => {
             const estado = state.hallazgoForm.hallazgo_estado;
-            return estado === 'creado' || estado === 'modificado';
+            return estado === 'creado' || estado === 'modificado' || estado === 'evaluado';
         },
 
         // Getter para verificar si las acciones de gestión (reprogramar y concluir) están permitidas
