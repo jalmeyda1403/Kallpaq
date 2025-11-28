@@ -21,9 +21,25 @@ class RadarController extends Controller
         $this->radarService = $radarService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $normas = RadarNormativo::orderBy('fecha_publicacion', 'desc')->get();
+        $query = RadarNormativo::query();
+
+        // Apply filters if provided
+        if ($request->has('fecha') && !empty($request->fecha)) {
+            $query->whereDate('fecha_publicacion', $request->fecha);
+        }
+
+        if ($request->has('relevancia') && !empty($request->relevancia)) {
+            $query->where('nivel_relevancia', $request->relevancia);
+        }
+
+        if ($request->has('estado') && !empty($request->estado)) {
+            $query->where('estado', $request->estado);
+        }
+
+        $normas = $query->orderBy('fecha_publicacion', 'desc')->get();
+
         return response()->json($normas);
     }
 

@@ -19,6 +19,42 @@
                             @click="scanNormas" :loading="radarStore.loading" />
                     </div>
                 </div>
+                <hr>
+                <form @submit.prevent="searchNormas">
+                    <div class="form-row">
+                        <div class="col">
+                            <input type="date" class="form-control" v-model="filters.fecha"
+                                placeholder="Filtrar por fecha...">
+                        </div>
+                        <div class="col">
+                            <select v-model="filters.relevancia" class="form-control">
+                                <option value="">Todas las Relevancias</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Media">Media</option>
+                                <option value="Baja">Baja</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select v-model="filters.estado" class="form-control">
+                                <option value="">Todos los Estados</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="En Análisis">En Análisis</option>
+                                <option value="Aplicable">Aplicable</option>
+                                <option value="No Aplicable">No Aplicable</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn bg-dark">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-danger" @click="clearFilters">
+                                <i class="fas fa-eraser"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
 
             <div class="card-body">
@@ -94,10 +130,39 @@ const radarStore = useRadarStore();
 const showModal = ref(false);
 const selectedNorma = ref(null);
 const modalMode = ref('approve');
+const filters = ref({
+    fecha: '',
+    relevancia: '',
+    estado: ''
+});
 
 onMounted(() => {
     radarStore.fetchNormas();
 });
+
+const searchNormas = async () => {
+    // Apply filters to the store
+    radarStore.filters.fecha = filters.value.fecha;
+    radarStore.filters.relevancia = filters.value.relevancia;
+    radarStore.filters.estado = filters.value.estado;
+
+    // Fetch normas with filters
+    await radarStore.fetchNormas();
+};
+
+const clearFilters = async () => {
+    filters.value.fecha = '';
+    filters.value.relevancia = '';
+    filters.value.estado = '';
+
+    // Clear filters in the store
+    radarStore.filters.fecha = '';
+    radarStore.filters.relevancia = '';
+    radarStore.filters.estado = '';
+
+    // Fetch normas without filters
+    await radarStore.fetchNormas();
+};
 
 const scanNormas = async () => {
     try {
@@ -162,5 +227,83 @@ const getEstadoClass = (estado) => {
 .badge {
     font-size: 0.9em;
     padding: 5px 10px;
+}
+
+/* Form row styling */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -5px;
+}
+
+.form-row .col,
+.form-row .col-auto {
+    padding: 0 5px;
+    margin-bottom: 10px;
+}
+
+/* Form control styling */
+.form-control {
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-radius: 0.375rem;
+}
+
+.form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dc3545;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Button styling */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
+}
+
+.btn-danger:not(:disabled):not(.disabled):active,
+.btn-danger:not(:disabled):not(.disabled).active {
+    background-color: #bd2130;
+    border-color: #b21f2d;
+}
+
+.btn-dark {
+    background-color: #454d55;
+    border-color: #454d55;
+}
+
+.btn-dark:hover {
+    background-color: #343a40;
+    border-color: #2e343a;
+}
+
+.bg-dark {
+    background-color: #454d55 !important;
+}
+
+/* Input group text */
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
 }
 </style>

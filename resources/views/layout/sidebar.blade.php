@@ -360,7 +360,8 @@
                     </li>
 
                     <!-- Configuracion Obligaciones -->
-                    <li class="nav-item has-treeview">
+                    <li
+                        class="nav-item has-treeview {{ request()->is('vue/obligaciones*') || request()->is('vue/mis-obligaciones*') || request()->is('vue/radar-obligaciones*') ? 'menu-open active' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-clipboard-check"></i>
                             <p>
@@ -371,16 +372,18 @@
                         <ul class="nav nav-treeview">
                             @if (in_array($rol, ['admin', 'supervisor']))
                                 <li class="nav-item">
-                                    <a href="{{ url('/vue/obligaciones') }}" class="nav-link">
+                                    <a href="{{ url('/vue/obligaciones') }}"
+                                        class="nav-link {{ request()->is('vue/obligaciones*') ? 'active' : '' }}">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Obligaciones</p>
                                     </a>
                                 </li>
                             @endif
 
-                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista']))
+                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista', 'admin']))
                                 <li class="nav-item">
-                                    <a href="{{ url('/vue/mis-obligaciones') }}" class="nav-link">
+                                    <a href="{{ url('/vue/mis-obligaciones') }}"
+                                        class="nav-link {{ request()->is('vue/mis-obligaciones*') ? 'active' : '' }}">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Obligaciones</p>
                                     </a>
@@ -419,18 +422,6 @@
                                         class="nav-link {{ request()->is('vue/riesgos/index*') ? 'active' : '' }}">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Riesgos</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="nav-icon fas fa-plus-circle"></i>
-                                        <p>Registrar Nuevo Riesgo</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="nav-icon fas fa-chart-line"></i>
-                                        <p>Evaluación de Riesgos</p>
                                     </a>
                                 </li>
                             @endif

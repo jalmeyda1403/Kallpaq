@@ -46,27 +46,40 @@ class RiesgoController extends Controller
 
 
     // Obtener riesgos del usuario actual basados en sus OUOs y Procesos
-    public function misRiesgos()
+    public function misRiesgos(Request $request)
     {
         $user = auth()->user();
-        
+
         // Si es admin, devolver todos
         if ($user->hasRole('admin')) {
-            $riesgos = Riesgo::with(['proceso', 'factor'])->get();
-            return response()->json($riesgos);
+            $query = Riesgo::with(['proceso', 'factor']);
+        } else {
+            // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs
+            // Asumiendo que la relación es User -> OUOs -> Procesos
+            $procesosIds = $user->ouos()->with('procesos')->get()->pluck('procesos')->flatten()->pluck('id')->unique();
+
+            // También incluir procesos donde el usuario esté asignado directamente (si existe esa relación)
+            // $procesosDirectos = $user->procesos->pluck('id');
+            // $procesosIds = $procesosIds->merge($procesosDirectos)->unique();
+
+            $query = Riesgo::whereIn('proceso_id', $procesosIds)
+                ->with(['proceso', 'factor']);
         }
 
-        // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs
-        // Asumiendo que la relación es User -> OUOs -> Procesos
-        $procesosIds = $user->ouos()->with('procesos')->get()->pluck('procesos')->flatten()->pluck('id')->unique();
-        
-        // También incluir procesos donde el usuario esté asignado directamente (si existe esa relación)
-        // $procesosDirectos = $user->procesos->pluck('id');
-        // $procesosIds = $procesosIds->merge($procesosDirectos)->unique();
+        // Apply filters if provided
+        if ($request->has('codigo') && !empty($request->codigo)) {
+            $query->where('riesgo_cod', 'like', '%' . $request->codigo . '%');
+        }
 
-        $riesgos = Riesgo::whereIn('proceso_id', $procesosIds)
-            ->with(['proceso', 'factor'])
-            ->get();
+        if ($request->has('nombre') && !empty($request->nombre)) {
+            $query->where('riesgo_nombre', 'like', '%' . $request->nombre . '%');
+        }
+
+        if ($request->has('valoracion') && !empty($request->valoracion)) {
+            $query->where('riesgo_valoracion', $request->valoracion);
+        }
+
+        $riesgos = $query->get();
 
         return response()->json($riesgos);
     }

@@ -13,7 +13,7 @@
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
                             <div class="form-group">
-                                <label class="font-weight-bold">Tratamiento</label>
+                                <label class="font-weight-bold text-dark custom-label">Tratamiento</label>
                                 <select v-model="form.snc_tratamiento" class="form-control">
                                     <option value="">Selecciona un tipo de tratamiento...</option>
                                     <option value="corrección">Corrección</option>
@@ -26,7 +26,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="font-weight-bold">Descripción del Tratamiento</label>
+                                <label class="font-weight-bold text-dark custom-label">Descripción del Tratamiento</label>
                                 <textarea v-model="form.snc_descripcion_tratamiento" class="form-control" rows="3"
                                     placeholder="Ingrese la descripción del tratamiento aplicado..."></textarea>
                             </div>
@@ -34,13 +34,13 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold">Fecha de Tratamiento</label>
+                                        <label class="font-weight-bold text-dark custom-label">Fecha de Tratamiento</label>
                                         <input type="date" v-model="form.snc_fecha_tratamiento" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold">Costo Estimado</label>
+                                        <label class="font-weight-bold text-dark custom-label">Costo Estimado</label>
                                         <input type="number" v-model="form.snc_costo_estimado" class="form-control"
                                             min="0" step="0.01" placeholder="Ingrese el costo estimado...">
                                     </div>
@@ -50,7 +50,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold">Requiere Acción Correctiva</label>
+                                        <label class="font-weight-bold text-dark custom-label">Requiere Acción Correctiva</label>
                                         <select v-model="form.snc_requiere_accion_correctiva" class="form-control">
                                             <option :value="null">Seleccionar...</option>
                                             <option :value="true">Sí</option>
@@ -60,21 +60,21 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold">Fecha de Cierre</label>
+                                        <label class="font-weight-bold text-dark custom-label">Fecha de Cierre</label>
                                         <input type="date" v-model="form.snc_fecha_cierre" class="form-control">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="font-weight-bold">Observaciones</label>
+                                <label class="font-weight-bold text-dark custom-label">Observaciones</label>
                                 <textarea v-model="form.snc_observaciones" class="form-control" rows="3"
                                     placeholder="Observaciones generales..."></textarea>
                             </div>
 
                             <!-- Sección de Evidencias (Multi-archivo) -->
                             <div class="form-group">
-                                <label class="font-weight-bold custom-label">Evidencias del Tratamiento</label>
+                                <label class="font-weight-bold file-list-label">Evidencias del Tratamiento</label>
                                 <small class="form-text text-muted mb-2">Adjunte archivos de evidencia del tratamiento
                                     si los tiene.</small>
                                 <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
@@ -113,7 +113,7 @@
 
                                 <!-- Archivos actualmente almacenados -->
                                 <div v-if="existingFiles.length > 0" class="mt-3">
-                                    <label class="font-weight-bold">Evidencias Existentes:</label>
+                                    <label class="font-weight-bold file-list-label">Evidencias Existentes:</label>
                                     <ul class="list-group">
                                         <li v-for="(file, index) in existingFiles" :key="index"
                                             class="list-group-item d-flex justify-content-between align-items-center">
@@ -428,25 +428,214 @@ const submitForm = async () => {
     font-size: 0.9em !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     font-weight: 600 !important;
-    color: #070707 !important;
+    color: #495057 !important;
     letter-spacing: 0.2px !important;
 }
 
+/* Smaller font size for labels of file lists */
+.file-list-label {
+    font-size: 0.85em !important;
+    font-weight: 600 !important;
+    color: #6c757d !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Improved drop zone styles with red/gray variations */
 .drop-zone {
-    border: 2px dashed #ccc;
+    border: 2px dashed #ced4da;
     border-radius: 10px;
     padding: 40px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background-color: #f9f9f9;
+    background-color: #f8f9fa;
+    text-align: center;
 }
 
 .drop-zone:hover {
-    border-color: #999;
+    border-color: #dc3545;
+    background-color: #fff5f5;
 }
 
 .drop-zone.drag-over {
-    background-color: #f0f0f0;
-    border-color: #666;
+    background-color: #fdf0f0;
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+}
+
+.drop-zone.disabled {
+    cursor: not-allowed;
+    background-color: #e9ecef;
+    opacity: 0.7;
+}
+
+/* Improved form controls */
+.form-control {
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-radius: 0.375rem;
+}
+
+.form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dc3545;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Button styles */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
+}
+
+.btn-danger:not(:disabled):not(.disabled):active,
+.btn-danger:not(:disabled):not(.disabled).active {
+    background-color: #bd2130;
+    border-color: #b21f2d;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5);
+}
+
+/* Modal header */
+.modal-header {
+    background-color: #dc3545;
+    color: white;
+    border-top-left-radius: calc(0.3rem - 1px);
+    border-top-right-radius: calc(0.3rem - 1px);
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 1;
+    font-size: 1.5rem;
+}
+
+.modal-header .close:hover {
+    color: #e9ecef;
+    opacity: 0.8;
+}
+
+/* Card styling */
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+}
+
+.card-body {
+    padding: 0.75rem;
+}
+
+/* Input group styling */
+.input-group .btn {
+    border: 1px solid #ced4da;
+    background-color: #e9ecef;
+    color: #495057;
+    transition: all 0.15s ease-in-out;
+}
+
+.input-group .btn:hover {
+    background-color: #dcdcdc;
+    border-color: #adb5bd;
+    color: #212529;
+}
+
+.input-group .btn-danger {
+    border: 1px solid #dc3545;
+    background-color: #dc3545;
+    color: white;
+}
+
+.input-group .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: white;
+}
+
+/* Form group styling */
+.form-group {
+    margin-bottom: 1.1rem;
+}
+
+/* Modal footer */
+.modal-footer {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-bottom-right-radius: calc(0.3rem - 1px);
+    border-bottom-left-radius: calc(0.3rem - 1px);
+}
+
+/* Textarea styling */
+textarea.form-control {
+    resize: vertical;
+}
+
+/* Section headers */
+h6.font-weight-bold {
+    color: #212529;
+    font-weight: 700;
+}
+
+/* Input group text */
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+/* Progress bar styling */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 1rem;
+}
+
+.progress-bar {
+    background-color: #dc3545;
+}
+
+/* File list items */
+.list-group-item {
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 </style>

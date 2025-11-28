@@ -38,7 +38,12 @@ class Riesgo extends Model
     {
         return $this->belongsToMany(Obligacion::class, 'obligacion_riesgo');
     }
-        public function calcularRiesgoValor()
+
+    public function acciones()
+    {
+        return $this->hasMany(RiesgoAccion::class, 'riesgo_cod');
+    }
+    public function calcularRiesgoValor()
     {
         return $this->probabilidad * $this->impacto;
     }
@@ -64,7 +69,7 @@ class Riesgo extends Model
             return 'Alto';
         } elseif ($riesgo_valor >= 32) {
             return 'Medio';
-        }   else {
+        } else {
             return 'Bajo';
         }
     }
@@ -76,7 +81,7 @@ class Riesgo extends Model
             // Calcular riesgo_valor y riesgo_valoracion antes de crear
             $riesgo->riesgo_valor = $riesgo->calcularRiesgoValor();
             $riesgo->riesgo_valoracion = $riesgo->calcularRiesgoValoracion();
-            $riesgo->estado= 'proyecto';            
+            $riesgo->estado = 'proyecto';
         });
 
         static::updating(function ($riesgo) {

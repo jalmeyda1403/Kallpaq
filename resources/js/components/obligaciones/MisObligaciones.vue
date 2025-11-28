@@ -58,38 +58,31 @@
                             {{ index + 1 }}
                         </template>
                     </Column>
-                    <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
+                    <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:25%">
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
                                 class="p-column-filter" placeholder="Buscar por Proceso" />
                         </template>
                     </Column>
-                    <Column field="documento.nombre_documento" header="Documento" style="width:15%">
+                    <Column field="documento.nombre_documento" header="Documento" style="width:20%">
                         <template #body="{ data }">
                             <span v-if="data.documento">{{ data.documento.nombre_documento }}</span>
                             <span v-else>{{ data.documento_tecnico_normativo }}</span>
                         </template>
                     </Column>
-                    <Column field="nivel_riesgo_inherente" header="Riesgo" style="width:10%">
-                        <template #body="{ data }">
-                            <span :class="['badge', getRiesgoClass(data.nivel_riesgo_inherente)]">
-                                {{ data.nivel_riesgo_inherente }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="obligacion_principal" header="Obligación Principal" style="width:20%">
+                    <Column field="obligacion_principal" header="Obligación Principal" style="width:25%">
                     </Column>
                     <Column field="consecuencia_incumplimiento" header="Consecuencia del Incumplimiento"
                         style="width:20%">
                     </Column>
-                    <Column field="estado_obligacion" header="Estado" style="width:7%">
+                    <Column field="estado_obligacion" header="Estado" style="width:10%">
                         <template #body="{ data }">
                             <span :class="['badge', getEstadoClass(data.estado_obligacion)]">
                                 {{ ucfirst(data.estado_obligacion) }}
                             </span>
                         </template>
                     </Column>
-                    <Column header="Acciones" :exportable="false" style="width:8%">
+                    <Column header="Acciones" :exportable="false" style="width:10%">
                         <template #body="{ data }">
                             <a href="#" title="Ver Riesgos" class="btn btn-danger btn-sm mr-1"
                                 @click.prevent="obligacionStore.openRiesgosModal(data.id)">
@@ -164,15 +157,6 @@ const getEstadoClass = (estado) => {
     }
 };
 
-const getRiesgoClass = (riesgo) => {
-    switch (riesgo) {
-        case 'Muy Alto': return 'badge-danger';
-        case 'Alto': return 'badge-warning';
-        case 'Medio': return 'badge-info';
-        case 'Bajo': return 'badge-success';
-        default: return 'badge-secondary';
-    }
-};
 
 const ucfirst = (string) => {
     if (!string) return '';

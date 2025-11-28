@@ -68,6 +68,7 @@ Route::get('/api/inventarios', [
     'apiInventarios'
 ])->name('api.inventarios.index');
 Route::get('/procesos/macro', [ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
+Route::get('/api/procesos/list', [ProcesoController::class, 'apiList'])->name('api.procesos.list');
 Route::get('/inventario/{id}/procesos-con-ouos', [InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos');
 
 // Gestion del Inventario (Nuevas Rutas API)
@@ -594,6 +595,16 @@ Route::prefix('api/radar')->middleware('auth')->name('api.radar.')->group(functi
     Route::get('/', [App\Http\Controllers\RadarController::class, 'index'])->name('index');
     Route::post('/scan', [App\Http\Controllers\RadarController::class, 'scan'])->name('scan');
     Route::post('/{id}/approve', [App\Http\Controllers\RadarController::class, 'approve'])->name('approve');
+    Route::put('/riesgos/{riesgo}/evaluacion', [App\Http\Controllers\RiesgoController::class, 'updateEvaluacion']);
+    Route::put('/riesgos/{riesgo}/tratamiento', [App\Http\Controllers\RiesgoController::class, 'updateTratamiento']);
+    Route::put('/riesgos/{riesgo}/verificacion', [App\Http\Controllers\RiesgoController::class, 'updateVerificacion']);
+    Route::resource('riesgos', App\Http\Controllers\RiesgoController::class);
+
+    // Riesgo Acciones
+    Route::get('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'index']);
+    Route::post('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'store']);
+    Route::put('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'update']);
+    Route::delete('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'destroy']);
     Route::post('/{id}/reject', [App\Http\Controllers\RadarController::class, 'reject'])->name('reject');
 });
 
@@ -602,4 +613,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/procesos', [App\Http\Controllers\ProcesoController::class, 'apiList']);
     Route::get('/api/areas-compliance', [App\Http\Controllers\AreaComplianceController::class, 'apiList']);
     Route::get('/api/areas-compliance/{id}/subareas', [App\Http\Controllers\AreaComplianceController::class, 'apiSubareas']);
+    Route::get('/api/areas-compliance/{id}/subareas', [App\Http\Controllers\AreaComplianceController::class, 'apiSubareas']);
 });
+
+// Chatbot Route
+Route::post('/chatbot/chat', [App\Http\Controllers\ChatbotController::class, 'chat'])->middleware('auth');

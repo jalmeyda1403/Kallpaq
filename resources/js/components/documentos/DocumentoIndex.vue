@@ -82,7 +82,7 @@
                         :loading="isLoading">
 
                         <Column field="cod_documento" header="Código Documento" sortable></Column>
-                        <Column field="nombre_documento" header="Nombre Documento" ></Column>
+                        <Column field="nombre_documento" header="Nombre Documento"></Column>
                         <Column header="Tipo de Documento">
                             <template #body="slotProps">
                                 {{ slotProps.data.tipo_documento ?
@@ -161,8 +161,8 @@ import { useToast } from 'primevue/usetoast'; // Re-introduce useToast
 
 const documentos = ref([]);
 const selectedDocumento = ref(null);
-// const successMessage = ref(''); // REMOVE THIS
-// const errorMessage = ref(''); // REMOVE THIS
+const successMessage = ref(''); // REMOVE THIS
+const errorMessage = ref(''); // REMOVE THIS
 const selectTipoDocumento = ref(null); // Re-introduce this
 const documentoStore = useDocumentoStore(); // Instancia de la tienda
 const filters = reactive({
@@ -265,6 +265,15 @@ const initializeSelect2 = () => {
 
 // Lifecycle Hooks
 onMounted(() => {
+    // Check for query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('buscar_proceso')) {
+        filters.buscar_proceso = urlParams.get('buscar_proceso');
+    }
+    if (urlParams.has('buscar_documento')) {
+        filters.buscar_documento = urlParams.get('buscar_documento');
+    }
+
     fetchDocumentos();
     initializeSelect2(); // Re-introduce this
 });

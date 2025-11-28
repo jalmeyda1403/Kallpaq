@@ -5,14 +5,25 @@ export const useRadarStore = defineStore('radar', {
     state: () => ({
         normas: [],
         loading: false,
-        error: null
+        error: null,
+        filters: {
+            fecha: '',
+            relevancia: '',
+            estado: ''
+        }
     }),
 
     actions: {
         async fetchNormas() {
             this.loading = true;
             try {
-                const response = await axios.get('/api/radar');
+                // Construct query parameters from filters
+                const params = {};
+                if (this.filters.fecha) params.fecha = this.filters.fecha;
+                if (this.filters.relevancia) params.relevancia = this.filters.relevancia;
+                if (this.filters.estado) params.estado = this.filters.estado;
+
+                const response = await axios.get('/api/radar', { params });
                 this.normas = response.data;
             } catch (error) {
                 this.error = error.response?.data?.message || error.message;

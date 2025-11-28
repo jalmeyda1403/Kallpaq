@@ -71,3 +71,12 @@ if (rootAppElement) {
 
     vueApp.mount('#app');
 }
+
+// Chatbot Mount Logic
+import ChatbotWidget from './components/chatbot/ChatbotWidget.vue';
+const chatbotRoot = document.getElementById('chatbot-root');
+if (chatbotRoot) {
+    const chatbotApp = createApp(ChatbotWidget);
+    // chatbotApp.use(pinia); // Uncomment if Chatbot needs access to the store
+    chatbotApp.mount('#chatbot-root');
+}
