@@ -247,6 +247,7 @@ Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('ap
 // Rutas API para Obligaciones
 Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () {
     Route::get('/', [ObligacionController::class, 'apiIndex'])->name('index');
+    Route::get('/mis-obligaciones', [ObligacionController::class, 'misObligaciones'])->name('mine');
     Route::get('/{id}', [ObligacionController::class, 'show'])->name('show');
     Route::post('/', [ObligacionController::class, 'store'])->name('store');
     Route::put('/{id}', [ObligacionController::class, 'update'])->name('update');
@@ -576,6 +577,7 @@ Route::prefix('api/sugerencias')->middleware('auth')->name('api.sugerencias.')->
     Route::get('/{id}', [App\Http\Controllers\SugerenciaController::class, 'show'])->name('show');
     Route::put('/{id}', [App\Http\Controllers\SugerenciaController::class, 'update'])->name('update');
     Route::delete('/{id}', [App\Http\Controllers\SugerenciaController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/validate', [App\Http\Controllers\SugerenciaController::class, 'validateSuggestion'])->name('validate');
 });
 
 // Rutas para Encuestas de Satisfacción
@@ -585,4 +587,19 @@ Route::prefix('api/encuestas-satisfaccion')->middleware('auth')->name('api.encue
     Route::post('/{id}', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'update'])->name('update'); // Using POST for file upload update
     Route::delete('/{id}', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'destroy'])->name('destroy');
     Route::get('/dashboard', [App\Http\Controllers\EncuestaSatisfaccionController::class, 'dashboard'])->name('dashboard');
+});
+
+// Rutas para Radar Normativo
+Route::prefix('api/radar')->middleware('auth')->name('api.radar.')->group(function () {
+    Route::get('/', [App\Http\Controllers\RadarController::class, 'index'])->name('index');
+    Route::post('/scan', [App\Http\Controllers\RadarController::class, 'scan'])->name('scan');
+    Route::post('/{id}/approve', [App\Http\Controllers\RadarController::class, 'approve'])->name('approve');
+    Route::post('/{id}/reject', [App\Http\Controllers\RadarController::class, 'reject'])->name('reject');
+});
+
+// Rutas para obtener listas (Procesos, Áreas, Subáreas)
+Route::middleware('auth')->group(function () {
+    Route::get('/api/procesos', [App\Http\Controllers\ProcesoController::class, 'apiList']);
+    Route::get('/api/areas-compliance', [App\Http\Controllers\AreaComplianceController::class, 'apiList']);
+    Route::get('/api/areas-compliance/{id}/subareas', [App\Http\Controllers\AreaComplianceController::class, 'apiSubareas']);
 });

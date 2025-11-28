@@ -49,6 +49,22 @@ export const useObligacionStore = defineStore('obligacion', {
             }
         },
 
+        async fetchMisObligaciones() {
+            this.loading = true;
+            try {
+                const response = await axios.get(route('api.obligaciones.mine'), {
+                    params: this.filters
+                });
+                this.obligaciones = response.data;
+                this.error = null;
+            } catch (error) {
+                this.error = 'Error al cargar mis obligaciones.';
+                console.error('Error fetching mis obligaciones:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async fetchObligacion(id) {
             this.loading = true;
             try {

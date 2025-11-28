@@ -150,7 +150,7 @@ class EncuestaSatisfaccionController extends Controller
 
             if ($request->hasFile('informe')) {
                 $file = $request->file('informe');
-                $path = $file->store('satisfaccion/' . $request->proceso_id, 'public');
+                $path = $file->store('satisfaccion/' . $request->proceso_id . '/encuestas', 'public');
                 $fileData = [
                     'path' => $path,
                     'name' => $file->getClientOriginalName()

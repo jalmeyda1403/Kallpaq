@@ -24,16 +24,16 @@ class ProcesoController extends Controller
 
             $query->whereHas('ouos', function ($q) use ($accessibleOuoIds) {
                 $q->whereIn('ouos.id', $accessibleOuoIds)
-                  ->where(function ($subQuery) {
-                      $subQuery->wherePivot('propietario', true)
-                               ->orWherePivot('delegado', true)
-                               ->orWherePivot('ejecutor', true)
-                               ->orWherePivot('sgc', true)
-                               ->orWherePivot('sgas', true)
-                               ->orWherePivot('sgcm', true)
-                               ->orWherePivot('sgsi', true)
-                               ->orWherePivot('sgco', true);
-                  });
+                    ->where(function ($subQuery) {
+                        $subQuery->wherePivot('propietario', true)
+                            ->orWherePivot('delegado', true)
+                            ->orWherePivot('ejecutor', true)
+                            ->orWherePivot('sgc', true)
+                            ->orWherePivot('sgas', true)
+                            ->orWherePivot('sgcm', true)
+                            ->orWherePivot('sgsi', true)
+                            ->orWherePivot('sgco', true);
+                    });
             });
         }
 
@@ -166,8 +166,8 @@ class ProcesoController extends Controller
         if ($facilitadorId) {
             // Obtener los IDs de los procesos ya asociados a este facilitador
             $associatedProcesoIds = \DB::table('proceso_facilitador')
-                                        ->where('facilitador_id', $facilitadorId)
-                                        ->pluck('proceso_id');
+                ->where('facilitador_id', $facilitadorId)
+                ->pluck('proceso_id');
 
             // Excluir estos procesos de la búsqueda
             $procesosQuery->whereNotIn('id', $associatedProcesoIds);
@@ -182,7 +182,7 @@ class ProcesoController extends Controller
             ];
         });
 
-         return response()->json($procesos);
+        return response()->json($procesos);
     }
 
 
@@ -200,6 +200,15 @@ class ProcesoController extends Controller
 
         return response()->json($formattedProcesos);
     }
+
+    public function apiList()
+    {
+        $procesos = Proceso::select('id', 'proceso_nombre', 'cod_proceso')
+            ->orderBy('proceso_nombre')
+            ->get();
+        return response()->json($procesos);
+    }
+
     public function mapaProcesos()
     {
         $inventarios = Inventario::all();
@@ -230,18 +239,18 @@ class ProcesoController extends Controller
 
     }
 
-      public function apiMacroProcesos()
+    public function apiMacroProcesos()
     {
-        
-            // Obtener procesos donde proceso_nivel = 0 (macroprocesos)
-            // Asegúrate de que 'cod_proceso', 'proceso_nombre', 'proceso_padre_id', 'proceso_nivel' estén en $fillable del modelo Proceso
-            $macroprocesos = Proceso::where('proceso_nivel', 0)
-                                  ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel') // Selecciona solo los campos necesarios
-                                  ->orderBy('cod_proceso') // Ordena si es necesario
-                                  ->get();
 
-            return response()->json($macroprocesos);
-      
+        // Obtener procesos donde proceso_nivel = 0 (macroprocesos)
+        // Asegúrate de que 'cod_proceso', 'proceso_nombre', 'proceso_padre_id', 'proceso_nivel' estén en $fillable del modelo Proceso
+        $macroprocesos = Proceso::where('proceso_nivel', 0)
+            ->select('id', 'cod_proceso', 'proceso_nombre', 'proceso_nivel') // Selecciona solo los campos necesarios
+            ->orderBy('cod_proceso') // Ordena si es necesario
+            ->get();
+
+        return response()->json($macroprocesos);
+
     }
     //Asociar OUO
     public function listarOUO($proceso_id)
@@ -299,7 +308,7 @@ class ProcesoController extends Controller
             'sgas' => 'boolean',
             'sgcm' => 'boolean',
             'sgsi' => 'boolean',
-            'sgco' => 'boolean',           
+            'sgco' => 'boolean',
         ]);
 
         // Actualiza la fila existente en la tabla pivote
@@ -343,19 +352,19 @@ class ProcesoController extends Controller
     {
         // Valida la solicitud para asegurar que los campos son booleanos
         $request->validate([
-             'propietario' => 'boolean',
+            'propietario' => 'boolean',
             'delegado' => 'boolean',
             'ejecutor' => 'boolean',
             'sgc' => 'boolean',
             'sgas' => 'boolean',
             'sgcm' => 'boolean',
             'sgsi' => 'boolean',
-            'sgco' => 'boolean',   
+            'sgco' => 'boolean',
         ]);
 
         // Actualiza la fila existente en la tabla pivote
         $proceso->ouos()->updateExistingPivot($ouo->id, [
-             'propietario' => $request->boolean('propietario'),
+            'propietario' => $request->boolean('propietario'),
             'delegado' => $request->boolean('delegado'),
             'ejecutor' => $request->boolean('ejecutor'),
             'sgc' => $request->boolean('sgc'),

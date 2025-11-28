@@ -44,7 +44,8 @@
                             :totalRecords="store.pagination.total"
                             :first="(store.pagination.currentPage - 1) * store.pagination.perPage" @page="onPage"
                             :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id"
-                            :globalFilterFields="['id', 'name', 'email']">
+                            :globalFilterFields="['id', 'name', 'email']"
+                            :loading="store.loading">
                             <Column field="id" header="ID" style="width:5%"></Column>
                             <Column field="name" header="Nombre" sortable style="width:30%"></Column>
                             <Column field="email" header="Email" sortable style="width:30%"></Column>
@@ -211,4 +212,17 @@ const closePermisosModal = () => {
 
 <style scoped>
 /* Estilos específicos del componente aquí */
+
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
 </style>

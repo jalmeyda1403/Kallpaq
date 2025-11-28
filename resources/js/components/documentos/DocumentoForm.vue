@@ -51,8 +51,8 @@
               <label for="estado_documento" class="form-label text-danger font-weight-bold">Estado</label>
               <select id="estado_documento" v-model="documentoStore.documentoForm.estado_documento" class="form-control"
                 data-toggle="tooltip" data-placement="top" title="Define el estado actual del documento.">
-                <option value="1">Vigente</option>
-                <option value="0">Obsoleto</option>
+                <option value="vigente">Vigente</option>
+                <option value="derogado">Derogado</option>
               </select>
               <div class="invalid-feedback">{{ documentoStore.errors.estado_documento ?
                 documentoStore.errors.estado_documento[0] : '' }}</div>

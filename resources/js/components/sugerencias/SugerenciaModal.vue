@@ -73,11 +73,11 @@
                                                 placeholder="Seleccionar proceso..." :required="!form.proceso_id">
                                             <div class="input-group-append">
                                                 <button class="btn btn-dark" type="button" @click="openProcessModal">
-                                                    <i class="fas fa-search"></i>
+                                                    <i class="fa fa-search"></i>
                                                 </button>
                                                 <button class="btn btn-danger" type="button" v-if="form.proceso_id"
                                                     @click="clearProcess">
-                                                    <i class="fas fa-times"></i>
+                                                    <i class="fa fa-times"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -90,8 +90,8 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @click="close">
-                                <i class="fas fa-times mr-1"></i> Cancelar</button>
-                            <button type="submit" class="btn btn-danger"> <i class="fas fa-save mr-1"></i>
+                                <i class="fa fa-times mr-1"></i> Cancelar</button>
+                            <button type="submit" class="btn btn-danger"> <i class="fa fa-save mr-1"></i>
                                 Guardar</button>
                         </div>
                     </form>
@@ -216,6 +216,10 @@ watch(() => props.show, async (newVal) => {
 });
 
 const close = () => {
+    // Remove focus from the button to prevent ARIA warnings when modal hides
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
     emit('close');
 };
 
@@ -250,7 +254,154 @@ onUnmounted(() => {
     font-size: 0.9em !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     font-weight: 600 !important;
-    color: #070707 !important;
+    color: #495057 !important;
     letter-spacing: 0.2px !important;
+}
+
+/* Improved form controls */
+.form-control {
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-radius: 0.375rem;
+}
+
+.form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dc3545;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Button styles */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
+}
+
+.btn-danger:not(:disabled):not(.disabled):active,
+.btn-danger:not(:disabled):not(.disabled).active {
+    background-color: #bd2130;
+    border-color: #b21f2d;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5);
+}
+
+/* Modal header */
+.modal-header {
+    background-color: #dc3545;
+    color: white;
+    border-top-left-radius: calc(0.3rem - 1px);
+    border-top-right-radius: calc(0.3rem - 1px);
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 1;
+    font-size: 1.5rem;
+}
+
+.modal-header .close:hover {
+    color: #e9ecef;
+    opacity: 0.8;
+}
+
+/* Card styling */
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+}
+
+.card-body {
+    padding: 0.75rem;
+}
+
+/* Input group styling */
+.input-group .btn {
+    border: 1px solid #ced4da;
+    background-color: #e9ecef;
+    color: #495057;
+    transition: all 0.15s ease-in-out;
+}
+
+.input-group .btn:hover {
+    background-color: #dcdcdc;
+    border-color: #adb5bd;
+    color: #212529;
+}
+
+.input-group .btn-danger {
+    border: 1px solid #dc3545;
+    background-color: #dc3545;
+    color: white;
+}
+
+.input-group .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: white;
+}
+
+/* Form group styling */
+.form-group {
+    margin-bottom: 1.1rem;
+}
+
+/* Modal footer */
+.modal-footer {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-bottom-right-radius: calc(0.3rem - 1px);
+    border-bottom-left-radius: calc(0.3rem - 1px);
+}
+
+/* Textarea styling */
+textarea.form-control {
+    resize: vertical;
+}
+
+/* Section headers */
+h6.font-weight-bold {
+    color: #212529;
+    font-weight: 700;
+}
+
+/* Input group text */
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
 }
 </style>

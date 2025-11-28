@@ -24,12 +24,17 @@ class Sugerencia extends Model
         'sugerencia_fecha_fin_real',
         'proceso_id',
         'sugerencia_evidencias',
+        'sugerencia_observacion',
+        'sugerencia_fecha_observacion',
+        'sugerencia_fecha_cierre',
     ];
 
     protected $casts = [
         'sugerencia_fecha_ingreso' => 'date',
         'sugerencia_fecha_fin_prog' => 'date',
         'sugerencia_fecha_fin_real' => 'date',
+        'sugerencia_fecha_observacion' => 'date',
+        'sugerencia_fecha_cierre' => 'date',
         'sugerencia_evidencias' => 'array',
     ];
 
@@ -62,6 +67,27 @@ class Sugerencia extends Model
         }
         if ($to) {
             $query->where('sugerencia_fecha_ingreso', '<=', $to);
+        }
+        return $query;
+    }
+
+    public function scopeFilterByClasificacion($query, $clasificacion)
+    {
+        if ($clasificacion) {
+            return $query->where('sugerencia_clasificacion', $clasificacion);
+        }
+        return $query;
+    }
+
+    public function scopeFilterByProcesoNombre($query, $procesoNombre)
+    {
+        if ($procesoNombre) {
+            return $query->whereHas('proceso', function ($subquery) use ($procesoNombre) {
+                $subquery->where('proceso_nombre', 'LIKE', '%' . $procesoNombre . '%')
+                         ->orWhere('nombre', 'LIKE', '%' . $procesoNombre . '%')
+                         ->orWhere('descripcion', 'LIKE', '%' . $procesoNombre . '%')
+                         ->orWhere('proceso_nombre_corto', 'LIKE', '%' . $procesoNombre . '%');
+            });
         }
         return $query;
     }

@@ -88,7 +88,7 @@
                     @endphp
                     <!-- Configuración Requerimientos-->
                     <li
-                        class="nav-item has-treeview {{ request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*') || request()->is('vue/requerimientos*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*') || request()->is('vue/requerimientos*') || request()->is('vue/mis-requerimientos*') || request()->is('api/requerimientos*') ? 'menu-open active' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-tasks"></i>
                             <p>
@@ -376,39 +376,21 @@
                                         <p>Bandeja de Obligaciones</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="nav-icon fas fa-plus-circle"></i>
-                                        <p>Registrar Nueva Obligación</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="nav-icon fas fa-chart-line"></i>
-                                        <p>Evaluación de Obligaciones</p>
-                                    </a>
-                                </li>
                             @endif
 
                             @if (in_array($rol, ['facilitador', 'subgerente', 'especialista']))
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link">
+                                    <a href="{{ url('/vue/mis-obligaciones') }}" class="nav-link">
                                         <i class="nav-icon fas fa-user-check"></i>
-                                        <p>Mis Obligaciones Asignadas</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="nav-icon fas fa-tasks"></i>
-                                        <p>Seguimiento de Acciones</p>
+                                        <p>Mis Obligaciones</p>
                                     </a>
                                 </li>
                             @endif
 
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-flag-checkered"></i>
-                                    <p>Acciones Identificadas</p>
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>Seguimiento de Acciones</p>
                                 </a>
                             </li>
 

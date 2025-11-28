@@ -25,9 +25,10 @@ export const useSugerenciasStore = defineStore('sugerencias', {
             try {
                 const params = new URLSearchParams();
 
-                if (filters.buscar_sugerencia) params.append('buscar_sugerencia', filters.buscar_sugerencia);
                 if (filters.estado) params.append('estado', filters.estado);
                 if (filters.proceso_id) params.append('proceso_id', filters.proceso_id);
+                if (filters.proceso_nombre) params.append('proceso_nombre', filters.proceso_nombre);
+                if (filters.clasificacion) params.append('clasificacion', filters.clasificacion);
 
                 const response = await axios.get(`${route('api.sugerencias.index')}?${params.toString()}`);
                 this.sugerencias = response.data;
@@ -88,10 +89,13 @@ export const useSugerenciasStore = defineStore('sugerencias', {
 
             try {
                 let response;
-                
-                // Si data es FormData, usamos PUT directamente
+
+                // Si data es FormData, usamos POST con method spoofing
                 if (data instanceof FormData) {
-                    response = await axios.put(route('api.sugerencias.update', { id }), data, {
+                    // Agregar _method para simular PUT
+                    data.append('_method', 'PUT');
+
+                    response = await axios.post(route('api.sugerencias.update', { id }), data, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
@@ -137,6 +141,25 @@ export const useSugerenciasStore = defineStore('sugerencias', {
                 await axios.delete(route('api.sugerencias.destroy', { id }));
                 // Actualizamos la lista de sugerencias
                 await this.fetchSugerencias();
+            } catch (error) {
+                this.error = error.message;
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async validateSugerencia(id, data) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await axios.post(route('api.sugerencias.validate', { id }), data);
+
+                // Actualizamos la lista de sugerencias
+                await this.fetchSugerencias();
+
+                return response.data;
             } catch (error) {
                 this.error = error.message;
                 throw error;

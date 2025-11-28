@@ -15,6 +15,8 @@ class SugerenciaController extends Controller
 
         $query->filterByEstado($request->estado)
             ->filterByProceso($request->proceso_id)
+            ->filterByProcesoNombre($request->proceso_nombre)
+            ->filterByClasificacion($request->clasificacion)
             ->filterByFecha($request->fecha_desde, $request->fecha_hasta);
 
         // If user is not admin, filter by their process (assuming user has process_id or similar logic)
@@ -57,6 +59,13 @@ class SugerenciaController extends Controller
     {
         $sugerencia = Sugerencia::findOrFail($id);
 
+        // Verificar que la sugerencia no esté cerrada para permitir modificaciones
+        if ($sugerencia->sugerencia_estado === 'cerrada') {
+            return response()->json([
+                'message' => 'No se puede modificar una sugerencia cerrada',
+            ], 400);
+        }
+
         $validated = $request->validate([
             'sugerencia_clasificacion' => 'sometimes|required|string',
             'sugerencia_detalle' => 'sometimes|required|string',
@@ -75,14 +84,34 @@ class SugerenciaController extends Controller
 
         DB::beginTransaction();
         try {
-            // Handle file updates for evidences
-            if ($request->has('update_evidences')) {
-                $this->handleFileUpdate($request, $sugerencia, 'sugerencia_evidencias', 'existing_evidencias');
-            }
+            // Debug información para ver qué se está recibiendo
+            \Log::info('Actualizando sugerencia', [
+                'hasFile' => $request->hasFile('sugerencia_evidencias'),
+                'hasUpdateEvidences' => $request->has('update_evidences'),
+                'allInputs' => $request->all(),
+                'files' => $request->file('sugerencia_evidencias') ? $request->file('sugerencia_evidencias') : 'no files'
+            ]);
 
-            $sugerencia->update(array_filter($validated, function ($key) {
-                return !in_array($key, ['sugerencia_evidencias']);
-            }, ARRAY_FILTER_USE_KEY));
+            // Handle file updates for evidences - check if files are being uploaded or update_evidences flag is set
+            $hasFiles = $request->hasFile('sugerencia_evidencias') || !empty($request->file('sugerencia_evidencias')); // Comprobar si hay archivos en el array
+            $hasUpdateEvidences = $request->has('update_evidences');
+
+            \Log::info('Detalles de archivo', [
+                'hasFiles' => $hasFiles,
+                'hasUpdateEvidences' => $hasUpdateEvidences,
+                'sugerencia_evidencias' => $request->file('sugerencia_evidencias'),
+                'update_evidences_value' => $request->get('update_evidences')
+            ]);
+
+            if ($hasFiles || $hasUpdateEvidences) {
+                \Log::info('Procesando archivos de evidencia');
+                $this->handleFileUpdate($request, $sugerencia, 'sugerencia_evidencias', 'existing_evidencias');
+            } else {
+                // Actualizar los campos normales si no hay archivos
+                $sugerencia->update(array_filter($validated, function ($key) {
+                    return !in_array($key, ['sugerencia_evidencias']);
+                }, ARRAY_FILTER_USE_KEY));
+            }
 
             DB::commit();
 
@@ -93,6 +122,7 @@ class SugerenciaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error al actualizar sugerencia', ['error' => $e->getMessage()]);
             return response()->json([
                 'message' => 'Error al actualizar la sugerencia',
                 'error' => $e->getMessage()
@@ -107,19 +137,68 @@ class SugerenciaController extends Controller
         return response()->json(['message' => 'Sugerencia eliminada exitosamente']);
     }
 
-    private function processNewFiles($files, $sugerenciaId)
+    public function validateSuggestion(Request $request, $id)
+    {
+        $sugerencia = Sugerencia::findOrFail($id);
+
+        // Only allow validation of suggestions with 'concluida' status
+        if ($sugerencia->sugerencia_estado !== 'concluida') {
+            return response()->json([
+                'message' => 'Solo se pueden evaluar sugerencias que han concluido',
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'sugerencia_estado' => 'required|in:cerrada,observada',
+            'sugerencia_observacion' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Update the status
+            $sugerencia->sugerencia_estado = $validated['sugerencia_estado'];
+
+            // If the status is 'observada', add the observation and date
+            if ($validated['sugerencia_estado'] === 'observada') {
+                $sugerencia->sugerencia_observacion = $validated['sugerencia_observacion'] ?? null;
+                $sugerencia->sugerencia_fecha_observacion = now();
+            }
+            // If the status is 'cerrada', set the closure date
+            elseif ($validated['sugerencia_estado'] === 'cerrada') {
+                $sugerencia->sugerencia_fecha_cierre = now();
+            }
+
+            $sugerencia->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Sugerencia validada exitosamente',
+                'data' => $sugerencia->load('proceso')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al validar la sugerencia',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function processNewFiles($files, $sugerencia)
     {
         $fileData = [];
         if (is_array($files)) {
             foreach ($files as $file) {
-                $path = $file->store("sugerencias/{$sugerenciaId}", 'public');
+                $path = $file->store("satisfaccion/{$sugerencia->proceso_id}/sugerencias/{$sugerencia->id}", 'public');
                 $fileData[] = [
                     'path' => $path,
                     'name' => $file->getClientOriginalName()
                 ];
             }
         } else {
-            $path = $files->store("sugerencias/{$sugerenciaId}", 'public');
+            $path = $files->store("satisfaccion/{$sugerencia->proceso_id}/sugerencias/{$sugerencia->id}", 'public');
             $fileData[] = [
                 'path' => $path,
                 'name' => $files->getClientOriginalName()
@@ -132,9 +211,17 @@ class SugerenciaController extends Controller
     {
         $currentFiles = [];
         if ($sugerencia->$dbField) {
-            $decoded = $sugerencia->$dbField; // Casted to array in model
+            // El modelo tiene cast 'array', así que ya viene como array
+            $decoded = $sugerencia->$dbField;
             if (is_array($decoded)) {
-                $currentFiles = $decoded;
+                // Normalizar la estructura: asegurar que todos los elementos tengan 'path' y 'name'
+                foreach ($decoded as $item) {
+                    if (is_array($item) && isset($item['path'])) {
+                        $currentFiles[] = $item;
+                    } elseif (is_string($item)) {
+                        $currentFiles[] = ['path' => $item, 'name' => basename($item)];
+                    }
+                }
             }
         }
 
@@ -154,11 +241,14 @@ class SugerenciaController extends Controller
             }
         }
 
+        // Verificar si hay archivos nuevos para subir
         if ($request->hasFile($dbField)) {
-            $newFiles = $this->processNewFiles($request->file($dbField), $sugerencia->id);
+            $files = $request->file($dbField);
+            $newFiles = $this->processNewFiles($files, $sugerencia);
             $finalFiles = array_merge($finalFiles, $newFiles);
         }
 
+        // Guardar los archivos (el cast 'array' del modelo se encargará de convertir a JSON)
         if (count($finalFiles) > 0) {
             $sugerencia->$dbField = $finalFiles;
         } else {

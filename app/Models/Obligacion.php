@@ -20,7 +20,13 @@ class Obligacion extends Model
         'obligacion_controles',
         'consecuencia_incumplimiento',
         'documento_deroga',
-        'estado_obligacion'
+        'estado_obligacion',
+        'radar_id',
+        'documento_id',
+        'tipo_obligacion',
+        'nivel_riesgo_inherente',
+        'nivel_riesgo_residual',
+        'frecuencia_revision'
     ];
 
     /**
@@ -84,7 +90,12 @@ class Obligacion extends Model
 
     public function documento()
     {
-        return $this->belongsTo(Documento::class);
+        return $this->belongsTo(Documento::class, 'documento_id');
+    }
+
+    public function radar()
+    {
+        return $this->belongsTo(RadarNormativo::class, 'radar_id');
     }
 
 }

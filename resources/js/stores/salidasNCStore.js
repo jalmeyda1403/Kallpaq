@@ -17,20 +17,20 @@ export const useSalidasNCStore = defineStore('salidasNC', {
         isLoading: (state) => state.loading,
         hasError: (state) => !!state.error
     },
-    
+
     actions: {
         async fetchSalidasNC(filters = {}) {
             this.loading = true;
             this.error = null;
-            
+
             try {
                 const params = new URLSearchParams();
-                
+
                 if (filters.buscar_snc) params.append('buscar_snc', filters.buscar_snc);
                 if (filters.estado) params.append('estado', filters.estado);
                 if (filters.origen) params.append('origen', filters.origen);
                 if (filters.clasificacion) params.append('clasificacion', filters.clasificacion);
-                
+
                 const response = await axios.get(`${route('api.salidas-nc.index')}?${params.toString()}`);
                 this.salidas = response.data;
             } catch (error) {
@@ -40,15 +40,15 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                 this.loading = false;
             }
         },
-        
+
         async createSNC(data) {
             this.loading = true;
             this.error = null;
-            
+
             try {
                 // Preparamos los datos para enviar al backend
                 const formData = new FormData();
-                
+
                 // Agregamos todos los campos
                 Object.keys(data).forEach(key => {
                     if (data[key] !== null && data[key] !== undefined) {
@@ -65,16 +65,16 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                         }
                     }
                 });
-                
+
                 const response = await axios.post(route('api.salidas-nc.store'), formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                
+
                 // Actualizamos la lista de salidas
                 await this.fetchSalidasNC();
-                
+
                 return response.data;
             } catch (error) {
                 this.error = error.message;
@@ -83,7 +83,7 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                 this.loading = false;
             }
         },
-        
+
         async updateSNC(id, data) {
             this.loading = true;
             this.error = null;
@@ -91,9 +91,12 @@ export const useSalidasNCStore = defineStore('salidasNC', {
             try {
                 let response;
 
-                // Si data es FormData, usamos PUT directamente sin spoofing
+                // Si data es FormData, usamos POST con method spoofing
                 if (data instanceof FormData) {
-                    response = await axios.put(route('api.salidas-nc.update', { id }), data, {
+                    // Agregar _method para simular PUT
+                    data.append('_method', 'PUT');
+
+                    response = await axios.post(route('api.salidas-nc.update', { id }), data, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
@@ -114,11 +117,11 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                 this.loading = false;
             }
         },
-        
+
         async fetchSNCById(id) {
             this.loading = true;
             this.error = null;
-            
+
             try {
                 const response = await axios.get(route('api.salidas-nc.show', { id }));
                 this.currentSNC = response.data;
@@ -130,11 +133,11 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                 this.loading = false;
             }
         },
-        
+
         async deleteSNC(id) {
             this.loading = true;
             this.error = null;
-            
+
             try {
                 await axios.delete(route('api.salidas-nc.destroy', { id }));
                 // Actualizamos la lista de salidas
@@ -146,7 +149,7 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                 this.loading = false;
             }
         },
-        
+
         async fetchUsers() {
             try {
                 const response = await axios.get(route('api.admin.usuarios.index'));
@@ -166,7 +169,7 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                 throw error;
             }
         },
-        
+
         async updateTratamiento(sncId, data) {
             this.loading = true;
             this.error = null;
@@ -174,9 +177,12 @@ export const useSalidasNCStore = defineStore('salidasNC', {
             try {
                 let response;
 
-                // Si data es FormData, usamos PUT directamente
+                // Si data es FormData, usamos POST con method spoofing
                 if (data instanceof FormData) {
-                    response = await axios.put(route('api.salidas-nc.update', { id: sncId }), data, {
+                    // Agregar _method para simular PUT
+                    data.append('_method', 'PUT');
+
+                    response = await axios.post(route('api.salidas-nc.update', { id: sncId }), data, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }

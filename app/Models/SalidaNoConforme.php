@@ -38,6 +38,8 @@ class SalidaNoConforme extends Model
         'snc_cantidad_afectada' => 'decimal:2',
         'snc_costo_estimado' => 'decimal:2',
         'snc_requiere_accion_correctiva' => 'boolean',
+        'snc_archivos' => 'array',
+        'snc_evidencias' => 'array',
     ];
 
     // Accessors

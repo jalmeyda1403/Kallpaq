@@ -10,9 +10,14 @@
  {{-- Title --}}
  <title>
      @yield('title_prefix', config('adminlte.title_prefix', ''))
-     @yield('title', config('adminlte.title', 'AdminLTE 3'))
+     @yield('title', config('adminlte.title', 'Kallpaq'))
      @yield('title_postfix', config('adminlte.title_postfix', ''))
  </title>
+
+ {{-- Favicon --}}
+ <link rel="shortcut icon" href="{{ asset('images/kallpaq_ico.png') }}" type="image/x-icon">
+ <link rel="icon" href="{{ asset('images/kallpaq_ico.png') }}" type="image/x-icon">
+
  {{-- Custom stylesheets (pre AdminLTE) --}}
  @yield('adminlte_css_pre')
 
@@ -44,6 +49,10 @@
      <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/plugins/summernote/summernote-bs4.min.css') }}">
 
      @if (config('adminlte.google_fonts.allowed', true))
+         {{-- Preconnect to Google Fonts for faster loading --}}
+         <link rel="preconnect" href="https://fonts.googleapis.com">
+         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
          <link rel="stylesheet"
              href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
      @endif

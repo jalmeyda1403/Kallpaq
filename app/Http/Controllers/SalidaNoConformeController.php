@@ -78,7 +78,7 @@ class SalidaNoConformeController extends Controller
             if ($request->hasFile('snc_archivos')) {
                 $files = $request->file('snc_archivos');
                 $fileData = $this->processNewFiles($files, $snc->id);
-                $snc->snc_archivos = json_encode($fileData);
+                $snc->snc_archivos = $fileData; // El cast 'array' se encarga de la conversión
                 $snc->save();
             }
 
@@ -132,11 +132,11 @@ class SalidaNoConformeController extends Controller
             'snc_fecha_cierre' => 'nullable|date',
             'snc_observaciones' => 'nullable|string',
             'proceso_id' => 'nullable|exists:procesos,id',
-            
+
             // Validación para archivos de registro
             'snc_archivos' => 'nullable',
             'snc_archivos.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
-            
+
             // Validación para evidencias de tratamiento
             'snc_evidencias' => 'nullable',
             'snc_evidencias.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
@@ -227,17 +227,17 @@ class SalidaNoConformeController extends Controller
     {
         $currentFiles = [];
         if ($snc->$dbField) {
-            $decoded = json_decode($snc->$dbField, true);
+            // El modelo tiene cast 'array', así que ya viene como array
+            $decoded = $snc->$dbField;
             if (is_array($decoded)) {
-                if (!empty($decoded) && isset($decoded[0]) && is_array($decoded[0])) {
-                    $currentFiles = $decoded;
-                } else {
-                    $currentFiles = array_map(function ($path) {
-                        return ['path' => $path, 'name' => basename($path)];
-                    }, $decoded);
+                // Normalizar la estructura: asegurar que todos los elementos tengan 'path' y 'name'
+                foreach ($decoded as $item) {
+                    if (is_array($item) && isset($item['path'])) {
+                        $currentFiles[] = $item;
+                    } elseif (is_string($item)) {
+                        $currentFiles[] = ['path' => $item, 'name' => basename($item)];
+                    }
                 }
-            } else {
-                $currentFiles = [['path' => $snc->$dbField, 'name' => basename($snc->$dbField)]];
             }
         }
 
@@ -257,16 +257,19 @@ class SalidaNoConformeController extends Controller
             }
         }
 
+        // Verificar si hay archivos nuevos para subir
         if ($request->hasFile($dbField)) {
-            $newFiles = $this->processNewFiles($request->file($dbField), $snc->id);
+            $files = $request->file($dbField);
+            $newFiles = $this->processNewFiles($files, $snc->id);
             $finalFiles = array_merge($finalFiles, $newFiles);
         }
 
+        // Guardar los archivos (el cast 'array' del modelo se encargará de convertir a JSON)
         if (count($finalFiles) > 0) {
-            $snc->$dbField = json_encode($finalFiles);
+            $snc->$dbField = $finalFiles;
         } else {
             $snc->$dbField = null;
         }
-        $snc->save(); // Guardar cambios intermedios
+        $snc->save();
     }
 }

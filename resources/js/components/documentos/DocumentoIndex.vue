@@ -78,7 +78,8 @@
                 </div>
                 <div v-else>
                     <DataTable :value="documentos" selectionMode="single" v-model:selection="selectedDocumento"
-                        dataKey="id" :paginator="true" :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]">
+                        dataKey="id" :paginator="true" :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]"
+                        :loading="isLoading">
 
                         <Column field="cod_documento" header="Código Documento" sortable></Column>
                         <Column field="nombre_documento" header="Nombre Documento" ></Column>
@@ -345,5 +346,18 @@ onBeforeUnmount(() => {
     justify-content: center;
     align-items: center;
     z-index: 1050;
+}
+
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
 }
 </style>

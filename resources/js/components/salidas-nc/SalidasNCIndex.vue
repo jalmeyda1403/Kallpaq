@@ -71,6 +71,7 @@
                 <DataTable ref="dt" :value="salidasNC" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['id', 'snc_descripcion', 'snc_clasificacion', 'snc_estado', 'snc_origen']"
+                    :loading="loading"
                     class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
                     <template #header>
                         <div class="d-flex align-items-center">
@@ -82,16 +83,16 @@
 
                     <Column field="id" header="ID" style="width:5%">
                     </Column>
-                    <Column field="snc_descripcion" header="Descripción" style="width:30%">
+                    <Column field="proceso.proceso_nombre" header="Proceso" style="width:15%">
+                        <template #body="{ data }">
+                            {{ data.proceso?.proceso_nombre || 'N/A' }}
+                        </template>
+                    </Column>
+                    <Column field="snc_descripcion" header="Salida No Conforme" style="width:30%">
                         <template #body="{ data }">
                             <span :title="data.snc_descripcion">
                                 {{ truncateText(data.snc_descripcion, 60) }}
                             </span>
-                        </template>
-                    </Column>
-                    <Column field="proceso.proceso_nombre" header="Proceso" style="width:15%">
-                        <template #body="{ data }">
-                            {{ data.proceso?.proceso_nombre || 'N/A' }}
                         </template>
                     </Column>
                     <Column field="snc_origen" header="Origen" style="width:10%">
@@ -277,5 +278,18 @@ onMounted(() => {
 .badge {
     font-size: 0.85rem;
     padding: 0.35em 0.65em;
+}
+
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
 }
 </style>

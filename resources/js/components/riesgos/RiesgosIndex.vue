@@ -109,3 +109,18 @@ const verDetalle = (riesgo) => {
     $('#riesgoModal').modal('show');
 };
 </script>
+
+<style>
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
+</style>

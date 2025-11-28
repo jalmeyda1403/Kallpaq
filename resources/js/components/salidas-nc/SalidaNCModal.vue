@@ -144,14 +144,17 @@
                                 <div v-if="existingFiles.length > 0" class="mt-3">
                                     <label class="font-weight-bold">Archivos Existentes:</label>
                                     <ul class="list-group">
-                                        <li v-for="(file, index) in existingFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+                                        <li v-for="(file, index) in existingFiles" :key="index"
+                                            class="list-group-item d-flex justify-content-between align-items-center">
                                             <div class="text-truncate" style="max-width: 85%;">
                                                 <i class="fas fa-paperclip mr-2 text-muted"></i>
-                                                <a :href="`/storage/${file.path}`" target="_blank" class="text-decoration-none text-dark">
+                                                <a :href="`/storage/${file.path}`" target="_blank"
+                                                    class="text-decoration-none text-dark">
                                                     {{ file.name }}
                                                 </a>
                                             </div>
-                                            <button type="button" @click="removeExistingFile(index)" class="btn btn-danger btn-sm" title="Eliminar archivo">
+                                            <button type="button" @click="removeExistingFile(index)"
+                                                class="btn btn-danger btn-sm" title="Eliminar archivo">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </li>
@@ -250,37 +253,36 @@ watch(() => props.snc, (newVal) => {
             snc_requiere_accion_correctiva: newVal.snc_requiere_accion_correctiva === true || newVal.snc_requiere_accion_correctiva === '1' || newVal.snc_requiere_accion_correctiva === 1
         };
 
-        // Parsear snc_archivos para existingFiles
+        // Cargar archivos existentes
         existingFiles.value = [];
         if (newVal.snc_archivos) {
-            try {
-                // Intentar parsear como JSON
-                let parsed = JSON.parse(newVal.snc_archivos);
-                
-                // Si no es array, lo convertimos a array
-                if (!Array.isArray(parsed)) {
-                    parsed = [parsed];
-                }
-
-                // Normalizar a objetos {path, name}
-                existingFiles.value = parsed.map(item => {
-                    if (typeof item === 'string') {
+            // El backend ya devuelve un array (gracias al cast 'array' del modelo)
+            if (Array.isArray(newVal.snc_archivos)) {
+                existingFiles.value = newVal.snc_archivos.map(item => {
+                    // Normalizar la estructura
+                    if (typeof item === 'object' && item.path) {
+                        return {
+                            path: item.path,
+                            name: item.name || item.path.split('/').pop()
+                        };
+                    } else if (typeof item === 'string') {
                         return {
                             path: item,
                             name: item.split('/').pop()
                         };
                     }
-                    return item; // Ya es objeto {path, name}
+                    return item;
                 });
-
-            } catch (e) {
-                // Si falla el parseo (es un string normal de la versión vieja), lo agregamos como único elemento
+            } else if (typeof newVal.snc_archivos === 'string') {
+                // Fallback: si por alguna razón viene como string
                 existingFiles.value = [{
                     path: newVal.snc_archivos,
                     name: newVal.snc_archivos.split('/').pop()
                 }];
             }
         }
+
+        console.log('Archivos existentes cargados (SNC):', existingFiles.value);
 
         // Formatear la fecha de detección para el input de tipo date
         if (newVal.snc_fecha_deteccion) {
@@ -528,44 +530,45 @@ const removeCurrentFile = () => {
 
 const submitForm = async () => {
     try {
-        // Preparar los datos a enviar
-        const formData = { ...form.value };
+        // Verificar si hay cambios en los archivos (nuevos o eliminados)
+        const hasNewFiles = filesToUpload.value.length > 0;
+        const hasFileChanges = hasNewFiles || existingFiles.value.length > 0;
 
-        // Agregar archivos existentes que se mantienen
-        if (existingFiles.value && existingFiles.value.length > 0) {
-            formData.existing_archivos = existingFiles.value.map(file => file.path);
-        }
-
-        // Agregar archivos nuevos para subir
-        if (filesToUpload.value.length > 0) {
+        if (hasFileChanges) {
             // Creamos un FormData para manejar la subida de archivos
             const filesFormData = new FormData();
 
             // Agregar todos los campos del formulario al FormData
-            for (const key in formData) {
-                if (formData[key] !== null && formData[key] !== undefined) {
-                    if (typeof formData[key] === 'object' && !(formData[key] instanceof Date) && !(formData[key] instanceof File)) {
-                        filesFormData.append(key, JSON.stringify(formData[key]));
+            for (const key in form.value) {
+                if (form.value[key] !== null && form.value[key] !== undefined && form.value[key] !== '') {
+                    if (key === 'snc_requiere_accion_correctiva') {
+                        // Manejo explícito de booleanos
+                        const boolValue = form.value[key] === true || form.value[key] === '1' || form.value[key] === 1;
+                        filesFormData.append(key, boolValue ? '1' : '0');
+                    } else if (typeof form.value[key] === 'object' && !(form.value[key] instanceof Date)) {
+                        filesFormData.append(key, JSON.stringify(form.value[key]));
                     } else {
-                        filesFormData.append(key, formData[key]);
+                        filesFormData.append(key, form.value[key]);
                     }
                 }
             }
 
-            // Agregar archivos nuevos para subir
-            filesToUpload.value.forEach((fileEntry) => {
-                filesFormData.append('snc_archivos[]', fileEntry.file, fileEntry.file.name);
-            });
-
-            // Asegurar que el campo snc_requiere_accion_correctiva sea un valor booleano adecuado para Laravel
-            if (formData.snc_requiere_accion_correctiva !== undefined && formData.snc_requiere_accion_correctiva !== null) {
-                const boolValue = formData.snc_requiere_accion_correctiva === true ||
-                                 formData.snc_requiere_accion_correctiva === 'true' ||
-                                 formData.snc_requiere_accion_correctiva === '1' ||
-                                 formData.snc_requiere_accion_correctiva === 1 ||
-                                 formData.snc_requiere_accion_correctiva === 'on';
-                filesFormData.set('snc_requiere_accion_correctiva', boolValue ? '1' : '0');
+            // Agregar archivos existentes que se mantienen
+            if (existingFiles.value.length > 0) {
+                existingFiles.value.forEach((file) => {
+                    filesFormData.append('existing_archivos[]', file.path);
+                });
             }
+
+            // Agregar archivos nuevos para subir
+            if (hasNewFiles) {
+                filesToUpload.value.forEach((fileEntry) => {
+                    filesFormData.append('snc_archivos[]', fileEntry.file, fileEntry.file.name);
+                });
+            }
+
+            // Añadir indicación de que se están actualizando archivos de registro
+            filesFormData.append('update_registration', '1');
 
             if (props.snc) {
                 // Actualizar la SNC existente
@@ -576,21 +579,21 @@ const submitForm = async () => {
             }
         } else {
             // Asegurar que el campo snc_requiere_accion_correctiva sea un valor booleano adecuado
-            if (formData.snc_requiere_accion_correctiva !== undefined && formData.snc_requiere_accion_correctiva !== null) {
-                const boolValue = formData.snc_requiere_accion_correctiva === true ||
-                                 formData.snc_requiere_accion_correctiva === 'true' ||
-                                 formData.snc_requiere_accion_correctiva === '1' ||
-                                 formData.snc_requiere_accion_correctiva === 1 ||
-                                 formData.snc_requiere_accion_correctiva === 'on';
-                formData.snc_requiere_accion_correctiva = boolValue ? 1 : 0;
+            if (form.value.snc_requiere_accion_correctiva !== undefined && form.value.snc_requiere_accion_correctiva !== null) {
+                const boolValue = form.value.snc_requiere_accion_correctiva === true ||
+                    form.value.snc_requiere_accion_correctiva === 'true' ||
+                    form.value.snc_requiere_accion_correctiva === '1' ||
+                    form.value.snc_requiere_accion_correctiva === 1 ||
+                    form.value.snc_requiere_accion_correctiva === 'on';
+                form.value.snc_requiere_accion_correctiva = boolValue ? 1 : 0;
             }
 
             if (props.snc) {
                 // Actualizar la SNC existente
-                await salidasNCStore.updateSNC(props.snc.id, formData);
+                await salidasNCStore.updateSNC(props.snc.id, form.value);
             } else {
                 // Crear nueva SNC
-                await salidasNCStore.createSNC(formData);
+                await salidasNCStore.createSNC(form.value);
             }
         }
 

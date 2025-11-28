@@ -12,7 +12,7 @@
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
                             <!-- Datos Generales -->
-                            <h6 class="font-weight-bold text-primary mb-3">Datos Generales</h6>
+                            <h6 class="font-weight-bold text-dark mb-3">Datos Generales</h6>
 
                             <!-- Fila 1: Proceso (ancho completo) -->
                             <div class="row mb-3">
@@ -80,8 +80,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="font-weight-bold custom-label">Cantidad</label>
-                                        <input type="number" v-model="form.es_cantidad" class="form-control"
-                                            min="0">
+                                        <input type="number" v-model="form.es_cantidad" class="form-control" min="0">
                                         <small class="text-muted">Solo números</small>
                                     </div>
                                 </div>
@@ -97,9 +96,11 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="font-weight-bold custom-label">Score</label>
-                                        <input type="number" :value="averageScore" class="form-control" readonly
-                                            step="0.01" min="0" max="5">
-                                        <small class="text-muted">Promedio de conductores: {{ averageScore || 'N/A' }}</small>
+                                        <input type="number" :value="averageScore"
+                                            :class="['form-control', getScoreClass(averageScore)]"
+                                            readonly step="0.01" min="0" max="5">
+                                        <small class="text-muted">Promedio de conductores: {{ averageScore || 'N/A'
+                                            }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -107,9 +108,10 @@
                             <!-- Conductores / Categorías -->
                             <div class="row mb-4">
                                 <div class="col-md-12">
-                                    <h6 class="font-weight-bold text-primary mb-3">
+                                    <h6 class="font-weight-bold text-dark mb-3">
                                         Conductores de Satisfacción
-                                        <small class="text-muted font-weight-normal ml-2">(Seleccione al menos 5)</small>
+                                        <small class="text-muted font-weight-normal ml-2">(Seleccione al menos
+                                            5)</small>
                                     </h6>
                                     <div class="alert alert-warning py-2" v-if="selectedCategoriesCount < 5">
                                         <small>
@@ -119,19 +121,19 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6" v-for="(cat, index) in availableCategories" :key="index">
-                                    <div class="card mb-2 border-light shadow-sm">
-                                        <div class="card-body p-2 d-flex align-items-center justify-content-between">
-                                            <div class="custom-control custom-checkbox flex-grow-1">
-                                                <input type="checkbox" class="custom-control-input" :id="'cat-' + index"
-                                                    :value="cat" v-model="selectedCategories">
-                                                <label class="custom-control-label font-weight-bold"
-                                                    :for="'cat-' + index">{{ cat }}</label>
-                                            </div>
-                                            <div v-if="selectedCategories.includes(cat)" class="ml-2" style="min-width: 120px;">
-                                                <input type="number" v-model="categoryScores[cat]"
-                                                    class="form-control form-control-sm" placeholder="Puntaje"
-                                                    step="0.01" min="0" max="5" required>
-                                            </div>
+                                    <div class="d-flex align-items-center p-2 category-item"
+                                         :class="{'selected-category': selectedCategories.includes(cat)}">
+                                        <div class="custom-control custom-checkbox flex-grow-1">
+                                            <input type="checkbox" class="custom-control-input" :id="'cat-' + index"
+                                                :value="cat" v-model="selectedCategories">
+                                            <label class="custom-control-label category-label"
+                                                :for="'cat-' + index">{{ cat }}</label>
+                                        </div>
+                                        <div v-if="selectedCategories.includes(cat)" class="ml-2"
+                                            style="min-width: 120px;">
+                                            <input type="number" v-model="categoryScores[cat]"
+                                                class="form-control form-control-sm" placeholder="Puntaje"
+                                                step="0.01" min="0" max="5" required>
                                         </div>
                                     </div>
                                 </div>
@@ -142,9 +144,9 @@
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="font-weight-bold custom-label">Informe (PDF/Excel)</label>
-                                        <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
-                                            @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging }"
-                                            @click="openFileDialog">
+                                        <div class="drop-zone" @dragenter.prevent="onDragEnter"
+                                            @dragleave.prevent="onDragLeave" @dragover.prevent @drop.prevent="onDrop"
+                                            :class="{ 'drag-over': isDragging }" @click="openFileDialog">
                                             <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
                                                 accept=".pdf,.xlsx,.xls">
                                             <div class="text-center">
@@ -180,14 +182,17 @@
                                         <div v-if="existingFile" class="mt-3">
                                             <label class="font-weight-bold">Archivo Existente:</label>
                                             <div class="list-group">
-                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
                                                     <div class="text-truncate" style="max-width: 85%;">
                                                         <i class="fas fa-paperclip mr-2 text-muted"></i>
-                                                        <a :href="`/storage/${existingFile.path || existingFile}`" target="_blank" class="text-decoration-none text-dark">
+                                                        <a :href="`/storage/${existingFile.path || existingFile}`"
+                                                            target="_blank" class="text-decoration-none text-dark">
                                                             {{ existingFile.name }}
                                                         </a>
                                                     </div>
-                                                    <button type="button" @click="removeCurrentFile" class="btn btn-danger btn-sm" title="Eliminar archivo">
+                                                    <button type="button" @click="removeCurrentFile"
+                                                        class="btn btn-danger btn-sm" title="Eliminar archivo">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
                                                 </div>
@@ -367,6 +372,16 @@ const getPeriodoOptions = () => {
 const onPeriodoChange = () => {
     // Reset numero_periodo when periodo changes
     form.value.es_numero_periodo = null;
+};
+
+const getScoreClass = (score) => {
+    if (score === null || score === undefined || score === '') return '';
+    if (score >= 4.2) return 'score-excellent';     // Muy bueno (4.2 ≤ ISC < 5)
+    if (score >= 3.4) return 'score-good';          // Bueno (3.4 ≤ ISC < 4.2)
+    if (score >= 2.5) return 'score-regular';       // Regular (2.5 ≤ ISC < 3.4)
+    if (score >= 1.8) return 'score-bad';           // Malo (1.8 ≤ ISC < 2.5)
+    if (score >= 1) return 'score-very-bad';        // Muy malo (1 ≤ ISC < 1.8)
+    return '';                                      // Default for invalid values
 };
 
 const loadEncuesta = async (id) => {
@@ -586,32 +601,312 @@ onMounted(() => {
     font-size: 0.9em !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     font-weight: 600 !important;
-    color: #070707 !important;
+    color: #495057 !important;
     letter-spacing: 0.2px !important;
 }
 
+/* Improved checkbox styles with red/gray variations */
+.custom-control-input:checked ~ .custom-control-label::before {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.custom-control-input:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.custom-control-input:disabled:checked ~ .custom-control-label::before {
+    background-color: #a0a0a0;
+}
+
+.custom-checkbox .custom-control-label::before {
+    border-color: #adb5bd;
+}
+
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
+}
+
+/* Card styles for categories */
+.card {
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(220, 53, 69, 0.15) !important;
+}
+
+/* Improved drop zone styles with red/gray variations */
 .drop-zone {
-    border: 2px dashed #ccc;
+    border: 2px dashed #ced4da;
     border-radius: 10px;
     padding: 40px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background-color: #f9f9f9;
+    background-color: #f8f9fa;
     text-align: center;
 }
 
 .drop-zone:hover {
-    border-color: #999;
+    border-color: #dc3545;
+    background-color: #fff5f5;
 }
 
 .drop-zone.drag-over {
-    background-color: #f0f0f0;
-    border-color: #666;
+    background-color: #fdf0f0;
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
 }
 
 .drop-zone.disabled {
     cursor: not-allowed;
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     opacity: 0.7;
+}
+
+/* Improved form controls */
+.form-control {
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-radius: 0.375rem;
+}
+
+.form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dc3545;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Button styles */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
+}
+
+.btn-danger:not(:disabled):not(.disabled):active,
+.btn-danger:not(:disabled):not(.disabled).active {
+    background-color: #bd2130;
+    border-color: #b21f2d;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5);
+}
+
+/* Alert styling */
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    border-radius: 0.375rem;
+}
+
+/* Modal header */
+.modal-header {
+    background-color: #dc3545;
+    color: white;
+    border-top-left-radius: calc(0.3rem - 1px);
+    border-top-right-radius: calc(0.3rem - 1px);
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 1;
+    font-size: 1.5rem;
+}
+
+.modal-header .close:hover {
+    color: #e9ecef;
+    opacity: 0.8;
+}
+
+/* Progress bar styling */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 1rem;
+}
+
+.progress-bar {
+    background-color: #dc3545;
+}
+
+/* Card styling */
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+}
+
+.card-body {
+    padding: 0.75rem;
+}
+
+/* Input group styling */
+.input-group .btn {
+    border: 1px solid #ced4da;
+}
+
+.input-group .btn:hover {
+    background-color: #f8f9fa;
+}
+
+.input-group .btn-danger {
+    border: 1px solid #dc3545;
+}
+
+/* Section headers */
+h6.font-weight-bold.text-dark {
+    color: #212529 !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* File list items */
+.list-group-item {
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Category items */
+.category-item {
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff;
+}
+
+.category-item:hover {
+    border-color: #dc3545;
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.15);
+}
+
+.selected-category {
+    background-color: #f8f9fa;
+    border: 1px solid #dc3545 !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.2);
+}
+
+.category-label {
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Input group button styling */
+.input-group .btn {
+    border: 1px solid #ced4da;
+    background-color: #e9ecef;
+    color: #495057;
+    transition: all 0.15s ease-in-out;
+}
+
+.input-group .btn:hover {
+    background-color: #dcdcdc;
+    border-color: #adb5bd;
+    color: #212529;
+}
+
+.input-group .btn-danger {
+    border: 1px solid #dc3545;
+    background-color: #dc3545;
+    color: white;
+}
+
+.input-group .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: white;
+}
+
+/* Footer buttons */
+.modal-footer {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-bottom-right-radius: calc(0.3rem - 1px);
+    border-bottom-left-radius: calc(0.3rem - 1px);
+}
+
+/* Score color styling based on EncuestasIndex palette */
+.score-excellent {
+    background-color: #d1ecf1 !important; /* Excellent score (blue) */
+    border-color: #bee5eb !important;
+    color: #0c5460 !important;
+}
+
+.score-good {
+    background-color: #d4edda !important; /* Good score (green) */
+    border-color: #c3e6cb !important;
+    color: #155724 !important;
+}
+
+.score-regular {
+    background-color: #fff3cd !important; /* Regular score (yellow) */
+    border-color: #ffeaa7 !important;
+    color: #856404 !important;
+}
+
+.score-bad {
+    background-color: #f8d7da !important; /* Bad score (red) */
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+}
+
+.score-very-bad {
+    background-color: #f8d7da !important; /* Very bad score (red) */
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+}
+
+/* General section headers */
+h6.font-weight-bold {
+    color: #212529;
+    font-weight: 700;
 }
 </style>

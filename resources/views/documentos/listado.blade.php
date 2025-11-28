@@ -155,7 +155,7 @@
                                     {{ $documento->fuente_documento == 1 ? 'Interna' : 'Externa' }}
                                 </td>
                                 <td class="text-center text-nowrap">
-                                    {{ optional($documento->estado_documento)->name }}
+                                    {{ $documento->estado_documento }}
                                 </td>
                                 <td class="text-center">
                                     {{ str_pad($documento->usa_versiones_documento ? optional($documento->ultimaVersion)->dv_version)}}

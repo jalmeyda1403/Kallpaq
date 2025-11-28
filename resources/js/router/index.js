@@ -69,6 +69,16 @@ const routes = [
         component: () => import('@/components/obligaciones/ObligacionesIndex.vue'),
     },
     {
+        path: '/mis-obligaciones',
+        name: 'obligaciones.mine',
+        component: () => import('@/components/obligaciones/MisObligaciones.vue'),
+    },
+    {
+        path: '/radar-obligaciones',
+        name: 'radar.index',
+        component: () => import('@/components/obligaciones/RadarObligaciones.vue'),
+    },
+    {
         path: '/administracion/asignacion-ouos', // Changed path to reflect new location
         name: 'administracion.asignacion-ouos.index', // Changed name
         component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'), // Updated path

@@ -12,8 +12,8 @@ class DocumentoObserver
         DocumentoMovimiento::create([
             'documento_id' => $documento->id,
             'usuario_id' => Auth::id(), // Obtiene el ID del usuario autenticado
-            'accion' => 'CREACIÓN',
-            'descripcion' => "Se creó el documento '{$documento->nombre_documento}' con código '{$documento->cod_documento}'.",
+            'accion' => 'creado',
+            'observacion' => "Se creó el documento '{$documento->nombre_documento}' con código '{$documento->cod_documento}'.",
         ]);
     }
 
@@ -22,7 +22,7 @@ class DocumentoObserver
      */
     public function updated(Documento $documento): void
     {
-      
+
         $cambios = $documento->getChanges();
 
         // No registramos nada si solo se actualizó el 'updated_at'
@@ -43,19 +43,19 @@ class DocumentoObserver
         DocumentoMovimiento::create([
             'documento_id' => $documento->id,
             'usuario_id' => Auth::id(),
-            'accion' => 'ACTUALIZACIÓN',
-            'descripcion' => rtrim($descripcion, '; '), // Quita el último punto y coma
+            'accion' => 'modificado',
+            'observacion' => rtrim($descripcion, '; '), // Quita el último punto y coma
         ]);
     }
 
-   
+
     public function deleting(Documento $documento): void
     {
         DocumentoMovimiento::create([
             'documento_id' => $documento->id,
             'usuario_id' => Auth::id(),
-            'accion' => 'ELIMINACIÓN',
-            'descripcion' => "Se eliminó el documento '{$documento->nombre_documento}' (Código: {$documento->cod_documento}).",
+            'accion' => 'eliminado',
+            'observacion' => "Se eliminó el documento '{$documento->nombre_documento}' (Código: {$documento->cod_documento}).",
         ]);
     }
 }

@@ -3,7 +3,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">Home</li>
-                <li class="breadcrumb-item active" aria-current="page">Listado Obligaciones</li>
+                <li class="breadcrumb-item active" aria-current="page">Mis Obligaciones</li>
             </ol>
         </nav>
 
@@ -11,25 +11,11 @@
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
-                        <h3 class="card-title mb-0">Lista de Obligaciones</h3>
-                    </div>
-                    <div class="col-md-6 text-md-right">
-                        <a href="#" class="btn btn-primary btn-sm"
-                            @click.prevent="obligacionStore.openObligacionModal()" title="Nueva Obligación">
-                            <i class="fas fa-plus-circle"></i> Agregar
-                        </a>
-                        <button class="btn btn-info btn-sm ml-1" @click="router.push({ name: 'radar.index' })"
-                            title="Radar Normativo (IA)">
-                            <i class="fas fa-satellite-dish"></i> Radar IA
-                        </button>
-                        <button class="btn btn-danger btn-sm ml-1" :disabled="!selectedObligacionId"
-                            @click="confirmDelete(selectedObligacionId)" title="Eliminar Obligación">
-                            <i class="fas fa-trash-alt"></i> Eliminar
-                        </button>
+                        <h3 class="card-title mb-0">Mis Obligaciones Asignadas</h3>
                     </div>
                 </div>
                 <hr>
-                <form @submit.prevent="obligacionStore.fetchObligaciones">
+                <form @submit.prevent="obligacionStore.fetchMisObligaciones">
                     <div class="form-row">
                         <div class="col">
                             <input type="text" v-model="obligacionStore.filters.documento" class="form-control"
@@ -109,65 +95,12 @@
                                 @click.prevent="obligacionStore.openRiesgosModal(data.id)">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </a>
-                            <a href="#" title="Editar Obligación" class="btn btn-warning btn-sm"
-                                @click.prevent="editObligacion(data)">
-                                <i class="fas fa-pencil-alt"></i>
-                            </a>
                         </template>
                     </Column>
                 </DataTable>
             </div>
         </div>
     </div>
-
-    <!-- Modal para agregar o editar obligación -->
-    <Dialog v-model:visible="obligacionStore.showObligacionModal" :style="{ width: '750px' }"
-        header="Detalles de la Obligación" :modal="true" class="p-fluid">
-        <div class="p-field">
-            <label for="proceso_nombre">Proceso</label>
-            <InputText id="proceso_nombre" v-model="obligacionStore.form.proceso_nombre" required autofocus />
-        </div>
-        <div class="p-field">
-            <label for="area_compliance_nombre">Área de Compliance</label>
-            <InputText id="area_compliance_nombre" v-model="obligacionStore.form.area_compliance_nombre" required />
-        </div>
-        <div class="p-field">
-            <label for="documento_tecnico_normativo">Documento Técnico Normativo</label>
-            <Textarea id="documento_tecnico_normativo" v-model="obligacionStore.form.documento_tecnico_normativo"
-                rows="3" cols="20" />
-        </div>
-        <div class="p-field">
-            <label for="obligacion_principal">Obligación Principal</label>
-            <Textarea id="obligacion_principal" v-model="obligacionStore.form.obligacion_principal" rows="3"
-                cols="20" />
-        </div>
-        <div class="p-field">
-            <label for="obligacion_controles">Controles Identificados</label>
-            <Textarea id="obligacion_controles" v-model="obligacionStore.form.obligacion_controles" rows="3"
-                cols="20" />
-        </div>
-        <div class="p-field">
-            <label for="consecuencia_incumplimiento">Consecuencia del Incumplimiento</label>
-            <Textarea id="consecuencia_incumplimiento" v-model="obligacionStore.form.consecuencia_incumplimiento"
-                rows="3" cols="20" />
-        </div>
-        <div class="p-field">
-            <label for="documento_deroga">Documento Deroga</label>
-            <InputText id="documento_deroga" v-model="obligacionStore.form.documento_deroga" />
-        </div>
-        <div class="p-field">
-            <label for="estado_obligacion">Estado de la Obligación</label>
-            <Dropdown id="estado_obligacion" v-model="obligacionStore.form.estado_obligacion"
-                :options="['pendiente', 'mitigada', 'controlada', 'vencida', 'inactiva', 'suspendida']"
-                placeholder="Seleccione un estado" />
-        </div>
-
-        <template #footer>
-            <Button label="Cancelar" icon="pi pi-times" class="p-button-text"
-                @click="obligacionStore.closeObligacionModal()" />
-            <Button label="Guardar" icon="pi pi-check" class="p-button-primary" @click="saveObligacion" />
-        </template>
-    </Dialog>
 
     <!-- Modal para mostrar los riesgos de la obligacion -->
     <Dialog v-model:visible="obligacionStore.showRiesgosModal" :style="{ width: '750px' }" header="Riesgos Asociados"
@@ -185,14 +118,6 @@
                     {{ data.riesgo_valoracion }}
                 </template>
             </Column>
-            <Column header="Acciones">
-                <template #body="{ data }">
-                    <Button icon="fas fa-pencil-alt" class="p-button-rounded p-button-warning mr-1"
-                        @click="editRiesgo(data)" />
-                    <Button icon="fas fa-trash-alt" class="p-button-rounded p-button-danger"
-                        @click="deleteRiesgo(data.id)" />
-                </template>
-            </Column>
         </DataTable>
         <template #footer>
             <Button label="Cerrar" icon="pi pi-times" class="p-button-text"
@@ -202,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useObligacionStore } from '@/stores/obligacionStore';
 import { FilterMatchMode } from 'primevue/api';
@@ -213,13 +138,10 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
-import Textarea from 'primevue/textarea';
-import Dropdown from 'primevue/dropdown';
 
 const router = useRouter();
 const obligacionStore = useObligacionStore();
 const dt = ref(null);
-const selectedObligacionId = ref(null);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -261,46 +183,8 @@ const exportCSV = () => {
     dt.value.exportCSV();
 };
 
-const editObligacion = (obligacion) => {
-    obligacionStore.openObligacionModal(obligacion);
-};
-
-const saveObligacion = async () => {
-    try {
-        await obligacionStore.saveObligacion(obligacionStore.form);
-        obligacionStore.closeObligacionModal();
-        // Mostrar mensaje de éxito
-    } catch (error) {
-        // Mostrar mensaje de error
-    }
-};
-
-const confirmDelete = async (id) => {
-    if (confirm('¿Estás seguro de que quieres eliminar esta obligación?')) {
-        try {
-            await obligacionStore.deleteObligacion(id);
-            selectedObligacionId.value = null; // Limpiar selección
-            // Mostrar mensaje de éxito
-        } catch (error) {
-            // Mostrar mensaje de error
-        }
-    }
-};
-
-const editRiesgo = (riesgo) => {
-    // Lógica para editar riesgo (puede abrir otro modal o navegar a otra ruta)
-    console.log('Editar riesgo:', riesgo);
-};
-
-const deleteRiesgo = (id) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este riesgo?')) {
-        // Lógica para eliminar riesgo
-        console.log('Eliminar riesgo:', id);
-    }
-};
-
 onMounted(() => {
-    obligacionStore.fetchObligaciones();
+    obligacionStore.fetchMisObligaciones();
 });
 </script>
 

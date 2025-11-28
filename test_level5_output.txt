@@ -1,0 +1,14 @@
+Normas encontradas: 61
+Primera norma:
+Array
+(
+    [titulo] => Ley que modifica la Ley 31419 Ley que establece disposiciones para garantizar la idoneidad en el acceso y ejercicio de la función pública de funcion...
+    [numero_norma] => LEY N° 32507
+    [organismo_emisor] => CONGRESO DE LA REPUBLICA
+    [fecha_publicacion] => 2025-11-27
+    [resumen_ia] => Ley que modifica la Ley 31419 Ley que establece disposiciones para garantizar la idoneidad en el acceso y ejercicio de la función pública de funcionarios y directivos de libre designación y remoción
+    [texto_completo] => Ley que modifica la Ley 31419 Ley que establece disposiciones para garantizar la idoneidad en el acceso y ejercicio de la función pública de funcionarios y directivos de libre designación y remoción
+    [nivel_relevancia] => Baja
+    [estado] => Pendiente
+    [obligacion_principal] => Ley que modifica la Ley 31419 Ley que establece disposiciones para garantizar la idoneidad en el acceso y ejercicio de la función pública de funcionarios y directivos de libre designación y remoción
+)

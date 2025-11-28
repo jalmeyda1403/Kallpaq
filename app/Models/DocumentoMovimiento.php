@@ -9,11 +9,12 @@ class DocumentoMovimiento extends Model
 {
     use HasFactory;
     protected $table = 'documento_movimientos';
+    public $timestamps = false;
 
     protected $fillable = [
         'documento_id',
         'accion',
-        'descripcion',
+        'observacion',
         'usuario_id',
     ];
 

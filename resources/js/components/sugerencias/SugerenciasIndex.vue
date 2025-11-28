@@ -15,11 +15,7 @@
                     </div>
                     <div class="col-md-6 text-md-right">
                         <button class="btn btn-primary btn-sm ml-1" @click="openModal()">
-                            <i class="fas fa-plus-circle"></i> Nueva Sugerencia
-                        </button>
-                        <button class="btn btn-danger btn-sm ml-1" :disabled="!selectedSugerenciaId"
-                            @click="confirmDelete">
-                            <i class="fas fa-trash-alt"></i> Eliminar
+                            <i class="fa fa-plus-circle"></i> Nueva Sugerencia
                         </button>
                     </div>
                 </div>
@@ -29,28 +25,33 @@
                         <form @submit.prevent="fetchSugerencias">
                             <div class="form-row">
                                 <div class="col">
-                                    <input type="text" v-model="filters.buscar_sugerencia" class="form-control"
-                                        placeholder="Buscar por ID, detalle...">
+                                    <input type="text" v-model="filters.proceso_nombre" class="form-control"
+                                        placeholder="Buscar por nombre de proceso...">
                                 </div>
                                 <div class="col">
                                     <select v-model="filters.estado" class="form-control">
                                         <option value="">Todos los Estados</option>
                                         <option value="abierta">Abierta</option>
                                         <option value="en progreso">En Progreso</option>
+                                        <option value="concluida">Concluida</option>
+                                        <option value="observada">Observada</option>
                                         <option value="cerrada">Cerrada</option>
                                     </select>
                                 </div>
                                 <div class="col">
-                                    <select v-model="filters.proceso_id" class="form-control">
-                                        <option value="">Todos los Procesos</option>
-                                        <option v-for="proceso in procesos" :key="proceso.id" :value="proceso.id">
-                                            {{ proceso.nombre }}
-                                        </option>
+                                    <select v-model="filters.clasificacion" class="form-control">
+                                        <option value="">Todas las Clasificaciones</option>
+                                        <option value="MP">Mejora de procesos y servicios</option>
+                                        <option value="MT">Mejora tecnológica</option>
+                                        <option value="AC">Atención al cliente y trato del personal</option>
+                                        <option value="MF">Mejora de infraestructura física</option>
+                                        <option value="CF">Capacitación y formación</option>
+                                        <option value="CT">Comunicación y transparencia</option>
                                     </select>
                                 </div>
                                 <div class="col-auto">
                                     <button type="submit" class="btn bg-dark">
-                                        <i class="fas fa-search"></i> Buscar
+                                        <i class="fa fa-search"></i> Buscar
                                     </button>
                                 </div>
                             </div>
@@ -63,10 +64,10 @@
 
                 <!-- Tabla -->
                 <DataTable ref="dt" :value="sugerencias" v-model:filters="filtersPrimevue"
-                    v-model:selection="selectedSugerenciaId" selectionMode="single" paginator :rows="10"
+                    v-model:selection="selectedSugerencia" selectionMode="single" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                    :globalFilterFields="['id', 'sugerencia_detalle', 'sugerencia_clasificacion', 'sugerencia_estado', 'sugerencia_procedencia']"
-                    class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
+                    :globalFilterFields="['id', 'sugerencia_clasificacion', 'sugerencia_estado', 'sugerencia_procedencia', 'proceso.proceso_nombre']"
+                    :loading="storeLoading" class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
                     <template #header>
                         <div class="d-flex align-items-center">
                             <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
@@ -76,16 +77,16 @@
 
                     <Column field="id" header="ID" style="width:5%">
                     </Column>
-                    <Column field="sugerencia_detalle" header="Detalle" style="width:30%">
+                    <Column field="proceso.proceso_nombre" header="Proceso" style="width:15%">
+                        <template #body="{ data }">
+                            {{ data.proceso?.proceso_nombre || 'N/A' }}
+                        </template>
+                    </Column>
+                    <Column field="sugerencia_detalle" header="Sugerencia" style="width:30%">
                         <template #body="{ data }">
                             <span :title="data.sugerencia_detalle">
                                 {{ truncateText(data.sugerencia_detalle, 60) }}
                             </span>
-                        </template>
-                    </Column>
-                    <Column field="proceso.proceso_nombre" header="Proceso" style="width:15%">
-                        <template #body="{ data }">
-                            {{ data.proceso?.proceso_nombre || 'N/A' }}
                         </template>
                     </Column>
                     <Column field="sugerencia_procedencia" header="Procedencia" style="width:10%">
@@ -94,7 +95,7 @@
                     </Column>
                     <Column field="sugerencia_estado" header="Estado" style="width:10%; text-align: center;">
                         <template #body="{ data }">
-                            <span :class="getStatusBadgeClass(data.sugerencia_estado)">
+                            <span :class="getStatusBadgeClass(data.sugerencia_estado)" class="badge-text">
                                 {{ data.sugerencia_estado }}
                             </span>
                         </template>
@@ -104,20 +105,20 @@
                             {{ formatDate(data.sugerencia_fecha_ingreso) }}
                         </template>
                     </Column>
-                    <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
-                        bodyStyle="width: 12%">
+                    <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
+                        bodyStyle="width: 15%">
                         <template #body="{ data }">
-                            <a href="#" title="Editar" class="mr-3 d-inline-block"
+                            <a href="#" title="Editar" class="mr-2 d-inline-block"
                                 @click.prevent="editSugerencia(data)">
                                 <i class="fas fa-pencil-alt text-warning fa-lg"></i>
                             </a>
-                            <a href="#" title="Tratamiento" class="mr-3 d-inline-block"
+                            <a href="#" title="Tratamiento" class="mr-2 d-inline-block"
                                 @click.prevent="openTratamiento(data)">
                                 <i class="fas fa-tasks text-info fa-lg"></i>
                             </a>
-                            <a href="#" title="Eliminar" class="mr-3 d-inline-block"
-                                @click.prevent="deleteSugerencia(data.id)">
-                                <i class="fas fa-trash text-danger fa-lg"></i>
+                            <a v-if="data.sugerencia_estado === 'concluida'" href="#" title="Validar"
+                                class="mr-2 d-inline-block" @click.prevent="validateSugerencia(data)">
+                                <i class="fas fa-check text-success fa-lg"></i>
                             </a>
                         </template>
                     </Column>
@@ -125,12 +126,17 @@
             </div>
 
             <!-- Modal Create/Edit -->
-            <SugerenciaModal :show="showModal" :sugerencia-id="selectedSugerenciaId" :procesos="procesos"
-                @close="closeModal" @saved="fetchSugerencias"></SugerenciaModal>
+            <SugerenciaModal :show="showModal" :sugerencia-id="selectedSugerencia?.id" @close="closeModal"
+                @saved="fetchSugerencias">
+            </SugerenciaModal>
 
             <!-- Modal Tratamiento -->
-            <SugerenciaTratamiento :show="showTratamientoModal" :sugerencia-id="selectedSugerenciaId"
+            <SugerenciaTratamiento :show="showTratamientoModal" :sugerencia-id="selectedSugerencia?.id"
                 @close="closeTratamientoModal" @saved="fetchSugerencias"></SugerenciaTratamiento>
+
+            <!-- Modal Evaluación -->
+            <SugerenciaEvaluacionModal :show="showEvaluacionModal" :sugerencia-id="selectedSugerenciaForEvaluation?.id"
+                @close="closeEvaluacionModal" @validated="fetchSugerencias"></SugerenciaEvaluacionModal>
         </div>
     </div>
 </template>
@@ -141,6 +147,7 @@ import { useSugerenciasStore } from '@/stores/sugerenciasStore';
 import { storeToRefs } from 'pinia';
 import SugerenciaModal from './SugerenciaModal.vue';
 import SugerenciaTratamiento from './SugerenciaTratamiento.vue';
+import SugerenciaEvaluacionModal from './SugerenciaEvaluacionModal.vue';
 import Swal from 'sweetalert2';
 
 // PrimeVue Imports
@@ -155,23 +162,26 @@ const { sugerencias, loading: storeLoading } = storeToRefs(sugerenciasStore);
 
 const showModal = ref(false);
 const showTratamientoModal = ref(false);
-const selectedSugerenciaId = ref(null);
+const showEvaluacionModal = ref(false);
+const selectedSugerencia = ref(null);
+const selectedSugerenciaForEvaluation = ref(null);
 const dt = ref(null);
 
 // Filtros
 const filters = reactive({
+    proceso_nombre: '',
     estado: '',
     proceso_id: '',
-    buscar_sugerencia: ''
+    clasificacion: ''
 });
 
 const filtersPrimevue = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     id: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    sugerencia_detalle: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     sugerencia_clasificacion: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     sugerencia_estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     sugerencia_procedencia: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    'proceso.proceso_nombre': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
 // Métodos
@@ -184,7 +194,7 @@ const fetchSugerencias = async () => {
 };
 
 const openModal = () => {
-    selectedSugerenciaId.value = null;
+    selectedSugerencia.value = null;
     showModal.value = true;
 };
 
@@ -192,7 +202,7 @@ const editSugerencia = async (sugerencia) => {
     try {
         // Cargamos la sugerencia específica en el store
         await sugerenciasStore.fetchSugerenciaById(sugerencia.id);
-        selectedSugerenciaId.value = sugerencia.id;
+        selectedSugerencia.value = sugerencia;
         showModal.value = true;
     } catch (error) {
         console.error('Error al cargar datos de la sugerencia:', error);
@@ -201,21 +211,31 @@ const editSugerencia = async (sugerencia) => {
 
 const closeModal = () => {
     showModal.value = false;
-    selectedSugerenciaId.value = null;
+    selectedSugerencia.value = null;
 };
 
 const openTratamiento = (sugerencia) => {
-    selectedSugerenciaId.value = sugerencia.id;
+    selectedSugerencia.value = sugerencia;
     showTratamientoModal.value = true;
 };
 
 const closeTratamientoModal = () => {
     showTratamientoModal.value = false;
-    selectedSugerenciaId.value = null;
+    selectedSugerencia.value = null;
+};
+
+const validateSugerencia = (sugerencia) => {
+    selectedSugerenciaForEvaluation.value = sugerencia;
+    showEvaluacionModal.value = true;
+};
+
+const closeEvaluacionModal = () => {
+    showEvaluacionModal.value = false;
+    selectedSugerenciaForEvaluation.value = null;
 };
 
 const confirmDelete = async () => {
-    if (!selectedSugerenciaId.value) {
+    if (!selectedSugerencia.value) {
         await Swal.fire('Advertencia', 'Por favor selecciona una sugerencia para eliminar.', 'warning');
         return;
     }
@@ -232,13 +252,13 @@ const confirmDelete = async () => {
 
     if (result.isConfirmed) {
         try {
-            await sugerenciasStore.deleteSugerencia(selectedSugerenciaId.value);
+            await sugerenciasStore.deleteSugerencia(selectedSugerencia.value.id);
             await Swal.fire(
                 'Eliminado!',
                 'La sugerencia ha sido eliminada.',
                 'success'
             );
-            selectedSugerenciaId.value = null; // Limpiar la selección después de eliminar
+            selectedSugerencia.value = null; // Limpiar la selección después de eliminar
         } catch (error) {
             await Swal.fire(
                 'Error!',
@@ -269,8 +289,8 @@ const deleteSugerencia = async (id) => {
                 'La sugerencia ha sido eliminada.',
                 'success'
             );
-            if (selectedSugerenciaId.value === id) {
-                selectedSugerenciaId.value = null; // Limpiar la selección si se elimina la sugerencia seleccionada
+            if (selectedSugerencia.value?.id === id) {
+                selectedSugerencia.value = null; // Limpiar la selección si se elimina la sugerencia seleccionada
             }
         } catch (error) {
             await Swal.fire(
@@ -300,6 +320,8 @@ const getStatusBadgeClass = (status) => {
     switch (status) {
         case 'abierta': return 'badge badge-warning';
         case 'en progreso': return 'badge badge-primary';
+        case 'concluida': return 'badge badge-info';
+        case 'observada': return 'badge badge-danger';  // Or another appropriate color
         case 'cerrada': return 'badge badge-success';
         default: return 'badge badge-secondary';
     }
@@ -322,5 +344,14 @@ onMounted(() => {
 .p-datatable-loading-icon {
     color: red !important;
     font-size: 2rem !important;
+}
+
+/* Improved badge styling */
+.badge-text {
+    font-size: 0.9em !important;
+    font-weight: 500 !important;
+    padding: 0.4em 0.8em !important;
+    border-radius: 0.375rem !important;
+    text-transform: capitalize;
 }
 </style>

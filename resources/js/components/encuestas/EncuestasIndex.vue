@@ -17,8 +17,7 @@
                         <button class="btn btn-primary btn-sm ml-1" @click="openModal()">
                             <i class="fas fa-plus-circle"></i> Nuevo Resultado
                         </button>
-                        <button class="btn btn-danger btn-sm ml-1" :disabled="!selectedEncuesta"
-                            @click="confirmDelete">
+                        <button class="btn btn-danger btn-sm ml-1" :disabled="!selectedEncuesta" @click="confirmDelete">
                             <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
                     </div>
@@ -30,7 +29,7 @@
                             <div class="form-row">
                                 <div class="col">
                                     <input type="text" class="form-control" v-model="filters.proceso_nombre"
-                                           placeholder="Filtrar por proceso...">
+                                        placeholder="Filtrar por proceso...">
                                 </div>
                                 <div class="col">
                                     <select v-model="filters.es_anio" class="form-control">
@@ -61,8 +60,8 @@
             <div class="card-body">
                 <!-- Tabla PrimeVue -->
                 <DataTable ref="dt" :value="encuestas" v-model:filters="filtersPrimevue"
-                    v-model:selection="selectedEncuesta" selectionMode="single" paginator :rows="10"
-                    :loading="loading" :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
+                    v-model:selection="selectedEncuesta" selectionMode="single" paginator :rows="10" :loading="loading"
+                    :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['id', 'proceso.proceso_nombre', 'es_nps_score', 'es_score']"
                     class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows" responsiveLayout="scroll"
                     loadingIcon="pi pi-spinner pi-spin" :loadingIconProps="{ class: 'p-datatable-loading-icon' }">
@@ -83,7 +82,8 @@
                     <Column header="Informe" field="informe" style="width: 20%">
                         <template #body="{ data }">
                             <span class="text-muted">
-                                {{ String(data.proceso_id).padStart(3, '0') }}-{{ data.es_anio }}-{{ data.es_numero_periodo }}
+                                {{ String(data.proceso_id).padStart(3, '0') }}-{{ data.es_anio }}-{{
+                                data.es_numero_periodo }}
                             </span>
                         </template>
                     </Column>
@@ -104,8 +104,9 @@
                     </Column>
                     <Column header="Acciones" style="width: 11%">
                         <template #body="{ data }">
-                            <a v-if="getInformePath(data.es_informe_path)" :href="`/storage/${getInformePath(data.es_informe_path)}`" target="_blank"
-                                class="mr-2" title="Ver Informe">
+                            <a v-if="getInformePath(data.es_informe_path)"
+                                :href="`/storage/${getInformePath(data.es_informe_path)}`" target="_blank" class="mr-2"
+                                title="Ver Informe">
                                 <i class="fas fa-file-pdf text-info fa-lg"></i>
                             </a>
                             <a v-else class="mr-2 disabled" title="No hay informe">
@@ -124,7 +125,8 @@
             </div>
         </div>
 
-        <EncuestaModal :show="showModal" :encuestaId="selectedEncuesta ? selectedEncuesta.id : null" @close="closeModal" @saved="fetchData" />
+        <EncuestaModal :show="showModal" :encuestaId="selectedEncuesta ? selectedEncuesta.id : null" @close="closeModal"
+            @saved="fetchData" />
 
         <ModalHijo ref="modalHijoRef" fetchUrl="/procesos/listar" targetId="proceso_id" targetDesc="proceso_nombre"
             @update-target="handleProcessSelected" />

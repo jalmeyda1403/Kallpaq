@@ -18,7 +18,7 @@ class ObligacionController extends Controller
 
     public function apiIndex(Request $request)
     {
-        $query = Obligacion::with('proceso', 'area_compliance');
+        $query = Obligacion::with('proceso', 'area_compliance', 'documento', 'radar');
 
         // Filtrar por nombre del proceso (relación)
         if ($request->filled('proceso')) {
@@ -33,6 +33,47 @@ class ObligacionController extends Controller
         }
 
         // Filtrar por fuente
+        if ($request->filled('fuente')) {
+            $query->where('fuente', $request->fuente);
+        }
+
+        $obligaciones = $query->get();
+
+        return response()->json($obligaciones);
+    }
+
+    public function misObligaciones(Request $request)
+    {
+        $user = auth()->user();
+
+        // Obtener las OUOs del usuario
+        $ouoIds = $user->ouos->pluck('id');
+
+        // Obtener los procesos asociados a esas OUOs
+        // Asumiendo que existe una relación 'procesos' en el modelo OUO
+        // Si la relación es muchos a muchos, se accede a través de la tabla pivote
+        $procesoIds = \App\Models\OUO::whereIn('id', $ouoIds)
+            ->with('procesos')
+            ->get()
+            ->pluck('procesos')
+            ->flatten()
+            ->pluck('id')
+            ->unique();
+
+        $query = Obligacion::with('proceso', 'area_compliance', 'documento', 'radar')
+            ->whereIn('proceso_id', $procesoIds);
+
+        // Aplicar los mismos filtros que en apiIndex si es necesario
+        if ($request->filled('proceso')) {
+            $query->whereHas('proceso', function ($q) use ($request) {
+                $q->where('proceso_nombre', 'like', '%' . $request->proceso . '%');
+            });
+        }
+
+        if ($request->filled('documento')) {
+            $query->where('documento_tecnico_normativo', 'like', '%' . $request->documento . '%');
+        }
+
         if ($request->filled('fuente')) {
             $query->where('fuente', $request->fuente);
         }
@@ -123,35 +164,105 @@ class ObligacionController extends Controller
 
 
 
-        public function show($id)
+    public function show($id)
+    {
 
 
 
-        {
+        $obligacion = Obligacion::with('proceso', 'area_compliance')->findOrFail($id);
 
 
 
-            $obligacion = Obligacion::with('proceso', 'area_compliance')->findOrFail($id);
+        return response()->json($obligacion);
 
 
 
-            return response()->json($obligacion);
+    }
 
 
 
-        }
 
 
 
-    
+
+    public function update(Request $request, $id)
+    {
 
 
 
-        public function update(Request $request, $id)
+        $obligacion = Obligacion::findOrFail($id);
 
 
 
-        {
+
+
+
+
+        $obligacion->update($request->only([
+
+
+
+            'proceso_id',
+
+
+
+            'area_compliance_id',
+
+
+
+            'documento_tecnico_normativo',
+
+
+
+            'obligacion_principal',
+
+
+
+            'obligacion_controles',
+
+
+
+            'consecuencia_incumplimiento',
+
+
+
+            'documento_deroga',
+
+
+
+            'estado_obligacion',
+            'radar_id',
+            'documento_id',
+            'tipo_obligacion',
+            'nivel_riesgo_inherente',
+            'nivel_riesgo_residual',
+            'frecuencia_revision'
+        ]));
+
+
+
+
+
+
+
+        return response()->json(['message' => 'Obligación actualizada con éxito', 'obligacion' => $obligacion]);
+
+
+
+    }
+
+
+
+
+
+
+
+    public function destroy($id)
+    {
+
+
+
+        try {
 
 
 
@@ -159,55 +270,19 @@ class ObligacionController extends Controller
 
 
 
-    
+            $obligacion->delete();
 
 
 
-            $obligacion->update($request->only([
+            return response()->json(['message' => 'Obligación eliminada correctamente.']);
 
 
 
-                'proceso_id',
+        } catch (\Exception $e) {
 
 
 
-                'area_compliance_id',
-
-
-
-                'documento_tecnico_normativo',
-
-
-
-                'obligacion_principal',
-
-
-
-                'obligacion_controles',
-
-
-
-                'consecuencia_incumplimiento',
-
-
-
-                'documento_deroga',
-
-
-
-                'estado_obligacion',
-
-
-
-            ]));
-
-
-
-    
-
-
-
-            return response()->json(['message' => 'Obligación actualizada con éxito', 'obligacion' => $obligacion]);
+            return response()->json(['message' => 'Ocurrió un error al eliminar la obligación.', 'error' => $e->getMessage()], 500);
 
 
 
@@ -215,47 +290,7 @@ class ObligacionController extends Controller
 
 
 
-    
-
-
-
-        public function destroy($id)
-
-
-
-        {
-
-
-
-            try {
-
-
-
-                $obligacion = Obligacion::findOrFail($id);
-
-
-
-                $obligacion->delete();
-
-
-
-                return response()->json(['message' => 'Obligación eliminada correctamente.']);
-
-
-
-            } catch (\Exception $e) {
-
-
-
-                return response()->json(['message' => 'Ocurrió un error al eliminar la obligación.', 'error' => $e->getMessage()], 500);
-
-
-
-            }
-
-
-
-        }
+    }
 
     public function listariesgos($id)
     {

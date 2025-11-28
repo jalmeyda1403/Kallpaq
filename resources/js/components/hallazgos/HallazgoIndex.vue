@@ -73,7 +73,8 @@
             <div class="card-body">
                 <DataTable ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                    :globalFilterFields="['hallazgo_cod', 'hallazgo_clasificacion', 'hallazgo_resumen', 'procesos.proceso_nombre', 'hallazgo_estado']">
+                    :globalFilterFields="['hallazgo_cod', 'hallazgo_clasificacion', 'hallazgo_resumen', 'procesos.proceso_nombre', 'hallazgo_estado']"
+                    :loading="isLoading">
                     <template #header>
                         <div class="d-flex align-items-center">
                             <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
@@ -298,3 +299,18 @@ onBeforeUnmount(() => {
 
 
 </script>
+
+<style>
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
+</style>

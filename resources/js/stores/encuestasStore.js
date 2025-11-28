@@ -12,6 +12,10 @@ export const useEncuestasStore = defineStore('encuestas', {
         error: null
     }),
 
+    getters: {
+        getCurrentEncuesta: (state) => state.encuestas.length > 0 ? state.encuestas[0] : null,
+    },
+
     actions: {
         async fetchEncuestas(filters = {}) {
             this.loading = true;
@@ -99,6 +103,24 @@ export const useEncuestasStore = defineStore('encuestas', {
             } finally {
                 this.loading = false;
             }
-        }
+        },
+
+        async fetchEncuestaById(id) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await axios.get(`/api/encuestas-satisfaccion/${id}`);
+                // No actualizamos la lista, solo devolvemos el elemento específico
+                return response.data;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Error al cargar la encuesta';
+                console.error('Error fetching encuesta by id:', error);
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+
     }
 });

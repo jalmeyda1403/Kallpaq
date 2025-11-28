@@ -70,7 +70,8 @@
                     <div class="card-body">
                         <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
                             :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']">
+                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']"
+                            :loading="loading">
                             <template #header>
                                <div class="d-flex align-items-center">
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
@@ -209,6 +210,7 @@ const statuses = ref([]);
 const complejidadOptions = ref(['Baja', 'Media', 'Alta', 'Muy Alta']); // Capitalized for display
 const dt = ref(null); // Reference to the DataTable component
 const selectedRequerimientoId = ref(null); // Declare selectedRequerimientoId
+const loading = ref(false);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -229,6 +231,7 @@ const serverFilters = ref({
 const isMyRequerimientosView = computed(() => router.currentRoute.value.name === 'requerimientos.mine');
 
 const fetchRequerimientos = async () => {
+    loading.value = true;
     console.log('fetchRequerimientos called'); // Log to confirm function call
     console.log('serverFilters.value:', serverFilters.value); // Log filter values
     try {
@@ -241,6 +244,8 @@ const fetchRequerimientos = async () => {
         console.log('Fetched requerimientos:', requerimientos.value);
     } catch (error) {
         console.error('Error fetching requerimientos:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -285,3 +290,18 @@ onMounted(() => {
 });
 // Script logic will go here
 </script>
+
+<style>
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
+</style>
