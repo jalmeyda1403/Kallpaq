@@ -21,6 +21,7 @@ use App\Http\Controllers\ContextoDeterminacionController;
 use App\Http\Controllers\ObligacionController;
 use App\Http\Controllers\AreaComplianceController;
 use App\Http\Controllers\RiesgoController;
+use App\Http\Controllers\RiesgoAccionController;
 use App\Http\Controllers\OUOController;
 use App\Http\Controllers\DiagramaContextoController;
 use App\Http\Controllers\SipocController;
@@ -133,7 +134,7 @@ Route::get('/acciones/evidencia/{path}', [AccionController::class, 'downloadEvid
 Route::post('/acciones/{accion}/upload-evidencia', [AccionController::class, 'uploadEvidencia'])->name('acciones.upload-evidencia');
 Route::post('/acciones/{accion}/delete-evidencia', [AccionController::class, 'deleteEvidencia'])->name('acciones.delete-evidencia');
 
-Route::resource('riesgos', RiesgoController::class);
+
 Route::resource('ouos', OUOController::class);
 
 // New routes for OUO-Process assignment
@@ -283,12 +284,24 @@ Route::prefix('api/riesgos')
         Route::put('/{riesgo}/tratamiento', [RiesgoController::class, 'updateTratamiento'])->name('api.riesgos.update-tratamiento');
         Route::put('/{riesgo}/verificacion', [RiesgoController::class, 'updateVerificacion'])->name('api.riesgos.update-verificacion');
 
+
+
+        // Asignación de Especialistas
+        Route::get('/{riesgo}/asignaciones', [RiesgoController::class, 'listarAsignaciones'])->name('riesgo.asignaciones.listar');
+        Route::post('/{riesgo}/asignaciones', [RiesgoController::class, 'asignarEspecialista'])->name('riesgo.asignaciones.asignar');
+
         // Rutas existentes (si las hay, o nuevas CRUD)
         Route::get('/', [RiesgoController::class, 'index'])->name('api.riesgos.index');
         Route::post('/', [RiesgoController::class, 'store'])->name('api.riesgos.store');
         Route::get('/{riesgo}', [RiesgoController::class, 'show'])->name('api.riesgos.show');
         Route::put('/{riesgo}', [RiesgoController::class, 'update'])->name('api.riesgos.update');
         Route::delete('/{riesgo}', [RiesgoController::class, 'destroy'])->name('api.riesgos.destroy');
+
+        // Riesgo Acciones Routes
+        Route::get('/{riesgo}/acciones', [RiesgoAccionController::class, 'index'])->name('api.riesgos.acciones.index');
+        Route::post('/{riesgo}/acciones', [RiesgoAccionController::class, 'store'])->name('api.riesgos.acciones.store');
+        Route::put('/acciones/{id}', [RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
+        Route::delete('/acciones/{id}', [RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
     });
 Route::middleware('auth')->group(function () {
     Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
@@ -598,14 +611,19 @@ Route::prefix('api/radar')->middleware('auth')->name('api.radar.')->group(functi
     Route::put('/riesgos/{riesgo}/evaluacion', [App\Http\Controllers\RiesgoController::class, 'updateEvaluacion']);
     Route::put('/riesgos/{riesgo}/tratamiento', [App\Http\Controllers\RiesgoController::class, 'updateTratamiento']);
     Route::put('/riesgos/{riesgo}/verificacion', [App\Http\Controllers\RiesgoController::class, 'updateVerificacion']);
-    Route::resource('riesgos', App\Http\Controllers\RiesgoController::class);
 
-    // Riesgo Acciones
-    Route::get('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'index']);
-    Route::post('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'store']);
-    Route::put('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'update']);
-    Route::delete('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'destroy']);
+
+
     Route::post('/{id}/reject', [App\Http\Controllers\RadarController::class, 'reject'])->name('reject');
+});
+
+Route::middleware('auth')->prefix('api')->group(function () {
+    // Riesgo Acciones
+    Route::get('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'index'])->name('api.riesgos.acciones.index');
+    Route::post('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'store'])->name('api.riesgos.acciones.store');
+    Route::put('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
+    Route::delete('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
+    Route::post('/riesgo-acciones/{id}/reprogramar', [App\Http\Controllers\RiesgoAccionController::class, 'reprogramar'])->name('api.riesgos.acciones.reprogramar');
 });
 
 // Rutas para obtener listas (Procesos, Áreas, Subáreas)

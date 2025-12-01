@@ -16,19 +16,27 @@ class Riesgo extends Model
         'riesgo_nombre',
         'riesgo_tipo',
         'factor_id',
-        'controles',
-        'probabilidad',
-        'impacto',
+        'riesgo_controles',
+        'riesgo_probabilidad',
+        'riesgo_impacto',
         'riesgo_valor',
-        'riesgo_valoracion',
+        'riesgo_nivel',
+        'riesgo_matriz',
         'riesgo_tratamiento',
-        'fecha_valoracion_rr',
-        'probabilidad_rr',
-        'impacto_rr',
-        'evaluacion_rr',
+        'riesgo_estado',
+        'riesgo_fecha_valoracion_rr',
+        'riesgo_probabilidad_rr',
+        'riesgo_impacto_rr',
+        'riesgo_evaluacion_rr',
         'riesgo_estado_rr',
-        'estado',  // Estado: 'pendiente', 'abierto', 'cerrado'
+        'riesgo_ciclo',
+        'especialista_id',
     ];
+
+    public function especialista()
+    {
+        return $this->belongsTo(User::class, 'especialista_id');
+    }
 
     /**
      * Relación con las obligaciones a través de la tabla intermedia 'obligacion_riesgo'.
@@ -41,11 +49,11 @@ class Riesgo extends Model
 
     public function acciones()
     {
-        return $this->hasMany(RiesgoAccion::class, 'riesgo_cod');
+        return $this->hasMany(RiesgoAccion::class, 'riesgo_id');
     }
     public function calcularRiesgoValor()
     {
-        return $this->probabilidad * $this->impacto;
+        return $this->riesgo_probabilidad * $this->riesgo_impacto;
     }
     public function factor()
     {
@@ -59,7 +67,7 @@ class Riesgo extends Model
 
 
     // Método para asignar la valoración del riesgo
-    public function calcularRiesgoValoracion()
+    public function calcularRiesgoNivel()
     {
         $riesgo_valor = $this->calcularRiesgoValor();
 
@@ -78,16 +86,18 @@ class Riesgo extends Model
     protected static function booted()
     {
         static::creating(function ($riesgo) {
-            // Calcular riesgo_valor y riesgo_valoracion antes de crear
+            // Calcular riesgo_valor y riesgo_nivel antes de crear
             $riesgo->riesgo_valor = $riesgo->calcularRiesgoValor();
-            $riesgo->riesgo_valoracion = $riesgo->calcularRiesgoValoracion();
-            $riesgo->estado = 'proyecto';
+            $riesgo->riesgo_nivel = $riesgo->calcularRiesgoNivel();
+            if (empty($riesgo->riesgo_estado)) {
+                $riesgo->riesgo_estado = 'proyecto';
+            }
         });
 
         static::updating(function ($riesgo) {
             // Recalcular en caso de actualización
             $riesgo->riesgo_valor = $riesgo->calcularRiesgoValor();
-            $riesgo->riesgo_valoracion = $riesgo->calcularRiesgoValoracion();
+            $riesgo->riesgo_nivel = $riesgo->calcularRiesgoNivel();
         });
     }
 }

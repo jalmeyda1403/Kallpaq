@@ -95,8 +95,8 @@
                                     </p>
                                     <small class="text-muted" style="font-size: 0.8em;">
                                         <i class="fas fa-exclamation-circle mr-1"></i>
-                                        Nivel: <span :class="getBadgeClass(riesgo.riesgo_valoracion)">{{
-                                            riesgo.riesgo_valoracion }}</span>
+                                        Nivel: <span :class="getBadgeClass(riesgo.riesgo_nivel)">{{
+                                            riesgo.riesgo_nivel }}</span>
                                     </small>
                                 </div>
                             </div>
@@ -170,7 +170,7 @@ const displayedRiesgos = computed(() => {
 });
 
 const getRiesgosEnCelda = (impacto, probabilidad) => {
-    return props.riesgos.filter(r => r.impacto === impacto && r.probabilidad === probabilidad);
+    return props.riesgos.filter(r => r.riesgo_impacto === impacto && r.riesgo_probabilidad === probabilidad);
 };
 
 const setPage = (pageNum) => {
@@ -206,10 +206,10 @@ const getCellClass = (impacto, probabilidad) => {
     return 'bg-success-light';
 };
 
-const getBadgeClass = (valoracion) => {
-    if (valoracion === 'Muy Alto') return 'badge badge-danger';
-    if (valoracion === 'Alto') return 'badge badge-orange';
-    if (valoracion === 'Medio') return 'badge badge-warning';
+const getBadgeClass = (nivel) => {
+    if (nivel === 'Muy Alto') return 'badge badge-danger';
+    if (nivel === 'Alto') return 'badge badge-orange';
+    if (nivel === 'Medio') return 'badge badge-warning';
     return 'badge badge-success';
 };
 </script>
@@ -230,6 +230,7 @@ const getBadgeClass = (valoracion) => {
 .bg-success-light {
     background-color: rgba(40, 167, 69, 0.2);
 }
+
 .bg-orange-light {
     background-color: rgba(253, 126, 20, 0.2);
 }

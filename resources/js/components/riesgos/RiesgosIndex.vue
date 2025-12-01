@@ -17,7 +17,7 @@
                         <button class="btn btn-info btn-sm ml-1" @click="showMapaCalor = true">
                             <i class="fas fa-th"></i> Mapa de Calor
                         </button>
-                        <button class="btn btn-primary btn-sm ml-1" @click="openRiesgoModal(null)">
+                        <button class="btn btn-primary btn-sm ml-1" @click="store.openModal(null)">
                             <i class="fas fa-plus-circle"></i> Nuevo Riesgo
                         </button>
                     </div>
@@ -27,15 +27,34 @@
                     <div class="form-row">
                         <div class="col">
                             <input type="text" v-model="store.filters.codigo" class="form-control"
-                                placeholder="Buscar por código...">
+                                placeholder="Buscar por código o proceso...">
                         </div>
                         <div class="col">
                             <input type="text" v-model="store.filters.nombre" class="form-control"
                                 placeholder="Buscar por nombre...">
                         </div>
                         <div class="col">
-                            <select v-model="store.filters.valoracion" class="form-control">
-                                <option value="">Todas las Valoraciones</option>
+                            <select v-model="store.filters.factor" class="form-control">
+                                <option value="">Todos los Factores</option>
+                                <option value="1">Estratégico</option>
+                                <option value="2">Operacional</option>
+                                <option value="3">Corrupción</option>
+                                <option value="4">Cumplimiento</option>
+                                <option value="5">Reputacional</option>
+                                <option value="6">Ambiental</option>
+                                <option value="7">Seguridad</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select v-model="store.filters.tipo" class="form-control">
+                                <option value="">Todos los Tipos</option>
+                                <option value="Riesgo">Riesgo</option>
+                                <option value="Oportunidad">Oportunidad</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select v-model="store.filters.nivel" class="form-control">
+                                <option value="">Todos los Niveles</option>
                                 <option value="Muy Alto">Muy Alto</option>
                                 <option value="Alto">Alto</option>
                                 <option value="Medio">Medio</option>
@@ -54,8 +73,7 @@
             <div class="card-body">
                 <div class="tab-content" id="riesgosTabsContent">
                     <!-- Tab Listado -->
-                    <div class="tab-pane fade show active" id="listado" role="tabpanel"
-                        aria-labelledby="listado-tab">
+                    <div class="tab-pane fade show active" id="listado" role="tabpanel" aria-labelledby="listado-tab">
                         <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10" :loading="loading"
                             :rowsPerPageOptions="[5, 10, 20, 50]"
                             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
@@ -63,26 +81,29 @@
 
                             <template #header>
                                 <div class="d-flex align-items-center">
-                                    <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
-                                        @click="exportCSV($event)" class="btn btn-secondary ml-auto">
+                                    <Button type="button" icon="pi pi-download" label="Descargar CSV"
+                                        severity="secondary" @click="exportCSV($event)"
+                                        class="btn btn-secondary ml-auto">
                                     </Button>
                                 </div>
                             </template>
 
                             <Column field="id" header="ID" sortable style="width:5%"></Column>
-                            <Column field="riesgo_cod" header="Código" sortable style="width:10%"></Column>
-                            <Column field="riesgo_nombre" header="Nombre" sortable style="width:20%"></Column>
                             <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%"></Column>
-                            <Column field="riesgo_valoracion" header="Nivel" sortable style="width:15%">
+                            <Column field="riesgo_nombre" header="Descripción del Riesgo" sortable style="width:30%">
+                            </Column>
+                            <Column field="factor.nombre" header="Factor" sortable style="width:15%"></Column>
+                            <Column field="riesgo_nivel" header="Nivel" sortable style="width:15%">
                                 <template #body="{ data }">
-                                    <span :class="['badge', 'badge-lg', getBadgeClass(data.riesgo_valoracion)]">{{
-                                        data.riesgo_valoracion }}</span>
+                                    <span :class="['badge', 'badge-lg', getBadgeClass(data.riesgo_nivel)]">{{
+                                        data.riesgo_nivel }}</span>
                                 </template>
                             </Column>
-                            <Column field="estado" header="Estado" sortable style="width:10%"></Column>
-                            <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%" bodyStyle="width: 12%">
+                            <Column field="riesgo_estado" header="Estado" sortable style="width:10%"></Column>
+                            <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
+                                bodyStyle="width: 12%">
                                 <template #body="{ data }">
-                                    <a href="#" class="mr-3 d-inline-block" @click.prevent="openRiesgoModal(data)"
+                                    <a href="#" class="mr-3 d-inline-block" @click.prevent="store.openModal(data)"
                                         title="Editar Riesgo">
                                         <i class="fas fa-pencil-alt text-warning fa-lg"></i>
                                     </a>
@@ -109,7 +130,7 @@
     </div>
 
     <!-- Modals -->
-    <RiesgoModal v-model:show="showRiesgoModal" :riesgo="selectedRiesgo" @saved="refreshList" />
+    <RiesgoModal />
     <RiesgoAccionesModal v-model:show="showAccionesModal" :riesgo="selectedRiesgo" />
 
     <!-- Modal for Heat Map -->
@@ -159,8 +180,6 @@ const riesgos = computed(() => store.riesgos);
 const loading = computed(() => store.loading);
 const dt = ref(null);
 const showMapaCalor = ref(false);
-
-const showRiesgoModal = ref(false);
 const showAccionesModal = ref(false);
 const selectedRiesgo = ref(null);
 
@@ -170,11 +189,6 @@ onMounted(() => {
 
 const refreshList = () => {
     store.fetchMisRiesgos();
-};
-
-const openRiesgoModal = (riesgo) => {
-    selectedRiesgo.value = riesgo;
-    showRiesgoModal.value = true;
 };
 
 const openAccionesModal = (riesgo) => {
@@ -196,10 +210,10 @@ const exportCSV = () => {
     dt.value.exportCSV();
 };
 
-const getBadgeClass = (valoracion) => {
-    if (valoracion === 'Muy Alto') return 'badge-danger';
-    if (valoracion === 'Alto') return 'badge-orange';
-    if (valoracion === 'Medio') return 'badge-warning';
+const getBadgeClass = (nivel) => {
+    if (nivel === 'Muy Alto') return 'badge-danger';
+    if (nivel === 'Alto') return 'badge-orange';
+    if (nivel === 'Medio') return 'badge-warning';
     return 'badge-success';
 };
 </script>
@@ -292,7 +306,7 @@ const getBadgeClass = (valoracion) => {
 .btn-warning:hover {
     background-color: #e0a800;
     border-color: #d39e00;
-    color: #212529;
+    color: #eeeff0;
 }
 
 .btn-info {

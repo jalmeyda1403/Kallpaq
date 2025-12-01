@@ -31,10 +31,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in filteredItems" :key="item.id"
-                    @click="selectItem(item)"
-                    class="selectable-row"
-                    :class="{'selected-row': selectedItemId === item.id}">
+                <tr v-for="item in filteredItems" :key="item.id" @click="selectItem(item)" class="selectable-row"
+                  :class="{ 'selected-row': selectedItemId === item.id }">
                   <td>{{ item.id }}</td>
                   <td>{{ item.descripcion }}</td>
                 </tr>
@@ -197,7 +195,7 @@ export default {
   background-color: #f8f9fa;
   cursor: pointer;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.15s ease;
 }
 

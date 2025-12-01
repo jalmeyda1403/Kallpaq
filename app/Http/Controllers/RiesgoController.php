@@ -67,16 +67,31 @@ class RiesgoController extends Controller
         }
 
         // Apply filters if provided
+        // Apply filters if provided
         if ($request->has('codigo') && !empty($request->codigo)) {
-            $query->where('riesgo_cod', 'like', '%' . $request->codigo . '%');
+            $term = $request->codigo;
+            $query->where(function ($q) use ($term) {
+                $q->where('riesgo_cod', 'like', '%' . $term . '%')
+                    ->orWhereHas('proceso', function ($q2) use ($term) {
+                        $q2->where('proceso_nombre', 'like', '%' . $term . '%');
+                    });
+            });
         }
 
         if ($request->has('nombre') && !empty($request->nombre)) {
             $query->where('riesgo_nombre', 'like', '%' . $request->nombre . '%');
         }
 
-        if ($request->has('valoracion') && !empty($request->valoracion)) {
-            $query->where('riesgo_valoracion', $request->valoracion);
+        if ($request->has('nivel') && !empty($request->nivel)) {
+            $query->where('riesgo_nivel', $request->nivel);
+        }
+
+        if ($request->has('factor') && !empty($request->factor)) {
+            $query->where('factor_id', $request->factor);
+        }
+
+        if ($request->has('tipo') && !empty($request->tipo)) {
+            $query->where('riesgo_tipo', $request->tipo);
         }
 
         $riesgos = $query->get();
@@ -133,7 +148,7 @@ class RiesgoController extends Controller
 
         // Calcular evaluación residual (simple multiplicación por ahora, igual que el inherente)
         $evaluacion_rr = $validated['probabilidad_rr'] * $validated['impacto_rr'];
-        
+
         // Determinar estado de eficacia (ejemplo simple)
         $estado_eficacia = ($evaluacion_rr < $riesgo->riesgo_valor) ? 'Con Eficacia' : 'Sin eficacia';
 
@@ -154,7 +169,7 @@ class RiesgoController extends Controller
 
         // Inicializar la variable de la obligación
         $obligacion = null;
-        $proceso =null;
+        $proceso = null;
         $proceso_id = null;
 
         // Verificar si se recibe un `obligacion_id`
@@ -163,25 +178,23 @@ class RiesgoController extends Controller
             $obligacion = Obligacion::find($request->obligacion_id);
             $proceso_id = $obligacion->proceso_id;
             $request->merge(['proceso_id' => $proceso_id]);
-            }
-            else{
-                $proceso_id = $request->proceso_id;
-            }
-                // Crear el riesgo
+        } else {
+            $proceso_id = $request->proceso_id;
+        }
+        // Crear el riesgo
         $riesgo = Riesgo::create($request->all());
 
         // Si hay una obligación asociada, asociamos el riesgo a la obligación
         if ($obligacion) {
             $obligacion->asociarRiesgo($riesgo);
             $riesgos = $obligacion->riesgos;
-            
-        }
-        else  {
+
+        } else {
             $proceso = Proceso::find($request->proceso_id);
             $riesgos = $proceso->riesgos;
         }
-        
-         $riesgos->load('proceso');
+
+        $riesgos->load('proceso');
 
         // Si no hay obligación, solo devolvemos el riesgo creado
         return response()->json($riesgos);
@@ -217,5 +230,32 @@ class RiesgoController extends Controller
         $riesgo->delete();
 
         return response()->json($riesgo);
+    }
+    // Asignación de Especialistas
+    public function listarAsignaciones(Riesgo $riesgo)
+    {
+        $riesgo->load('especialista');
+
+        return response()->json([
+            'actual' => $riesgo->especialista,
+            'historial' => [] // Implementar historial si se crea la tabla riesgo_movimientos
+        ]);
+    }
+
+    public function asignarEspecialista(Request $request, Riesgo $riesgo)
+    {
+        $request->validate([
+            'especialista_id' => 'required|exists:users,id',
+        ]);
+
+        $riesgo->especialista_id = $request->especialista_id;
+        $riesgo->save();
+
+        $riesgo->load('especialista');
+
+        return response()->json([
+            'actual' => $riesgo->especialista,
+            'historial' => []
+        ]);
     }
 }

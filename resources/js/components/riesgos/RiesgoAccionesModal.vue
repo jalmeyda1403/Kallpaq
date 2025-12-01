@@ -13,12 +13,12 @@
                         @click="openForm(null)" />
                 </div>
             </template>
-            <Column field="nombre" header="Acción"></Column>
-            <Column field="responsable" header="Responsable"></Column>
-            <Column field="fecha_prog_fin" header="Fecha Fin"></Column>
-            <Column field="estado" header="Estado">
+            <Column field="ra_descripcion" header="Acción"></Column>
+            <Column field="ra_responsable" header="Responsable"></Column>
+            <Column field="ra_fecha_fin_planificada" header="Fecha Fin"></Column>
+            <Column field="ra_estado" header="Estado">
                 <template #body="{ data }">
-                    <span :class="['badge', getEstadoClass(data.estado)]">{{ data.estado }}</span>
+                    <span :class="['badge', getEstadoClass(data.ra_estado)]">{{ data.ra_estado }}</span>
                 </template>
             </Column>
             <Column header="Opciones" style="width: 120px">
@@ -35,35 +35,39 @@
         <Dialog v-model:visible="showForm" :header="editingAccion ? 'Editar Acción' : 'Nueva Acción'" :modal="true"
             :style="{ width: '500px' }">
             <div class="p-field">
-                <label>Nombre Acción</label>
-                <InputText v-model="form.nombre" />
-            </div>
-            <div class="p-field">
                 <label>Descripción</label>
-                <Textarea v-model="form.descripcion" rows="2" />
+                <Textarea v-model="form.ra_descripcion" rows="2" />
             </div>
             <div class="p-field">
                 <label>Responsable</label>
-                <InputText v-model="form.responsable" />
+                <InputText v-model="form.ra_responsable" />
+            </div>
+            <div class="p-field">
+                <label>Correo Responsable</label>
+                <InputText v-model="form.ra_responsable_correo" />
             </div>
             <div class="row">
                 <div class="col-6">
                     <div class="p-field">
                         <label>Fecha Inicio</label>
-                        <InputText type="date" v-model="form.fecha_prog_inicio" />
+                        <InputText type="date" v-model="form.ra_fecha_inicio" />
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="p-field">
-                        <label>Fecha Fin</label>
-                        <InputText type="date" v-model="form.fecha_prog_fin" />
+                        <label>Fecha Fin Planificada</label>
+                        <InputText type="date" v-model="form.ra_fecha_fin_planificada" />
                     </div>
                 </div>
             </div>
             <div class="p-field">
                 <label>Estado</label>
-                <Dropdown v-model="form.estado"
-                    :options="['Pendiente', 'En Implementación', 'Implementado', 'Cancelado']" />
+                <Dropdown v-model="form.ra_estado"
+                    :options="['programada', 'desestimada', 'en proceso', 'implementada']" />
+            </div>
+            <div class="p-field">
+                <label>Comentario</label>
+                <Textarea v-model="form.ra_comentario" rows="2" />
             </div>
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="showForm = false" />
@@ -102,13 +106,13 @@ const editingAccion = ref(false);
 
 const form = reactive({
     id: null,
-    nombre: '',
-    descripcion: '',
-    responsable: '',
-    fecha_prog_inicio: '',
-    fecha_prog_fin: '',
-    estado: 'Pendiente',
-    comentario: ''
+    ra_descripcion: '',
+    ra_responsable: '',
+    ra_responsable_correo: '',
+    ra_fecha_inicio: '',
+    ra_fecha_fin_planificada: '',
+    ra_estado: 'programada',
+    ra_comentario: ''
 });
 
 watch(() => props.show, async (val) => {
@@ -141,13 +145,13 @@ const openForm = (accion) => {
         editingAccion.value = false;
         Object.assign(form, {
             id: null,
-            nombre: '',
-            descripcion: '',
-            responsable: '',
-            fecha_prog_inicio: '',
-            fecha_prog_fin: '',
-            estado: 'Pendiente',
-            comentario: ''
+            ra_descripcion: '',
+            ra_responsable: '',
+            ra_responsable_correo: '',
+            ra_fecha_inicio: '',
+            ra_fecha_fin_planificada: '',
+            ra_estado: 'programada',
+            ra_comentario: ''
         });
     }
     showForm.value = true;
@@ -176,10 +180,10 @@ const confirmDelete = async (accion) => {
 
 const getEstadoClass = (estado) => {
     switch (estado) {
-        case 'Pendiente': return 'badge-secondary';
-        case 'En Implementación': return 'badge-warning';
-        case 'Implementado': return 'badge-success';
-        case 'Cancelado': return 'badge-danger';
+        case 'programada': return 'badge-secondary';
+        case 'en proceso': return 'badge-warning';
+        case 'implementada': return 'badge-success';
+        case 'desestimada': return 'badge-danger';
         default: return 'badge-light';
     }
 };

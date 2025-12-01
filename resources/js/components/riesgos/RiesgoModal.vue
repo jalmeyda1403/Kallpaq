@@ -1,203 +1,144 @@
 <template>
-    <Dialog v-model:visible="visible" :style="{ width: '800px' }" :header="isEditing ? 'Editar Riesgo' : 'Nuevo Riesgo'"
-        :modal="true" class="p-fluid">
-        <div class="p-field">
-            <label for="proceso">Proceso</label>
-            <div class="p-inputgroup">
-                <InputText id="proceso" v-model="form.proceso_nombre" readonly placeholder="Seleccione un proceso" />
-                <Button icon="pi pi-search" class="p-button-secondary" @click="openProcesoModal" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="p-field">
-                    <label for="riesgo_cod">Código</label>
-                    <InputText id="riesgo_cod" v-model="form.riesgo_cod" />
+    <div class="modal fade" tabindex="-1" aria-labelledby="riesgoModalLabel" ref="modal" id="riesgoModal"
+        data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">{{ store.modalTitle }}</h5>
+                    <button type="button" class="close text-white" aria-label="Close" @click="store.closeModal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="p-field">
-                    <label for="riesgo_tipo">Tipo de Riesgo</label>
-                    <Dropdown id="riesgo_tipo" v-model="form.riesgo_tipo" :options="tiposRiesgo"
-                        placeholder="Seleccione tipo" />
-                </div>
-            </div>
-        </div>
+                <div class="modal-body modal-body-scrollable p-0">
+                    <div class="row m-0" style="min-height: 100%;">
+                        <div class="col-md-3 border-right p-0">
+                            <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+                                <h6 class="text-secondary mx-3 mt-3">GENERAL</h6>
+                                <a class="nav-link" :class="{ 'text-danger active': store.currentTab === 'RiesgoForm' }"
+                                    @click="store.setCurrentTab('RiesgoForm')" role="tab">
+                                    <i class="fas fa-file-alt"></i> Información del Riesgo
+                                </a>
 
-        <div class="p-field">
-            <label for="riesgo_nombre">Nombre del Riesgo</label>
-            <Textarea id="riesgo_nombre" v-model="form.riesgo_nombre" rows="2" />
-        </div>
+                                <!-- Future tabs can be added here -->
+                                <div :class="{ 'disabled-links': !store.isEditing }">
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoAcciones' }"
+                                        @click="store.setCurrentTab('RiesgoAcciones')" role="tab">
+                                        <i class="fas fa-tasks"></i> Planes de Tratamiento
+                                    </a>
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoAsignarEspecialista' }"
+                                        @click="store.setCurrentTab('RiesgoAsignarEspecialista')" role="tab">
+                                        <i class="fas fa-user-tie"></i> Asignar Especialista
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="p-field">
-            <label for="factor">Factor de Riesgo</label>
-            <Dropdown id="factor" v-model="form.factor_id" :options="factores" optionLabel="nombre" optionValue="id"
-                placeholder="Seleccione factor" />
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="p-field">
-                    <label for="probabilidad">Probabilidad (1-10)</label>
-                    <InputNumber id="probabilidad" v-model="form.probabilidad" :min="1" :max="10" showButtons />
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="p-field">
-                    <label for="impacto">Impacto (1-10)</label>
-                    <InputNumber id="impacto" v-model="form.impacto" :min="1" :max="10" showButtons />
+                        <div class="col-md-9 p-4">
+                            <component :is="tabs[store.currentTab]" :key="store.currentTab"></component>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="p-field">
-            <label for="controles">Controles Actuales</label>
-            <Textarea id="controles" v-model="form.controles" rows="3" />
-        </div>
-
-        <div class="p-field">
-            <label for="riesgo_tratamiento">Estrategia de Tratamiento</label>
-            <Dropdown id="riesgo_tratamiento" v-model="form.riesgo_tratamiento" :options="estrategias"
-                placeholder="Seleccione estrategia" />
-        </div>
-
-        <template #footer>
-            <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="closeModal" />
-            <Button label="Guardar" icon="pi pi-check" class="p-button-primary" @click="save" :loading="loading" />
-        </template>
-    </Dialog>
-
-    <ModalHijo ref="modalProceso" fetchUrl="/api/procesos/list" targetId="proceso_id" targetDesc="proceso_nombre"
-        @update-target="onProcesoSelected" />
+    </div>
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue';
+import { ref, onMounted, shallowRef } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
-import ModalHijo from '@/components/generales/ModalHijo.vue';
 
-// PrimeVue
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import Dropdown from 'primevue/dropdown';
-import InputNumber from 'primevue/inputnumber';
-import Button from 'primevue/button';
-import axios from 'axios';
-
-const props = defineProps({
-    show: Boolean,
-    riesgo: Object
-});
-
-const emit = defineEmits(['update:show', 'saved']);
+// Import tab components
+// Import tab components
+import RiesgoForm from './RiesgoForm.vue';
+import RiesgoAcciones from './RiesgoAcciones.vue';
+import RiesgoAsignarEspecialista from './RiesgoAsignarEspecialista.vue';
 
 const store = useRiesgoStore();
-const visible = ref(false);
-const isEditing = ref(false);
-const loading = ref(false);
-const modalProceso = ref(null);
-const factores = ref([]);
+const modal = ref(null);
 
-const form = reactive({
-    id: null,
-    proceso_id: null,
-    proceso_nombre: '',
-    riesgo_cod: '',
-    riesgo_tipo: '',
-    riesgo_nombre: '',
-    factor_id: null,
-    probabilidad: 1,
-    impacto: 1,
-    controles: '',
-    riesgo_tratamiento: ''
+const tabs = shallowRef({
+    RiesgoForm,
+    RiesgoAcciones,
+    RiesgoAsignarEspecialista
 });
 
-const tiposRiesgo = ['Estratégico', 'Operativo', 'Financiero', 'Cumplimiento', 'Tecnológico', 'Corrupción/Soborno'];
-const estrategias = ['Mitigar', 'Evitar', 'Transferir', 'Aceptar'];
-
-// Watchers
-watch(() => props.show, (val) => {
-    visible.value = val;
-    if (val) {
-        if (props.riesgo) {
-            isEditing.value = true;
-            Object.assign(form, props.riesgo);
-            form.proceso_nombre = props.riesgo.proceso?.proceso_nombre || '';
-        } else {
-            isEditing.value = false;
-            resetForm();
-        }
-        fetchFactores();
-    }
-});
-
-watch(visible, (val) => {
-    emit('update:show', val);
-});
-
-// Methods
-const resetForm = () => {
-    Object.assign(form, {
-        id: null,
-        proceso_id: null,
-        proceso_nombre: '',
-        riesgo_cod: '',
-        riesgo_tipo: '',
-        riesgo_nombre: '',
-        factor_id: null,
-        probabilidad: 1,
-        impacto: 1,
-        controles: '',
-        riesgo_tratamiento: ''
+onMounted(() => {
+    // Initialize Bootstrap modal
+    $(modal.value).modal({
+        backdrop: 'static',
+        keyboard: false,
+        show: false
     });
-};
 
-const fetchFactores = async () => {
-    try {
-        // Asumiendo que existe un endpoint para factores, si no, habría que crearlo o mockearlo
-        // Por ahora hardcodeamos o intentamos llamar a una API existente
-        // const response = await axios.get('/api/factores'); 
-        // factores.value = response.data;
+    // Subscribe to store state changes
+    store.$subscribe((mutation, state) => {
+        if (state.isModalOpen) {
+            $(modal.value).modal('show');
+        } else {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+            $(modal.value).modal('hide');
+        }
+    });
 
-        // Mock temporarl si no existe endpoint
-        factores.value = [
-            { id: 1, nombre: 'Externo' },
-            { id: 2, nombre: 'Procesos' },
-            { id: 3, nombre: 'Personas' },
-            { id: 4, nombre: 'Sistemas' },
-            { id: 5, nombre: 'Eventos Externos' }
-        ];
-    } catch (e) {
-        console.error(e);
-    }
-};
+    // Handle Bootstrap modal events
+    $(modal.value).on('hidden.bs.modal', (e) => {
+        // Only react if the event was triggered by this modal, not a child modal
+        if (e.target !== modal.value) return;
 
-const openProcesoModal = () => {
-    modalProceso.value.open();
-};
-
-const onProcesoSelected = (payload) => {
-    form.proceso_id = payload.idValue;
-    form.proceso_nombre = payload.descValue;
-};
-
-const closeModal = () => {
-    visible.value = false;
-};
-
-const save = async () => {
-    loading.value = true;
-    try {
-        await store.saveRiesgo(form);
-        emit('saved');
-        closeModal();
-    } catch (error) {
-        console.error(error);
-        // Manejar error (toast)
-    } finally {
-        loading.value = false;
-    }
-};
+        // Ensure store state is synced if modal is closed via other means (e.g. ESC)
+        if (store.isModalOpen) {
+            store.closeModal();
+        }
+    });
+});
 </script>
+
+<style scoped>
+.nav-pills .nav-link {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    text-align: left !important;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.nav-pills .nav-link:not(.active):hover {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #fff;
+    font-weight: bold;
+    color: #dc3545 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link i {
+    width: 1.5rem;
+    text-align: left !important;
+}
+
+.nav-pills h6 {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05rem;
+    text-align: left !important;
+}
+
+.disabled-links {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.modal-body-scrollable {
+    height: 90vh;
+    overflow-y: auto;
+}
+</style>
