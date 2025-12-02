@@ -4,6 +4,27 @@
             <div class="row">
                 <!-- Heat Map Section -->
                 <div class="col-md-8 p-4">
+                    <!-- Filter Control -->
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn btn-outline-secondary" :class="{ active: matrizFilter === '' }">
+                                <input type="radio" name="options" id="option1" autocomplete="off"
+                                    @click="matrizFilter = ''" :checked="matrizFilter === ''"> Todas
+                            </label>
+                            <label class="btn btn-outline-secondary"
+                                :class="{ active: matrizFilter === 'estrategica' }">
+                                <input type="radio" name="options" id="option2" autocomplete="off"
+                                    @click="matrizFilter = 'estrategica'"
+                                    :checked="matrizFilter === 'Estratégestrategicaica'">
+                                Estratégica
+                            </label>
+                            <label class="btn btn-outline-secondary" :class="{ active: matrizFilter === 'tactica' }">
+                                <input type="radio" name="options" id="option3" autocomplete="off"
+                                    @click="matrizFilter = 'tactica'" :checked="matrizFilter === 'tactica'"> Táctica
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-center">
                         <div class="position-relative" style="width: 600px; height: 600px;">
                             <!-- Eje Y Label -->
@@ -134,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
     riesgos: {
@@ -147,6 +168,7 @@ const props = defineProps({
 const celdaSeleccionada = ref({ x: 0, y: 0 });
 const riesgosCelda = ref([]);
 const showModal = ref(false);
+const matrizFilter = ref('');
 
 // Pagination variables
 const currentPage = ref(1);
@@ -169,9 +191,21 @@ const displayedRiesgos = computed(() => {
     return riesgosCelda.value.slice(startIndex.value, endIndex.value);
 });
 
+const filteredRiesgos = computed(() => {
+    if (!matrizFilter.value) return props.riesgos;
+    return props.riesgos.filter(r => r.riesgo_matriz === matrizFilter.value);
+});
+
 const getRiesgosEnCelda = (impacto, probabilidad) => {
-    return props.riesgos.filter(r => r.riesgo_impacto === impacto && r.riesgo_probabilidad === probabilidad);
+    return filteredRiesgos.value.filter(r => r.riesgo_impacto === impacto && r.riesgo_probabilidad === probabilidad);
 };
+
+watch(matrizFilter, () => {
+    if (celdaSeleccionada.value.x !== 0 && celdaSeleccionada.value.y !== 0) {
+        riesgosCelda.value = getRiesgosEnCelda(celdaSeleccionada.value.x, celdaSeleccionada.value.y);
+        currentPage.value = 1;
+    }
+});
 
 const setPage = (pageNum) => {
     if (pageNum >= 1 && pageNum <= totalPages.value) {
@@ -207,9 +241,11 @@ const getCellClass = (impacto, probabilidad) => {
 };
 
 const getBadgeClass = (nivel) => {
-    if (nivel === 'Muy Alto') return 'badge badge-danger';
-    if (nivel === 'Alto') return 'badge badge-orange';
-    if (nivel === 'Medio') return 'badge badge-warning';
+    if (!nivel) return 'badge badge-secondary';
+    const n = nivel.toLowerCase();
+    if (n === 'muy alto') return 'badge badge-danger';
+    if (n === 'alto') return 'badge badge-orange';
+    if (n === 'medio') return 'badge badge-warning';
     return 'badge badge-success';
 };
 </script>

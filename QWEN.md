@@ -65,20 +65,67 @@ Además de tecnologías mencionadas en el documento original:
 
 ## Estructura de Directorios
 ```
-D:\Proyectos\kallpaq\
+D:\Kallpaq\
 ├── app/                  # Archivos principales de la aplicación
+│   ├── Console/          # Comandos de consola
+│   ├── Enums/            # Enumeraciones
+│   ├── Exceptions/       # Manejo de excepciones
+│   ├── Helpers/          # Funciones de ayuda
+│   ├── Http/             # Controladores, middleware, etc.
+│   ├── Livewire/         # Componentes Livewire
+│   ├── Models/           # Modelos de Eloquent
+│   ├── Notifications/    # Notificaciones
+│   ├── Observers/        # Observadores de modelos
+│   ├── Providers/        # Proveedores de servicios
+│   ├── Services/         # Lógica de negocio
+│   └── View/             # Componentes y vistas
 ├── bootstrap/            # Archivos de inicialización del framework
+├── certificados/         # Certificados
 ├── config/               # Archivos de configuración
 ├── database/             # Migraciones, semillas y factories
+│   ├── factories/        # Factories para modelos
+│   ├── migrations/       # Migraciones de base de datos
+│   └── seeders/          # Seeders para datos iniciales
+├── documentacion/        # Documentación del proyecto
+├── lang/                 # Archivos de traducción
 ├── public/               # Archivos accesibles web
 ├── resources/            # Vistas, activos y archivos de idioma
+│   ├── css/              # Archivos CSS
+│   ├── js/               # Archivos JavaScript/Vue
+│   ├── sass/             # Archivos SASS
+│   └── views/            # Vistas Blade
 ├── routes/               # Definiciones de rutas (web.php, api.php, auth.php)
+├── scriptbd/             # Scripts de base de datos
+├── scripts/              # Scripts auxiliares
 ├── storage/              # Plantillas compiladas, logs y subidas de archivos
 ├── tests/                # Archivos de pruebas
+├── .editorconfig         # Configuración de editor
+├── .env.example          # Ejemplo de archivo de entorno
+├── .gitattributes        # Atributos de Git
+├── .gitignore            # Archivos excluidos por Git
 ├── artisan               # Herramienta CLI de Laravel
+├── build_error_2.log     # Registro de errores de compilación
+├── build_error_3.log     # Registro de errores de compilación
+├── build_error.log       # Registro de errores de compilación
+├── build_log.txt         # Registro de compilación
+├── commit_message.txt    # Mensaje de commit
 ├── composer.json         # Dependencias PHP
+├── composer.lock         # Versiones exactas de dependencias PHP
+├── debug_full.html       # Archivo de debug HTML
+├── debug_output.txt      # Archivo de debug texto
+├── Funcionalidades.docx  # Documento de funcionalidades
+├── Funcionalidades.pdf   # PDF de funcionalidades
+├── GEMINI.md             # Documento de GEMINI
+├── implementation_plan.md # Plan de implementación
+├── package-lock.json     # Versiones exactas de dependencias JavaScript
 ├── package.json          # Dependencias JavaScript
-└── ...
+├── phpunit.xml           # Configuración de pruebas phpunit
+├── postcss.config.js     # Configuración de PostCSS
+├── QWEN.md               # Documento actual (este archivo)
+├── README.md             # Documento de inicio
+├── tailwind.config.js    # Configuración de Tailwind CSS
+├── vite.config.js        # Configuración de Vite
+└── webpack.mix.cjs       # Configuración de Webpack Mix
 ```
 
 ## Rutas del Sistema

@@ -14,6 +14,7 @@ class Riesgo extends Model
         'riesgo_cod',
         'proceso_id',
         'riesgo_nombre',
+        'riesgo_consecuencia',
         'riesgo_tipo',
         'factor_id',
         'riesgo_controles',
@@ -50,6 +51,11 @@ class Riesgo extends Model
     public function acciones()
     {
         return $this->hasMany(RiesgoAccion::class, 'riesgo_id');
+    }
+
+    public function revisiones()
+    {
+        return $this->hasMany(RiesgoRevision::class, 'riesgo_id');
     }
     public function calcularRiesgoValor()
     {

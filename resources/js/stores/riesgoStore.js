@@ -12,7 +12,8 @@ export const useRiesgoStore = defineStore('riesgo', {
             nombre: '',
             nivel: '',
             factor: '',
-            tipo: ''
+            tipo: '',
+            matriz: ''
         },
         // Modal State
         isModalOpen: false,
@@ -28,6 +29,7 @@ export const useRiesgoStore = defineStore('riesgo', {
             riesgo_cod: '',
             riesgo_tipo: '',
             riesgo_nombre: '',
+            riesgo_consecuencia: '',
             factor_id: null,
             riesgo_matriz: '',
             riesgo_probabilidad: 1,
@@ -102,6 +104,7 @@ export const useRiesgoStore = defineStore('riesgo', {
                 riesgo_cod: '',
                 riesgo_tipo: '',
                 riesgo_nombre: '',
+                riesgo_consecuencia: '',
                 factor_id: null,
                 riesgo_matriz: '',
                 riesgo_probabilidad: 1,
@@ -125,6 +128,7 @@ export const useRiesgoStore = defineStore('riesgo', {
                 if (this.filters.nivel) params.nivel = this.filters.nivel;
                 if (this.filters.factor) params.factor = this.filters.factor;
                 if (this.filters.tipo) params.tipo = this.filters.tipo;
+                if (this.filters.matriz) params.matriz = this.filters.matriz;
 
                 const response = await axios.get('/api/riesgos/mis-riesgos', { params });
                 this.riesgos = response.data;
@@ -175,12 +179,20 @@ export const useRiesgoStore = defineStore('riesgo', {
                     }
                 } else {
                     response = await axios.post('/api/riesgos', data);
-                    // Add new risk to list
-                    // this.riesgos.push(response.data); // Or fetchMisRiesgos to be safe with sorting/filtering
                     await this.fetchMisRiesgos();
+
+                    // Switch to edit mode without closing
+                    this.riesgoForm = { ...response.data };
+                    // Ensure nested properties like proceso_nombre are set if they exist
+                    if (response.data.proceso) {
+                        this.riesgoForm.proceso_nombre = response.data.proceso.proceso_nombre;
+                    }
+                    this.isEditing = true;
+                    this.riesgoActual = response.data;
+                    this.modalTitle = 'Editar Riesgo';
                 }
 
-                this.closeModal();
+                // this.closeModal(); // Removed to keep modal open
                 // Toast success?
                 return response.data;
             } catch (error) {
@@ -260,18 +272,38 @@ export const useRiesgoStore = defineStore('riesgo', {
         // Especialistas Actions
         async fetchAsignaciones() {
             if (!this.riesgoForm.id) return;
-            this.loadingAsignaciones = true;
-            try {
-                // Fetch specialists if not loaded
-                if (this.especialistas.length === 0) {
+
+            // Cargar lista de especialistas si no existe
+            if (this.especialistas.length === 0) {
+                this.loadingAsignaciones = true;
+                try {
                     const response = await axios.get(route('especialistas.index'));
                     this.especialistas = response.data;
+                } catch (error) {
+                    console.error("Error al cargar lista de especialistas:", error);
+                } finally {
+                    this.loadingAsignaciones = false;
                 }
+            }
 
+            // Si ya tenemos el especialista en riesgoActual, lo usamos
+            if (this.riesgoActual && this.riesgoActual.especialista) {
+                this.especialistaActual = this.riesgoActual.especialista;
+                return;
+            }
+
+            // Si no, intentamos cargarlo (fallback)
+            this.loadingAsignaciones = true;
+            try {
                 const response = await axios.get(route('riesgo.asignaciones.listar', { riesgo: this.riesgoForm.id }));
                 this.especialistaActual = response.data.actual;
+
+                // Actualizar riesgoActual para caché futuro
+                if (this.riesgoActual) {
+                    this.riesgoActual.especialista = response.data.actual;
+                }
             } catch (error) {
-                console.error("Error al cargar las asignaciones:", error);
+                console.error("Error al cargar la asignación del especialista:", error);
             } finally {
                 this.loadingAsignaciones = false;
             }
@@ -292,6 +324,16 @@ export const useRiesgoStore = defineStore('riesgo', {
                 this.especialistaActual = response.data.actual;
                 // Update local form state if needed
                 this.riesgoForm.especialista_id = especialistaId;
+
+                // Actualizar riesgoActual para mantener consistencia
+                if (this.riesgoActual) {
+                    this.riesgoActual.especialista = response.data.actual;
+                    // También actualizar en la lista principal de riesgos si es necesario
+                    const index = this.riesgos.findIndex(r => r.id === this.riesgoForm.id);
+                    if (index !== -1) {
+                        this.riesgos[index].especialista = response.data.actual;
+                    }
+                }
             } catch (error) {
                 console.error("Error al asignar el especialista:", error);
             } finally {
@@ -428,6 +470,94 @@ export const useRiesgoStore = defineStore('riesgo', {
                 throw error;
             } finally {
                 this.loadingAcciones = false;
+            }
+        },
+
+        async aprobarReprogramacion(reprogramacionId, comentario) {
+            this.loadingAcciones = true;
+            try {
+                const response = await axios.post(route('api.riesgos.acciones.reprogramar.aprobar', reprogramacionId), { comentario });
+                // Update the action in the list
+                const updatedAccion = response.data.accion;
+                const index = this.acciones.findIndex(a => a.id === updatedAccion.id);
+                if (index !== -1) {
+                    this.acciones[index] = updatedAccion;
+                }
+                return response.data;
+            } catch (error) {
+                console.error('Error aprobando reprogramacion:', error);
+                throw error;
+            } finally {
+                this.loadingAcciones = false;
+            }
+        },
+
+        async rechazarReprogramacion(reprogramacionId, comentario) {
+            this.loadingAcciones = true;
+            try {
+                const response = await axios.post(route('api.riesgos.acciones.reprogramar.rechazar', reprogramacionId), { comentario });
+                // Update the action in the list
+                const updatedAccion = response.data.accion;
+                const index = this.acciones.findIndex(a => a.id === updatedAccion.id);
+                if (index !== -1) {
+                    this.acciones[index] = updatedAccion;
+                }
+                return response.data;
+            } catch (error) {
+                console.error('Error rechazando reprogramacion:', error);
+                throw error;
+            } finally {
+                this.loadingAcciones = false;
+            }
+        },
+        async improveRiskDescription(description) {
+            this.loading = true;
+            try {
+                const response = await axios.post(route('api.riesgos.improve-description'), { description });
+                return response.data.improved_description;
+            } catch (error) {
+                console.error('Error improving risk description:', error);
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async saveVerificacion(data) {
+            this.loading = true;
+            try {
+                const response = await axios.post(route('api.riesgos.store-verificacion', this.riesgoForm.id), data);
+                // Update riesgoActual with the response which includes updated cycle and revisions
+                this.riesgoActual = response.data;
+
+                // Also update the risk in the main list
+                const index = this.riesgos.findIndex(r => r.id === this.riesgoForm.id);
+                if (index !== -1) {
+                    this.riesgos[index] = { ...this.riesgos[index], ...response.data };
+                }
+
+                return response.data;
+            } catch (error) {
+                console.error('Error saving verificacion:', error);
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async improveRiskConsecuencia(riskDescription, currentConsequence) {
+            this.loading = true;
+            try {
+                const response = await axios.post(route('api.riesgos.improve-consecuencia'), {
+                    risk_description: riskDescription,
+                    current_consequence: currentConsequence
+                });
+                return response.data.result;
+            } catch (error) {
+                console.error('Error improving risk consequence:', error);
+                throw error;
+            } finally {
+                this.loading = false;
             }
         }
     }

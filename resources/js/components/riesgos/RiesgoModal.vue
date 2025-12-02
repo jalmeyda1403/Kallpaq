@@ -16,20 +16,29 @@
                                 <h6 class="text-secondary mx-3 mt-3">GENERAL</h6>
                                 <a class="nav-link" :class="{ 'text-danger active': store.currentTab === 'RiesgoForm' }"
                                     @click="store.setCurrentTab('RiesgoForm')" role="tab">
-                                    <i class="fas fa-file-alt"></i> Información del Riesgo
+                                    <i class="fas fa-file-alt"></i> Identificar Riesgo
                                 </a>
-
                                 <!-- Future tabs can be added here -->
                                 <div :class="{ 'disabled-links': !store.isEditing }">
                                     <a class="nav-link"
+                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoEvaluacionForm' }"
+                                        @click="store.setCurrentTab('RiesgoEvaluacionForm')" role="tab">
+                                        <i class="fas fa-chart-bar"></i> Evaluar Riesgo
+                                    </a>
+                                    <a class="nav-link"
                                         :class="{ 'text-danger active': store.currentTab === 'RiesgoAcciones' }"
                                         @click="store.setCurrentTab('RiesgoAcciones')" role="tab">
-                                        <i class="fas fa-tasks"></i> Planes de Tratamiento
+                                        <i class="fas fa-tasks"></i> Tratar Riesgo
                                     </a>
                                     <a class="nav-link"
                                         :class="{ 'text-danger active': store.currentTab === 'RiesgoAsignarEspecialista' }"
                                         @click="store.setCurrentTab('RiesgoAsignarEspecialista')" role="tab">
                                         <i class="fas fa-user-tie"></i> Asignar Especialista
+                                    </a>
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoVerificacionForm' }"
+                                        @click="store.setCurrentTab('RiesgoVerificacionForm')" role="tab">
+                                        <i class="fas fa-check-circle"></i> Verificar Eficacia
                                     </a>
                                 </div>
                             </div>
@@ -52,16 +61,20 @@ import { useRiesgoStore } from '@/stores/riesgoStore';
 // Import tab components
 // Import tab components
 import RiesgoForm from './RiesgoForm.vue';
+import RiesgoEvaluacionForm from './RiesgoEvaluacionForm.vue';
 import RiesgoAcciones from './RiesgoAcciones.vue';
 import RiesgoAsignarEspecialista from './RiesgoAsignarEspecialista.vue';
+import RiesgoVerificacionForm from './RiesgoVerificacionForm.vue';
 
 const store = useRiesgoStore();
 const modal = ref(null);
 
 const tabs = shallowRef({
     RiesgoForm,
+    RiesgoEvaluacionForm,
     RiesgoAcciones,
-    RiesgoAsignarEspecialista
+    RiesgoAsignarEspecialista,
+    RiesgoVerificacionForm
 });
 
 onMounted(() => {

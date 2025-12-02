@@ -283,6 +283,7 @@ Route::prefix('api/riesgos')
         Route::put('/{riesgo}/evaluacion', [RiesgoController::class, 'updateEvaluacion'])->name('api.riesgos.update-evaluacion');
         Route::put('/{riesgo}/tratamiento', [RiesgoController::class, 'updateTratamiento'])->name('api.riesgos.update-tratamiento');
         Route::put('/{riesgo}/verificacion', [RiesgoController::class, 'updateVerificacion'])->name('api.riesgos.update-verificacion');
+        Route::post('/{riesgo}/verificacion', [RiesgoController::class, 'storeVerificacion'])->name('api.riesgos.store-verificacion');
 
 
 
@@ -624,6 +625,8 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::put('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
     Route::delete('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
     Route::post('/riesgo-acciones/{id}/reprogramar', [App\Http\Controllers\RiesgoAccionController::class, 'reprogramar'])->name('api.riesgos.acciones.reprogramar');
+    Route::post('/riesgo-acciones/reprogramaciones/{id}/aprobar', [App\Http\Controllers\RiesgoAccionController::class, 'aprobarReprogramacion'])->name('api.riesgos.acciones.reprogramar.aprobar');
+    Route::post('/riesgo-acciones/reprogramaciones/{id}/rechazar', [App\Http\Controllers\RiesgoAccionController::class, 'rechazarReprogramacion'])->name('api.riesgos.acciones.reprogramar.rechazar');
 });
 
 // Rutas para obtener listas (Procesos, Áreas, Subáreas)
@@ -636,3 +639,7 @@ Route::middleware('auth')->group(function () {
 
 // Chatbot Route
 Route::post('/chatbot/chat', [App\Http\Controllers\ChatbotController::class, 'chat'])->middleware('auth');
+
+// AI Risk Improvement Route
+Route::post('/api/riesgos/improve-description', [App\Http\Controllers\RiesgoController::class, 'improveDescription'])->middleware('auth')->name('api.riesgos.improve-description');
+Route::post('/api/riesgos/improve-consecuencia', [App\Http\Controllers\RiesgoController::class, 'improveConsecuencia'])->middleware('auth')->name('api.riesgos.improve-consecuencia');

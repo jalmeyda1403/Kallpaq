@@ -33,4 +33,9 @@ class RiesgoAccion extends Model
     {
         return $this->belongsTo(Riesgo::class, 'riesgo_id');
     }
+
+    public function reprogramaciones()
+    {
+        return $this->hasMany(RiesgoAccionReprogramacion::class, 'riesgo_accion_id');
+    }
 }

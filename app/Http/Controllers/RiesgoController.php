@@ -7,8 +7,16 @@ use App\Models\Obligacion;
 use Illuminate\Http\Request;
 use App\Helpers\SemaforoHelper;
 
+use App\Services\AIService;
+
 class RiesgoController extends Controller
 {
+    protected $aiService;
+
+    public function __construct(AIService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
     // Mostrar una lista de los riesgos
     public function index()
     {
@@ -92,6 +100,10 @@ class RiesgoController extends Controller
 
         if ($request->has('tipo') && !empty($request->tipo)) {
             $query->where('riesgo_tipo', $request->tipo);
+        }
+
+        if ($request->has('matriz') && !empty($request->matriz)) {
+            $query->where('riesgo_matriz', $request->matriz);
         }
 
         $riesgos = $query->get();
@@ -257,5 +269,63 @@ class RiesgoController extends Controller
             'actual' => $riesgo->especialista,
             'historial' => []
         ]);
+    }
+    public function improveDescription(Request $request)
+    {
+        $request->validate([
+            'description' => 'required|string|max:1000',
+        ]);
+
+        try {
+            $improvedDescription = $this->aiService->improveRiskDescription($request->description);
+            return response()->json(['improved_description' => $improvedDescription]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al procesar la solicitud con IA: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function improveConsecuencia(Request $request)
+    {
+        $request->validate([
+            'risk_description' => 'required|string|max:1000',
+            'current_consequence' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $result = $this->aiService->improveRiskConsequence(
+                $request->risk_description,
+                $request->current_consequence
+            );
+            return response()->json(['result' => $result]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al procesar la solicitud con IA: ' . $e->getMessage()], 500);
+        }
+    }
+    public function storeVerificacion(Request $request, Riesgo $riesgo)
+    {
+        $validated = $request->validate([
+            'rr_fecha' => 'required|date',
+            'rr_resultado' => 'required|in:Con Eficacia,Sin Eficacia',
+            'rr_comentario' => 'required_if:rr_resultado,Sin Eficacia|nullable|string',
+        ]);
+
+        // Crear la revisión
+        $revision = $riesgo->revisiones()->create([
+            'rr_fecha' => $validated['rr_fecha'],
+            'rr_responsable_id' => auth()->id(),
+            'rr_resultado' => $validated['rr_resultado'],
+            'rr_comentario' => $validated['rr_comentario'],
+            'rr_ciclo' => $riesgo->riesgo_ciclo ?? 1,
+        ]);
+
+        // Si es "Sin Eficacia", incrementar el ciclo del riesgo
+        if ($validated['rr_resultado'] === 'Sin Eficacia') {
+            $riesgo->increment('riesgo_ciclo');
+        }
+
+        // Devolver el riesgo actualizado con sus revisiones
+        $riesgo->load(['revisiones.responsable', 'proceso']);
+
+        return response()->json($riesgo);
     }
 }

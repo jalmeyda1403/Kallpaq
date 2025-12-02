@@ -31,6 +31,9 @@
             </template>
             <Column field="ra_descripcion" header="Descripción"></Column>
             <Column field="ra_responsable" header="Responsable"></Column>
+            <Column field="ra_ciclo" header="Ciclo" headerStyle="width: 80px; text-align: center"
+                bodyStyle="text-align: center">
+            </Column>
             <Column header="Fecha Inicio">
                 <template #body="slotProps">
                     {{ formatDate(slotProps.data.ra_fecha_inicio) }}
@@ -50,6 +53,12 @@
                     <div v-else>
                         {{ formatDate(slotProps.data.ra_fecha_fin_planificada) }}
                     </div>
+                    <!-- Indicator for pending reprogramming -->
+                    <div v-if="hasPendingReprogramming(slotProps.data)" class="mt-1">
+                        <span class="badge badge-warning">
+                            <i class="fas fa-clock"></i> Solicitud Pendiente
+                        </span>
+                    </div>
                 </template>
             </Column>
             <Column header="Estado">
@@ -61,160 +70,36 @@
             </Column>
             <Column header="Acciones" headerStyle="width: 150px; text-align: center" bodyStyle="text-align: center">
                 <template #body="slotProps">
-                    <button class="btn btn-sm btn-info mr-1" @click="openModal(slotProps.data)" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-warning mr-1" @click="openReprogramarModal(slotProps.data)"
+                    <a href="#" class="mr-2 d-inline-block" @click.prevent="openModal(slotProps.data)" title="Editar">
+                        <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                    </a>
+                    <a href="#" class="mr-2 d-inline-block" @click.prevent="openReprogramarModal(slotProps.data)"
                         title="Reprogramar">
-                        <i class="fas fa-clock"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" @click="confirmDelete(slotProps.data)" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                        <i class="fas fa-clock text-info fa-lg"></i>
+                    </a>
+                    <a href="#" class="d-inline-block" @click.prevent="confirmDelete(slotProps.data)" title="Eliminar">
+                        <i class="fas fa-trash-alt text-danger fa-lg"></i>
+                    </a>
                 </template>
             </Column>
         </DataTable>
 
-        <!-- Modal para Crear/Editar Acción -->
-        <Teleport to="body">
-            <div class="modal fade" tabindex="-1" ref="actionModal" aria-hidden="true" style="z-index: 1060;">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title">{{ editing ? 'Editar Plan de Tratamiento' : 'Nuevo Plan Tratamiento'
-                            }}</h5>
-                            <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <form @submit.prevent="saveAccion">
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Descripción <span
-                                            class="text-danger">*</span></label>
-                                    <textarea class="form-control" v-model="form.ra_descripcion" rows="3"
-                                        required></textarea>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold">Responsable</label>
-                                            <input type="text" class="form-control" v-model="form.ra_responsable">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold">Correo Responsable</label>
-                                            <input type="email" class="form-control"
-                                                v-model="form.ra_responsable_correo">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold">Fecha Inicio</label>
-                                            <input type="date" class="form-control" v-model="form.ra_fecha_inicio">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold">Fecha Fin Planificada</label>
-                                            <input type="date" class="form-control"
-                                                v-model="form.ra_fecha_fin_planificada">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Estado <span class="text-danger">*</span></label>
-                                    <select class="form-control" v-model="form.ra_estado" required>
-                                        <option value="programada">Programada</option>
-                                        <option value="en proceso">En Proceso</option>
-                                        <option value="implementada">Implementada</option>
-                                        <option value="desestimada">Desestimada</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Comentario</label>
-                                    <textarea class="form-control" v-model="form.ra_comentario" rows="2"></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
-                                <button type="submit" class="btn btn-danger" :disabled="saving">
-                                    <span v-if="saving" class="spinner-border spinner-border-sm" role="status"
-                                        aria-hidden="true"></span>
-                                    {{ editing ? 'Actualizar' : 'Guardar' }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
+        <RiesgoAccionesForm :show="showActionModal" :actionData="selectedAction" @close="closeModal"
+            @saved="onActionSaved" />
 
-        <!-- Modal Reprogramar -->
-        <Teleport to="body">
-            <div class="modal fade" tabindex="-1" ref="reprogramarModalRef" aria-hidden="true" style="z-index: 1060;">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-warning text-white">
-                            <h5 class="modal-title">Reprogramar Acción</h5>
-                            <button type="button" class="close text-white" @click="closeReprogramarModal"
-                                aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <form @submit.prevent="submitReprogramacion">
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Tipo de Acción <span
-                                            class="text-danger">*</span></label>
-                                    <select v-model="reprogramarForm.actionType" class="form-control" required>
-                                        <option value="reprogramar">Reprogramar Fecha</option>
-                                        <option value="desestimar">Desestimar Acción</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" v-if="reprogramarForm.actionType === 'reprogramar'">
-                                    <label class="font-weight-bold">Nueva Fecha Fin <span
-                                            class="text-danger">*</span></label>
-                                    <input v-model="reprogramarForm.ra_fecha_fin_reprogramada" type="date"
-                                        class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Justificación <span
-                                            class="text-danger">*</span></label>
-                                    <textarea v-model="reprogramarForm.ra_justificacion" class="form-control" rows="3"
-                                        required></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Evidencia (Opcional)</label>
-                                    <input type="file" class="form-control-file" @change="handleFileUpload">
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary"
-                                    @click="closeReprogramarModal">Cancelar</button>
-                                <button type="submit" class="btn btn-primary" :disabled="savingReprogramacion">
-                                    <span v-if="savingReprogramacion" class="spinner-border spinner-border-sm"
-                                        role="status" aria-hidden="true"></span>
-                                    Guardar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
+        <RiesgoAccionesReproForm :show="showReproModal" :actionData="selectedReproAction" @close="closeReprogramarModal"
+            @updated="onReproUpdated" />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
 import Swal from 'sweetalert2';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import RiesgoAccionesForm from './RiesgoAccionesForm.vue';
+import RiesgoAccionesReproForm from './RiesgoAccionesReproForm.vue';
 
 const store = useRiesgoStore();
 
@@ -223,30 +108,10 @@ const formatBreadcrumbId = (id) => {
     return `R${id.toString().padStart(6, '0')}`;
 };
 
-const actionModal = ref(null);
-const reprogramarModalRef = ref(null);
-const editing = ref(false);
-const saving = ref(false);
-const savingReprogramacion = ref(false);
-
-const form = reactive({
-    id: null,
-    ra_descripcion: '',
-    ra_responsable: '',
-    ra_responsable_correo: '',
-    ra_fecha_inicio: '',
-    ra_fecha_fin_planificada: '',
-    ra_estado: 'programada',
-    ra_comentario: ''
-});
-
-const reprogramarForm = reactive({
-    id: null,
-    actionType: 'reprogramar',
-    ra_fecha_fin_reprogramada: '',
-    ra_justificacion: '',
-    ra_evidencia: null
-});
+const showActionModal = ref(false);
+const showReproModal = ref(false);
+const selectedAction = ref(null);
+const selectedReproAction = ref(null);
 
 onMounted(() => {
     if (store.riesgoActual && store.riesgoActual.id) {
@@ -255,52 +120,41 @@ onMounted(() => {
 });
 
 const openModal = (accion = null) => {
-    if (accion) {
-        editing.value = true;
-        Object.assign(form, accion);
-        // Format dates for input
-        if (form.ra_fecha_inicio) form.ra_fecha_inicio = form.ra_fecha_inicio.split('T')[0];
-        if (form.ra_fecha_fin_planificada) form.ra_fecha_fin_planificada = form.ra_fecha_fin_planificada.split('T')[0];
-    } else {
-        editing.value = false;
-        resetForm();
-    }
-    $(actionModal.value).modal('show');
+    selectedAction.value = accion;
+    showActionModal.value = true;
 };
 
 const closeModal = () => {
-    $(actionModal.value).modal('hide');
-    resetForm();
+    showActionModal.value = false;
+    selectedAction.value = null;
 };
 
-const resetForm = () => {
-    form.id = null;
-    form.ra_descripcion = '';
-    form.ra_responsable = '';
-    form.ra_responsable_correo = '';
-    form.ra_fecha_inicio = '';
-    form.ra_fecha_fin_planificada = '';
-    form.ra_estado = 'programada';
-    form.ra_comentario = '';
-    editing.value = false;
-};
-
-const saveAccion = async () => {
-    saving.value = true;
-    try {
-        if (editing.value) {
-            await store.updateAccion(form.id, form);
-            Swal.fire('Actualizado', 'El plan de tratamiento ha sido actualizado.', 'success');
-        } else {
-            await store.createAccion(store.riesgoActual.id, form);
-            Swal.fire('Guardado', 'El plan de tratamiento ha sido creado.', 'success');
-        }
-        closeModal();
-    } catch (error) {
-        Swal.fire('Error', 'Hubo un problema al guardar el plan.', 'error');
-    } finally {
-        saving.value = false;
+const onActionSaved = () => {
+    // Refresh list or handle update if needed (store updates automatically usually if we push to it)
+    // But fetchAcciones is safer to ensure sync
+    if (store.riesgoActual && store.riesgoActual.id) {
+        store.fetchAcciones(store.riesgoActual.id);
     }
+};
+
+const openReprogramarModal = (action) => {
+    selectedReproAction.value = action;
+    showReproModal.value = true;
+};
+
+const closeReprogramarModal = () => {
+    showReproModal.value = false;
+    selectedReproAction.value = null;
+};
+
+const onReproUpdated = (updatedAction) => {
+    // Update the action in the list locally to reflect changes immediately
+    const index = store.acciones.findIndex(a => a.id === updatedAction.id);
+    if (index !== -1) {
+        store.acciones[index] = updatedAction;
+    }
+    // Also update the selected action passed to the modal if it's still open (for history update)
+    selectedReproAction.value = updatedAction;
 };
 
 const confirmDelete = (accion) => {
@@ -325,45 +179,9 @@ const confirmDelete = (accion) => {
     });
 };
 
-// Reprogramación Logic
-const openReprogramarModal = (action) => {
-    reprogramarForm.id = action.id;
-    reprogramarForm.actionType = 'reprogramar';
-    reprogramarForm.ra_fecha_fin_reprogramada = '';
-    reprogramarForm.ra_justificacion = '';
-    reprogramarForm.ra_evidencia = null;
-    $(reprogramarModalRef.value).modal('show');
-};
-
-const closeReprogramarModal = () => {
-    $(reprogramarModalRef.value).modal('hide');
-};
-
-const handleFileUpload = (event) => {
-    reprogramarForm.ra_evidencia = event.target.files[0];
-};
-
-const submitReprogramacion = async () => {
-    savingReprogramacion.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('actionType', reprogramarForm.actionType);
-        formData.append('ra_justificacion', reprogramarForm.ra_justificacion);
-        if (reprogramarForm.actionType === 'reprogramar') {
-            formData.append('ra_fecha_fin_reprogramada', reprogramarForm.ra_fecha_fin_reprogramada);
-        }
-        if (reprogramarForm.ra_evidencia) {
-            formData.append('ra_evidencia', reprogramarForm.ra_evidencia);
-        }
-
-        await store.reprogramarAccion(reprogramarForm.id, formData);
-        closeReprogramarModal();
-        Swal.fire('Éxito', 'Acción gestionada correctamente', 'success');
-    } catch (error) {
-        Swal.fire('Error', 'No se pudo gestionar la acción', 'error');
-    } finally {
-        savingReprogramacion.value = false;
-    }
+const hasPendingReprogramming = (action) => {
+    if (!action.reprogramaciones) return false;
+    return action.reprogramaciones.some(r => r.rar_estado === 'pendiente');
 };
 
 const formatDate = (dateString) => {
@@ -383,7 +201,6 @@ const getEstadoBadgeClass = (status) => {
 </script>
 
 <style scoped>
-/* No specific styles needed for Bootstrap modal */
 .header-container {
     padding: 0.75rem;
     margin-bottom: 1.5rem;

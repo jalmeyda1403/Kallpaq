@@ -23,18 +23,18 @@
                     </div>
                 </div>
                 <hr>
-                <form @submit.prevent="store.fetchMisRiesgos">
+                <form @submit.prevent="search">
                     <div class="form-row">
                         <div class="col">
-                            <input type="text" v-model="store.filters.codigo" class="form-control"
+                            <input type="text" v-model="localFilters.codigo" class="form-control"
                                 placeholder="Buscar por código o proceso...">
                         </div>
                         <div class="col">
-                            <input type="text" v-model="store.filters.nombre" class="form-control"
+                            <input type="text" v-model="localFilters.nombre" class="form-control"
                                 placeholder="Buscar por nombre...">
                         </div>
                         <div class="col">
-                            <select v-model="store.filters.factor" class="form-control">
+                            <select v-model="localFilters.factor" class="form-control">
                                 <option value="">Todos los Factores</option>
                                 <option value="1">Estratégico</option>
                                 <option value="2">Operacional</option>
@@ -46,19 +46,26 @@
                             </select>
                         </div>
                         <div class="col">
-                            <select v-model="store.filters.tipo" class="form-control">
+                            <select v-model="localFilters.tipo" class="form-control">
                                 <option value="">Todos los Tipos</option>
                                 <option value="Riesgo">Riesgo</option>
                                 <option value="Oportunidad">Oportunidad</option>
                             </select>
                         </div>
                         <div class="col">
-                            <select v-model="store.filters.nivel" class="form-control">
+                            <select v-model="localFilters.nivel" class="form-control">
                                 <option value="">Todos los Niveles</option>
                                 <option value="Muy Alto">Muy Alto</option>
                                 <option value="Alto">Alto</option>
                                 <option value="Medio">Medio</option>
                                 <option value="Bajo">Bajo</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select v-model="localFilters.matriz" class="form-control">
+                                <option value="">Todas las Matrices</option>
+                                <option value="Estratégica">Estratégica</option>
+                                <option value="Táctica">Táctica</option>
                             </select>
                         </div>
                         <div class="col-auto">
@@ -131,7 +138,6 @@
 
     <!-- Modals -->
     <RiesgoModal />
-    <RiesgoAccionesModal v-model:show="showAccionesModal" :riesgo="selectedRiesgo" />
 
     <!-- Modal for Heat Map -->
     <Teleport to="body">
@@ -168,7 +174,6 @@ import { ref, onMounted, computed } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
 import MapaCalor from './MapaCalor.vue';
 import RiesgoModal from './RiesgoModal.vue';
-import RiesgoAccionesModal from './RiesgoAccionesModal.vue';
 
 // PrimeVue
 import DataTable from 'primevue/datatable';
@@ -180,8 +185,21 @@ const riesgos = computed(() => store.riesgos);
 const loading = computed(() => store.loading);
 const dt = ref(null);
 const showMapaCalor = ref(false);
-const showAccionesModal = ref(false);
 const selectedRiesgo = ref(null);
+
+const localFilters = ref({
+    codigo: store.filters.codigo,
+    nombre: store.filters.nombre,
+    factor: store.filters.factor,
+    tipo: store.filters.tipo,
+    nivel: store.filters.nivel,
+    matriz: store.filters.matriz
+});
+
+const search = () => {
+    store.filters = { ...localFilters.value };
+    store.fetchMisRiesgos();
+};
 
 onMounted(() => {
     store.fetchMisRiesgos();
@@ -192,8 +210,8 @@ const refreshList = () => {
 };
 
 const openAccionesModal = (riesgo) => {
-    selectedRiesgo.value = riesgo;
-    showAccionesModal.value = true;
+    store.openModal(riesgo);
+    store.setCurrentTab('RiesgoAcciones');
 };
 
 const confirmDelete = async (riesgo) => {
@@ -211,177 +229,37 @@ const exportCSV = () => {
 };
 
 const getBadgeClass = (nivel) => {
-    if (nivel === 'Muy Alto') return 'badge-danger';
-    if (nivel === 'Alto') return 'badge-orange';
-    if (nivel === 'Medio') return 'badge-warning';
+    if (!nivel) return 'badge-secondary';
+    const n = nivel.toLowerCase();
+    if (n === 'muy alto') return 'badge-danger';
+    if (n === 'alto') return 'badge-orange';
+    if (n === 'medio') return 'badge-warning';
     return 'badge-success';
 };
 </script>
 
 <style scoped>
-.badge-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.badge-warning {
-    background-color: #ffc107;
-    color: black;
-}
-
-.badge-info {
-    background-color: #17a2b8;
-    color: white;
-}
-
-.badge-success {
-    background-color: #28a745;
-    color: white;
-}
-
-/* Form row styling */
-.form-row {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0 -5px;
-}
-
-.form-row .col,
-.form-row .col-auto {
-    padding: 0 5px;
-    margin-bottom: 10px;
-}
-
-/* Form control styling */
-.form-control {
-    border: 1px solid #ced4da;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    border-radius: 0.375rem;
-}
-
-.form-control:focus {
-    color: #495057;
-    background-color: #fff;
-    border-color: #dc3545;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-
-/* Button styling */
-.btn {
-    border-radius: 0.375rem;
-    font-weight: 500;
-    padding: 0.375rem 0.75rem;
-    transition: all 0.15s ease-in-out;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
-    transform: translateY(-1px);
-    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
-}
-
-.btn-danger:focus {
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
-}
-
-.btn-danger:not(:disabled):not(.disabled):active,
-.btn-danger:not(:disabled):not(.disabled).active {
-    background-color: #bd2130;
-    border-color: #b21f2d;
-}
-
-.btn-warning {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: #212529;
-}
-
-.btn-warning:hover {
-    background-color: #e0a800;
-    border-color: #d39e00;
-    color: #eeeff0;
-}
-
-.btn-info {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-}
-
-.btn-info:hover {
-    background-color: #138496;
-    border-color: #117a8b;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-}
-
-.btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
-
-.btn-secondary:hover {
-    background-color: #5a6268;
-    border-color: #545b62;
-}
-
-.btn-dark {
-    background-color: #454d55;
-    border-color: #454d55;
-}
-
-.btn-dark:hover {
-    background-color: #343a40;
-    border-color: #2e343a;
-}
-
-.bg-dark {
-    background-color: #454d55 !important;
-}
-
-/* Input group text */
-.input-group-text {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-}
-
-/* Orange badge for risk level */
+/* Orange badge for risk level - AdminLTE/Bootstrap doesn't have badge-orange by default */
 .badge-orange {
     background-color: #fd7e14;
     color: white;
 }
 
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
-}
-
-/* Change the loader icon to red */
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
-}
-
 /* Larger badge styles for level indicators */
 .badge-lg {
-    font-size: 1em;
-    padding: 0.5em 1em;
-    font-weight: bold;
+    font-size: 0.9em;
+    padding: 0.4em 0.8em;
+    font-weight: 600;
+}
+
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: #dc3545 !important;
+    /* Use hex for consistency */
+    font-size: 2rem !important;
 }
 </style>

@@ -92,12 +92,60 @@ class AIService
 
     protected function improveRedaction(string $message): string
     {
-        $prompt = "Act as an expert in ISO 9001 and ISO 37001. The user wants to improve the redaction of a Risk or Obligation.
+        $prompt = "Act as an expert in ISO 9001, ISO 37301, ISO 31000 and ISO 37001. The user wants to improve the redaction of a Risk or Obligation.
         User Input: \"$message\"
         
         Analyze the text. If it's a Risk, ensure it follows syntax (Cause -> Risk -> Effect). If it's an Obligation, ensure clarity and compliance.
         Provide a revised version and a brief explanation. Keep it under 500 chars.
         IMPORTANT: Respond ONLY in Spanish.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    public function improveRiskDescription(string $text): string
+    {
+        $prompt = "Actúa como un experto en gestión de riesgos ISO 9001, ISO 37301, ISO 31000 and ISO 37001.
+        Tu tarea es evaluar primero el riesgo (ISO 31000, un riesgo es el efecto de la incertidumbre sobre los objetivos,  Es decir, es la probabilidad de que ocurra un evento que tenga un impacto en los objetivos de la organización) e indicar si es o no un riesgo, si es un riesgo, mejorar la redacción de la siguiente descripción de riesgo para que cumpla estrictamente con la estructura:
+        '[EVENTO], debido a [CAUSA]'. (Los eventos no deben ser factores externos o internos, deben ser eventos internos de la organización).
+
+        
+        Texto original: \"$text\"
+        
+        Ejemplos de buena redacción:
+        - 'Favorecimiento indebido al solicitante, debido al procedimiento desactualizado y a la atención mediante canales personales.'
+        - 'Mayor cobertura en la atención de solicitudes, debido a la directiva de atención y a la disponibilidad de equipos informáticos.'
+        
+        Instrucciones:
+        1. Identifica el efecto (consecuencia) y la causa (origen) en el texto original.
+        2. Si falta información, infiere lo más lógico basado en el contexto de gestión pública o empresarial.
+        3. Devuelve SOLO el texto reescrito, sin explicaciones adicionales ni comillas.
+        4. Mantén un lenguaje formal y técnico.
+        5. Longitud máxima: 500 caracteres.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    public function improveRiskConsequence(string $riskDescription, ?string $currentConsequence = null): string
+    {
+        $prompt = "Actúa como un experto en gestión de riesgos ISO 9001, ISO 37301, ISO 31000 e ISO 37001.
+        
+        Contexto (Descripción del Riesgo): \"$riskDescription\"
+        
+        Tarea:
+        ";
+
+        if (empty($currentConsequence)) {
+            $prompt .= "La 'Consecuencia' está vacía. Sugiere 2 posibles consecuencias directas y coherentes con la descripción del riesgo proporcionada dando un enfoque en la afectación o impacto en la continuidad del proceso o servicio.
+            Formato de respuesta:
+            - Opción 1: [Consecuencia sugerida]
+            - Opción 2: [Consecuencia sugerida]";
+        } else {
+            $prompt .= "Analiza la siguiente 'Consecuencia' actual: \"$currentConsequence\".
+            Mejora su redacción para que sea más clara, técnica y tenga una relación lógica directa con la descripción del riesgo.
+            Mantén un tono formal.";
+        }
+
+        $prompt .= "\n\nIMPORTANTE: Devuelve SOLO el texto de la respuesta (las opciones o la redacción mejorada), sin introducciones ni explicaciones adicionales. Longitud máxima: 500 caracteres.";
 
         return $this->callOpenAI($prompt);
     }
