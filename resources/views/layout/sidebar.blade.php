@@ -184,7 +184,7 @@
 
                     <!-- Configuración Procesos -->
                     <li
-                        class="nav-item has-treeview {{ request()->is('procesos*') || request()->is('documento*') || request()->is('vue/inventario-gestion*') || request()->is('vue/documentos*') || request()->is('partes*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('procesos*') || request()->is('documento*') || request()->is('vue/inventario-gestion*') || request()->is('vue/documentos*') || request()->is('partes*') || request()->is('indicadores-gestion*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cogs"></i>
                             <p>
@@ -219,8 +219,8 @@
                             </li>
                             <!-- 4. Gestión del Desempeño (indicadores) -->
                             <li class="nav-item">
-                                <a href="/vue/indicadores"
-                                    class="nav-link {{ request()->is('vue/indicadores*') ? 'active' : '' }}">
+                                <a href="{{ route('indicadores-gestion.view') }}"
+                                    class="nav-link {{ request()->routeIs('indicadores-gestion.view') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-chart-bar"></i>
                                     <p>Listado de Indicadores</p>
                                 </a>
@@ -426,7 +426,7 @@
                                 </li>
                             @endif
 
-                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista', 'gestor']))
+                            @if (in_array($rol, ['facilitador', 'subgerente', 'especialista', 'gestor', 'admin']))
                                 <li class="nav-item">
                                     <a href="{{ url('/vue/riesgos/mis-riesgos') }}"
                                         class="nav-link {{ request()->is('vue/riesgos/mis-riesgos*') ? 'active' : '' }}">

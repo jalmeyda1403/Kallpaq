@@ -566,19 +566,24 @@ Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->gr
 Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraController::class, 'index'])->name('dashboard.mejora.api');
 
 // Rutas para el módulo de Indicadores (Vue)
-Route::prefix('api/indicadores-vue')->middleware('auth')->name('api.indicadores-vue.')->group(function () {
-    Route::get('/procesos-gestion', [App\Http\Controllers\IndicadoresVueController::class, 'getProcesosGestion'])->name('procesos-gestion');
-    Route::get('/procesos/{procesoId}', [App\Http\Controllers\IndicadoresVueController::class, 'getIndicadoresByProceso'])->name('by-proceso');
-    Route::post('/', [App\Http\Controllers\IndicadoresVueController::class, 'storeIndicador'])->name('store');
-    Route::put('/{id}', [App\Http\Controllers\IndicadoresVueController::class, 'updateIndicador'])->name('update');
-    Route::get('/ouo-reporte', [App\Http\Controllers\IndicadoresVueController::class, 'getIndicadoresForOUO'])->name('ouo-reporte');
-    Route::post('/{id}/seguimiento', [App\Http\Controllers\IndicadoresVueController::class, 'storeSeguimiento'])->name('seguimiento');
+// Rutas para el módulo de Indicadores (Refactorizado)
+Route::get('/indicadores-gestion', [IndicadorController::class, 'view'])->name('indicadores-gestion.view');
+
+Route::prefix('api/indicadores-gestion')->middleware('auth')->name('api.indicadores-gestion.')->group(function () {
+    Route::get('/', [IndicadorController::class, 'index'])->name('index'); // Devuelve JSON
+    Route::post('/', [IndicadorController::class, 'store'])->name('store');
+    Route::put('/{id}', [IndicadorController::class, 'update'])->name('update');
+    Route::delete('/{id}', [IndicadorController::class, 'destroy'])->name('destroy');
+    Route::get('/{id}/avances', [IndicadorController::class, 'getAvances'])->name('avances.index');
+    Route::post('/avance', [IndicadorController::class, 'storeAvance'])->name('avances.store');
+    Route::post('/avance/{id}', [IndicadorController::class, 'updateAvance'])->name('avances.update');
+    Route::post('/next-period', [IndicadorController::class, 'getNextPeriod'])->name('next-period');
 });
 
 // Route to handle Vue SPA pages, prefixed with /vue/
 Route::get('/vue/{any}', function () {
     return view('app');
-})->where('any', '.*')->name('vue.app');
+})->where('any', '.*')->middleware('auth')->name('vue.app');
 
 // New route for OuoUserAssignment component
 Route::get('/vue/ouos/user-assignment', function () {

@@ -57,9 +57,10 @@ class RiesgoController extends Controller
     public function misRiesgos(Request $request)
     {
         $user = auth()->user();
+        $forceOuo = $request->query('scope') === 'ouo';
 
-        // Si es admin, devolver todos
-        if ($user->hasRole('admin')) {
+        // Si es admin y NO se fuerza el scope OUO, devolver todos
+        if ($user->hasRole('admin') && !$forceOuo) {
             $query = Riesgo::with(['proceso', 'factor']);
         } else {
             // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs

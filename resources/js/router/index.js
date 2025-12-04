@@ -140,7 +140,12 @@ const routes = [
     {
         path: '/indicadores',
         name: 'indicadores.index',
-        component: () => import('@/components/indicadores/IndicadoresMain.vue'),
+        component: () => import('@/components/indicadores/IndicadoresIndex.vue'),
+    },
+    {
+        path: '/indicadores-gestion',
+        name: 'indicadores.gestion',
+        component: () => import('@/components/indicadores/IndicadoresIndex.vue'),
     },
     {
         path: '/encuestas-satisfaccion',

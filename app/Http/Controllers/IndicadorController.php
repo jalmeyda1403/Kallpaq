@@ -1,298 +1,280 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
+
 use App\Models\Indicador;
-use App\Models\IndicadorHistorico;
 use App\Models\IndicadorSeguimiento;
-use App\Models\Configuracion;
 use App\Models\Proceso;
+use App\Models\PlanificacionPEI;
 use App\Models\PlanificacionSIG;
-use App\Models\User;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class IndicadorController extends Controller
 {
+    public function view()
+    {
+        return view('indicadores.index');
+    }
+
     public function index()
     {
-        $user = User::find(auth()->user()->id);
-        $configuracion = new Configuracion();
-        $fecha_inicio_bloqueo = Configuracion::getFechaInicioBloqueada();
-        $fecha_fin_bloqueo = Configuracion::getFechaFinBloqueada();
-        $procesos = $user->procesos()->with('indicadores')->get();
-        $procesos->transform(function ($proceso) {
-            return $proceso->setRelation('indicadores', $proceso->indicadores->sortBy('id'));
-        });
+        $procesos = Proceso::select('id', 'proceso_nombre')->get();
+        $query = Indicador::with(['proceso', 'objetivoPEI', 'objetivoSIG']);
 
-        return view('indicadores.index', compact('procesos', 'fecha_inicio_bloqueo', 'fecha_fin_bloqueo'));
-    }
-
-
-    public function listar($proceso_id = null)
-    {
-        $proceso = Proceso::with('subprocesos.indicadores')->findOrFail($proceso_id);
-        $indicadores = $proceso->indicadores;
-
-        // Función recursiva para obtener indicadores de subprocesos, nietos, etc.
-        $indicadores = $this->obtenerIndicadoresRecursivos($proceso, $indicadores);
-
-        return view('indicadores.index', compact('proceso', 'indicadores'));
-    }
-    private function obtenerIndicadoresRecursivos($proceso, &$indicadores)
-    {
-        foreach ($proceso->subprocesos as $subproceso) {
-            // Fusionar los indicadores del subproceso a la colección de indicadores
-            $indicadores = $indicadores->merge($subproceso->indicadores);
-    
-            // Recursión para obtener indicadores de los subprocesos de los hijos (nietos, bisnietos...)
-            $indicadores = $this->obtenerIndicadoresRecursivos($subproceso, $indicadores);
+        if (request()->has('proceso_id') && request()->proceso_id) {
+            $query->where('proceso_id', request()->proceso_id);
         }
-        return $indicadores;
-    }
 
-    public function create($proceso_id = null)
-    {
+        $indicadores = $query->get()
+            ->map(function ($indicador) {
+                // Obtener el último seguimiento para mostrar el valor actual, filtrando por año si existe
+                $seguimientosQuery = $indicador->seguimientos();
 
-        $frecuencias = Config::get('opciones.frecuencias');
-        $tiposIndicador = Config::get('opciones.tipos_indicador');
-        $tiposAgregacion = Config::get('opciones.tipos_agregacion');
-        $parametroMedida = Config::get('opciones.parametro_medida');
-        $sentido = Config::get('opciones.sentido');
-        $proceso = Proceso::find($proceso_id);
-        return view('indicadores.form', compact('proceso', 'frecuencias', 'tiposIndicador', 'tiposAgregacion', 'parametroMedida', 'sentido'));
+                if (request()->has('year') && request()->year) {
+                    $seguimientosQuery->where('is_periodo', request()->year);
+                }
+
+                $ultimoSeguimiento = $seguimientosQuery->orderBy('is_numero_periodo', 'desc')->first();
+
+                $indicador->ultimo_valor = $ultimoSeguimiento ? $ultimoSeguimiento->is_valor : null;
+                $indicador->ultima_meta = $ultimoSeguimiento ? $ultimoSeguimiento->is_meta : null;
+                $indicador->ultimo_periodo = $ultimoSeguimiento ? $ultimoSeguimiento->is_numero_periodo : null;
+                $indicador->ultima_fecha = $ultimoSeguimiento ? $ultimoSeguimiento->is_fecha : null;
+
+                return $indicador;
+            });
+
+        return response()->json([
+            'indicadores' => $indicadores,
+            'procesos' => $procesos
+        ]);
     }
 
     public function store(Request $request)
     {
-        // Validación y almacenamiento de los datos
-        Indicador::create($request->all());
-        return redirect()->back()->with('success', 'Indicador creado exitosamente.');
-    }
+        $validated = $request->validate([
+            'proceso_id' => 'required|exists:procesos,id',
+            'indicador_nombre' => 'required|string|max:255',
+            'indicador_frecuencia' => 'required|string',
+            'indicador_meta' => 'required|string',
+            // Agregar más validaciones según sea necesario
+        ]);
 
-    public function edit($id)
-    {
-        $indicador = Indicador::findOrFail($id);
-        $proceso_id = $indicador->proceso_id;
-        $frecuencias = Config::get('opciones.frecuencias');
-        $tiposIndicador = Config::get('opciones.tipos_indicador');
-        $tiposAgregacion = Config::get('opciones.tipos_agregacion');
-        $parametroMedida = Config::get('opciones.parametro_medida');
-        $sentido = Config::get('opciones.sentido');
-        $proceso = Proceso::find($proceso_id);
-
-
-        // Código para cargar los datos necesarios para la edición
-
-        return view('indicadores.form', compact('proceso', 'indicador', 'frecuencias', 'tiposIndicador', 'tiposAgregacion', 'parametroMedida', 'sentido'));
+        try {
+            DB::beginTransaction();
+            $indicador = Indicador::create($request->all());
+            DB::commit();
+            return response()->json(['message' => 'Indicador creado correctamente', 'indicador' => $indicador], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al crear indicador: ' . $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
-        // Validación y actualización de los datos
-        $data = $request->except(['proceso_nombre', 'indicador_id']);
         $indicador = Indicador::findOrFail($id);
 
-        // Obtener el proceso_id del indicador (que ya está asociado)
-        $proceso_id = $indicador->proceso_id;
-
-        // Actualizar el indicador con los datos filtrados
-        $indicador->update($data);
-
-        // Redirigir a la vista de lista de indicadores
-        return redirect()->route('indicadores.listar', ['proceso_id' => $proceso_id])
-            ->with('success', 'Indicador actualizado exitosamente.');
+        try {
+            DB::beginTransaction();
+            $indicador->update($request->all());
+            DB::commit();
+            return response()->json(['message' => 'Indicador actualizado correctamente', 'indicador' => $indicador]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al actualizar indicador: ' . $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $indicador = Indicador::findOrFail($id);
-        $indicador->delete();
-        return redirect()->route('indicadores.index')->with('success', 'Indicador eliminado exitosamente.');
-    }
-    public function generarFrecuencia($id)
-    {
-        $periodo_actual = Config::get('opciones.periodo.actual');
-
-
-
-
-        DB::statement("CALL generar_frecuencias(?, ?)", [$id, $periodo_actual]);
-
-        return redirect()->route('indicadores.index')->with('success', 'Procedimiento almacenado ejecutado correctamente.');
-
-
-    }
-
-    public function limpiar_frecuencia($frecuencia, $id)
-    {
-
-    }
-
-    public function showHistorico($id)
-    {  // Obtener los datos históricos asociados a este indicador
-        $indicador = Indicador::findOrFail($id);
-        $historicalData = IndicadorHistorico::where('indicador_id', $id)->get();
-        return response()->json($historicalData);
-
-    }
-    // Indicador_Seguimiento
-    public function showDatos($id)
-    {
-        $configuracion = new Configuracion();
-        $fecha_inicio_bloqueo = Configuracion::getFechaInicioBloqueada();
-        $fecha_fin_bloqueo = Configuracion::getFechaFinBloqueada();
-        $indicador = Indicador::findOrFail($id);
-
-        $data = IndicadorSeguimiento::where('indicador_id', $id)->get();
-
-        $data->each(function ($item) use ($fecha_inicio_bloqueo, $fecha_fin_bloqueo) {
-            $item->editable = !($item->fecha <= $fecha_fin_bloqueo && $item->fecha >= $fecha_inicio_bloqueo);
-        });
-
-        return response()->json($data);
-
-
-    }
-
-    public function editDatos($id)
-    {
-        $indicadorSeguimiento = IndicadorSeguimiento::with('indicador')->findOrFail($id);
-        $indicadorFields = $indicadorSeguimiento->indicador->getAttributes();
-
-        $indicadorSeguimientoFields = $indicadorSeguimiento->getAttributes();
-
-        $mergedFields = array_merge_recursive($indicadorFields, $indicadorSeguimientoFields);
-
-
-        return response()->json($mergedFields);
-    }
-
-    public function updateDatos(Request $request, $id)
-    {
         try {
-            $indicadorSeguimiento = IndicadorSeguimiento::findOrFail($id);
-            // Actualizar datos del indicadorSeguimiento    
-            $indicadorSeguimiento->meta = $request->meta;
-            $indicadorSeguimiento->var1 = $request->var1;
-            $indicadorSeguimiento->var2 = $request->var2;
-            $indicadorSeguimiento->var3 = $request->var3;
-            $indicadorSeguimiento->var4 = $request->var4;
-            $indicadorSeguimiento->var5 = $request->var5;
-            $indicadorSeguimiento->var6 = $request->var6;
-            $indicadorSeguimiento->estado = $request->var6;
+            $indicador = Indicador::findOrFail($id);
+            $indicador->delete();
+            return response()->json(['message' => 'Indicador eliminado correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminar indicador: ' . $e->getMessage()], 500);
+        }
+    }
 
-            // Obtener los valores de las variables y la fórmula ingresados por el usuario
-            $var1Value = $indicadorSeguimiento->var1;
-            $var2Value = $indicadorSeguimiento->var2;
-            $var3Value = $indicadorSeguimiento->var3;
-            $var4Value = $indicadorSeguimiento->var4;
-            $var5Value = $indicadorSeguimiento->var5;
-            $var6Value = $indicadorSeguimiento->var6;
-            $formula = $indicadorSeguimiento->indicador->formula;
+    public function storeAvance(Request $request)
+    {
+        $request->validate([
+            'indicador_id' => 'required|exists:indicadores,id',
+            'is_fecha' => 'required|date',
+            'is_valor' => 'required',
+            'is_periodo' => 'required|integer',
+            'is_numero_periodo' => [
+                'required',
+                'integer',
+                Rule::unique('indicadores_seguimiento')->where(function ($query) use ($request) {
+                    return $query->where('indicador_id', $request->indicador_id)
+                        ->where('is_periodo', $request->is_periodo);
+                })
+            ],
+            'is_evidencias.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240'
+        ], [
+            'is_numero_periodo.unique' => 'Ya existe un avance registrado para este N° de Periodo en el año seleccionado.'
+        ]);
 
-            // Reemplazar los nombres de las variables en la fórmula con sus valores
-            $formula = str_replace('var1', $var1Value, $formula);
-            $formula = str_replace('var2', $var2Value, $formula);
-            $formula = str_replace('var3', $var3Value, $formula);
-            $formula = str_replace('var4', $var4Value, $formula);
-            $formula = str_replace('var5', $var5Value, $formula);
-            $formula = str_replace('var6', $var6Value, $formula);
+        try {
+            $indicador = Indicador::findOrFail($request->indicador_id);
 
-            // calcular valor segun formula
-            $indicadorSeguimiento->valor = eval ("return $formula;");
-            $valor = $indicadorSeguimiento->valor;
+            // Validar que la meta del periodo no supere la meta del indicador
+            $metaPeriodo = (float) $request->is_meta;
+            $metaIndicador = (float) $indicador->indicador_meta;
 
-            // Evaluar y asignar el estado del indicador
-            if ($valor >= $indicadorSeguimiento->meta) {
-                $indicadorSeguimiento->estado = 'bueno';
-            } elseif ($valor >= 0.85 * $indicadorSeguimiento->meta) {
-                $indicadorSeguimiento->estado = 'regular';
+            // Esta validación depende de la lógica de negocio, a veces la meta del periodo puede ser distinta.
+            // La mantengo si es requerida, pero ojo si bloquea casos válidos.
+            if ($request->has('is_meta') && $metaPeriodo > $metaIndicador && $indicador->indicador_sentido == 'lineal') {
+                // Solo validar si es sentido lineal estricto, o según requiera el usuario.
+                // Por ahora lo dejo comentado o laxo si el usuario no lo pidió explícitamente corregir.
+                // return response()->json([
+                //    'message' => "La meta del periodo ($metaPeriodo) no puede ser mayor a la meta del indicador ($metaIndicador)"
+                // ], 422);
+            }
+
+            DB::beginTransaction();
+
+            $data = $request->except(['is_evidencias', 'indicador_id', 'existing_evidencias', 'update_evidences']);
+            $data['indicador_id'] = $request->indicador_id;
+
+            $evidenciasPaths = [];
+            if ($request->hasFile('is_evidencias')) {
+                foreach ($request->file('is_evidencias') as $file) {
+                    $path = $file->store('evidencias_indicadores', 'public');
+                    $evidenciasPaths[] = $path;
+                }
+            }
+
+            if (!empty($evidenciasPaths)) {
+                $data['is_evidencias'] = json_encode($evidenciasPaths);
+            }
+
+            $seguimiento = IndicadorSeguimiento::create($data);
+
+            DB::commit();
+            return response()->json(['message' => 'Avance registrado correctamente', 'seguimiento' => $seguimiento], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error storing avance: ' . $e->getMessage());
+            return response()->json(['message' => 'Error interno al registrar el avance. Por favor, inténtelo de nuevo más tarde.'], 500);
+        }
+    }
+
+    public function updateAvance(Request $request, $id)
+    {
+        $seguimiento = IndicadorSeguimiento::findOrFail($id);
+
+        $request->validate([
+            'is_fecha' => 'required|date',
+            'is_valor' => 'required',
+            'is_periodo' => 'required|integer',
+            'is_numero_periodo' => [
+                'required',
+                'integer',
+                Rule::unique('indicadores_seguimiento')->ignore($id)->where(function ($query) use ($request, $seguimiento) {
+                    return $query->where('indicador_id', $seguimiento->indicador_id)
+                        ->where('is_periodo', $request->is_periodo);
+                })
+            ],
+            'is_evidencias.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240'
+        ], [
+            'is_numero_periodo.unique' => 'Ya existe un avance registrado para este N° de Periodo en el año seleccionado.'
+        ]);
+
+        try {
+            $indicador = Indicador::findOrFail($seguimiento->indicador_id);
+
+            DB::beginTransaction();
+
+            $data = $request->except(['is_evidencias', 'indicador_id', 'existing_evidencias', 'update_evidences']);
+
+            // Manejo de evidencias
+            $evidenciasPaths = [];
+
+            // 1. Mantener evidencias existentes que vienen del frontend
+            if ($request->has('existing_evidencias')) {
+                $existing = $request->existing_evidencias;
+                if (is_array($existing)) {
+                    $evidenciasPaths = $existing;
+                }
+            }
+
+            // 2. Agregar nuevas evidencias
+            if ($request->hasFile('is_evidencias')) {
+                foreach ($request->file('is_evidencias') as $file) {
+                    $path = $file->store('evidencias_indicadores', 'public');
+                    $evidenciasPaths[] = $path;
+                }
+            }
+
+            // Si se envió la bandera update_evidences, actualizamos el campo.
+            // Si no hay evidencias, guardamos null o array vacío según preferencia.
+            if ($request->has('update_evidences')) {
+                $data['is_evidencias'] = !empty($evidenciasPaths) ? json_encode($evidenciasPaths) : null;
             } else {
-                $indicadorSeguimiento->estado = 'malo';
+                // Si no se envió la bandera (edición simple de datos), mantenemos lo que había si no se tocaron archivos
+                // Pero el frontend parece enviar siempre todo si usa FormData.
+                // Asumiremos que si llega update_evidences es porque se gestionaron archivos.
             }
-            // Guarda los cambios en el indicadorSeguimiento
-            $indicadorSeguimiento->save();
 
-            $message = "Los datos del indicador se han actualizado correctamente";
-            return response()->json(['success' => true, 'message' => $message]);
+            $seguimiento->update($data);
 
-        } catch (\Throwable $e) {
-            $message = "Error al guardar los datos: " . $e->getMessage();
-            return response()->json(['success' => false, 'message' => $message]);
+            DB::commit();
+            return response()->json(['message' => 'Avance actualizado correctamente', 'seguimiento' => $seguimiento]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e; // Re-throw validation exceptions to be handled by Laravel's default handler (returns 422)
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error updating avance: ' . $e->getMessage());
+            return response()->json(['message' => 'Error interno al actualizar el avance. Por favor, inténtelo de nuevo más tarde.'], 500);
         }
     }
-    // formula
-    public function formula($id)
+
+    public function getAvances($id)
     {
         $indicador = Indicador::findOrFail($id);
-        return view('indicadores.formula', compact('indicador'));
+        $avances = $indicador->seguimientos()->orderBy('is_fecha', 'desc')->get();
+        return response()->json($avances);
     }
 
-
-    public function validarFormula(Request $request)
+    public function getNextPeriod(Request $request)
     {
-        // Obtener los valores de las variables y la fórmula ingresados por el usuario
-        $var1Value = $request->input('var1_value', 0);
-        $var2Value = $request->input('var2_value', 0);
-        $var3Value = $request->input('var3_value', 0);
-        $var4Value = $request->input('var4_value', 0);
-        $var5Value = $request->input('var5_value', 0);
-        $var6Value = $request->input('var6_value', 0);
-        $formula = $request->input('formula');
+        $request->validate([
+            'indicador_id' => 'required|exists:indicadores,id',
+            'year' => 'required|integer'
+        ]);
 
-        // Validar fórmula
-        try {
+        $indicador = Indicador::findOrFail($request->indicador_id);
 
-            // Reemplazar los nombres de las variables en la fórmula con sus valores
-            $formula = str_replace('var1', $var1Value, $formula);
-            $formula = str_replace('var2', $var2Value, $formula);
-            $formula = str_replace('var3', $var3Value, $formula);
-            $formula = str_replace('var4', $var4Value, $formula);
-            $formula = str_replace('var5', $var5Value, $formula);
-            $formula = str_replace('var6', $var6Value, $formula);
+        $ultimoSeguimiento = IndicadorSeguimiento::where('indicador_id', $request->indicador_id)
+            ->where('is_periodo', $request->year)
+            ->orderBy('is_numero_periodo', 'desc')
+            ->first();
 
-            if (!preg_match('/^[0-9+\-*\/().\s]+$/', $formula)) {
-                throw new Exception("La fórmula contiene caracteres no permitidos.");
-            }
-            // Evaluar fórmula
-            $result = eval ("return $formula;");
-            $message = "La fórmula es válida. El resultado es: $result";
-            return response()->json(['success' => true, 'message' => $message]);
+        $siguientePeriodo = $ultimoSeguimiento ? ($ultimoSeguimiento->is_numero_periodo + 1) : 1;
 
-        } catch (\Throwable $e) {
-            $message = "Error al evaluar la fórmula: " . $e->getMessage();
-            return response()->json(['success' => false, 'message' => $message]);
-        }
-    }
+        // Validar contra frecuencia
+        $maxPeriodos = match (strtolower($indicador->indicador_frecuencia)) {
+            'mensual' => 12,
+            'trimestral' => 4,
+            'semestral' => 2,
+            'anual' => 1,
+            default => 12
+        };
 
-
-    public function actualizarFormula(Request $request, $indicadorId)
-    {
-        $indicador = Indicador::findOrFail($indicadorId);
-
-        $indicador->formula = $request->formula;
-        $indicador->var1 = $request->var1_definition;
-        $indicador->var2 = $request->var2_definition;
-        $indicador->var3 = $request->var3_definition;
-        $indicador->var4 = $request->var4_definition;
-        $indicador->var5 = $request->var5_definition;
-        $indicador->var6 = $request->var6_definition;
-        try {
-            $indicador->save();
-            $message = "La fórmula se grabo correctamente";
-            $request->session()->flash('success', $message);
-
-        } catch (\Throwable $e) {
-            $message = "Error al grabar la fórmula: " . $e->getMessage();
-            $request->session()->flash('error', $message);
+        if ($siguientePeriodo > $maxPeriodos) {
+            return response()->json(['message' => 'Se ha alcanzado el máximo de periodos para este año', 'full' => true, 'periodo' => $maxPeriodos], 200);
         }
 
-        // Pasar los datos de vuelta a la vista
-        return redirect()->route('indicadores.index')->with('success', $message);
+        return response()->json(['periodo' => $siguientePeriodo, 'full' => false]);
     }
-
-
 }

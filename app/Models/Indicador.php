@@ -9,9 +9,27 @@ class Indicador extends Model
 {
     protected $table = 'indicadores';
     protected $fillable = [
-        'proceso_id', 'planificacion_pei_id', 'planificacion_sig_id', ' planificacion_sig_estado', 'estado', 
-        'nombre', 'descripcion', 'fuente', 'tipo_indicador','sgc','sgas','sgcm','sgsi','sgce','frecuencia', 'formula','meta', 'parametro_medida', 'tipo_agregacion', 'sentido',
-        'var1','var2','var3','var4','var5','var6'
+        'proceso_id',
+        'planificacion_pei_id',
+        'planificacion_sig_id',
+        'indicador_nombre',
+        'indicador_descripcion',
+        'indicador_fuente',
+        'indicador_tipo_indicador',
+        'indicador_sig',
+        'indicador_estado',
+        'indicador_formula',
+        'indicador_frecuencia',
+        'indicador_meta',
+        'indicador_tipo_agregacion',
+        'indicador_parametro_medida',
+        'indicador_sentido',
+        'indicador_var1',
+        'indicador_var2',
+        'indicador_var3',
+        'indicador_var4',
+        'indicador_var5',
+        'indicador_var6'
     ];
 
     public function proceso()
@@ -25,5 +43,15 @@ class Indicador extends Model
     public function objetivoPEI()
     {
         return $this->belongsTo(PlanificacionPEI::class, 'planificacion_pei_id');
+    }
+
+    public function seguimientos()
+    {
+        return $this->hasMany(IndicadorSeguimiento::class, 'indicador_id');
+    }
+
+    public function historicos()
+    {
+        return $this->hasMany(IndicadorHistorico::class, 'indicador_id');
     }
 }

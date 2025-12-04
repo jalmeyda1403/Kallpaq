@@ -1,0 +1,9 @@
+TABLE: indicadores
+id,proceso_id,planificacion_pei_id,planificacion_sig_id,indicador_nombre,indicador_descripcion,indicador_fuente,indicador_tipo_indicador,indicador_sig,indicador_estado,indicador_formula,indicador_frecuencia,indicador_meta,indicador_tipo_agregacion,indicador_parametro_medida,indicador_sentido,indicador_var1,indicador_var2,indicador_var3,indicador_var4,indicador_var5,indicador_var6,created_at,updated_at
+
+TABLE: indicadores_historico
+id,indicador_id,ih_año,ih_meta,ih_valor,ih_evidencia,created_at,updated_at
+
+TABLE: indicadores_seguimiento
+id,indicador_proceso_ouo_id,is_fecha,is_meta,is_valor,is_estado,is_var1,is_var2,is_var3,is_var4,is_var5,is_var6,is_evidencias,created_at,updated_at
+

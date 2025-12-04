@@ -2,17 +2,21 @@
     <div class="chatbot-container">
         <!-- Floating Button -->
         <button class="chatbot-toggle btn btn-danger rounded-circle shadow-lg" @click="toggleChat" v-if="!isOpen">
-            <i class="fas fa-robot fa-2x"></i>
+            <img :src="'/images/icono_chatbot.png'" alt="Chatbot"
+                style="width: 45px; height: 45px; object-fit: contain;">
         </button>
 
         <!-- Chat Window -->
         <div class="chatbot-window card shadow-lg" v-if="isOpen">
-            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <div
+                class="card-header bg-danger text-white d-flex justify-content-between align-items-center position-relative">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-robot mr-2"></i>
+                    <img :src="'/images/icono_chatbot.png'" alt="Chatbot" class="mr-2"
+                        style="width: 30px; height: 30px; object-fit: contain;">
                     <h5 class="mb-0 font-weight-bold">Jaris</h5>
                 </div>
-                <button class="btn btn-sm btn-link text-white p-0" @click="toggleChat">
+                <button class="btn btn-sm btn-link text-white p-0" @click="toggleChat"
+                    style="position: absolute; right: 15px;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -20,13 +24,13 @@
             <div class="card-body chat-history p-3" ref="chatHistory">
                 <div v-for="(msg, index) in messages" :key="index"
                     :class="['message mb-3', msg.role === 'user' ? 'text-right' : 'text-left']">
-                    <div :class="['d-inline-block p-2 rounded', msg.role === 'user' ? 'bg-light text-dark border' : 'bg-danger text-white']"
+                    <div :class="['d-inline-block p-2 rounded', msg.role === 'user' ? 'bg-light text-dark border' : 'bg-secondary text-white']"
                         style="max-width: 80%; word-wrap: break-word;">
                         <div v-html="formatMessage(msg.content)"></div>
                     </div>
                 </div>
                 <div v-if="isTyping" class="text-left mb-3">
-                    <div class="d-inline-block p-2 rounded bg-danger text-white">
+                    <div class="d-inline-block p-2 rounded bg-secondary text-white">
                         <i class="fas fa-circle-notch fa-spin"></i> Escribiendo...
                     </div>
                 </div>

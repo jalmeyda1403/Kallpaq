@@ -30,6 +30,7 @@ import ResumenGrafico from './components/dashboard/ResumenGrafico.vue';
 import ResumenAlertas from './components/dashboard/ResumenAlertas.vue';
 import ResumenEspecialistas from './components/dashboard/ResumenEspecialistas.vue';
 import DetalleEspecialistaModal from './components/dashboard/DetalleEspecialistaModal.vue';
+import IndicadoresIndex from './components/indicadores/IndicadoresIndex.vue';
 
 import router from './router/index.js';
 
@@ -49,7 +50,14 @@ if (rootAppElement) {
     }
 
     vueApp.use(pinia);
-    vueApp.use(PrimeVue); // Add this line
+    vueApp.use(PrimeVue, {
+        zIndex: {
+            modal: 1100,        // dialog, sidebar
+            overlay: 1100,      // dropdown, overlaypanel
+            menu: 1100,         // overlay menus
+            tooltip: 1100       // tooltip
+        }
+    });
     vueApp.use(ToastService); // Register ToastService
     vueApp.component('Toast', Toast); // Register Toast component globally
 
@@ -68,6 +76,9 @@ if (rootAppElement) {
     vueApp.component('resumen-alertas', ResumenAlertas);
     vueApp.component('resumen-especialistas', ResumenEspecialistas);
     vueApp.component('detalle-especialista-modal', DetalleEspecialistaModal);
+
+    // Indicadores
+    vueApp.component('indicadores-index', IndicadoresIndex);
 
     vueApp.mount('#app');
 }

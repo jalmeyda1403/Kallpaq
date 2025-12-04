@@ -8,12 +8,28 @@ class IndicadorSeguimiento extends Model
 {
     protected $table = 'indicadores_seguimiento';
     protected $fillable = [
-        'indicador_id', 'fecha', 'meta', 'valor', 'estado',
-        'var1','var2','var3','var4','var5','var6', 'evidencias'
+        'indicador_id',
+        'is_fecha',
+        'is_meta',
+        'is_valor',
+        'is_estado',
+        'is_var1',
+        'is_var2',
+        'is_var3',
+        'is_var4',
+        'is_var5',
+        'is_var6',
+        'is_evidencias',
+        'is_numero_periodo',
+        'is_periodo'
+    ];
+
+    protected $casts = [
+        'is_evidencias' => 'array',
     ];
 
     public function indicador()
     {
-        return $this->belongsTo(Indicador::class);
+        return $this->belongsTo(Indicador::class, 'indicador_id');
     }
 }

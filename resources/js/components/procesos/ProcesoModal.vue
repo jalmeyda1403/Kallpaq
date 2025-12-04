@@ -44,8 +44,8 @@
                     @click="setActiveComponent('DocumentosList')" id="v-pills-documentos-tab" role="tab">
                     <i class="fas fa-file-alt"></i> Documentos
                   </a>
-                  <a class="nav-link" :class="{ 'text-danger active': activeComponent === 'IndicadoresList' }"
-                    @click="setActiveComponent('IndicadoresList')" id="v-pills-indicadores-tab" role="tab">
+                  <a class="nav-link" :class="{ 'text-danger active': activeComponent === 'IndicadoresIndex' }"
+                    @click="setActiveComponent('IndicadoresIndex')" id="v-pills-indicadores-tab" role="tab">
                     <i class="fas fa-chart-line"></i> Indicadores
                   </a>
                   <a class="nav-link" :class="{ 'text-danger active': activeComponent === 'MejorasList' }"
@@ -56,8 +56,8 @@
               </div>
             </div>
             <div class="col-md-9 px-4">
-              <component :is="activeComponent" ref="dynamicComponent" :proceso-id="procesoId" @form-submitted="closeModal"
-                @close-modal="closeModal"></component>
+              <component :is="activeComponent" ref="dynamicComponent" :proceso-id="procesoId"
+                @form-submitted="closeModal" @close-modal="closeModal"></component>
             </div>
           </template>
         </div>
@@ -66,14 +66,6 @@
   </div>
 </template>
 
-<style scoped>
-/* Estilo para deshabilitar visualmente y funcionalmente los enlaces */
-.disabled-links {
-  pointer-events: none; /* Deshabilita el click */
-  opacity: 0.5; /* Atenúa visualmente los enlaces */
-}
-</style>
-
 <script>
 import { Modal } from 'bootstrap';
 import ProcesoForm from './ProcesoForm.vue';
@@ -81,7 +73,7 @@ import ResponsablesList from './ResponsablesList.vue';
 import RiesgosList from '../riesgos/RiesgosList.vue';
 import NormasList from '../obligaciones/NormasList.vue';
 import DocumentosList from '../documentos/DocumentosList.vue';
-import IndicadoresList from '../indicadores/IndicadoresList.vue';
+import IndicadoresIndex from '../indicadores/IndicadoresIndex.vue';
 import MejorasList from '../mejoras/MejorasList.vue';
 
 export default {
@@ -92,7 +84,7 @@ export default {
     RiesgosList,
     NormasList,
     DocumentosList,
-    IndicadoresList,
+    IndicadoresIndex,
     MejorasList,
   },
   props: {
@@ -108,6 +100,7 @@ export default {
       btnName: "Guardar",
       activeComponent: 'ProcesoForm', // ¡El componente activo por defecto!
       procesoId: null, // Propiedad local para pasar al hijo
+      loading: false
     };
   },
   watch: {
@@ -138,8 +131,8 @@ export default {
         });
       }
     };
-    setupChildModalListener('modalPei');
-    setupChildModalListener('modalProceso');
+    // setupChildModalListener('modalPei'); // Comentado si no se usa o verificar si existe
+    // setupChildModalListener('modalProceso');
   },
   methods: {
     setActiveComponent(componentName) {
@@ -225,8 +218,10 @@ export default {
   opacity: 0.5;
   /* Atenúa visualmente los enlaces */
 }
+
 .modal-body-scrollable {
-    height: 90vh; /* Ajusta este valor según lo necesites */
-    overflow-y: auto;
+  height: 90vh;
+  /* Ajusta este valor según lo necesites */
+  overflow-y: auto;
 }
 </style>

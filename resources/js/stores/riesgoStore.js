@@ -117,12 +117,12 @@ export const useRiesgoStore = defineStore('riesgo', {
             this.errors = {};
         },
 
-        async fetchMisRiesgos() {
+        async fetchMisRiesgos(extraParams = {}) {
             this.loading = true;
             this.error = null;
             try {
                 // Construct query parameters from filters
-                const params = {};
+                const params = { ...extraParams };
                 if (this.filters.codigo) params.codigo = this.filters.codigo;
                 if (this.filters.nombre) params.nombre = this.filters.nombre;
                 if (this.filters.nivel) params.nivel = this.filters.nivel;
