@@ -19,7 +19,8 @@ class AccionController extends Controller
             ->with([
                 'responsable:id,name,email',
                 'responsable.ouos:id,ouo_nombre',
-                'hallazgoProceso.proceso:id,proceso_nombre,proceso_sigla'
+                'hallazgoProceso.proceso:id,proceso_nombre,proceso_sigla',
+                'reprogramaciones' // Eager load reprogramaciones
             ])
             ->select([
                 'id',
@@ -85,7 +86,8 @@ class AccionController extends Controller
             ->with([
                 'responsable:id,name,email',
                 'responsable.ouos:id,ouo_nombre',
-                'hallazgoProceso.proceso:id,proceso_nombre,cod_proceso'
+                'hallazgoProceso.proceso:id,proceso_nombre,cod_proceso',
+                'reprogramaciones' // Eager load reprogramaciones
             ])
             ->select([
                 'id',
@@ -111,19 +113,19 @@ class AccionController extends Controller
             ->select([
                 'id',
                 'hallazgo_id',
-                'causa_metodo',
-                'causa_por_que1',
-                'causa_por_que2',
-                'causa_por_que3',
-                'causa_por_que4',
-                'causa_por_que5',
-                'causa_mano_obra',
-                'causa_metodologias',
-                'causa_materiales',
-                'causa_maquinas',
-                'causa_medicion',
-                'causa_medio_ambiente',
-                'causa_resultado'
+                'hc_metodo',
+                'hc_por_que1',
+                'hc_por_que2',
+                'hc_por_que3',
+                'hc_por_que4',
+                'hc_por_que5',
+                'hc_mano_obra',
+                'hc_metodologias',
+                'hc_materiales',
+                'hc_maquinas',
+                'hc_medicion',
+                'hc_medio_ambiente',
+                'hc_resultado'
             ])
             ->first();
 
@@ -147,6 +149,14 @@ class AccionController extends Controller
         $accion->accion_justificacion = $request->accion_justificacion;
 
         if ($request->actionType === 'reprogramar') {
+            // Guardar historial de reprogramación
+            $accion->reprogramaciones()->create([
+                'ar_fecha_anterior' => $accion->accion_fecha_fin_reprogramada ?? $accion->accion_fecha_fin_planificada,
+                'ar_fecha_nueva' => $request->accion_fecha_fin_reprogramada,
+                'ar_justificacion' => $request->accion_justificacion,
+                'ar_usuario_id' => auth()->id(),
+            ]);
+
             $accion->accion_fecha_fin_reprogramada = $request->accion_fecha_fin_reprogramada;
         } else { // desestimar
             $accion->accion_estado = 'desestimada';
@@ -272,19 +282,19 @@ class AccionController extends Controller
             ->select([
                 'id',
                 'hallazgo_id',
-                'causa_metodo',
-                'causa_por_que1',
-                'causa_por_que2',
-                'causa_por_que3',
-                'causa_por_que4',
-                'causa_por_que5',
-                'causa_mano_obra',
-                'causa_metodologias',
-                'causa_materiales',
-                'causa_maquinas',
-                'causa_medicion',
-                'causa_medio_ambiente',
-                'causa_resultado'
+                'hc_metodo',
+                'hc_por_que1',
+                'hc_por_que2',
+                'hc_por_que3',
+                'hc_por_que4',
+                'hc_por_que5',
+                'hc_mano_obra',
+                'hc_metodologias',
+                'hc_materiales',
+                'hc_maquinas',
+                'hc_medicion',
+                'hc_medio_ambiente',
+                'hc_resultado'
             ])
             ->first();
 
@@ -311,19 +321,19 @@ class AccionController extends Controller
         $this->validarEstadoHallazgo($hallazgo);
 
         $validatedData = $request->validate([
-            'causa_metodo' => 'required|string',
-            'causa_por_que1' => 'nullable|string',
-            'causa_por_que2' => 'nullable|string',
-            'causa_por_que3' => 'nullable|string',
-            'causa_por_que4' => 'nullable|string',
-            'causa_por_que5' => 'nullable|string',
-            'causa_mano_obra' => 'nullable|string',
-            'causa_metodologias' => 'nullable|string',
-            'causa_materiales' => 'nullable|string',
-            'causa_maquinas' => 'nullable|string',
-            'causa_medicion' => 'nullable|string',
-            'causa_medio_ambiente' => 'nullable|string',
-            'causa_resultado' => 'nullable|string',
+            'hc_metodo' => 'required|string',
+            'hc_por_que1' => 'nullable|string',
+            'hc_por_que2' => 'nullable|string',
+            'hc_por_que3' => 'nullable|string',
+            'hc_por_que4' => 'nullable|string',
+            'hc_por_que5' => 'nullable|string',
+            'hc_mano_obra' => 'nullable|string',
+            'hc_metodologias' => 'nullable|string',
+            'hc_materiales' => 'nullable|string',
+            'hc_maquinas' => 'nullable|string',
+            'hc_medicion' => 'nullable|string',
+            'hc_medio_ambiente' => 'nullable|string',
+            'hc_resultado' => 'nullable|string',
         ]);
 
         // Find existing Causa or create a new one
@@ -343,15 +353,69 @@ class AccionController extends Controller
         $this->validarEstadoHallazgo($accion->hallazgo);
 
         $validatedData = $request->validate([
-            'accion_tipo' => 'in:inmediata,correctiva',
+            'accion_tipo' => 'required|in:inmediata,correctiva',
             'accion_descripcion' => 'required|string',
             'accion_responsable' => 'required|string',
+            'accion_responsable_correo' => 'nullable|email',
             'accion_fecha_inicio' => 'required|date',
             'accion_fecha_fin_planificada' => 'required|date',
-            // Add other fields that can be updated
+            'accion_estado' => 'required|string',
+            'accion_comentario' => 'nullable|string',
         ]);
 
         $accion->update($validatedData);
+
+        return response()->json($accion);
+    }
+
+    public function registrarAvance(Request $request, Accion $accion)
+    {
+        // Validar el estado del hallazgo asociado a la acción
+        // Permitimos registrar avance en estados donde se permite gestión
+        // $this->validarEstadoHallazgo($accion->hallazgo); 
+
+        $validatedData = $request->validate([
+            'accion_estado' => 'required|string',
+            'accion_comentario' => 'nullable|string',
+            'accion_fecha_fin_real' => 'nullable|date',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
+        ]);
+
+        $accion->accion_estado = $request->accion_estado;
+        $accion->accion_comentario = $request->accion_comentario;
+
+        if ($request->accion_fecha_fin_real) {
+            $accion->accion_fecha_fin_real = $request->accion_fecha_fin_real;
+        }
+
+        // Handle file upload if present
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $originalName = $file->getClientOriginalName();
+
+            $hallazgoCod = $accion->hallazgo->hallazgo_cod;
+            $accionCod = $accion->accion_cod;
+            $pathPrefix = "hallazgos/{$hallazgoCod}/acciones/{$accionCod}";
+
+            $path = $file->store($pathPrefix, 'public');
+
+            $newFile = [
+                'path' => $path,
+                'name' => $originalName,
+            ];
+
+            $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
+            if (!is_array($existingFiles)) {
+                $existingFiles = [];
+            }
+
+            $existingFiles[] = $newFile;
+            $accion->accion_ruta_evidencia = json_encode($existingFiles);
+        }
+
+        $accion->save();
+
+        $this->updateHallazgoAvance($accion->hallazgo);
 
         return response()->json($accion);
     }
@@ -365,6 +429,7 @@ class AccionController extends Controller
             'accion_tipo' => 'required|in:inmediata,correctiva',
             'accion_descripcion' => 'required|string',
             'accion_responsable' => 'required|string',
+            'accion_responsable_correo' => 'nullable|email',
             'accion_fecha_inicio' => 'required|date',
             'accion_fecha_fin_planificada' => 'required|date',
         ]);

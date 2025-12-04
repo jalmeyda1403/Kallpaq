@@ -50,7 +50,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
 
         //Estado Analisis de Causa Raiz
         causaRaiz: {
-            causa_metodo: 'cinco_porques',
+            hc_metodo: 'cinco_porques',
         },
         isCausaRaizModalOpen: false, // New state property
         accionesDelPlan: [],
@@ -306,7 +306,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
                     this.causaRaiz = causasResponse.data;
                 } else {
                     // Si no hay causa guardada, resetea al estado inicial
-                    this.causaRaiz = { causa_metodo: 'cinco_porques' };
+                    this.causaRaiz = { hc_metodo: 'cinco_porques' };
                 }
                 this.accionesDelPlan = accionesResponse.data;
 
@@ -327,23 +327,67 @@ export const useHallazgoStore = defineStore('hallazgo', {
                         accionData
                     );
                 } else { // Otherwise, it's a new action
+                    // Note: This legacy method might need adjustment if used directly. 
+                    // Prefer createAccion and updateAccion wrappers.
                     response = await axios.post(
-                        route('hallazgos.acciones.store', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }),
+                        route('hallazgos.acciones.store', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar?.id || accionData.proceso_id }),
                         accionData
                     );
                 }
 
                 // Refrescamos solo la lista de acciones para una respuesta más rápida
-                const responseList = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
-                this.accionesDelPlan = responseList.data;
+                // If we are in the context of managing a specific process
+                if (this.procesoParaGestionar) {
+                    const responseList = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
+                    this.accionesDelPlan = responseList.data;
+                }
+
+                return response.data;
             } catch (error) {
                 console.error("Error al guardar la acción:", error);
                 if (error.response) {
                     console.error("Error response data:", error.response.data);
                     console.error("Error response status:", error.response.status);
                 }
-                alert("Ocurrió un error al guardar la acción.");
+                throw error;
             } finally {
+            }
+        },
+
+        async createAccion(hallazgoId, data) {
+            try {
+                const response = await axios.post(route('hallazgos.acciones.store', {
+                    hallazgo: hallazgoId,
+                    proceso: data.proceso_id
+                }), data);
+                return response.data;
+            } catch (error) {
+                console.error("Error al crear la acción:", error);
+                throw error;
+            }
+        },
+
+        async updateAccion(accionId, data) {
+            try {
+                const response = await axios.put(route('acciones.update', { accion: accionId }), data);
+                return response.data;
+            } catch (error) {
+                console.error("Error al actualizar la acción:", error);
+                throw error;
+            }
+        },
+
+        async saveAccionAvance(accionId, formData) {
+            try {
+                const response = await axios.post(route('acciones.avance', { accion: accionId }), formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                console.error("Error al registrar avance:", error);
+                throw error;
             }
         },
 
@@ -430,7 +474,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.isGestionPlanModalOpen = false;
             this.procesoParaGestionar = null;
             this.isCausaRaizModalOpen = false; // Reset new state property
-            this.causaRaiz = { causa_metodo: 'cinco_porques' };
+            this.causaRaiz = { hc_metodo: 'cinco_porques' };
             this.accionesDelPlan = [];
             this.loadingPlan = false;
         },
@@ -458,11 +502,11 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 if (response.data) {
                     this.causaRaiz = response.data;
                 } else {
-                    this.causaRaiz = { causa_metodo: 'cinco_porques' };
+                    this.causaRaiz = { hc_metodo: 'cinco_porques' };
                 }
             } catch (error) {
                 console.error("Error al cargar el análisis de causa:", error);
-                this.causaRaiz = { causa_metodo: 'cinco_porques' };
+                this.causaRaiz = { hc_metodo: 'cinco_porques' };
             }
         },
         /**
@@ -483,7 +527,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 }
 
                 this.todasLasAcciones = response.data.acciones || [];
-                this.causaRaiz = response.data.causaRaiz || { causa_metodo: 'cinco_porques' };
+                this.causaRaiz = response.data.causaRaiz || { hc_metodo: 'cinco_porques' };
 
             } catch (error) {
                 console.error("Error al cargar los datos completos de planes de acción:", error);
