@@ -28,7 +28,8 @@ class Riesgo extends Model
         'riesgo_fecha_valoracion_rr',
         'riesgo_probabilidad_rr',
         'riesgo_impacto_rr',
-        'riesgo_evaluacion_rr',
+        'riesgo_valor_rr',
+        'riesgo_nivel_rr',
         'riesgo_estado_rr',
         'riesgo_ciclo',
         'especialista_id',
@@ -97,6 +98,9 @@ class Riesgo extends Model
             $riesgo->riesgo_nivel = $riesgo->calcularRiesgoNivel();
             if (empty($riesgo->riesgo_estado)) {
                 $riesgo->riesgo_estado = 'proyecto';
+            }
+            if (empty($riesgo->riesgo_ciclo)) {
+                $riesgo->riesgo_ciclo = 1;
             }
         });
 

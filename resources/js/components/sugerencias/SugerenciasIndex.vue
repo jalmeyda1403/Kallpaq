@@ -91,7 +91,10 @@
                     </Column>
                     <Column field="sugerencia_procedencia" header="Procedencia" style="width:10%">
                     </Column>
-                    <Column field="sugerencia_clasificacion" header="Clasificación" style="width:8%">
+                    <Column field="sugerencia_clasificacion" header="Clasificación" style="width:20%">
+                        <template #body="{ data }">
+                            {{ getClasificacionFullName(data.sugerencia_clasificacion) }}
+                        </template>
                     </Column>
                     <Column field="sugerencia_estado" header="Estado" style="width:10%; text-align: center;">
                         <template #body="{ data }">
@@ -314,6 +317,18 @@ const formatDate = (date) => {
 const truncateText = (text, length) => {
     if (!text) return '';
     return text.length > length ? text.substring(0, length) + '...' : text;
+};
+
+const getClasificacionFullName = (code) => {
+    const map = {
+        'MP': 'Mejora de procesos y servicios',
+        'MT': 'Mejora tecnológica',
+        'AC': 'Atención al cliente y trato del personal',
+        'MF': 'Mejora de infraestructura física',
+        'CF': 'Capacitación y formación',
+        'CT': 'Comunicación y transparencia'
+    };
+    return map[code] || code;
 };
 
 const getStatusBadgeClass = (status) => {

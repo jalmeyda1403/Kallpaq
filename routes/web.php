@@ -32,6 +32,8 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EspecialistaController;
 use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\ChatbotController;
+
 
 // ... existing routes ...
 
@@ -56,6 +58,7 @@ Route::get('users/list', [UserController::class, 'listUsers'])->name('api.users.
 Route::get('/', function () {
     return view('home');
 });
+
 
 Auth::routes();
 
@@ -346,6 +349,7 @@ Route::controller(AccionController::class) // <-- CAMBIO
     ->group(function () {
         Route::put('/', 'updateAccion')->name('update');
         Route::delete('/', 'destroyAccion')->name('destroy');
+        Route::post('/avance', 'registrarAvance')->name('avance'); // New route
     });
 
 // Análisis de Causa Raíz
@@ -625,26 +629,29 @@ Route::prefix('api/radar')->middleware('auth')->name('api.radar.')->group(functi
 
 Route::middleware('auth')->prefix('api')->group(function () {
     // Riesgo Acciones
-    Route::get('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'index'])->name('api.riesgos.acciones.index');
-    Route::post('/riesgos/{riesgo}/acciones', [App\Http\Controllers\RiesgoAccionController::class, 'store'])->name('api.riesgos.acciones.store');
-    Route::put('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
-    Route::delete('/riesgo-acciones/{id}', [App\Http\Controllers\RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
-    Route::post('/riesgo-acciones/{id}/reprogramar', [App\Http\Controllers\RiesgoAccionController::class, 'reprogramar'])->name('api.riesgos.acciones.reprogramar');
-    Route::post('/riesgo-acciones/reprogramaciones/{id}/aprobar', [App\Http\Controllers\RiesgoAccionController::class, 'aprobarReprogramacion'])->name('api.riesgos.acciones.reprogramar.aprobar');
-    Route::post('/riesgo-acciones/reprogramaciones/{id}/rechazar', [App\Http\Controllers\RiesgoAccionController::class, 'rechazarReprogramacion'])->name('api.riesgos.acciones.reprogramar.rechazar');
+    Route::get('/riesgos/{riesgo}/acciones', [RiesgoAccionController::class, 'index'])->name('api.riesgos.acciones.index');
+    Route::post('/riesgos/{riesgo}/acciones', [RiesgoAccionController::class, 'store'])->name('api.riesgos.acciones.store');
+    Route::put('/riesgo-acciones/{id}', [RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
+    Route::delete('/riesgo-acciones/{id}', [RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
+    Route::post('/riesgo-acciones/{id}/reprogramar', [RiesgoAccionController::class, 'reprogramar'])->name('api.riesgos.acciones.reprogramar');
+    Route::post('/riesgo-acciones/reprogramaciones/{id}/aprobar', [RiesgoAccionController::class, 'aprobarReprogramacion'])->name('api.riesgos.acciones.reprogramar.aprobar');
+    Route::post('/riesgo-acciones/reprogramaciones/{id}/rechazar', [RiesgoAccionController::class, 'rechazarReprogramacion'])->name('api.riesgos.acciones.reprogramar.rechazar');
+    Route::post('/riesgo-acciones/{id}/avance', [RiesgoAccionController::class, 'updateAvance'])->name('api.riesgos.acciones.avance');
 });
 
 // Rutas para obtener listas (Procesos, Áreas, Subáreas)
 Route::middleware('auth')->group(function () {
-    Route::get('/api/procesos', [App\Http\Controllers\ProcesoController::class, 'apiList']);
-    Route::get('/api/areas-compliance', [App\Http\Controllers\AreaComplianceController::class, 'apiList']);
-    Route::get('/api/areas-compliance/{id}/subareas', [App\Http\Controllers\AreaComplianceController::class, 'apiSubareas']);
-    Route::get('/api/areas-compliance/{id}/subareas', [App\Http\Controllers\AreaComplianceController::class, 'apiSubareas']);
+    Route::get('/api/procesos', [ProcesoController::class, 'apiList']);
+    Route::get('/api/areas-compliance', [AreaComplianceController::class, 'apiList']);
+    Route::get('/api/areas-compliance/{id}/subareas', [AreaComplianceController::class, 'apiSubareas']);
+    Route::get('/api/areas-compliance/{id}/subareas', [AreaComplianceController::class, 'apiSubareas']);
 });
 
 // Chatbot Route
-Route::post('/chatbot/chat', [App\Http\Controllers\ChatbotController::class, 'chat'])->middleware('auth');
+Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->middleware('auth');
 
 // AI Risk Improvement Route
-Route::post('/api/riesgos/improve-description', [App\Http\Controllers\RiesgoController::class, 'improveDescription'])->middleware('auth')->name('api.riesgos.improve-description');
-Route::post('/api/riesgos/improve-consecuencia', [App\Http\Controllers\RiesgoController::class, 'improveConsecuencia'])->middleware('auth')->name('api.riesgos.improve-consecuencia');
+Route::post('/api/riesgos/improve-description', [RiesgoController::class, 'improveDescription'])->middleware('auth')->name('api.riesgos.improve-description');
+Route::post('/api/riesgos/improve-consecuencia', [RiesgoController::class, 'improveConsecuencia'])->middleware('auth')->name('api.riesgos.improve-consecuencia');
+
+// Catch-all route for Vue SPA

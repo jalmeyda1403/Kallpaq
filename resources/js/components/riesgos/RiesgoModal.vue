@@ -1,51 +1,56 @@
 <template>
-    <div class="modal fade" tabindex="-1" aria-labelledby="riesgoModalLabel" ref="modal" id="riesgoModal"
-        data-backdrop="static" data-keyboard="false">
+    <div class="modal fade" tabindex="-1" aria-labelledby="riesgoModalLabel" aria-hidden="true" ref="modalRef"
+        id="riesgoModal" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">{{ store.modalTitle }}</h5>
-                    <button type="button" class="close text-white" aria-label="Close" @click="store.closeModal">
+                    <h5 class="modal-title" id="riesgoModalLabel">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        {{ store.modalTitle }}
+                    </h5>
+                    <button type="button" class="close text-white" @click="store.closeModal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body modal-body-scrollable p-0">
-                    <div class="row m-0" style="min-height: 100%;">
-                        <div class="col-md-3 border-right p-0">
-                            <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
-                                <h6 class="text-secondary mx-3 mt-3">GENERAL</h6>
-                                <a class="nav-link" :class="{ 'text-danger active': store.currentTab === 'RiesgoForm' }"
-                                    @click="store.setCurrentTab('RiesgoForm')" role="tab">
-                                    <i class="fas fa-file-alt"></i> Identificar Riesgo
+                    <div class="d-flex h-100">
+                        <!-- Sidebar de Navegación -->
+                        <div class="nav flex-column nav-pills bg-light border-right p-3" style="width: 250px;"
+                            role="tablist" aria-orientation="vertical">
+                            <a class="nav-link"
+                                :class="{ 'text-danger active': store.currentTab === 'RiesgoForm', 'd-none': store.isActionPlanMode }"
+                                @click="store.setCurrentTab('RiesgoForm')" role="tab">
+                                <i class="fas fa-file-alt"></i> Identificar Riesgo
+                            </a>
+
+                            <div :class="{ 'disabled-links': !store.isEditing && !store.isActionPlanMode }">
+                                <a class="nav-link"
+                                    :class="{ 'text-danger active': store.currentTab === 'RiesgoEvaluacionForm', 'd-none': store.isActionPlanMode }"
+                                    @click="store.setCurrentTab('RiesgoEvaluacionForm')" role="tab">
+                                    <i class="fas fa-chart-bar"></i> Evaluar Riesgo
                                 </a>
-                                <!-- Future tabs can be added here -->
-                                <div :class="{ 'disabled-links': !store.isEditing }">
-                                    <a class="nav-link"
-                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoEvaluacionForm' }"
-                                        @click="store.setCurrentTab('RiesgoEvaluacionForm')" role="tab">
-                                        <i class="fas fa-chart-bar"></i> Evaluar Riesgo
-                                    </a>
-                                    <a class="nav-link"
-                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoAcciones' }"
-                                        @click="store.setCurrentTab('RiesgoAcciones')" role="tab">
-                                        <i class="fas fa-tasks"></i> Tratar Riesgo
-                                    </a>
-                                    <a class="nav-link"
-                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoAsignarEspecialista' }"
-                                        @click="store.setCurrentTab('RiesgoAsignarEspecialista')" role="tab">
-                                        <i class="fas fa-user-tie"></i> Asignar Especialista
-                                    </a>
-                                    <a class="nav-link"
-                                        :class="{ 'text-danger active': store.currentTab === 'RiesgoVerificacionForm' }"
-                                        @click="store.setCurrentTab('RiesgoVerificacionForm')" role="tab">
-                                        <i class="fas fa-check-circle"></i> Verificar Eficacia
-                                    </a>
-                                </div>
+                                <a class="nav-link"
+                                    :class="{ 'text-danger active': store.currentTab === 'RiesgoAcciones' }"
+                                    @click="store.setCurrentTab('RiesgoAcciones')" role="tab">
+                                    <i class="fas fa-tasks"></i> Tratar Riesgo
+                                </a>
+                                <a class="nav-link"
+                                    :class="{ 'text-danger active': store.currentTab === 'RiesgoAsignarEspecialista', 'd-none': store.isActionPlanMode }"
+                                    @click="store.setCurrentTab('RiesgoAsignarEspecialista'); store.fetchAsignaciones()"
+                                    role="tab">
+                                    <i class="fas fa-user-tie"></i> Asignar Especialista
+                                </a>
+                                <a class="nav-link"
+                                    :class="{ 'text-danger active': store.currentTab === 'RiesgoVerificacionForm', 'd-none': store.isActionPlanMode }"
+                                    @click="store.setCurrentTab('RiesgoVerificacionForm')" role="tab">
+                                    <i class="fas fa-check-circle"></i> Verificar Eficacia
+                                </a>
                             </div>
                         </div>
 
-                        <div class="col-md-9 p-4">
-                            <component :is="tabs[store.currentTab]" :key="store.currentTab"></component>
+                        <!-- Contenido del Tab -->
+                        <div class="flex-grow-1 p-4">
+                            <component :is="tabs[store.currentTab]" />
                         </div>
                     </div>
                 </div>
@@ -58,8 +63,7 @@
 import { ref, onMounted, shallowRef } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
 
-// Import tab components
-// Import tab components
+// Importar componentes de los tabs
 import RiesgoForm from './RiesgoForm.vue';
 import RiesgoEvaluacionForm from './RiesgoEvaluacionForm.vue';
 import RiesgoAcciones from './RiesgoAcciones.vue';
@@ -67,7 +71,7 @@ import RiesgoAsignarEspecialista from './RiesgoAsignarEspecialista.vue';
 import RiesgoVerificacionForm from './RiesgoVerificacionForm.vue';
 
 const store = useRiesgoStore();
-const modal = ref(null);
+const modalRef = ref(null);
 
 const tabs = shallowRef({
     RiesgoForm,
@@ -78,32 +82,26 @@ const tabs = shallowRef({
 });
 
 onMounted(() => {
-    // Initialize Bootstrap modal
-    $(modal.value).modal({
+    // Initialize modal manually
+    $(modalRef.value).modal({
         backdrop: 'static',
         keyboard: false,
         show: false
     });
 
-    // Subscribe to store state changes
+    // Subscribe to store changes
     store.$subscribe((mutation, state) => {
         if (state.isModalOpen) {
-            $(modal.value).modal('show');
+            $(modalRef.value).modal('show');
         } else {
-            if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur();
-            }
-            $(modal.value).modal('hide');
+            $(modalRef.value).modal('hide');
         }
     });
 
-    // Handle Bootstrap modal events
-    $(modal.value).on('hidden.bs.modal', (e) => {
-        // Only react if the event was triggered by this modal, not a child modal
-        if (e.target !== modal.value) return;
-
-        // Ensure store state is synced if modal is closed via other means (e.g. ESC)
+    // Handle hidden event
+    $(modalRef.value).on('hidden.bs.modal', () => {
         if (store.isModalOpen) {
+            store.fetchMisRiesgos(); // Refresh list on close
             store.closeModal();
         }
     });
@@ -112,42 +110,34 @@ onMounted(() => {
 
 <style scoped>
 .nav-pills .nav-link {
-    font-size: 0.9rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.25rem;
-    text-align: left !important;
-    transition: background-color 0.2s ease-in-out;
+    color: #495057;
     cursor: pointer;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
 }
 
-.nav-pills .nav-link:not(.active):hover {
-    background-color: #f8f9fa;
-    color: #000;
+.nav-pills .nav-link:hover {
+    background-color: #e9ecef;
 }
 
 .nav-pills .nav-link.active {
     background-color: #fff;
+    border-left: 4px solid #dc3545;
+    color: #dc3545;
     font-weight: bold;
-    color: #dc3545 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.nav-link i {
-    width: 1.5rem;
-    text-align: left !important;
-}
-
-.nav-pills h6 {
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.05rem;
-    text-align: left !important;
+.nav-pills .nav-link i {
+    width: 20px;
+    margin-right: 10px;
+    text-align: center;
 }
 
 .disabled-links {
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0.6;
 }
 
 .modal-body-scrollable {

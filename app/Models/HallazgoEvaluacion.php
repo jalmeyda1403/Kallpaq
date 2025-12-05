@@ -13,16 +13,17 @@ class HallazgoEvaluacion extends Model
 
     protected $fillable = [
         'hallazgo_id',
-        'evaluador_id',
-        'resultado',        // 'con eficacia' o 'sin eficacia'
-        'observaciones',
-        'fecha_evaluacion',
-        'evidencias',       // Added evidencias
+        'he_responsable_id',
+        'he_resultado',        // 'con eficacia' o 'sin eficacia'
+        'he_comentario',
+        'he_fecha',
+        'he_evidencias',
+        'he_ciclo',
     ];
 
     protected $casts = [
-        'fecha_evaluacion' => 'date',
-        'evidencias' => 'array', // Cast evidencias as array
+        'he_fecha' => 'date',
+        'he_evidencias' => 'array',
     ];
 
     /**
@@ -38,16 +39,16 @@ class HallazgoEvaluacion extends Model
      */
     public function evaluador()
     {
-        return $this->belongsTo(User::class, 'evaluador_id');
+        return $this->belongsTo(User::class, 'he_responsable_id');
     }
 
     public function setResultadoAttribute($value)
     {
-        $this->attributes['resultado'] = $value;
+        $this->attributes['he_resultado'] = $value;
 
-        // If resultado is 'sin eficacia', set fecha_evaluacion to null
+        // If resultado is 'sin eficacia', set he_fecha to null
         if ($value === 'sin eficacia') {
-            $this->attributes['fecha_evaluacion'] = null;
+            $this->attributes['he_fecha'] = null;
         }
     }
 }

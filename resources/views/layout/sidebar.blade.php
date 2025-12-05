@@ -287,17 +287,8 @@
                                 <li class="nav-item">
                                     <a href="/vue/bandeja-eficacia"
                                         class="nav-link {{ request()->is('vue/bandeja-eficacia*') ? 'active' : '' }}">
-                                        <i class="fas fa-clipboard-check nav-icon fa-xs"></i>
-                                        <p>Bandeja Eficacia</p>
-                                    </a>
-                                </li>
-                            @endif
-
-                            @if (in_array($rol, ['auditor']))
-                                <li class="nav-item">
-                                    <a href="{{ url('/vue/mejora?evaluacion=true') }}" class="nav-link">
-                                        <i class="fas fa-check-double nav-icon fa-xs"></i>
-                                        <p>Evaluación de Eficacia</p>
+                                        <i class="nav-icon fas fa-tasks"></i>
+                                        <p>Verificar Eficacia Mejora</p>
                                     </a>
                                 </li>
                             @endif
@@ -308,52 +299,6 @@
                                     class="nav-link {{ request()->is('vue/dashboard/mejora*') ? 'active' : '' }}">
                                     <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
                                     <p>Dashboard de Mejora</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Configuración Satisfacción del Cliente -->
-                    <li
-                        class="nav-item has-treeview {{ request()->is('vue/salidas-nc*') || request()->is('vue/sugerencias*') || request()->is('vue/encuestas-satisfaccion*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-smile"></i>
-                            <p>
-                                Satisfacción del Cliente
-                                <i class="fas fa-angle-left right"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            {{-- Salidas No Conformes --}}
-                            <li class="nav-item">
-                                <a href="/vue/salidas-nc"
-                                    class="nav-link {{ request()->is('vue/salidas-nc*') ? 'active' : '' }}">
-                                    <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
-                                    <p>Salidas No Conformes</p>
-                                </a>
-                            </li>
-                            {{-- Consolidado de Sugerencias --}}
-                            <li class="nav-item">
-                                <a href="/vue/sugerencias"
-                                    class="nav-link {{ request()->is('vue/sugerencias*') ? 'active' : '' }}">
-                                    <i class="fas fa-lightbulb fa-xs nav-icon"></i>
-                                    <p>Consolidado Sugerencias</p>
-                                </a>
-                            </li>
-                            {{-- Encuestas de Satisfacción --}}
-                            <li class="nav-item">
-                                <a href="/vue/encuestas-satisfaccion"
-                                    class="nav-link {{ request()->is('vue/encuestas-satisfaccion*') ? 'active' : '' }}">
-                                    <i class="fas fa-poll fa-xs nav-icon"></i>
-                                    <p>Encuestas de Satisfacción</p>
-                                </a>
-                            </li>
-
-                            {{-- Dashboard para todos los roles, al final del módulo --}}
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="fas fa-tachometer-alt fa-xs nav-icon "></i>
-                                    <p>Dashboard Satisfacción</p>
                                 </a>
                             </li>
                         </ul>
@@ -435,9 +380,9 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link">
+                                    <a href="/vue/riesgos/verificacion" class="nav-link">
                                         <i class="nav-icon fas fa-tasks"></i>
-                                        <p>Seguimiento de Acciones</p>
+                                        <p>Verificar Eficacia Riesgos</p>
                                     </a>
                                 </li>
                             @endif
@@ -490,7 +435,46 @@
                             </li>
                         </ul>
                     </li>
+                    <!-- Configuración Satisfacción del Cliente -->
+                    <li
+                        class="nav-item has-treeview {{ request()->is('vue/salidas-nc*') || request()->is('vue/sugerencias*') || request()->is('vue/encuestas-satisfaccion*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-smile"></i>
+                            <p>
+                                Satisfacción del Cliente
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            {{-- Salidas No Conformes --}}
+                            <li class="nav-item">
+                                <a href="/vue/salidas-nc"
+                                    class="nav-link {{ request()->is('vue/salidas-nc*') ? 'active' : '' }}">
+                                    <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
+                                    <p>Salidas No Conformes</p>
+                                </a>
+                            </li>
+                            {{-- Consolidado de Sugerencias --}}
+                            <li class="nav-item">
+                                <a href="/vue/sugerencias"
+                                    class="nav-link {{ request()->is('vue/sugerencias*') ? 'active' : '' }}">
+                                    <i class="fas fa-lightbulb fa-xs nav-icon"></i>
+                                    <p>Consolidado Sugerencias</p>
+                                </a>
+                            </li>
+                            {{-- Encuestas de Satisfacción --}}
+                            <li class="nav-item">
+                                <a href="/vue/encuestas-satisfaccion"
+                                    class="nav-link {{ request()->is('vue/encuestas-satisfaccion*') ? 'active' : '' }}">
+                                    <i class="fas fa-poll fa-xs nav-icon"></i>
+                                    <p>Encuestas de Satisfacción</p>
+                                </a>
+                            </li>
 
+                            {{-- Dashboard para todos los roles, al final del módulo --}}
+
+                        </ul>
+                    </li>
                     <!-- Nueva sección de Administración -->
                     <li class="nav-item has-treeview {{ request()->is('vue/administracion*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link">

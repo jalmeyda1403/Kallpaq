@@ -17,7 +17,7 @@
                     <form @submit.prevent="guardarEvaluacion">
                         <div class="form-group">
                             <label for="resultado">Resultado de la Eficacia <span class="text-danger">*</span></label>
-                            <select v-model="form.resultado" class="form-control" required>
+                            <select v-model="form.he_resultado" class="form-control" required>
                                 <option value="" disabled>Seleccione un resultado</option>
                                 <option value="con eficacia">Con Eficacia (Cierra el hallazgo)</option>
                                 <option value="sin eficacia">Sin Eficacia (Solicita nuevo plan de acción)</option>
@@ -26,13 +26,13 @@
 
                         <div class="form-group">
                             <label for="fecha_evaluacion">Fecha de Evaluación <span class="text-danger">*</span></label>
-                            <input type="date" v-model="form.fecha_evaluacion" class="form-control" required>
+                            <input type="date" v-model="form.he_fecha" class="form-control" required>
                         </div>
 
                         <div class="form-group">
                             <label for="observaciones">Observaciones / Evidencia <span
                                     class="text-danger">*</span></label>
-                            <textarea v-model="form.observaciones" class="form-control" rows="4" required
+                            <textarea v-model="form.he_comentario" class="form-control" rows="4" required
                                 placeholder="Describa los detalles de la verificación y la evidencia revisada..."></textarea>
                         </div>
 
@@ -68,22 +68,26 @@ const emit = defineEmits(['cerrar', 'guardado']);
 const modalRef = ref(null);
 const loading = ref(false);
 const form = reactive({
-    resultado: '',
-    fecha_evaluacion: new Date().toISOString().split('T')[0],
-    observaciones: ''
+    he_resultado: '',
+    he_fecha: new Date().toISOString().split('T')[0],
+    he_comentario: ''
 });
 
 const guardarEvaluacion = async () => {
-    if (!form.resultado || !form.observaciones || !form.fecha_evaluacion) return;
+    if (!form.he_resultado || !form.he_comentario || !form.he_fecha) return;
 
     loading.value = true;
     try {
-        await axios.post(route('hallazgo.evaluacion.store', props.hallazgo.id), form);
+        await axios.post(route('hallazgo.evaluacion.store', props.hallazgo.id), {
+            resultado: form.he_resultado,
+            fecha_evaluacion: form.he_fecha,
+            observaciones: form.he_comentario
+        });
 
         Swal.fire({
             icon: 'success',
             title: 'Evaluación Guardada',
-            text: `El hallazgo ha sido marcado como ${form.resultado}.`,
+            text: `El hallazgo ha sido marcado como ${form.he_resultado}.`,
             timer: 2000,
             showConfirmButton: false
         });
@@ -114,9 +118,9 @@ const abrirModal = () => {
 watch(() => props.visible, (newVal) => {
     if (newVal) {
         // Reset form
-        form.resultado = '';
-        form.fecha_evaluacion = new Date().toISOString().split('T')[0];
-        form.observaciones = '';
+        form.he_resultado = '';
+        form.he_fecha = new Date().toISOString().split('T')[0];
+        form.he_comentario = '';
         abrirModal();
     } else {
         cerrarModal();

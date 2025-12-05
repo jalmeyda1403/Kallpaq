@@ -44,4 +44,9 @@ class Accion extends Model
         return $this->belongsTo(User::class, 'accion_responsable');
     }
 
+    public function reprogramaciones()
+    {
+        return $this->hasMany(AccionReprogramacion::class);
+    }
+
 }

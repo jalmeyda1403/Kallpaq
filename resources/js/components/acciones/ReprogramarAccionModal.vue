@@ -1,5 +1,6 @@
 <template>
-    <div class="modal fade" id="reprogramarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="reprogramarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content" v-if="accion">
                 <div class="modal-header bg-danger text-white">
@@ -18,11 +19,13 @@
                             <label class="font-weight-bold">Acción a Realizar</label>
                             <div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" id="reprogramar" value="reprogramar" v-model="form.actionType" :disabled="isReadOnly">
+                                    <input class="form-check-input" type="radio" id="reprogramar" value="reprogramar"
+                                        v-model="form.actionType" :disabled="isReadOnly">
                                     <label class="form-check-label" for="reprogramar">Reprogramar</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" id="desestimar" value="desestimar" v-model="form.actionType" :disabled="isReadOnly">
+                                    <input class="form-check-input" type="radio" id="desestimar" value="desestimar"
+                                        v-model="form.actionType" :disabled="isReadOnly">
                                     <label class="form-check-label" for="desestimar">Desestimar</label>
                                 </div>
                             </div>
@@ -32,9 +35,11 @@
                         <!-- Justification -->
                         <div class="form-group">
                             <label for="justificacion" class="font-weight-bold">Justificación</label>
-                            <textarea class="form-control" id="justificacion" v-model.trim="form.accion_justificacion" rows="5" required maxlength="300" :readonly="isReadOnly"></textarea>
+                            <textarea class="form-control" id="justificacion" v-model.trim="form.accion_justificacion"
+                                rows="5" required maxlength="300" :readonly="isReadOnly"></textarea>
                             <div class="d-flex justify-content-between">
-                                <small class="form-text text-muted">Explique el motivo de la reprogramación o desestimación.</small>
+                                <small class="form-text text-muted">Explique el motivo de la reprogramación o
+                                    desestimación.</small>
                                 <small class="form-text text-muted">{{ form.accion_justificacion.length }} / 300</small>
                             </div>
                         </div>
@@ -43,14 +48,17 @@
                         <div v-if="form.actionType === 'reprogramar'" class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="fecha_fin_planificada" class="font-weight-bold">Fecha Fin Programada (Original)</label>
-                                    <input type="text" class="form-control" id="fecha_fin_planificada" :value="formattedOriginalDate" readonly>
+                                    <label for="fecha_fin_planificada" class="font-weight-bold">Fecha Fin Programada
+                                        (Original)</label>
+                                    <input type="text" class="form-control" id="fecha_fin_planificada"
+                                        :value="formattedOriginalDate" readonly>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="fecha_fin_reprogramada" class="font-weight-bold">Nueva Fecha Fin</label>
-                                    <input type="date" class="form-control" id="fecha_fin_reprogramada" v-model="form.accion_fecha_fin_reprogramada" required :readonly="isReadOnly">
+                                    <input type="date" class="form-control" id="fecha_fin_reprogramada"
+                                        v-model="form.accion_fecha_fin_reprogramada" required :readonly="isReadOnly">
                                 </div>
                             </div>
                         </div>
@@ -59,11 +67,15 @@
                         <!-- File Upload Section -->
                         <div class="form-group">
                             <label class="font-weight-bold">Adjuntar Evidencia (Opcional)</label>
-                            <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave" @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging, 'disabled': isReadOnly }" @click="openFileDialog">
-                                <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect" multiple :disabled="isReadOnly">
+                            <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
+                                @dragover.prevent @drop.prevent="onDrop"
+                                :class="{ 'drag-over': isDragging, 'disabled': isReadOnly }" @click="openFileDialog">
+                                <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect" multiple
+                                    :disabled="isReadOnly">
                                 <div class="text-center">
                                     <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
-                                    <p class="mb-0 mt-2">Arrastra y suelta archivos aquí, o haz clic para seleccionar.</p>
+                                    <p class="mb-0 mt-2">Arrastra y suelta archivos aquí, o haz clic para seleccionar.
+                                    </p>
                                     <small class="text-muted">(Peso máximo por archivo: 10MB)</small>
                                 </div>
                             </div>
@@ -74,24 +86,56 @@
                             <li v-for="file in filesToUpload" :key="file.id" class="list-group-item">
                                 <div>{{ file.file.name }}</div>
                                 <div class="progress" style="height: 10px;">
-                                    <div class="progress-bar" role="progressbar" :style="{ width: file.progress + '%' }"></div>
+                                    <div class="progress-bar" role="progressbar"
+                                        :style="{ width: file.progress + '%' }"></div>
                                 </div>
                             </li>
                         </ul>
                         <ul v-if="existingFiles.length > 0" class="list-group mt-3">
-                             <li v-for="(file, index) in existingFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+                            <li v-for="(file, index) in existingFiles" :key="index"
+                                class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>{{ file.name }}</span>
                                 <div>
-                                    <a :href="getFileUrl(file.path)" target="_blank" class="btn btn-info btn-sm mr-2" title="Ver"><i class="fas fa-eye"></i></a>
-                                    <button @click="deleteEvidencia(file.path, index)" class="btn btn-danger btn-sm" title="Eliminar" :disabled="isReadOnly"><i class="fas fa-trash"></i></button>
+                                    <a :href="getFileUrl(file.path)" target="_blank" class="btn btn-info btn-sm mr-2"
+                                        title="Ver"><i class="fas fa-eye"></i></a>
+                                    <button @click="deleteEvidencia(file.path, index)" class="btn btn-danger btn-sm"
+                                        title="Eliminar" :disabled="isReadOnly"><i class="fas fa-trash"></i></button>
                                 </div>
                             </li>
                         </ul>
                     </form>
+
+                    <!-- Historial de Reprogramaciones -->
+                    <div v-if="accion && accion.reprogramaciones && accion.reprogramaciones.length > 0" class="mt-4">
+                        <h6 class="font-weight-bold border-bottom pb-2">Historial de Reprogramaciones</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Fecha Solicitud</th>
+                                        <th>Fecha Anterior</th>
+                                        <th>Fecha Nueva</th>
+                                        <th>Justificación</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="repro in accion.reprogramaciones" :key="repro.id">
+                                        <td>{{ new Date(repro.created_at).toLocaleDateString() }}</td>
+                                        <td>{{ new Date(repro.ar_fecha_anterior).toLocaleDateString() }}</td>
+                                        <td>{{ new Date(repro.ar_fecha_nueva).toLocaleDateString() }}</td>
+                                        <td>{{ repro.ar_justificacion }}</td>
+                                        <td>{{ repro.usuario?.name || 'N/A' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" @click="guardarCambios" :disabled="isSaveDisabled || isReadOnly">Guardar Cambios</button>
+                    <button type="button" class="btn btn-primary" @click="guardarCambios"
+                        :disabled="isSaveDisabled || isReadOnly">Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -106,10 +150,12 @@
     cursor: pointer;
     transition: all 0.3s ease;
 }
+
 .drop-zone.drag-over {
     background-color: #f0f0f0;
     border-color: #aaa;
 }
+
 .drop-zone.disabled {
     cursor: not-allowed;
     background-color: #f8f9fa;
@@ -171,7 +217,7 @@ const handleOpenModal = (event) => {
     form.actionType = 'reprogramar';
     form.accion_justificacion = accion.value.accion_justificacion || '';
     form.accion_fecha_fin_reprogramada = '';
-    
+
     if (accion.value && accion.value.accion_ruta_evidencia) {
         try {
             existingFiles.value = JSON.parse(accion.value.accion_ruta_evidencia) || [];
@@ -184,7 +230,7 @@ const handleOpenModal = (event) => {
 
     filesToUpload.value = [];
     if (fileInput.value) fileInput.value.value = '';
-    
+
     modal.value.show();
 };
 
@@ -207,17 +253,17 @@ const handleFileSelect = (e) => {
     startUpload(Array.from(e.target.files));
 };
 
-const openFileDialog = () => { 
+const openFileDialog = () => {
     if (isReadOnly.value) return;
-    fileInput.value.click(); 
+    fileInput.value.click();
 };
-const onDragEnter = (e) => { 
+const onDragEnter = (e) => {
     if (isReadOnly.value) return;
-    isDragging.value = true; 
+    isDragging.value = true;
 };
-const onDragLeave = (e) => { 
+const onDragLeave = (e) => {
     if (isReadOnly.value) return;
-    isDragging.value = false; 
+    isDragging.value = false;
 };
 const onDrop = (event) => {
     if (isReadOnly.value) return;

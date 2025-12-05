@@ -107,6 +107,31 @@
                                 </template>
                             </Column>
                             <Column field="riesgo_estado" header="Estado" sortable style="width:10%"></Column>
+
+                            <Column header="Avance Acciones" style="width:10%" class="text-center">
+                                <template #body="{ data }">
+                                    <a href="#" @click.prevent="store.openAccionesModal(data)"
+                                        class="font-weight-bold text-dark" title="Gestionar Avance">
+                                        {{ data.acciones_completadas_count }} / {{ data.acciones_total_count }}
+                                    </a>
+                                    <i v-if="data.reprogramaciones_pendientes_count > 0"
+                                        class="fas fa-exclamation-triangle text-warning ml-1"
+                                        title="Tiene reprogramaciones pendientes de aprobación"></i>
+                                </template>
+                            </Column>
+                            <Column header="% Avance" style="width:15%">
+                                <template #body="{ data }">
+                                    <div class="small text-center">
+                                        {{ calculateProgress(data) }}%
+                                        <div class="progress progress-xs">
+                                            <div class="progress-bar bg-info"
+                                                :style="{ width: calculateProgress(data) + '%' }">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </Column>
+
                             <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
                                 bodyStyle="width: 12%">
                                 <template #body="{ data }">
@@ -179,6 +204,7 @@ import RiesgoModal from './RiesgoModal.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 
 const store = useRiesgoStore();
 const riesgos = computed(() => store.riesgos);
@@ -186,6 +212,13 @@ const loading = computed(() => store.loading);
 const dt = ref(null);
 const showMapaCalor = ref(false);
 const selectedRiesgo = ref(null);
+
+const calculateProgress = (data) => {
+    const total = data.acciones_total_count || 0;
+    const completed = data.acciones_completadas_count || 0;
+    if (total === 0) return 0;
+    return Math.round((completed / total) * 100);
+};
 
 const localFilters = ref({
     codigo: store.filters.codigo,

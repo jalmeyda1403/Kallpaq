@@ -6,6 +6,7 @@ use App\Models\Hallazgo;
 use App\Models\Proceso;
 use App\Models\Accion;
 use App\Models\User;
+use App\Models\ProcesoOuo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -57,20 +58,7 @@ class HallazgoController extends Controller
 
     public function create($clasificacion = null)
     {
-        if ($clasificacion == 'Ncm') {
-            $breadcrumb['nombre'] = "Listado de SMP";
-            $breadcrumb['codigo'] = "Ncm";
-        } elseif ($clasificacion == 'Obs') {
-            $breadcrumb['nombre'] = "Listado de Observaciones";
-            $breadcrumb['codigo'] = "Obs";
-        } elseif ($clasificacion == 'Odm') {
-            $breadcrumb['nombre'] = "Listado de Oportunidades de mejora";
-            $breadcrumb['codigo'] = "Odm";
-        } else {
-            $breadcrumb['nombre'] = "Listado de SMP";
-            $breadcrumb['codigo'] = $clasificacion;
-        }
-        return view('smp.create', compact('breadcrumb'));
+
     }
     public function apiListar(Request $request)
     {
@@ -340,7 +328,7 @@ class HallazgoController extends Controller
 
         // Actualizar el estado a 'aprobado'
         $hallazgo->hallazgo_estado = 'aprobado';
-        $hallazgo->hallazgo_fecha_aprobacion = Carbon::now()->format('Y-m-d');
+        $hallazgo->hallazgo_fecha_aprobacion = now();
 
         // Obtener las acciones relacionadas con el hallazgo
         $acciones = $hallazgo->acciones()->get();
@@ -391,180 +379,9 @@ class HallazgoController extends Controller
         ]);
     }
 
-    public function planes($id)
-    {
-
-        $hallazgo = Hallazgo::with('causa')->findOrFail($id);
-
-        $planesAccion = Accion::where('hallazgo_id', $id)->get();
-        $correctivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 1)->count();
-        $preventivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 0)->count();
-
-        $clasificacion = $hallazgo->hallazgo_clasificacion;
-
-        if ($clasificacion == 'NCM' || $clasificacion == "Ncme") {
-            $breadcrumb['nombre'] = "Listado de SMP";
-            $breadcrumb['codigo'] = "Ncm";
-        } elseif ($hallazgo->hallazgo_clasificacion == 'Obs') {
-            $breadcrumb['nombre'] = "Listado de Observaciones";
-            $breadcrumb['codigo'] = "Obs";
-        } elseif ($hallazgo->hallazgo_clasificacion == 'Odm') {
-            $breadcrumb['nombre'] = "Listado de Oportunidades de mejora";
-            $breadcrumb['codigo'] = "Odm";
-        }
-
-        return view('smp.plan', compact('planesAccion', 'hallazgo', 'correctivas', 'preventivas', 'breadcrumb'));
-    }
-
-    public function dashboard(Request $request)
-    {
-        $sig = $request->sig;
-        // Crear una consulta base con el filtro de clasificación para grafico pie
-        $classifications = ['Ncme', 'NCM'];
-
-        $query = Hallazgo::whereIn('hallazgo_clasificacion', $classifications);
-        $queryBase = $query->filterBySig($sig);
 
 
-        $smpAbiertas = (clone $queryBase)
-            ->where('estado', 'Abierto')
-            ->count();
 
-        $smpImplementacion = (clone $queryBase)
-            ->whereIn('estado', ['En implementación', 'Aprobado'])
-            ->count();
-
-        $smpPendientes = (clone $queryBase)
-            ->where('estado', 'Pendiente')
-            ->count();
-
-        $smpCerradas = (clone $queryBase)
-            ->where('estado', 'Cerrado')
-            ->count();
-
-        // Crear una consulta de clasificacion para tabla proceso 
-
-        $clasificacionFiltro = function ($query) {
-            $query->whereIn('hallazgo_clasificacion', ['Ncme', 'NCM']);
-        };
-
-        $estadoSmpData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
-            ->withCount([
-                'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->where('estado', 'Abierto')->where($clasificacionFiltro)->filterBySig($sig);
-                },
-                'hallazgos as pendientes' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->where('estado', 'Pendiente')->where($clasificacionFiltro)->filterBySig($sig);
-                },
-                'hallazgos as implementaciones' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->whereIn('estado', ['En implementación', 'Aprobado'])->where($clasificacionFiltro)->filterBySig($sig);
-                },
-                'hallazgos as cerradas' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->where('estado', 'Cerrado')->where($clasificacionFiltro)->filterBySig($sig);
-                }
-            ])
-            ->get()
-            ->filter(function ($proceso) {
-                return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
-            });
-
-        $estadoSmpData->each(function ($proceso) {
-            $proceso->total = $proceso->abiertos + $proceso->pendientes + $proceso->implementaciones + $proceso->cerradas;
-        });
-
-
-        $totalAbiertas = $estadoSmpData->sum('abiertos');
-        $totalPendientes = $estadoSmpData->sum('pendientes');
-        $totalImplementacion = $estadoSmpData->sum('implementaciones');
-        $totalCerradas = $estadoSmpData->sum('cerradas');
-        $totalHallazgos = $totalAbiertas + $totalPendientes + $totalImplementacion + $totalCerradas;
-
-        // Crear una consulta de clasificacion para gráfico SMP 
-        $hallazgos = Hallazgo::where('sig', $sig)->get();
-
-        $estados = ['Abierto', 'En implementación', 'Pendiente', 'Cerrado'];
-        $smp = [];
-        foreach ($classifications as $clasificacion) {
-            $smp[$clasificacion] = [
-                'Abierto' => 0,
-                'En implementación' => 0, // Combina estos dos estados
-                'Pendiente' => 0,
-                'Cerrado' => 0
-            ];
-
-            foreach ($estados as $estado) {
-                if ($estado == 'En implementación') {
-                    // Combina las cuentas de 'Aprobado' y 'En implementación'
-                    $smp[$clasificacion]['En implementación'] = $hallazgos->where('hallazgo_clasificacion', $clasificacion)
-                        ->whereIn('estado', ['En implementación', 'Aprobado'])->count();
-
-                } else {
-                    $smp[$clasificacion][$estado] = $hallazgos->where('hallazgo_clasificacion', $clasificacion)
-                        ->where('estado', $estado)->count();
-
-                }
-            }
-        }
-
-        // Crear consulta para la tabla observaciones.
-        $clasificacionFiltro = function ($query) {
-            $query->whereIn('hallazgo_clasificacion', ['Obs', 'Odm']);
-        };
-        $estadoObsData = Proceso::select('id', 'cod_proceso', 'proceso_nombre as proceso')
-            ->withCount([
-                'hallazgos as abiertos' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->where('estado', 'Abierto')->where($clasificacionFiltro)->filterBySig($sig);
-                },
-                'hallazgos as pendientes' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->where('estado', 'Pendiente')->where($clasificacionFiltro)->filterBySig($sig);
-                },
-                'hallazgos as implementaciones' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->whereIn('estado', ['En implementación', 'Aprobado'])->where($clasificacionFiltro)->filterBySig($sig);
-                },
-                'hallazgos as cerradas' => function ($query) use ($clasificacionFiltro, $sig) {
-                    $query->where('estado', 'Cerrado')->where($clasificacionFiltro)->filterBySig($sig);
-                    ;
-                }
-            ])
-            ->get()
-            ->filter(function ($proceso) {
-                return $proceso->abiertos > 0 || $proceso->pendientes > 0 || $proceso->implementaciones > 0 || $proceso->cerradas > 0;
-            });
-
-        $estadoObsData->each(function ($proceso) {
-            $proceso->total = $proceso->abiertos + $proceso->pendientes + $proceso->implementaciones + $proceso->cerradas;
-        });
-
-        $ObsAbiertas = $estadoObsData->sum('abiertos');
-        $ObsPendientes = $estadoObsData->sum('pendientes');
-        $ObsImplementacion = $estadoObsData->sum('implementaciones');
-        $ObsCerradas = $estadoObsData->sum('cerradas');
-        $ObsTotal = $ObsAbiertas + $ObsPendientes + $ObsImplementacion + $ObsCerradas;
-
-
-        return view(
-            'smp.dashboard',
-            compact(
-                'smpAbiertas',
-                'smpImplementacion',
-                'smpPendientes',
-                'smpCerradas',
-                'estadoSmpData',
-                'estadoObsData',
-                'totalAbiertas',
-                'totalPendientes',
-                'totalImplementacion',
-                'totalCerradas',
-                'totalHallazgos',
-                'ObsAbiertas',
-                'ObsPendientes',
-                'ObsImplementacion',
-                'ObsCerradas',
-                'ObsTotal',
-                'smp'
-            )
-        );
-    }
 
     public function porProceso($id, $clasificacion)
     {
@@ -695,8 +512,8 @@ class HallazgoController extends Controller
 
                 // Create a HallazgoMovimientos record
                 $hallazgo->movimientos()->create([ // Assuming 'movimientos' is the relationship to HallazgoMovimientos
-                    'estado' => 'asignado',
-                    'comentario' => "Hallazgo asignado a {$specialistName} por {$validatedData['assigned_by_user_name']}.",
+                    'hm_estado' => 'asignado',
+                    'hm_comentario' => "Hallazgo asignado a {$specialistName} por {$validatedData['assigned_by_user_name']}.",
                     'user_id' => $validatedData['assigned_by_user_id'], // The user who made the assignment
                 ]);
 
@@ -767,19 +584,19 @@ class HallazgoController extends Controller
 
                 if ($evaluacion) {
                     $evaluacion->update([
-                        'evaluador_id' => Auth::id(),
-                        'resultado' => $validatedData['resultado'],
-                        'observaciones' => $validatedData['observaciones'],
-                        'fecha_evaluacion' => $validatedData['fecha_evaluacion'],
-                        'evidencias' => $validatedData['evidencias'] ?? $evaluacion->evidencias,
+                        'he_responsable_id' => Auth::id(),
+                        'he_resultado' => $validatedData['resultado'],
+                        'he_comentario' => $validatedData['observaciones'],
+                        'he_fecha' => $validatedData['fecha_evaluacion'],
+                        'he_evidencias' => $validatedData['evidencias'] ?? $evaluacion->he_evidencias,
                     ]);
                 } else {
                     $hallazgo->evaluaciones()->create([
-                        'evaluador_id' => Auth::id(),
-                        'resultado' => $validatedData['resultado'],
-                        'observaciones' => $validatedData['observaciones'],
-                        'fecha_evaluacion' => $validatedData['fecha_evaluacion'],
-                        'evidencias' => $validatedData['evidencias'] ?? [],
+                        'he_responsable_id' => Auth::id(),
+                        'he_resultado' => $validatedData['resultado'],
+                        'he_comentario' => $validatedData['observaciones'],
+                        'he_fecha' => $validatedData['fecha_evaluacion'],
+                        'he_evidencias' => $validatedData['evidencias'] ?? [],
                     ]);
                 }
 
@@ -830,13 +647,13 @@ class HallazgoController extends Controller
             $evaluacion = $hallazgo->evaluaciones()->first();
 
             if ($evaluacion) {
-                $currentEvidencias = $evaluacion->evidencias ?? [];
-                $evaluacion->evidencias = array_merge($currentEvidencias, $paths);
+                $currentEvidencias = $evaluacion->he_evidencias ?? [];
+                $evaluacion->he_evidencias = array_merge($currentEvidencias, $paths);
                 $evaluacion->save();
             } else {
                 $hallazgo->evaluaciones()->create([
-                    'evaluador_id' => Auth::id(), // O null si queremos
-                    'evidencias' => $paths,
+                    'he_responsable_id' => Auth::id(), // O null si queremos
+                    'he_evidencias' => $paths,
                     // resultado y observaciones son nullable ahora
                 ]);
             }

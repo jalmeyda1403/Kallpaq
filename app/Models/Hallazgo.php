@@ -5,6 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property \Illuminate\Support\Carbon|null $hallazgo_fecha_identificacion
+ * @property \Illuminate\Support\Carbon|null $hallazgo_fecha_aprobacion
+ * @property \Illuminate\Support\Carbon|null $hallazgo_fecha_desestimacion
+ * @property \Illuminate\Support\Carbon|null $hallazgo_fecha_conclusion
+ * @property \Illuminate\Support\Carbon|null $hallazgo_fecha_evaluacion
+ * @property \Illuminate\Support\Carbon|null $hallazgo_fecha_cierre
+ */
 class Hallazgo extends Model
 {
     use HasFactory;

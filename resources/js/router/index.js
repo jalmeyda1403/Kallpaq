@@ -138,6 +138,11 @@ const routes = [
         component: () => import('@/components/riesgos/MisRiesgos.vue'),
     },
     {
+        path: '/riesgos/verificacion',
+        name: 'riesgos.verificacion',
+        component: () => import('@/components/riesgos/RiesgoVerificacionIndex.vue'),
+    },
+    {
         path: '/indicadores',
         name: 'indicadores.index',
         component: () => import('@/components/indicadores/IndicadoresIndex.vue'),

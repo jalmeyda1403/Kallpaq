@@ -28,7 +28,7 @@
                 <i class="fas fa-info-circle text-primary mr-2"></i>
                 <p class="mb-0 small">
                     Actualmente asignado a: <strong class="text-dark">{{ store.especialistaActual.name
-                        }}</strong>.
+                    }}</strong>.
                 </p>
 
             </div>
@@ -86,9 +86,7 @@ const confirmarAsignacion = () => {
     }
 };
 
-onMounted(() => {
-    store.fetchAsignaciones();
-});
+// onMounted removed to prevent redundant calls. Data is fetched when tab is selected or modal opens.
 </script>
 
 <style scoped>

@@ -57,12 +57,17 @@ class RiesgoController extends Controller
     public function misRiesgos(Request $request)
     {
         $user = auth()->user();
-        $forceOuo = $request->query('scope') === 'ouo';
+        $scope = $request->query('scope');
 
-        // Si es admin y NO se fuerza el scope OUO, devolver todos
-        if ($user->hasRole('admin') && !$forceOuo) {
-            $query = Riesgo::with(['proceso', 'factor']);
+        // Si es admin y NO se fuerza un scope específico, devolver todos
+        if ($user->hasRole('admin') && !$scope) {
+            $query = Riesgo::with(['proceso', 'factor', 'revisiones.responsable']);
+        } elseif ($scope === 'specialist') {
+            // Scope: Specialist - Risks where the user is the assigned specialist
+            $query = Riesgo::where('especialista_id', $user->id)
+                ->with(['proceso', 'factor', 'revisiones.responsable']);
         } else {
+            // Default Scope: OUO - Risks related to user's OUOs
             // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs
             // Asumiendo que la relación es User -> OUOs -> Procesos
             $procesosIds = $user->ouos()->with('procesos')->get()->pluck('procesos')->flatten()->pluck('id')->unique();
@@ -72,8 +77,27 @@ class RiesgoController extends Controller
             // $procesosIds = $procesosIds->merge($procesosDirectos)->unique();
 
             $query = Riesgo::whereIn('proceso_id', $procesosIds)
-                ->with(['proceso', 'factor']);
+                ->with(['proceso', 'factor', 'revisiones.responsable']);
         }
+
+        // Add counts for actions and reprogrammings
+        $query->withCount([
+            'acciones as acciones_total_count',
+            'acciones as acciones_completadas_count' => function ($query) {
+                $query->whereIn('ra_estado', ['implementada', 'desestimada']);
+            },
+            'acciones as acciones_programadas_count' => function ($query) {
+                $query->where('ra_estado', '!=', 'desestimada');
+            },
+            'acciones as acciones_pendientes_count' => function ($query) {
+                $query->whereNotIn('ra_estado', ['implementada', 'desestimada']);
+            },
+            'acciones as reprogramaciones_pendientes_count' => function ($query) {
+                $query->whereHas('reprogramaciones', function ($q) {
+                    $q->where('rar_estado', 'pendiente');
+                });
+            }
+        ]);
 
         // Apply filters if provided
         // Apply filters if provided
@@ -115,7 +139,7 @@ class RiesgoController extends Controller
     // Obtener un riesgo con todas sus relaciones para la vista de detalle
     public function getRiesgoCompleto(Riesgo $riesgo)
     {
-        $riesgo->load(['proceso', 'factor', 'obligacion']);
+        $riesgo->load(['proceso', 'factor', 'obligacion', 'revisiones.responsable']);
         return response()->json($riesgo);
     }
 
@@ -218,7 +242,7 @@ class RiesgoController extends Controller
     public function show(Riesgo $riesgo)
     {
 
-        $riesgo->load('proceso');
+        $riesgo->load(['proceso', 'revisiones.responsable']);
         return response()->json($riesgo);
     }
 
@@ -304,29 +328,59 @@ class RiesgoController extends Controller
     }
     public function storeVerificacion(Request $request, Riesgo $riesgo)
     {
-        $validated = $request->validate([
-            'rr_fecha' => 'required|date',
-            'rr_resultado' => 'required|in:Con Eficacia,Sin Eficacia',
-            'rr_comentario' => 'required_if:rr_resultado,Sin Eficacia|nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'rr_fecha' => 'required|date',
+                'rr_resultado' => 'required|in:Con Eficacia,Sin eficacia',
+                'rr_comentario' => 'required_if:rr_resultado,Sin eficacia|nullable|string',
+                'probabilidad_rr' => 'required|integer',
+                'impacto_rr' => 'required|integer',
+            ]);
 
-        // Crear la revisión
-        $revision = $riesgo->revisiones()->create([
-            'rr_fecha' => $validated['rr_fecha'],
-            'rr_responsable_id' => auth()->id(),
-            'rr_resultado' => $validated['rr_resultado'],
-            'rr_comentario' => $validated['rr_comentario'],
-            'rr_ciclo' => $riesgo->riesgo_ciclo ?? 1,
-        ]);
+            // Calcular evaluación residual
+            $riesgo_valor_rr = $validated['probabilidad_rr'] * $validated['impacto_rr'];
 
-        // Si es "Sin Eficacia", incrementar el ciclo del riesgo
-        if ($validated['rr_resultado'] === 'Sin Eficacia') {
-            $riesgo->increment('riesgo_ciclo');
+            // Calcular Nivel de Riesgo Residual (usando la misma lógica que el inherente)
+            $riesgo_nivel_rr = 'Bajo';
+            if ($riesgo_valor_rr >= 80) {
+                $riesgo_nivel_rr = 'Muy Alto';
+            } elseif ($riesgo_valor_rr >= 48) {
+                $riesgo_nivel_rr = 'Alto';
+            } elseif ($riesgo_valor_rr >= 32) {
+                $riesgo_nivel_rr = 'Medio';
+            }
+
+            // Crear la revisión
+            $revision = $riesgo->revisiones()->create([
+                'rr_fecha' => $validated['rr_fecha'],
+                'rr_responsable_id' => auth()->id(),
+                'rr_resultado' => $validated['rr_resultado'],
+                'rr_comentario' => $validated['rr_comentario'],
+                'rr_ciclo' => $riesgo->riesgo_ciclo ?? 1,
+            ]);
+
+            // Actualizar el riesgo con los datos residuales y el estado
+            $riesgo->update([
+                'riesgo_probabilidad_rr' => $validated['probabilidad_rr'],
+                'riesgo_impacto_rr' => $validated['impacto_rr'],
+                'riesgo_valor_rr' => $riesgo_valor_rr,
+                'riesgo_nivel_rr' => $riesgo_nivel_rr,
+                'riesgo_fecha_valoracion_rr' => $validated['rr_fecha'],
+                'riesgo_estado_rr' => $validated['rr_resultado'],
+            ]);
+
+            // Si es "Sin eficacia", incrementar el ciclo del riesgo
+            if ($validated['rr_resultado'] === 'Sin eficacia') {
+                $riesgo->riesgo_ciclo = ($riesgo->riesgo_ciclo ?? 1) + 1;
+                $riesgo->save();
+            }
+
+            // Devolver el riesgo actualizado con sus revisiones
+            $riesgo->load(['revisiones.responsable', 'proceso']);
+
+            return response()->json($riesgo);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
         }
-
-        // Devolver el riesgo actualizado con sus revisiones
-        $riesgo->load(['revisiones.responsable', 'proceso']);
-
-        return response()->json($riesgo);
     }
 }

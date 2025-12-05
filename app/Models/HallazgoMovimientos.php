@@ -13,8 +13,8 @@ class HallazgoMovimientos extends Model
 
     protected $fillable = [
         'hallazgo_id',
-        'estado',
-        'comentario',
+        'hm_estado',
+        'hm_comentario',
         'user_id',
     ];
 

@@ -4,7 +4,7 @@
         <div class="header-container">
             <h6 class="mb-0 d-flex align-items-center">
                 <span class="text-dark">{{ formatBreadcrumbId(store.riesgoActual ? store.riesgoActual.id : null)
-                    }}</span>
+                }}</span>
                 <span class="mx-2 text-secondary"><i class="fas fa-chevron-right fa-xs"></i></span>
                 <span class="text-dark">Planes de Tratamiento</span>
             </h6>
@@ -77,6 +77,10 @@
                         title="Reprogramar">
                         <i class="fas fa-clock text-info fa-lg"></i>
                     </a>
+                    <a href="#" class="mr-2 d-inline-block" @click.prevent="openAvanceModal(slotProps.data)"
+                        title="Registrar Avance">
+                        <i class="fas fa-tasks text-success fa-lg"></i>
+                    </a>
                     <a href="#" class="d-inline-block" @click.prevent="confirmDelete(slotProps.data)" title="Eliminar">
                         <i class="fas fa-trash-alt text-danger fa-lg"></i>
                     </a>
@@ -89,6 +93,9 @@
 
         <RiesgoAccionesReproForm :show="showReproModal" :actionData="selectedReproAction" @close="closeReprogramarModal"
             @updated="onReproUpdated" />
+
+        <RiesgoAccionesAvanceForm :show="showAvanceModal" :actionData="selectedAvanceAction" @close="closeAvanceModal"
+            @saved="onAvanceSaved" />
     </div>
 </template>
 
@@ -100,6 +107,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import RiesgoAccionesForm from './RiesgoAccionesForm.vue';
 import RiesgoAccionesReproForm from './RiesgoAccionesReproForm.vue';
+import RiesgoAccionesAvanceForm from './RiesgoAccionesAvanceForm.vue';
 
 const store = useRiesgoStore();
 
@@ -110,8 +118,10 @@ const formatBreadcrumbId = (id) => {
 
 const showActionModal = ref(false);
 const showReproModal = ref(false);
+const showAvanceModal = ref(false);
 const selectedAction = ref(null);
 const selectedReproAction = ref(null);
+const selectedAvanceAction = ref(null);
 
 onMounted(() => {
     if (store.riesgoActual && store.riesgoActual.id) {
@@ -130,8 +140,6 @@ const closeModal = () => {
 };
 
 const onActionSaved = () => {
-    // Refresh list or handle update if needed (store updates automatically usually if we push to it)
-    // But fetchAcciones is safer to ensure sync
     if (store.riesgoActual && store.riesgoActual.id) {
         store.fetchAcciones(store.riesgoActual.id);
     }
@@ -148,13 +156,27 @@ const closeReprogramarModal = () => {
 };
 
 const onReproUpdated = (updatedAction) => {
-    // Update the action in the list locally to reflect changes immediately
     const index = store.acciones.findIndex(a => a.id === updatedAction.id);
     if (index !== -1) {
         store.acciones[index] = updatedAction;
     }
-    // Also update the selected action passed to the modal if it's still open (for history update)
     selectedReproAction.value = updatedAction;
+};
+
+const openAvanceModal = (action) => {
+    selectedAvanceAction.value = action;
+    showAvanceModal.value = true;
+};
+
+const closeAvanceModal = () => {
+    showAvanceModal.value = false;
+    selectedAvanceAction.value = null;
+};
+
+const onAvanceSaved = () => {
+    if (store.riesgoActual && store.riesgoActual.id) {
+        store.fetchAcciones(store.riesgoActual.id);
+    }
 };
 
 const confirmDelete = (accion) => {
