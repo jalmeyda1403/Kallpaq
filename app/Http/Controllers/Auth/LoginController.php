@@ -26,8 +26,7 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-
-        return view('auth.login');
+        return view('app');
     }
     public function login(Request $request)
     {
@@ -44,16 +43,21 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             Log::info('Auth::attempt successful for user:', ['email' => $credentials['email']]); // Log success
             $request->session()->regenerate();
-
-            // Redirigir a la página de bienvenida o a la ruta que desees
-            return redirect($this->redirectTo);
+            
+            $user = Auth::user();
+            // Assuming toArrayWithRoles() exists on User model as seen in app.blade.php
+            return response()->json([
+                'message' => 'Login successful',
+                'user' => $user->toArrayWithRoles() 
+            ]);
         }
 
         Log::warning('Auth::attempt failed for user:', ['email' => $credentials['email']]); // Log failure
-        // Si la autenticación falla, redirigir de vuelta al formulario de inicio de sesión con un error
-        return back()->withErrors([
-            'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
-        ]);
+        
+        return response()->json([
+            'message' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+            'errors' => ['email' => ['Las credenciales proporcionadas no coinciden con nuestros registros.']]
+        ], 422);
     }
 
     // Removed the problematic 'authenticated' method
@@ -70,7 +74,7 @@ class LoginController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect()->route('login');
+        return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function redirectTo()

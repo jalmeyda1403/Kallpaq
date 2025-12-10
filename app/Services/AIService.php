@@ -14,7 +14,7 @@ class AIService
 
     public function __construct(ChatbotKnowledgeService $knowledgeService)
     {
-        $this->apiKey = config('services.openai.api_key') ?? env('OPENAI_API_KEY');
+        $this->apiKey = config('services.openai.api_key') ?? env('OPENAI_API_KEY') ?? '';
         $this->knowledgeService = $knowledgeService;
     }
 

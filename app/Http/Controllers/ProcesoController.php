@@ -55,6 +55,52 @@ class ProcesoController extends Controller
         return view('procesos.index', compact('procesos', 'procesos_padre'));
     }
 
+    public function apiIndex(Request $request)
+    {
+        $query = Proceso::query();
+        $user = auth()->user();
+
+        if (!$user->hasRole('admin')) {
+            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
+            $query->whereHas('ouos', function ($q) use ($accessibleOuoIds) {
+                $q->whereIn('ouos.id', $accessibleOuoIds)
+                    ->where(function ($subQuery) {
+                        $subQuery->wherePivot('propietario', true)
+                            ->orWherePivot('delegado', true)
+                            ->orWherePivot('ejecutor', true)
+                            ->orWherePivot('sgc', true)
+                            ->orWherePivot('sgas', true)
+                            ->orWherePivot('sgcm', true)
+                            ->orWherePivot('sgsi', true)
+                            ->orWherePivot('sgco', true);
+                    });
+            });
+        }
+
+        if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
+            $query->where('cod_proceso_padre', $request->proceso_padre_id);
+        }
+
+        if ($request->has('buscar_proceso') && $request->buscar_proceso != '') {
+            $query->where('proceso_nombre', 'LIKE', "%{$request->buscar_proceso}%");
+        }
+
+        // Eager load relationships needed for the table
+        $procesos = $query->withCount('ouos', 'subprocesos')->get();
+        
+        // Append calculated attributes if needed, or use a resource. 
+        // For now, we'll iterate to add 'ouo_responsable' logic if it's an attribute or method.
+        // Proceso model has ouo_responsable() method? Let's check.
+        // The blade view calls $proceso->ouo_responsable().
+        
+        $procesos->transform(function ($proceso) {
+            $proceso->responsable = $proceso->ouo_responsable();
+            return $proceso;
+        });
+
+        return response()->json($procesos);
+    }
+
 
     public function subprocesos($proceso_id)
     {
@@ -215,6 +261,21 @@ class ProcesoController extends Controller
         $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
         return view('procesos.mapa', compact('inventarios', 'procesos'));
 
+    }
+
+    public function apiMapaProcesos()
+    {
+        $inventarios = Inventario::all();
+        $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
+        
+        // Transformar procesos para incluir la URL de caracterización si es necesaria, 
+        // aunque en el frontend se puede construir con el ID.
+        // Lo importante es devolver la estructura correcta.
+        
+        return response()->json([
+            'inventarios' => $inventarios,
+            'procesos' => $procesos
+        ]);
     }
 
     public function inventarioProcesos(Request $request)

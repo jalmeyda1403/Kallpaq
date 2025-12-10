@@ -97,17 +97,11 @@
                 <div class="col-md-12">
                   <div class="form-group small">
                     <label for="hallazgo_sig" class="form-label font-weight-bold">Sistemas de Gestión</label>
-                    <select id="hallazgo_sig" ref="sigSelectElementRef" class="form-control select2"
-                      :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_sig }" multiple="multiple"
-                      data-placeholder="Seleccione los sistemas..." data-toggle="tooltip" data-placement="top"
-                      title="Sistemas de Gestión al que aplica el hallazgo.">
-                      <option value="sgc">ISO 9001 (Calidad)</option>
-                      <option value="sgas">ISO 37001 (Antisoborno)</option>
-                      <option value="sgcm">ISO 37301 (Compliance)</option>
-                      <option value="sgsi">ISO 27001 (Seguridad Información)</option>
-                      <option value="sgco">ISO 21001 (Calidad Educativa)</option>
-                    </select>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_sig">
+                    <MultiSelect v-model="hallazgoStore.hallazgoForm.hallazgo_sig" :options="sigOptions"
+                      optionLabel="label" optionValue="value" placeholder="Seleccione los sistemas..."
+                      display="chip" class="w-100 custom-multiselect"
+                      :class="{ 'p-invalid': hallazgoStore.errors.hallazgo_sig }" />
+                    <div class="invalid-feedback d-block" v-if="hallazgoStore.errors.hallazgo_sig">
                       {{ hallazgoStore.errors.hallazgo_sig[0] }}
                     </div>
                   </div>
@@ -215,10 +209,10 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore';
+import MultiSelect from 'primevue/multiselect';
 
 // Inicializa el store
 const hallazgoStore = useHallazgoStore();
-const sigSelectElementRef = ref(null);
 const localLoading = ref(false);
 
 const hallazgoOrigenOptions = [
@@ -232,63 +226,23 @@ const hallazgoOrigenOptions = [
     { value: 'OT', text: 'OT - Otros' },
 ];
 
-// Función para inicializar o re-inicializar Select2
-const initializeSelect2 = () => {
-  localLoading.value = true; // Inicia el spinner local
+const sigOptions = [
+    { value: 'sgc', label: 'ISO 9001 (Calidad)' },
+    { value: 'sgas', label: 'ISO 37001 (Antisoborno)' },
+    { value: 'sgcm', label: 'ISO 37301 (Compliance)' },
+    { value: 'sgsi', label: 'ISO 27001 (Seguridad Información)' },
+    { value: 'sgco', label: 'ISO 21001 (Calidad Educativa)' },
+];
 
-  if (!sigSelectElementRef.value) {
-    console.warn("Select element not found for Select2 initialization.");
-    return;
-  }
-
-  const el = $(sigSelectElementRef.value);
-
-  // DESTRUYE cualquier instancia existente de Select2 antes de crear una nueva
-  if (el.data('select2')) {
-    el.select2('destroy');
-  }
-
-
-  el.select2({
-
-    width: '100%',
-    placeholder: el.data('placeholder'),
-    allowClear: true,
-    dropdownParent: el.closest('.modal-content'), // Puede ayudar si el dropdown se corta
-
-  }).on('change', function () {
-    const selectedValues = $(this).val() || [];
-    if (JSON.stringify(hallazgoStore.hallazgoForm.hallazgo_sig.sort()) !== JSON.stringify(selectedValues.sort())) {
-      hallazgoStore.hallazgoForm.hallazgo_sig = selectedValues;
-
-    }
-  });
-
-  // Cargar los valores iniciales *después* de la inicialización de Select2
-  const currentSigValues = hallazgoStore.hallazgoForm.hallazgo_sig || [];
-  el.val(currentSigValues).trigger('change');
-  localLoading.value = false;
-};
-
-// --- Exportar la función para que el padre la pueda llamar ---
-defineExpose({
-
-  reInitializeSelect2: initializeSelect2
-});
 // Hook de ciclo de vida para cargar datos globales cuando el componente se monta
 onMounted(() => {
   console.log("HallazgoForm Mounted.");
-  //  hallazgoStore.loadGlobalData();
-  initializeSelect2();
-});
-
-onBeforeUnmount(() => {
-  // Si el componente se desmonta, destruye Select2 si existe
-  const el = $(sigSelectElementRef.value);
-  if (el.data('select2')) {
-    el.select2('destroy');
+  // Asegurar que hallazgo_sig sea un array
+  if (!Array.isArray(hallazgoStore.hallazgoForm.hallazgo_sig)) {
+      hallazgoStore.hallazgoForm.hallazgo_sig = [];
   }
 });
+
 </script>
 
 <style scoped>
@@ -337,31 +291,25 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
-/* Estilos del contenedor del Select2 */
-::v-deep(.select2-container--default .select2-selection--multiple) {
-  font-size: 13px;
+/* Estilos para el MultiSelect de PrimeVue */
+::v-deep(.custom-multiselect) {
+    font-size: 13px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
 }
 
-::v-deep(.select2-container--default .select2-results__option--highlighted[aria-selected]) {
-  background-color: #4e7da6 !important;
-  color: white !important;
+::v-deep(.custom-multiselect .p-multiselect-label) {
+    font-size: 13px;
+    padding: 0.375rem 0.75rem;
 }
 
-/* Estilos para los elementos seleccionados (las píldoras) */
-::v-deep(.select2-container--default .select2-selection--multiple .select2-selection__choice) {
-  background-color: #dc3545;
-  /* Fondo rojo */
-  color: white;
-  /* Texto blanco */
-  font-size: 12px;
-  /* Tamaño de texto de 13px */
-  border-color: #dc3545;
+::v-deep(.custom-multiselect .p-multiselect-token) {
+    font-size: 12px;
+    background-color: #dc3545;
+    color: white;
 }
 
-
-/* Estilos para la 'x' de eliminar en los elementos seleccionados */
-::v-deep(.select2-container--default .select2-selection__choice__remove) {
-  color: rgb(255, 255, 255);
-  /* Color blanco para el icono de la 'x' */
+::v-deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
+    color: white;
 }
 </style>

@@ -56,13 +56,15 @@ Route::get('users/list', [UserController::class, 'listUsers'])->name('api.users.
 */
 
 Route::get('/', function () {
-    return view('home');
+    return view('app');
 });
 
 
 Auth::routes();
 
-Route::get('home', [HomeController::class, 'index'])->name('home');
+Route::get('home', function () {
+    return view('app');
+})->name('home');
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
@@ -73,6 +75,8 @@ Route::get('/api/inventarios', [
 ])->name('api.inventarios.index');
 Route::get('/procesos/macro', [ProcesoController::class, 'apiMacroProcesos'])->name('api.procesos.macro');
 Route::get('/api/procesos/list', [ProcesoController::class, 'apiList'])->name('api.procesos.list');
+Route::get('/api/procesos/index', [ProcesoController::class, 'apiIndex'])->name('api.procesos.index');
+Route::get('/api/procesos/mapa', [ProcesoController::class, 'apiMapaProcesos'])->name('api.procesos.mapa');
 Route::get('/inventario/{id}/procesos-con-ouos', [InventarioController::class, 'apiProcesosConOuos'])->name('api.inventario.procesos');
 
 // Gestion del Inventario (Nuevas Rutas API)
@@ -128,6 +132,7 @@ Route::middleware('auth')->group(function () {
 Route::resource('procesos', ProcesoController::class);
 Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
+Route::get('/api/programa', [ProgramaAuditoriaController::class, 'apiIndex'])->name('api.programa.index');
 Route::resource('smp', HallazgoController::class);
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
 Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
@@ -394,7 +399,7 @@ Route::controller(DocumentoController::class)
     ->name('documento.procesos.')
     ->group(function () {
         Route::get('/', 'listarProcesosAsociados')->name('listar');
-        Route::post('/{proceso}', 'asociarProceso')->name('asociar');
+        Route::post('/', 'asociarProceso')->name('asociar');
         Route::delete('/{proceso}', 'disociarProceso')->name('disociar');
     });
 
@@ -457,6 +462,7 @@ Route::get('/buscar-documento', [DocumentoController::class, 'findDocumento'])->
 Route::get('/documentos/{proceso_id}/validar', [DocumentoController::class, 'validarEnlaces'])->name('documentos.validar.enlaces');
 
 Route::get('/api/documentos', [DocumentoController::class, 'apiListar'])->name('api.documentos');
+Route::get('/api/documentos/buscar', [DocumentoController::class, 'apiFindDocumento'])->name('api.documentos.buscar');
 
 //Pemisos asignados al Usuario
 Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
@@ -571,7 +577,9 @@ Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraControl
 
 // Rutas para el módulo de Indicadores (Vue)
 // Rutas para el módulo de Indicadores (Refactorizado)
-Route::get('/indicadores-gestion', [IndicadorController::class, 'view'])->name('indicadores-gestion.view');
+Route::get('/indicadores-gestion', function () {
+    return view('app');
+})->name('indicadores-gestion.view');
 
 Route::prefix('api/indicadores-gestion')->middleware('auth')->name('api.indicadores-gestion.')->group(function () {
     Route::get('/', [IndicadorController::class, 'index'])->name('index'); // Devuelve JSON

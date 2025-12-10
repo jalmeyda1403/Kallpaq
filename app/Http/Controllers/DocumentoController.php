@@ -110,6 +110,71 @@ class DocumentoController extends Controller
         return view('procesos.buscar', compact('documentos'));
     }
 
+    public function apiFindDocumento(Request $request)
+    {
+        $buscar_documento = $request->get('buscar_documento');
+        $buscar_proceso = $request->get('buscar_proceso');
+        $buscar_fuente = $request->get('fuente');
+        $buscar_tipo_documento = $request->get('tipo_documento');
+        $buscar_estado = $request->input('estado');
+        $perPage = 8;
+
+
+        // Si se busca por proceso (requiere lógica especial por jerarquía)
+        if ($buscar_proceso) {
+            // Recibes una colección
+            $documentos = $this->obtenerDocumentosPorProcesos($buscar_proceso);
+            $documentos = $documentos->reject(fn($d) => $d->tipo_documento_id == 9);
+            // Aplicar filtros sobre la colección
+            $documentos = $documentos->when(
+                $buscar_documento,
+                fn($docs) => $docs->filter(fn($d) => str_contains(strtolower($d->nombre), strtolower($buscar_documento)))
+            )->when(
+                    $buscar_fuente,
+                    fn($docs) => $docs->filter(fn($d) => $d->fuente == $buscar_fuente)
+                )->when(
+                    $buscar_tipo_documento,
+                    fn($docs) => $docs->filter(fn($d) => in_array($d->tipo_documento_id, $buscar_tipo_documento))
+                );
+
+
+
+
+            // Paginación manual
+            $page = LengthAwarePaginator::resolveCurrentPage();
+
+            $total = $documentos->count();
+            $items = $documentos->slice(($page - 1) * $perPage, $perPage)->values();
+
+            $documentos = new LengthAwarePaginator($items, $total, $perPage, $page, [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]);
+        } else {
+            // Uso del builder de Eloquent directamente
+            $documentos = Documento::query();
+            $documentos->where('tipo_documento_id', '!=', 9);
+
+            if ($buscar_documento) {
+                $documentos->where('nombre_documento', 'LIKE', "%{$buscar_documento}%");
+            }
+
+            if ($buscar_fuente) {
+                $documentos->where('fuente_documento', $buscar_fuente);
+            }
+
+            if ($buscar_tipo_documento) {
+                $documentos->whereIn('tipo_documento_id', $buscar_tipo_documento);
+            }
+
+
+
+            $documentos = $documentos->with('procesos', 'tipo_documento', 'ultimaVersion', 'area_compliance')->paginate($perPage);
+        }
+
+        return response()->json($documentos);
+    }
+
 
     public function listar(Request $request)
     {

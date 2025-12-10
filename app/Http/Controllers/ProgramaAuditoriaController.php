@@ -13,6 +13,12 @@ class ProgramaAuditoriaController extends Controller
         return view('programa.index', compact('programas'));
     }
 
+    public function apiIndex()
+    {
+        $programas = ProgramaAuditoria::all();
+        return response()->json($programas);
+    }
+
     public function create()
     {
         return view('programa.create');

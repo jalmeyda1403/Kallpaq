@@ -56,8 +56,10 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <select ref="selectTipoDocumento" v-model="filters.tipo_documento" class="form-control"
-                                    multiple></select>
+                                <MultiSelect v-model="filters.tipo_documento" :options="tipoDocumentoOptions"
+                                    optionLabel="nombre_tipodocumento" optionValue="id" placeholder="Seleccione Tipo de Documento"
+                                    class="w-100 custom-multiselect" display="chip" :filter="true" 
+                                    panelClass="custom-multiselect-panel" />
                             </div>
                             <div class="col-md-auto">
                                 <button type="submit" class="btn bg-dark btn-sm">
@@ -158,12 +160,12 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag'; // Re-introduce Tag
 import { useToast } from 'primevue/usetoast'; // Re-introduce useToast
+import MultiSelect from 'primevue/multiselect';
 
 const documentos = ref([]);
 const selectedDocumento = ref(null);
 const successMessage = ref(''); // REMOVE THIS
 const errorMessage = ref(''); // REMOVE THIS
-const selectTipoDocumento = ref(null); // Re-introduce this
 const documentoStore = useDocumentoStore(); // Instancia de la tienda
 const filters = reactive({
     buscar_documento: '',
@@ -175,15 +177,31 @@ const isLoading = ref(true);
 const toast = useToast(); // Initialize Toast
 
 // Métodos
+const tipoDocumentoOptions = ref([]);
+
+// Métodos
+const fetchTiposDocumento = async () => {
+    try {
+        const response = await axios.get(route('tipoDocumento.buscar'));
+        // Assuming the API returns an array of objects like { id: 1, nombre_tipodocumento: 'Manual' }
+        tipoDocumentoOptions.value = response.data;
+    } catch (error) {
+        console.error('Error al cargar tipos de documento:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los tipos de documento.', life: 3000 });
+    }
+};
+
 const fetchDocumentos = async () => {
-    console.log('prueba');
     isLoading.value = true;
     try {
+        // Prepare filters for API
+        // MultiSelect v-model returns an array of selected values (IDs if optionValue is set)
+        const params = { ...filters };
+        
         const response = await axios.get(route('api.documentos'), {
-            params: filters
+            params: params
         });
         documentos.value = response.data;
-        console.log('Documentos fetched:', documentos.value);
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al cargar los documentos. Intente de nuevo más tarde.', life: 3000 });
     } finally {
@@ -231,40 +249,10 @@ const showRelatedDocs = (documentoId) => {
     // Lógica para mostrar docs relacionados
 };
 
-const initializeSelect2 = () => {
-    try {
-        if (selectTipoDocumento.value && !$(selectTipoDocumento.value).data('select2')) {
-            $(selectTipoDocumento.value).select2({
-                placeholder: 'Seleccione Tipo de Documento...',
-                ajax: {
-                    url: route('tipoDocumento.buscar'),
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return { q: params.term };
-                    },
-                    processResults: function (data) {
-                        return { results: data.map(tipoDocumento => ({ id: tipoDocumento.id, text: tipoDocumento.nombre_tipodocumento })) };
-                    },
-                    cache: true,
-                },
-                multiple: true // Asegura que el modo múltiple esté activado
-            });
-
-            // Conecta el evento de cambio de Select2 con tu variable de Vue
-            $(selectTipoDocumento.value).on('change', function () {
-                // Obtiene los valores seleccionados (un array de IDs) y actualiza la variable
-                filters.tipo_documento = $(this).val();
-            });
-        }
-    } catch (error) {
-        console.error('Error initializing Select2:', error);
-        errorMessage.value = 'Error al inicializar el selector de tipo de documento.';
-    }
-};
-
 // Lifecycle Hooks
 onMounted(() => {
+    fetchTiposDocumento();
+    
     // Check for query parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('buscar_proceso')) {
@@ -275,63 +263,56 @@ onMounted(() => {
     }
 
     fetchDocumentos();
-    initializeSelect2(); // Re-introduce this
-});
-
-onBeforeUnmount(() => {
-    if (selectTipoDocumento.value && $(selectTipoDocumento.value).data('select2')) { // Re-introduce this
-        $(selectTipoDocumento.value).select2('destroy'); // Re-introduce this
-    }
 });
 </script>
 
 
+<style>
+/* Non-scoped styles to target the teleported panel */
+.custom-multiselect-panel .p-multiselect-items .p-multiselect-item {
+    font-size: 11px !important;
+    padding: 0.25rem 0.5rem !important;
+}
+
+.custom-multiselect-panel .p-multiselect-header {
+    font-size: 11px !important;
+    padding: 0.25rem 0.5rem !important;
+}
+</style>
+
 <style scoped>
-/* Estilos del contenedor del Select2 */
-::v-deep(.select2-container--default .select2-selection--multiple) {
+/* Estilos para el MultiSelect de PrimeVue */
+::v-deep(.custom-multiselect) {
     font-size: 13px;
 }
 
-::v-deep(.select2-container--default .select2-results__option) {
+::v-deep(.custom-multiselect .p-multiselect-label) {
+    font-size: 13px;
+    padding: 0.375rem 0.75rem; /* Match Bootstrap form-control padding */
+}
+
+::v-deep(.custom-multiselect .p-multiselect-label.p-placeholder) {
     font-size: 13px;
 }
 
-::v-deep(.select2-container--default .select2-results__option--highlighted[aria-selected]) {
-    background-color: #6c757d !important;
-    color: white !important;
+::v-deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
+    font-size: 11px;
+    padding: 0.25rem 0.5rem; /* Reduce padding for more compact list */
 }
 
-/* Estilos para los elementos seleccionados (las píldoras) */
-::v-deep(.select2-container--default .select2-selection--multiple .select2-selection__choice) {
+::v-deep(.p-multiselect-panel .p-multiselect-header) {
+    font-size: 11px;
+    padding: 0.25rem 0.5rem;
+}
+
+::v-deep(.custom-multiselect .p-multiselect-token) {
+    font-size: 12px;
     background-color: #dc3545;
-    /* Fondo rojo */
     color: white;
-    /* Texto blanco */
-    font-size: 12px;
-    /* Tamaño de texto de 13px */
-    border-color: #dc3545;
 }
 
-
-/* Estilos para la 'x' de eliminar en los elementos seleccionados */
-::v-deep(.select2-container--default .select2-selection__choice__remove) {
+::v-deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
     color: white;
-    /* Color blanco para el icono de la 'x' */
-}
-
-/* Estilos para las opciones del menú desplegable */
-::v-deep(.select2-results) {
-    font-size: 12px;
-    /* Tamaño de texto de 12px */
-}
-
-/* Estilos para la opción seleccionada/resaltada en el menú (hover) */
-
-::v-deep(.select2-results__options .select2-results__option--highlighted) {
-    background-color: #dc3545 !important;
-    /* Fondo rojo al pasar el mouse */
-    color: white !important;
-    font-size: 12px;
 }
 
 /* Existing styles */

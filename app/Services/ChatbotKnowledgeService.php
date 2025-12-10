@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Smalot\PdfParser\Parser as PdfParser;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory as SpreadsheetFactory;
 use PhpOffice\PhpWord\IOFactory as WordFactory;
+use Smalot\PdfParser\Parser as PdfParser;
 
 class ChatbotKnowledgeService
 {
@@ -15,20 +15,40 @@ class ChatbotKnowledgeService
     public function getRelevantContext(string $query): string
     {
         $files = Storage::files($this->docsPath);
-        $context = "";
+        $context = '';
         $foundFiles = 0;
+        $maxFiles = 5; // Increased limit
 
-        // Simple keyword matching to select relevant files
-        // In a real production system, we would use vector embeddings (e.g., Pinecone, pgvector)
         $keywords = $this->extractKeywords($query);
 
+        // Sort files to prioritize those matching keywords in filename
+        usort($files, function ($a, $b) use ($keywords) {
+            $scoreA = 0;
+            $scoreB = 0;
+            $nameA = basename($a);
+            $nameB = basename($b);
+
+            foreach ($keywords as $keyword) {
+                if (stripos($nameA, $keyword) !== false) {
+                    $scoreA++;
+                }
+                if (stripos($nameB, $keyword) !== false) {
+                    $scoreB++;
+                }
+            }
+
+            return $scoreB <=> $scoreA; // Descending order
+        });
+
         foreach ($files as $file) {
-            if ($foundFiles >= 3)
-                break; // Limit to 3 files to avoid token limits
+            if ($foundFiles >= $maxFiles) {
+                break;
+            }
 
             $filename = basename($file);
             $isRelevant = false;
 
+            // 1. Check direct keyword match in filename
             foreach ($keywords as $keyword) {
                 if (stripos($filename, $keyword) !== false) {
                     $isRelevant = true;
@@ -36,15 +56,22 @@ class ChatbotKnowledgeService
                 }
             }
 
-            // If query is generic or no keywords matched, maybe include "Manual" or "Guia" files
-            if (empty($keywords) && (stripos($filename, 'manual') !== false || stripos($filename, 'guia') !== false)) {
-                $isRelevant = true;
+            // 2. Include Core Documents (Manuals, System Specs, Policies)
+            // This ensures files like "Sistema de Gestion.txt" are always included as context base
+            if (! $isRelevant) {
+                $coreTerms = ['manual', 'guia', 'sistema', 'gestion', 'politica', 'objetivo', 'kallpaq', 'plan'];
+                foreach ($coreTerms as $term) {
+                    if (stripos($filename, $term) !== false) {
+                        $isRelevant = true;
+                        break;
+                    }
+                }
             }
 
             if ($isRelevant) {
                 $content = $this->parseFile($file);
                 if ($content) {
-                    $context .= "Documento: $filename\nContenido:\n" . substr($content, 0, 2000) . "\n\n"; // Limit content per file
+                    $context .= "Documento: $filename\nContenido:\n".substr($content, 0, 3000)."\n\n"; // Increased char limit
                     $foundFiles++;
                 }
             }
@@ -56,10 +83,11 @@ class ChatbotKnowledgeService
     protected function extractKeywords(string $query): array
     {
         // Remove stop words and split
-        $stopWords = ['el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'y', 'o', 'que', 'en', 'por', 'para', 'con', 'como', 'quiero', 'ver', 'dame', 'muestrame'];
+        $stopWords = ['el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'y', 'o', 'que', 'en', 'por', 'para', 'con', 'como', 'quiero', 'ver', 'dame', 'muestrame', 'cual', 'es', 'son'];
         $words = explode(' ', strtolower($query));
+
         return array_filter($words, function ($w) use ($stopWords) {
-            return strlen($w) > 3 && !in_array($w, $stopWords);
+            return strlen($w) >= 3 && ! in_array($w, $stopWords); // Allow 3 chars (e.g. ISO)
         });
     }
 
@@ -71,8 +99,9 @@ class ChatbotKnowledgeService
         try {
             switch ($extension) {
                 case 'pdf':
-                    $parser = new PdfParser();
+                    $parser = new PdfParser;
                     $pdf = $parser->parseFile($fullPath);
+
                     return $pdf->getText();
 
                 case 'txt':
@@ -92,10 +121,12 @@ class ChatbotKnowledgeService
                             foreach ($cellIterator as $cell) {
                                 $cells[] = $cell->getValue();
                             }
-                            $data[] = implode(", ", $cells);
+                            $data[] = implode(', ', $cells);
                         }
+
                         return implode("\n", $data);
                     }
+
                     return null;
 
                 case 'docx':
@@ -106,19 +137,22 @@ class ChatbotKnowledgeService
                         foreach ($phpWord->getSections() as $section) {
                             foreach ($section->getElements() as $element) {
                                 if (method_exists($element, 'getText')) {
-                                    $text .= $element->getText() . "\n";
+                                    $text .= $element->getText()."\n";
                                 }
                             }
                         }
+
                         return $text;
                     }
+
                     return null;
 
                 default:
                     return null;
             }
         } catch (\Exception $e) {
-            Log::error("Error parsing file $path: " . $e->getMessage());
+            Log::error("Error parsing file $path: ".$e->getMessage());
+
             return null;
         }
     }

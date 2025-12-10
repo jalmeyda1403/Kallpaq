@@ -82,7 +82,11 @@
                         </a>
                         <a href="#" class="mr-3 d-inline-block" @click.prevent="openAvanceModal(slotProps.data)"
                             title="Registrar Avance">
-                            <i class="fas fa-chart-line text-info fa-lg"></i>
+                            <i class="fas fa-clipboard-list text-info fa-lg"></i>
+                        </a>
+                        <a href="#" class="mr-3 d-inline-block" @click.prevent="openGraficoModal(slotProps.data)"
+                            title="Ver Gráfico">
+                            <i class="fas fa-chart-line text-success fa-lg"></i>
                         </a>
                         <a href="#" class="mr-3 d-inline-block" @click.prevent="deleteIndicador(slotProps.data)"
                             title="Eliminar">
@@ -98,6 +102,8 @@
             :proceso-id="procesoId" @close="closeFormModal" @saved="loadIndicadores" />
         <IndicadorAvanceForm v-if="showAvanceModal" :visible="showAvanceModal" :indicador="selectedIndicador"
             @close="closeAvanceModal" @saved="loadIndicadores" />
+        <IndicadorGrafico v-if="showGraficoModal" :visible="showGraficoModal" :indicador="selectedIndicador"
+            @close="closeGraficoModal" />
     </div>
 </template>
 
@@ -109,6 +115,7 @@ import Column from 'primevue/column';
 import Swal from 'sweetalert2';
 import IndicadorForm from './IndicadorForm.vue';
 import IndicadorAvanceForm from './IndicadorAvanceForm.vue';
+import IndicadorGrafico from './IndicadorGrafico.vue';
 
 const props = defineProps({
     procesoId: {
@@ -120,6 +127,7 @@ const props = defineProps({
 const indicadores = ref([]);
 const showFormModal = ref(false);
 const showAvanceModal = ref(false);
+const showGraficoModal = ref(false);
 const selectedIndicador = ref(null);
 
 const filters = ref({
@@ -209,6 +217,11 @@ const openAvanceModal = (indicador) => {
     showAvanceModal.value = true;
 };
 
+const openGraficoModal = (indicador) => {
+    selectedIndicador.value = indicador;
+    showGraficoModal.value = true;
+};
+
 const closeFormModal = () => {
     showFormModal.value = false;
     selectedIndicador.value = null;
@@ -216,6 +229,11 @@ const closeFormModal = () => {
 
 const closeAvanceModal = () => {
     showAvanceModal.value = false;
+    selectedIndicador.value = null;
+};
+
+const closeGraficoModal = () => {
+    showGraficoModal.value = false;
     selectedIndicador.value = null;
 };
 

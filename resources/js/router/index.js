@@ -1,168 +1,309 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-// Importa los componentes de tus vistas
+// Layouts
+import AppLayout from '@/layouts/AppLayout.vue';
+
+// Components
 import DocumentoIndex from '@/components/documentos/DocumentoIndex.vue';
 import HallazgosIndex from '@/components/hallazgos/HallazgoIndex.vue';
 import RequerimientosIndex from '@/components/requerimientos/RequerimientosIndex.vue';
 import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosIndexMe.vue';
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
-import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue'; // Import the new component
-import InventarioPublico from '@/components/inventario/InventarioPublico.vue'; // Importa el componente público del inventario
-import InventarioIndex from '@/components/inventario/InventarioIndex.vue'; // Importa el componente de Gestión del Inventario
-import MisHallazgos from '@/components/hallazgos/MisHallazgos.vue'; // Import MisHallazgos
+import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue';
+import ProcesosIndex from '../components/procesos/ProcesosIndex.vue';
+import Login from '../components/auth/Login.vue';
+import InventarioPublico from '@/components/inventario/InventarioPublico.vue';
+import InventarioIndex from '@/components/inventario/InventarioIndex.vue';
+import MisHallazgos from '@/components/hallazgos/MisHallazgos.vue';
+import BladeViewPlaceholder from '@/components/BladeViewPlaceholder.vue';
+import Home from '@/components/Home.vue';
 
 const routes = [
     {
-        path: '/documentos',
-        name: 'documentos.index',
-        component: DocumentoIndex,
+        path: '/login',
+        name: 'login',
+        component: Login,
+        meta: { guest: true }
     },
     {
-        path: '/mejora',
-        name: 'hallazgos.index',
-        component: HallazgosIndex,
-    },
-    {
-        path: '/mis-hallazgos', // New route for Mis Hallazgos
-        name: 'hallazgos.mine.vue',
-        component: MisHallazgos,
-    },
-    {
-        path: '/bandeja-eficacia',
-        name: 'hallazgos.eficacia',
-        component: () => import('@/components/hallazgos/BandejaEficacia.vue'),
-    },
-    {
-        path: '/acciones/imprimir/:hallazgoId',
-        name: 'acciones.imprimir',
-        component: () => import('@/components/acciones/PlanAccionImprimirPage.vue'),
-    },
-    {
-        path: '/requerimientos/index',
-        name: 'requerimientos.index',
-        component: RequerimientosIndex,
-    },
-    {
-        path: '/requerimientos/crear',
-        name: 'requerimientos.create',
-        component: RequerimientoFormWizard,
-    },
-    {
-        path: '/requerimientos/:id/edit',
-        name: 'requerimientos.edit',
-        component: RequerimientoFormWizard,
-        props: route => ({ requerimientoId: route.params.id })
-    },
-    {
-        path: '/mis-requerimientos',
-        name: 'requerimientos.mine',
-        component: RequerimientosIndexMe,
-    },
-    {
-        path: '/requerimientos/seguimiento',
-        name: 'requerimientos.seguimiento',
-        component: () => import('@/components/requerimientos/RequerimientosSeguimiento.vue'),
-    },
-    {
-        path: '/obligaciones',
-        name: 'obligaciones.index',
-        component: () => import('@/components/obligaciones/ObligacionesIndex.vue'),
-    },
-    {
-        path: '/mis-obligaciones',
-        name: 'obligaciones.mine',
-        component: () => import('@/components/obligaciones/MisObligaciones.vue'),
-    },
-    {
-        path: '/radar-obligaciones',
-        name: 'radar.index',
-        component: () => import('@/components/obligaciones/RadarObligaciones.vue'),
-    },
-    {
-        path: '/administracion/asignacion-ouos', // Changed path to reflect new location
-        name: 'administracion.asignacion-ouos.index', // Changed name
-        component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'), // Updated path
-    },
-    {
-        path: '/administracion/usuarios', // New path for user management
-        name: 'administracion.usuarios.index',
-        component: UsuariosIndex,
-    },
-    {
-        path: '/hallazgos/:hallazgoId/acciones',
-        name: 'acciones.index',
-        component: () => import('@/components/acciones/AccionesIndex.vue'),
-        props: true
-    },
-    {
-        path: '/smp-ouo',
-        name: 'smp.ouo.index',
-        component: () => import('@/components/hallazgos/HallazgoIndex.vue'), // Reutilizando el componente existente (en singular)
-        props: { fromOuo: true } // Prop para indicar que se está accediendo desde OUO
-    },
+        path: '/',
+        component: AppLayout,
+        children: [
+            // Home / Dashboard
+            {
+                path: '',
+                redirect: '/inventario-publico/0' // Default redirect
+            },
 
-    {
-        path: '/inventario-publico/:id',
-        name: 'inventario.publico',
-        component: InventarioPublico,
-        props: true // Permitir que el ID del inventario llegue como prop
-    },
-    {
-        path: '/inventario-gestion',
-        name: 'inventario.gestion',
-        component: InventarioIndex,
-    },
-    {
-        path: '/salidas-nc',
-        name: 'salidas-nc.index',
-        component: () => import('@/components/salidas-nc/SalidasNCIndex.vue'),
-    },
-    {
-        path: '/sugerencias',
-        name: 'sugerencias.index',
-        component: () => import('@/components/sugerencias/SugerenciasIndex.vue'),
-    },
-    {
-        path: '/dashboard/mejora',
-        name: 'dashboard.mejora',
-        component: () => import('@/components/dashboard/DashboardMejora.vue'),
-    },
-    {
-        path: '/riesgos/index',
-        name: 'riesgos.index',
-        component: () => import('@/components/riesgos/RiesgosIndex.vue'),
-    },
-    {
-        path: '/riesgos/mis-riesgos',
-        name: 'riesgos.mine',
-        component: () => import('@/components/riesgos/MisRiesgos.vue'),
-    },
-    {
-        path: '/riesgos/verificacion',
-        name: 'riesgos.verificacion',
-        component: () => import('@/components/riesgos/RiesgoVerificacionIndex.vue'),
-    },
-    {
-        path: '/indicadores',
-        name: 'indicadores.index',
-        component: () => import('@/components/indicadores/IndicadoresIndex.vue'),
-    },
-    {
-        path: '/indicadores-gestion',
-        name: 'indicadores.gestion',
-        component: () => import('@/components/indicadores/IndicadoresIndex.vue'),
-    },
-    {
-        path: '/encuestas-satisfaccion',
-        name: 'encuestas.index',
-        component: () => import('@/components/encuestas/EncuestasIndex.vue'),
-    },
-    {
-        path: '/encuestas-satisfaccion/dashboard',
-        name: 'encuestas.dashboard',
-        component: () => import('@/components/encuestas/EncuestasDashboard.vue'),
-    },
-]
+            {
+                path: 'home',
+                name: 'home',
+                component: Home
+            },
+
+            // Documentación por Procesos
+            {
+                path: 'inventario-publico/:id',
+                name: 'inventario.publico',
+                component: InventarioPublico,
+                props: true
+            },
+            {
+                path: 'procesos',
+                name: 'procesos.index',
+                component: ProcesosIndex
+            },
+            {
+                path: 'procesos/:id/subprocesos',
+                name: 'procesos.subprocesos',
+                component: ProcesosIndex
+            },
+            {
+                path: 'procesos/mapa',
+                name: 'procesos.mapa',
+                component: () => import('@/components/procesos/ProcesosMapa.vue')
+            },
+            {
+                path: 'procesos/index',
+                redirect: { name: 'procesos.index' }
+            },
+            // Auditoría
+            {
+                path: 'programa',
+                name: 'programa.index',
+                component: () => import('@/components/auditoria/ProgramaAuditoriaIndex.vue')
+            },
+            {
+                path: 'documentos/listado',
+                name: 'documentos.listado',
+                component: () => import('@/components/documentos/DocumentoPublicoIndex.vue')
+            },
+
+            // Gestión de Requerimientos
+            {
+                path: 'requerimientos/index',
+                name: 'requerimientos.index',
+                component: RequerimientosIndex,
+            },
+            {
+                path: 'requerimientos/crear',
+                name: 'requerimientos.create',
+                component: RequerimientoFormWizard,
+            },
+            {
+                path: 'requerimientos/:id/edit',
+                name: 'requerimientos.edit',
+                component: RequerimientoFormWizard,
+                props: route => ({ requerimientoId: route.params.id })
+            },
+            {
+                path: 'mis-requerimientos',
+                name: 'requerimientos.mine',
+                component: RequerimientosIndexMe,
+            },
+            {
+                path: 'requerimientos/asignados/:rol',
+                name: 'requerimientos.asignados',
+                component: BladeViewPlaceholder, // Placeholder
+                props: true
+            },
+            {
+                path: 'requerimientos/atendidos/:rol',
+                name: 'requerimientos.atendidos',
+                component: BladeViewPlaceholder, // Placeholder
+                props: true
+            },
+            {
+                path: 'requerimientos/seguimiento/:rol?',
+                name: 'requerimientos.seguimiento',
+                component: () => import('@/components/requerimientos/RequerimientosSeguimiento.vue'),
+                props: true
+            },
+
+            // Gestión por Procesos
+            {
+                path: 'inventario-gestion',
+                name: 'inventario.gestion',
+                component: InventarioIndex,
+            },
+
+            {
+                path: 'documentos',
+                name: 'documentos.index',
+                component: DocumentoIndex,
+            },
+            {
+                path: 'indicadores-gestion',
+                name: 'indicadores.gestion',
+                component: () => import('@/components/indicadores/IndicadoresIndex.vue'),
+            },
+            {
+                path: 'partes',
+                name: 'partes.index',
+                component: BladeViewPlaceholder // Placeholder
+            },
+            {
+                path: 'dashboard/procesos',
+                name: 'dashboard.procesos',
+                component: BladeViewPlaceholder // Placeholder
+            },
+
+            // Gestión de la Mejora
+            {
+                path: 'mejora',
+                name: 'hallazgos.index',
+                component: HallazgosIndex,
+            },
+            {
+                path: 'mis-hallazgos',
+                name: 'hallazgos.mine.vue',
+                component: MisHallazgos,
+            },
+            {
+                path: 'bandeja-eficacia',
+                name: 'hallazgos.eficacia',
+                component: () => import('@/components/hallazgos/BandejaEficacia.vue'),
+            },
+            {
+                path: 'hallazgos/:hallazgoId/acciones',
+                name: 'acciones.index',
+                component: () => import('@/components/acciones/AccionesIndex.vue'),
+                props: true
+            },
+            {
+                path: 'acciones/imprimir/:hallazgoId',
+                name: 'acciones.imprimir',
+                component: () => import('@/components/acciones/PlanAccionImprimirPage.vue'),
+            },
+            {
+                path: 'dashboard/mejora',
+                name: 'dashboard.mejora',
+                component: () => import('@/components/dashboard/DashboardMejora.vue'),
+            },
+            {
+                path: 'smp-ouo',
+                name: 'smp.ouo.index',
+                component: () => import('@/components/hallazgos/HallazgoIndex.vue'),
+                props: { fromOuo: true }
+            },
+
+            // Gestión de Obligaciones
+            {
+                path: 'obligaciones',
+                name: 'obligaciones.index',
+                component: () => import('@/components/obligaciones/ObligacionesIndex.vue'),
+            },
+            {
+                path: 'mis-obligaciones',
+                name: 'obligaciones.mine',
+                component: () => import('@/components/obligaciones/MisObligaciones.vue'),
+            },
+            {
+                path: 'obligaciones/seguimiento',
+                name: 'obligaciones.seguimiento',
+                component: BladeViewPlaceholder // Placeholder
+            },
+            {
+                path: 'dashboard/obligaciones',
+                name: 'dashboard.obligaciones',
+                component: BladeViewPlaceholder // Placeholder
+            },
+            {
+                path: 'radar-obligaciones',
+                name: 'radar.index',
+                component: () => import('@/components/obligaciones/RadarObligaciones.vue'),
+            },
+
+            // Gestión de Riesgos
+            {
+                path: 'riesgos/index',
+                name: 'riesgos.index',
+                component: () => import('@/components/riesgos/RiesgosIndex.vue'),
+            },
+            {
+                path: 'riesgos/mis-riesgos',
+                name: 'riesgos.mine',
+                component: () => import('@/components/riesgos/MisRiesgos.vue'),
+            },
+            {
+                path: 'riesgos/verificacion',
+                name: 'riesgos.verificacion',
+                component: () => import('@/components/riesgos/RiesgoVerificacionIndex.vue'),
+            },
+            {
+                path: 'dashboard/riesgos',
+                name: 'dashboard.riesgos',
+                component: BladeViewPlaceholder // Placeholder
+            },
+
+            // Gestión de Continuidad
+            {
+                path: 'continuidad/planes',
+                name: 'continuidad.planes',
+                component: BladeViewPlaceholder
+            },
+            {
+                path: 'continuidad/escenarios',
+                name: 'continuidad.escenarios',
+                component: BladeViewPlaceholder
+            },
+            {
+                path: 'continuidad/activos',
+                name: 'continuidad.activos',
+                component: BladeViewPlaceholder
+            },
+            {
+                path: 'dashboard/continuidad',
+                name: 'dashboard.continuidad',
+                component: BladeViewPlaceholder
+            },
+
+            // Satisfacción del Cliente
+            {
+                path: 'salidas-nc',
+                name: 'salidas-nc.index',
+                component: () => import('@/components/salidas-nc/SalidasNCIndex.vue'),
+            },
+            {
+                path: 'sugerencias',
+                name: 'sugerencias.index',
+                component: () => import('@/components/sugerencias/SugerenciasIndex.vue'),
+            },
+            {
+                path: 'encuestas-satisfaccion',
+                name: 'encuestas.index',
+                component: () => import('@/components/encuestas/EncuestasIndex.vue'),
+            },
+            {
+                path: 'encuestas-satisfaccion/dashboard',
+                name: 'encuestas.dashboard',
+                component: () => import('@/components/encuestas/EncuestasDashboard.vue'),
+            },
+
+            // Administración
+            {
+                path: 'administracion/usuarios',
+                name: 'administracion.usuarios.index',
+                component: UsuariosIndex,
+            },
+            {
+                path: 'administracion/asignacion-ouos',
+                name: 'administracion.asignacion-ouos.index',
+                component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'),
+            },
+            {
+                path: 'administracion/configuracion',
+                name: 'administracion.configuracion',
+                component: BladeViewPlaceholder // Placeholder
+            },
+            {
+                path: 'dashboard/administracion',
+                name: 'dashboard.administracion',
+                component: BladeViewPlaceholder // Placeholder
+            }
+        ]
+    }
+];
 
 const router = createRouter({
     history: createWebHistory('/vue/'),

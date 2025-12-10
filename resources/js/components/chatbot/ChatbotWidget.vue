@@ -23,25 +23,32 @@
 
             <div class="card-body chat-history p-3" ref="chatHistory">
                 <div v-for="(msg, index) in messages" :key="index"
-                    :class="['message mb-3', msg.role === 'user' ? 'text-right' : 'text-left']">
-                    <div :class="['d-inline-block p-2 rounded', msg.role === 'user' ? 'bg-light text-dark border' : 'bg-secondary text-white']"
-                        style="max-width: 80%; word-wrap: break-word;">
+                    :class="['message mb-3 d-flex', msg.role === 'user' ? 'justify-content-end' : 'justify-content-start']">
+                    <div :class="['p-3 shadow-sm', msg.role === 'user' ? 'text-white' : 'bg-white text-dark border']"
+                        :style="{
+                            backgroundColor: msg.role === 'user' ? '#2c3e50' : '#ffffff',
+                            maxWidth: '85%', 
+                            wordWrap: 'break-word', 
+                            borderRadius: '15px',
+                            borderBottomRightRadius: msg.role === 'user' ? '0' : '15px',
+                            borderBottomLeftRadius: msg.role === 'assistant' ? '0' : '15px'
+                        }">
                         <div v-html="formatMessage(msg.content)"></div>
                     </div>
                 </div>
                 <div v-if="isTyping" class="text-left mb-3">
-                    <div class="d-inline-block p-2 rounded bg-secondary text-white">
-                        <i class="fas fa-circle-notch fa-spin"></i> Escribiendo...
+                    <div class="d-inline-block p-3 bg-white text-dark border shadow-sm" style="border-radius: 15px; border-bottom-left-radius: 0;">
+                        <i class="fas fa-circle-notch fa-spin text-danger"></i> <span class="text-muted ml-2">Escribiendo...</span>
                     </div>
                 </div>
             </div>
 
-            <div class="card-footer p-2">
+            <div class="card-footer p-2 bg-white border-top">
                 <form @submit.prevent="sendMessage" class="input-group">
-                    <input type="text" class="form-control" placeholder="Escribe tu consulta..." v-model="newMessage"
-                        :disabled="isTyping">
+                    <input type="text" class="form-control border-0 bg-light" placeholder="Escribe tu consulta..." v-model="newMessage"
+                        :disabled="isTyping" style="border-radius: 20px 0 0 20px; padding-left: 15px;">
                     <div class="input-group-append">
-                        <button class="btn btn-danger" type="submit" :disabled="!newMessage.trim() || isTyping">
+                        <button class="btn btn-danger" type="submit" :disabled="!newMessage.trim() || isTyping" style="border-radius: 0 20px 20px 0;">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
@@ -86,7 +93,7 @@ const formatMessage = (text) => {
     // Detect links (simple regex)
     formatted = formatted.replace(
         /(https?:\/\/[^\s]+)/g,
-        '<a href="$1" target="_blank" class="text-white" style="text-decoration: underline;">$1</a>'
+        '<a href="$1" target="_blank" class="text-primary font-weight-bold" style="text-decoration: underline;">$1</a>'
     );
 
     return formatted;
@@ -171,16 +178,18 @@ watch(messages, () => {
     flex-direction: column;
     border-radius: 15px;
     overflow: hidden;
+    border: none;
 }
 
 .chat-history {
     flex: 1;
     overflow-y: auto;
-    background-color: #f8f9fa;
+    background-color: #f4f6f9; /* Lighter background for better contrast */
 }
 
 .message {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 /* Scrollbar styling */
@@ -193,7 +202,7 @@ watch(messages, () => {
 }
 
 .chat-history::-webkit-scrollbar-thumb {
-    background: #dc3545;
+    background: #adb5bd;
     border-radius: 3px;
 }
 </style>

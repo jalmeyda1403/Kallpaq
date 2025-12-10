@@ -10,6 +10,7 @@ import App from './components/App.vue'; // This is the root component for the SP
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice'; // Import ToastService
 import Toast from 'primevue/toast'; // Import Toast component
+import Tooltip from 'primevue/tooltip'; // Import Tooltip directive
 import 'primevue/resources/themes/saga-blue/theme.css'; // Choose a theme
 import 'primevue/resources/primevue.min.css'; // Core CSS
 import 'primeicons/primeicons.css'; // Icons
@@ -60,6 +61,7 @@ if (rootAppElement) {
     });
     vueApp.use(ToastService); // Register ToastService
     vueApp.component('Toast', Toast); // Register Toast component globally
+    vueApp.directive('tooltip', Tooltip); // Register Tooltip directive globally
 
     // Register global components
     vueApp.component('proceso-modal', ProcesoModal);
