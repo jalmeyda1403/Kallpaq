@@ -9,6 +9,12 @@ use App\Models\Documento;
 use App\Models\User;
 
 
+use App\Imports\ProcesosImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Exports\ProcesosTemplateExport;
+
 class ProcesoController extends Controller
 {
     public function index(Request $request)
@@ -57,28 +63,21 @@ class ProcesoController extends Controller
 
     public function apiIndex(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('apiIndex called', [
+            'user_id' => auth()->id(),
+            'user_roles' => auth()->user() ? auth()->user()->roles->pluck('name') : 'none',
+            'params' => $request->all()
+        ]);
+
         $query = Proceso::query();
         $user = auth()->user();
 
-        if (!$user->hasRole('admin')) {
-            $accessibleOuoIds = $user->ouos->pluck('id')->toArray();
-            $query->whereHas('ouos', function ($q) use ($accessibleOuoIds) {
-                $q->whereIn('ouos.id', $accessibleOuoIds)
-                    ->where(function ($subQuery) {
-                        $subQuery->wherePivot('propietario', true)
-                            ->orWherePivot('delegado', true)
-                            ->orWherePivot('ejecutor', true)
-                            ->orWherePivot('sgc', true)
-                            ->orWherePivot('sgas', true)
-                            ->orWherePivot('sgcm', true)
-                            ->orWherePivot('sgsi', true)
-                            ->orWherePivot('sgco', true);
-                    });
-            });
-        }
+        // Role based filtering removed to allow "viewer" access to all processes as requested.
+        // if ($user && !$user->hasRole('admin')) { ... }
 
         if ($request->has('proceso_padre_id') && $request->proceso_padre_id != '') {
             $query->where('cod_proceso_padre', $request->proceso_padre_id);
+            \Illuminate\Support\Facades\Log::info('Filtering by direct parent', ['parent_id' => $request->proceso_padre_id]);
         }
 
         if ($request->has('buscar_proceso') && $request->buscar_proceso != '') {
@@ -87,16 +86,24 @@ class ProcesoController extends Controller
 
         // Eager load relationships needed for the table
         $procesos = $query->withCount('ouos', 'subprocesos')->get();
-        
-        // Append calculated attributes if needed, or use a resource. 
-        // For now, we'll iterate to add 'ouo_responsable' logic if it's an attribute or method.
-        // Proceso model has ouo_responsable() method? Let's check.
-        // The blade view calls $proceso->ouo_responsable().
-        
-        $procesos->transform(function ($proceso) {
-            $proceso->responsable = $proceso->ouo_responsable();
-            return $proceso;
-        });
+
+        \Illuminate\Support\Facades\Log::info('apiIndex processes found', ['count' => $procesos->count()]);
+
+        try {
+            $procesos->transform(function ($proceso) {
+                // Check if method exists to avoid crash
+                if (method_exists($proceso, 'ouo_responsable')) {
+                    $proceso->responsable = $proceso->ouo_responsable();
+                } else {
+                    $proceso->responsable = 'N/A';
+                    // Log only once per request to avoid spamming if many fail
+                }
+                return $proceso;
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error transforming procesos: ' . $e->getMessage());
+            return response()->json(['message' => 'Error processing data'], 500);
+        }
 
         return response()->json($procesos);
     }
@@ -136,7 +143,7 @@ class ProcesoController extends Controller
     public function create()
     {
         $procesos = Proceso::all();
-        return view('procesos.create', compact('procesos'));
+
     }
 
     public function store(Request $request)
@@ -149,7 +156,7 @@ class ProcesoController extends Controller
     public function edit(Proceso $proceso)
     {
         $procesosPadre = Proceso::where('cod_proceso_padre', '=', null)->get();
-        return view('procesos.edit', compact('proceso', 'procesosPadre'));
+
     }
 
     public function show($proceso_id)
@@ -267,11 +274,11 @@ class ProcesoController extends Controller
     {
         $inventarios = Inventario::all();
         $procesos = Proceso::whereNull('cod_proceso_padre')->orderBy('proceso_tipo')->get();
-        
+
         // Transformar procesos para incluir la URL de caracterización si es necesaria, 
         // aunque en el frontend se puede construir con el ID.
         // Lo importante es devolver la estructura correcta.
-        
+
         return response()->json([
             'inventarios' => $inventarios,
             'procesos' => $procesos
@@ -445,4 +452,50 @@ class ProcesoController extends Controller
         return response()->json(['message' => 'Asociación eliminada correctamente.']);
     }
 
+    public function downloadTemplate(Request $request)
+    {
+        $nivel = $request->query('nivel', 0);
+
+        // Clear buffer just in case
+        if (ob_get_length())
+            ob_end_clean();
+
+        \Illuminate\Support\Facades\Log::info('Generating and Downloading Excel template for level', ['nivel' => $nivel]);
+
+        $filename = "plantilla_procesos_nivel_{$nivel}.xlsx";
+
+        // Use a unique temporary filename to avoid collisions
+        $tempFilename = 'temp_' . uniqid() . '_' . $filename;
+
+        // Store file to the default disk (usually local/storage_path('app'))
+        Excel::store(new ProcesosTemplateExport($nivel), $tempFilename);
+
+        // Get absolute path. Default driver stores in storage/app
+        $fullPath = storage_path('app/' . $tempFilename);
+
+        // Return download and delete after sending
+        return response()->download($fullPath, $filename)->deleteFileAfterSend(true);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xls,xlsx,csv',
+            'nivel' => 'required|integer|min:0|max:3',
+        ]);
+
+        try {
+            Excel::import(new ProcesosImport($request->nivel), $request->file('file'));
+            return response()->json(['message' => 'Procesos importados correctamente.']);
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $messages = [];
+            foreach ($failures as $failure) {
+                $messages[] = 'Fila ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            return response()->json(['message' => 'Error de validación', 'errors' => $messages], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al importar: ' . $e->getMessage()], 500);
+        }
+    }
 }

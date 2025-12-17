@@ -210,7 +210,7 @@ class AccionController extends Controller
             abort(404, 'File not found.');
         }
 
-        return Storage::disk('public')->download($path);
+        return response()->download(storage_path('app/public/' . $path));
     }
 
     public function uploadEvidencia(Request $request, Accion $accion)
@@ -489,7 +489,7 @@ class AccionController extends Controller
      * Genera un PDF del plan de acción
      *
      * @param Hallazgo $hallazgo
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function imprimirPlanAccion(Hallazgo $hallazgo)
     {

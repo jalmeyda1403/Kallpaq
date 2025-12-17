@@ -129,6 +129,10 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// Importar/Exportar Procesos (Must be before resource to avoid ID conflict)
+Route::get('/procesos/template', [ProcesoController::class, 'downloadTemplate'])->name('procesos.template');
+Route::post('/procesos/import', [ProcesoController::class, 'import'])->name('procesos.import');
+
 Route::resource('procesos', ProcesoController::class);
 Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
@@ -650,6 +654,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
 // Rutas para obtener listas (Procesos, Áreas, Subáreas)
 Route::middleware('auth')->group(function () {
     Route::get('/api/procesos', [ProcesoController::class, 'apiList']);
+    Route::get('/api/procesos/index', [ProcesoController::class, 'apiIndex']);
     Route::get('/api/areas-compliance', [AreaComplianceController::class, 'apiList']);
     Route::get('/api/areas-compliance/{id}/subareas', [AreaComplianceController::class, 'apiSubareas']);
     Route::get('/api/areas-compliance/{id}/subareas', [AreaComplianceController::class, 'apiSubareas']);
@@ -661,5 +666,7 @@ Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->middleware('au
 // AI Risk Improvement Route
 Route::post('/api/riesgos/improve-description', [RiesgoController::class, 'improveDescription'])->middleware('auth')->name('api.riesgos.improve-description');
 Route::post('/api/riesgos/improve-consecuencia', [RiesgoController::class, 'improveConsecuencia'])->middleware('auth')->name('api.riesgos.improve-consecuencia');
+
+
 
 // Catch-all route for Vue SPA

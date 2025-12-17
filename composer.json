@@ -2,7 +2,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.1",
@@ -16,6 +19,7 @@
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.2",
         "livewire/livewire": "^3.5",
+        "maatwebsite/excel": "^3.1",
         "smalot/pdfparser": "^2.12",
         "spatie/laravel-permission": "^5.10",
         "symfony/dom-crawler": "^7.4",
@@ -81,7 +85,8 @@
         {
             "type": "composer",
             "url": "http://packagist.org"
-        }],
+        }
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true
 }

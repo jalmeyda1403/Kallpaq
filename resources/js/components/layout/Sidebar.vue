@@ -38,7 +38,7 @@
             <!-- Sidebar Menu -->
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    
+
                     <!-- Documentación por Procesos -->
                     <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }">
                         <a href="#" class="nav-link" @click.prevent="toggleMenu('documentacion')">
@@ -88,32 +88,37 @@
                                         <p>Crear Requerimiento</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'supervisor', 'admin'])">
+                                <li class="nav-item"
+                                    v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'supervisor', 'admin'])">
                                     <router-link to="/mis-requerimientos" class="nav-link">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista'])">
-                                    <router-link :to="{ name: 'requerimientos.asignados', params: { rol: userRole } }" class="nav-link">
+                                    <router-link :to="{ name: 'requerimientos.asignados', params: { rol: userRole } }"
+                                        class="nav-link">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Requerimientos Asignados</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista'])">
-                                    <router-link :to="{ name: 'requerimientos.atendidos', params: { rol: userRole } }" class="nav-link">
+                                    <router-link :to="{ name: 'requerimientos.atendidos', params: { rol: userRole } }"
+                                        class="nav-link">
                                         <i class="fas fa-check-circle fa-xs nav-icon"></i>
                                         <p>Requerimientos Atendidos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['supervisor', 'admin'])">
+                                <li class="nav-item"
+                                    v-if="hasAnyRole(['supervisor', 'admin', 'facilitador', 'subgerente', 'especialista'])">
                                     <router-link to="/requerimientos/index" class="nav-link">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link :to="{ name: 'requerimientos.seguimiento', params: { rol: userRole } }" class="nav-link">
+                                    <router-link :to="{ name: 'requerimientos.seguimiento', params: { rol: userRole } }"
+                                        class="nav-link">
                                         <i class="fas fa-tachometer-alt fa-xs nav-icon"></i>
                                         <p>Dashboard Requerimientos</p>
                                     </router-link>
@@ -180,13 +185,13 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('mejora')">
-                                <li class="nav-item" v-if="hasRole('admin')">
+                                <li class="nav-item">
                                     <router-link to="/mejora" class="nav-link">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Hallazgos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['admin', 'gestor'])">
+                                <li class="nav-item">
                                     <router-link to="/mis-hallazgos" class="nav-link">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Hallazgos</p>
@@ -217,13 +222,13 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('obligaciones')">
-                                <li class="nav-item" v-if="hasAnyRole(['admin', 'supervisor'])">
+                                <li class="nav-item">
                                     <router-link to="/obligaciones" class="nav-link">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Obligaciones</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'admin'])">
+                                <li class="nav-item">
                                     <router-link to="/mis-obligaciones" class="nav-link">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Obligaciones</p>
@@ -254,19 +259,20 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('riesgos')">
-                                <li class="nav-item" v-if="hasAnyRole(['admin', 'supervisor'])">
+                                <li class="nav-item">
                                     <router-link to="/riesgos/index" class="nav-link">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Riesgos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'gestor', 'admin'])">
+                                <li class="nav-item">
                                     <router-link to="/riesgos/mis-riesgos" class="nav-link">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Riesgos Asignados</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'gestor', 'admin'])">
+                                <li class="nav-item"
+                                    v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'gestor', 'admin'])">
                                     <router-link to="/riesgos/verificacion" class="nav-link">
                                         <i class="nav-icon fas fa-tasks"></i>
                                         <p>Verificar Eficacia Riesgos</p>
@@ -280,7 +286,7 @@
                                 </li>
                             </ul>
                         </li>
-                        
+
                         <!-- Gestión de Auditorías -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }">
                             <a href="#" class="nav-link" @click.prevent="toggleMenu('auditoria')">
