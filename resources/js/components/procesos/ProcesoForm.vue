@@ -125,6 +125,22 @@
         <div class="row mt-3">
           <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="proceso_producto" class="form-label text-danger font-weight-bold p-0 m-0 small">Producto y/o Servicio</label>
+              <small class="text-muted">{{ form.proceso_producto?.length || 0 }}/500</small>
+            </div>
+
+            <textarea id="proceso_producto" v-model="form.proceso_producto" maxlength="500"
+              placeholder="Describe el producto o servicio del proceso." rows="3" class="form-control" required
+              data-toggle="tooltip" data-placement="top"
+              title="Describe el producto o servicio del proceso in no más de 500 caracteres."></textarea>
+
+            <small v-if="errors.proceso_producto" class="text-danger">{{ errors.proceso_producto }}</small>
+          </div>
+        </div>
+        
+        <div class="row mt-3">
+          <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-1">
               <label for="proceso_objetivo" class="form-label text-danger font-weight-bold p-0 m-0 small">Objetivo del
                 Proceso</label>
               <small class="text-muted">{{ form.proceso_objetivo?.length || 0 }}/500</small>
@@ -203,6 +219,7 @@ export default {
         proceso_sigla: "",
         proceso_nombre: "",
         proceso_objetivo: "",
+        proceso_producto: "",
         planificacion_pei_id: null,
         planificacion_pei_nombre: "",
         proceso_nivel: 0, // Asegúrate de tener este campo
@@ -255,6 +272,7 @@ export default {
         proceso_sigla: "",
         proceso_nombre: "",
         proceso_objetivo: "",
+        proceso_producto: "",
         planificacion_pei_id: null,
         planificacion_pei_nombre: "",
         proceso_nivel: 0,
@@ -302,7 +320,9 @@ export default {
         this.form.cod_proceso = data.cod_proceso;
         this.form.proceso_sigla = data.proceso_sigla;
         this.form.proceso_nombre = data.proceso_nombre;
+        this.form.proceso_nombre = data.proceso_nombre;
         this.form.proceso_objetivo = data.proceso_objetivo;
+        this.form.proceso_producto = data.proceso_producto;
         this.form.proceso_nivel = data.proceso_nivel; // Asigna el nivel
         this.form.cod_proceso_padre = data.cod_proceso_padre; // Asigna el id del padre
         this.form.proceso_nombre_padre = data.proceso_nombre_padre; // Asigna el nombre del padre

@@ -25,22 +25,30 @@ class ProcesosImport implements ToModel, WithHeadingRow, WithValidation
     public function model(array $row)
     {
         return new Proceso([
-            'cod_proceso' => $row['codigo'],
-            'proceso_nombre' => $row['nombre'],
-            'proceso_sigla' => $row['sigla'] ?? null,
-            'proceso_tipo' => $row['tipo'] ?? 'Misional', // Valor por defecto
-            'proceso_nivel' => $this->nivel,
-            'cod_proceso_padre' => $row['codigo_padre'] ?? null,
-            // Agrega otros campos según tu modelo
+            'cod_proceso' => $row['cod_proceso'],
+            'proceso_nombre' => $row['proceso_nombre'],
+            'proceso_sigla' => $row['proceso_sigla'] ?? null,
+            'proceso_tipo' => $row['proceso_tipo'] ?? 'Misional',
+            'proceso_objetivo' => $row['proceso_objetivo'] ?? null,
+            'proceso_producto' => $row['proceso_producto'] ?? null,
+            'proceso_nivel' => $this->nivel, // Keep using the selected level from modal for safety/consistency
+            'cod_proceso_padre' => $row['cod_proceso_padre'] ?? null,
+
+            // Boolean fields
+            'sgc' => isset($row['sgc']) ? ($row['sgc'] == 1 || $row['sgc'] == 'yes' ? 1 : 0) : 0,
+            'sgas' => isset($row['sgas']) ? ($row['sgas'] == 1 || $row['sgas'] == 'yes' ? 1 : 0) : 0,
+            'sgcm' => isset($row['sgcm']) ? ($row['sgcm'] == 1 || $row['sgcm'] == 'yes' ? 1 : 0) : 0,
+            'sgsi' => isset($row['sgsi']) ? ($row['sgsi'] == 1 || $row['sgsi'] == 'yes' ? 1 : 0) : 0,
+            'sgco' => isset($row['sgco']) ? ($row['sgco'] == 1 || $row['sgco'] == 'yes' ? 1 : 0) : 0,
         ]);
     }
 
     public function rules(): array
     {
         return [
-            'codigo' => 'required|unique:procesos,cod_proceso',
-            'nombre' => 'required',
-            'codigo_padre' => Rule::requiredIf($this->nivel > 0),
+            'cod_proceso' => 'required|unique:procesos,cod_proceso',
+            'proceso_nombre' => 'required',
+            'cod_proceso_padre' => Rule::requiredIf($this->nivel > 0),
         ];
     }
 }

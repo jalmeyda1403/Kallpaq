@@ -39,6 +39,29 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
+                                        <label class="font-weight-bold custom-label">Planificación PEI</label>
+                                        <Dropdown v-model="form.planificacion_pei_id" :options="peiOptions"
+                                            optionLabel="descripcion" optionValue="id" filter
+                                            placeholder="Seleccione item PEI" class="w-100"
+                                            panelClass="custom-dropdown-panel" :panelStyle="{ maxWidth: '350px' }"
+                                            showClear />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold custom-label">Planificación SIG</label>
+                                        <Dropdown v-model="form.planificacion_sig_id" :options="sigPlanOptions"
+                                            optionLabel="descripcion" optionValue="id" filter
+                                            placeholder="Seleccione item SIG" class="w-100"
+                                            panelClass="custom-dropdown-panel" :panelStyle="{ maxWidth: '350px' }"
+                                            showClear />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
                                         <label class="font-weight-bold custom-label">Nombre del Indicador <span
                                                 class="text-danger">*</span></label>
                                         <input type="text" v-model="form.indicador_nombre" class="form-control"
@@ -50,15 +73,24 @@
                                         <label class="font-weight-bold custom-label">Indicador SIG</label>
                                         <MultiSelect v-model="form.indicador_sig" :options="sigOptions"
                                             placeholder="Seleccione sistemas" display="chip" class="w-100"
-                                            appendTo="body" panelClass="custom-dropdown-panel" />
+                                            panelClass="custom-dropdown-panel" :panelStyle="{ maxWidth: '100%' }" />
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label class="font-weight-bold custom-label">Descripción <span
-                                            class="text-danger">*</span></label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="d-flex align-items-center">
+                                        <label class="font-weight-bold custom-label mb-0 mr-2">Descripción <span
+                                                class="text-danger">*</span></label>
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            @click="improveDescription"
+                                            :disabled="improvingDescription || !form.indicador_nombre"
+                                            title="Generar descripción con IA basada en el nombre">
+                                            <i class="fas fa-magic" :class="{ 'fa-spin': improvingDescription }"></i>
+                                            <span v-if="improvingDescription" class="ml-1">Generando...</span>
+                                        </button>
+                                    </div>
                                     <small class="form-text text-muted">
                                         {{ form.indicador_descripcion ? form.indicador_descripcion.length : 0 }}/300
                                     </small>
@@ -85,7 +117,8 @@
                                     <div class="form-group">
                                         <label class="font-weight-bold custom-label">Meta <span
                                                 class="text-danger">*</span></label>
-                                        <input type="text" v-model="form.indicador_meta" class="form-control" required>
+                                        <input type="number" step="any" v-model="form.indicador_meta"
+                                            class="form-control" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -214,12 +247,15 @@ import Swal from 'sweetalert2';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
 import FormulaModal from './FormulaModal.vue';
 import MultiSelect from 'primevue/multiselect';
+import Dropdown from 'primevue/dropdown';
 import { Modal } from 'bootstrap';
 
 const props = defineProps({
     visible: Boolean,
     indicador: Object,
-    procesoId: [Number, String] // Optional initial process ID
+    procesoId: [Number, String], // Optional initial process ID
+    peiOptions: { type: Array, default: () => [] },
+    sigPlanOptions: { type: Array, default: () => [] }
 });
 
 const emit = defineEmits(['close', 'saved']);
@@ -229,6 +265,7 @@ const showFormulaModal = ref(false);
 const processRoute = '/buscarProcesos'; // Adjust route as needed based on web.php
 const modalRef = ref(null);
 const modalInstance = ref(null);
+const improvingDescription = ref(false);
 
 const isEdit = computed(() => !!props.indicador);
 
@@ -299,7 +336,10 @@ watch(() => props.indicador, (newVal) => {
         form.value.indicador_var3 = newVal.indicador_var3;
         form.value.indicador_var4 = newVal.indicador_var4;
         form.value.indicador_var5 = newVal.indicador_var5;
+        form.value.indicador_var5 = newVal.indicador_var5;
         form.value.indicador_var6 = newVal.indicador_var6;
+        form.value.planificacion_pei_id = newVal.planificacion_pei_id;
+        form.value.planificacion_sig_id = newVal.planificacion_sig_id;
 
         // Handle JSON parsing for multi-select
         if (typeof newVal.indicador_sig === 'string') {
@@ -365,6 +405,13 @@ const openProcesoModal = () => {
 const onProcesoSelected = (payload) => {
     form.value.proceso_id = payload.idValue;
     form.value.proceso_nombre = payload.descValue;
+
+    // Restaurar el scroll del modal padre después de que el hijo se cierra
+    // Aumentamos el tiempo y forzamos el estilo para asegurar que Bootstrap no lo limpie después
+    setTimeout(() => {
+        document.body.classList.add('modal-open');
+        document.body.style.overflow = 'hidden';
+    }, 800);
 };
 
 const clearProceso = () => {
@@ -415,12 +462,45 @@ const onFormulaUpdated = (payload) => {
     form.value.indicador_var6 = payload.variables.indicador_var6;
 };
 
+const improveDescription = async () => {
+    if (!form.value.indicador_nombre || form.value.indicador_nombre.length < 3) {
+        Swal.fire('Atención', 'Por favor ingrese primero un nombre para el indicador.', 'warning');
+        return;
+    }
+
+    improvingDescription.value = true;
+    try {
+        const response = await axios.post('/api/indicadores-gestion/generate-description', {
+            nombre: form.value.indicador_nombre
+        });
+
+        form.value.indicador_descripcion = response.data.description;
+        Swal.fire({
+            icon: 'success',
+            title: 'Descripción Generada',
+            text: 'La descripción ha sido generada por IA.',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } catch (error) {
+        console.error('Error generating description:', error);
+        Swal.fire('Error', 'No se pudo generar la descripción. Intente nuevamente.', 'error');
+    } finally {
+        improvingDescription.value = false;
+    }
+};
+
 const save = async () => {
     try {
         const payload = { ...form.value };
-        // Convert array to JSON string for storage if backend expects string, or keep array if casted
-        // Assuming backend handles JSON casting or expects string:
-        // payload.indicador_sig = JSON.stringify(payload.indicador_sig);
+
+        // Convert array to JSON string for storage
+        if (Array.isArray(payload.indicador_sig)) {
+            payload.indicador_sig = JSON.stringify(payload.indicador_sig);
+        }
+        // Also handle potential null values for optional foreign keys if they are empty strings
+        if (payload.planificacion_pei_id === '') payload.planificacion_pei_id = null;
+        if (payload.planificacion_sig_id === '') payload.planificacion_sig_id = null;
 
         if (isEdit.value) {
             await axios.put(`/api/indicadores-gestion/${props.indicador.id}`, payload);
@@ -432,7 +512,8 @@ const save = async () => {
         close();
     } catch (error) {
         console.error('Error guardando indicador:', error);
-        Swal.fire('Error', 'No se pudo guardar el indicador', 'error');
+        const errorMsg = error.response?.data?.message || 'No se pudo guardar el indicador. Verifique los datos.';
+        Swal.fire('Error', errorMsg, 'error');
     }
 };
 
@@ -511,11 +592,49 @@ const isValid = computed(() => {
 :deep(.p-multiselect:not(.p-disabled):hover) {
     border-color: #ced4da;
 }
+
+/* Styling for Dropdown to match MultiSelect and form inputs but smaller font */
+:deep(.p-dropdown) {
+    width: 100%;
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    box-shadow: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    align-items: center;
+}
+
+:deep(.p-dropdown:not(.p-disabled).p-focus) {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+:deep(.p-dropdown .p-dropdown-label) {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem !important;
+    /* Smaller font: 14px */
+    line-height: 1.5;
+    color: #495057;
+}
+
+:deep(.p-dropdown .p-dropdown-label.p-placeholder) {
+    color: #6c757d !important;
+    font-size: 0.875rem !important;
+}
+
+:deep(.p-dropdown:not(.p-disabled):hover) {
+    border-color: #ced4da;
+}
 </style>
 
 <style>
 /* Global styles for the appended panels */
-.custom-dropdown-panel .p-multiselect-item {
+
+
+.custom-dropdown-panel .p-multiselect-item,
+.custom-dropdown-panel .p-dropdown-item {
     font-size: 0.875rem !important;
+    white-space: normal !important;
+    word-break: break-word;
+
 }
 </style>

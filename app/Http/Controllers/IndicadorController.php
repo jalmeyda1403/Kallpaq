@@ -11,9 +11,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Services\AIService;
 
 class IndicadorController extends Controller
 {
+    protected $aiService;
+
+    public function __construct(AIService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
+
     public function view()
     {
         return view('indicadores.index');
@@ -26,6 +34,10 @@ class IndicadorController extends Controller
 
         if (request()->has('proceso_id') && request()->proceso_id) {
             $query->where('proceso_id', request()->proceso_id);
+        }
+
+        if (request()->has('indicador_sig') && request()->indicador_sig) {
+            $query->where('indicador_sig', 'like', '%"' . request()->indicador_sig . '"%');
         }
 
         $indicadores = $query->get()
@@ -47,9 +59,14 @@ class IndicadorController extends Controller
                 return $indicador;
             });
 
+        $planificacionesPei = PlanificacionPEI::all();
+        $planificacionesSig = PlanificacionSIG::all();
+
         return response()->json([
             'indicadores' => $indicadores,
-            'procesos' => $procesos
+            'procesos' => $procesos,
+            'planificaciones_pei' => $planificacionesPei,
+            'planificaciones_sig' => $planificacionesSig
         ]);
     }
 
@@ -59,7 +76,7 @@ class IndicadorController extends Controller
             'proceso_id' => 'required|exists:procesos,id',
             'indicador_nombre' => 'required|string|max:255',
             'indicador_frecuencia' => 'required|string',
-            'indicador_meta' => 'required|string',
+            'indicador_meta' => 'required|numeric',
             // Agregar más validaciones según sea necesario
         ]);
 
@@ -276,5 +293,18 @@ class IndicadorController extends Controller
         }
 
         return response()->json(['periodo' => $siguientePeriodo, 'full' => false]);
+    }
+    public function generateDescription(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+        ]);
+
+        try {
+            $description = $this->aiService->generateIndicatorDescription($request->nombre);
+            return response()->json(['description' => $description]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al generar descripción: ' . $e->getMessage()], 500);
+        }
     }
 }

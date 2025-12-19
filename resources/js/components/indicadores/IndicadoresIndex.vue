@@ -25,6 +25,12 @@
                         </select>
                     </div>
                     <div class="col">
+                        <select class="form-control" v-model="filters.indicador_sig">
+                            <option value="">Todos los Sistemas</option>
+                            <option v-for="sig in sigOptions" :key="sig" :value="sig">{{ sig }}</option>
+                        </select>
+                    </div>
+                    <div class="col">
                         <select class="form-control" v-model="filters.mes">
                             <option value="">Todos los Meses</option>
                             <option v-for="(mes, index) in meses" :key="index" :value="index + 1">{{ mes }}</option>
@@ -99,7 +105,8 @@
 
         <!-- Modales -->
         <IndicadorForm v-if="showFormModal" :visible="showFormModal" :indicador="selectedIndicador"
-            :proceso-id="procesoId" @close="closeFormModal" @saved="loadIndicadores" />
+            :proceso-id="procesoId" :pei-options="peiOptions" :sig-plan-options="sigPlanOptions" @close="closeFormModal"
+            @saved="loadIndicadores" />
         <IndicadorAvanceForm v-if="showAvanceModal" :visible="showAvanceModal" :indicador="selectedIndicador"
             @close="closeAvanceModal" @saved="loadIndicadores" />
         <IndicadorGrafico v-if="showGraficoModal" :visible="showGraficoModal" :indicador="selectedIndicador"
@@ -129,14 +136,23 @@ const showFormModal = ref(false);
 const showAvanceModal = ref(false);
 const showGraficoModal = ref(false);
 const selectedIndicador = ref(null);
+const peiOptions = ref([]);
+const sigPlanOptions = ref([]);
 
 const filters = ref({
     year: new Date().getFullYear(),
     frecuencia: '',
     periodo: '',
     mes: '',
-    search: ''
+    year: new Date().getFullYear(),
+    frecuencia: '',
+    periodo: '',
+    mes: '',
+    search: '',
+    indicador_sig: ''
 });
+
+const sigOptions = ['SGAS', 'SGCM', 'SGC', 'SGSI', 'SGCO'];
 
 const meses = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -170,6 +186,8 @@ const loadIndicadores = async () => {
         }
         const response = await axios.get('/api/indicadores-gestion', { params });
         indicadores.value = response.data.indicadores;
+        peiOptions.value = response.data.planificaciones_pei;
+        sigPlanOptions.value = response.data.planificaciones_sig;
     } catch (error) {
         console.error('Error cargando indicadores:', error);
         Swal.fire('Error', 'No se pudieron cargar los indicadores', 'error');

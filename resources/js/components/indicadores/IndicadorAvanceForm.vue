@@ -264,7 +264,7 @@
                             <div></div> <!-- Empty div for spacing -->
                             <div>
                                 <button type="button" class="btn btn-secondary" @click="close">
-                                    <i class="fas fa-times mr-1"></i> Cancelar
+                                    <i class="fas fa-times mr-1"></i> Cerrar
                                 </button>
                                 <button type="submit" class="btn btn-danger ml-2">
                                     <i class="fas fa-save mr-1"></i> {{ editingAvanceId ? 'Actualizar' : 'Guardar' }}
@@ -282,6 +282,7 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     visible: Boolean,
@@ -569,7 +570,27 @@ const submitForm = async () => {
         }
 
         emit('saved');
-        close();
+        await fetchHistory(); // Refresh history table
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: editingAvanceId.value ? 'Avance actualizado correctamente' : 'Avance registrado correctamente',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        // Optional: clear form logic if creating new? 
+        // For now, leaving form as is allows user to see what they saved or make minor adjustments for another entry if needed.
+        // If it was editing, we might want to exit edit mode?
+        if (editingAvanceId.value) {
+            editingAvanceId.value = null;
+            // Reset form fields to default for new entry? 
+            // Or just leave it. The user said "not close". Usually implies "add another" or "review".
+            // I'll leave it but maybe resetting the form would be better UX if they want to add another.
+            // However, keeping values (like year/period) might be useful. 
+            // I'll stick to minimum changes: don't close.
+        }
+
     } catch (error) {
         console.error('Error saving avance:', error);
         let msg = error.response?.data?.message || error.message;
@@ -586,7 +607,7 @@ const submitForm = async () => {
             }
         }
 
-        alert('Error al guardar el avance: ' + msg);
+        Swal.fire('Error', 'Error al guardar el avance: ' + msg, 'error');
     }
 };
 
@@ -613,16 +634,12 @@ watch(() => props.visible, async (newVal) => {
         filesToUpload.value = [];
         existingFiles.value = [];
 
-        // Fetch data
-        await fetchNextPeriod();
-        await fetchHistory();
-
         // Set meta if lineal
         if (props.indicador?.indicador_sentido === 'lineal') {
             form.value.is_meta = props.indicador.indicador_meta;
         }
 
-        // Show modal
+        // Show modal immediately
         await nextTick();
         if (modalRef.value) {
             if (!modalInstance.value) {
@@ -633,6 +650,10 @@ watch(() => props.visible, async (newVal) => {
             }
             modalInstance.value.show();
         }
+
+        // Fetch data asynchronously after showing modal
+        Promise.all([fetchNextPeriod(), fetchHistory()]).catch(console.error);
+
     } else {
         if (modalInstance.value) {
             modalInstance.value.hide();
@@ -643,6 +664,7 @@ watch(() => props.visible, async (newVal) => {
         editingAvanceId.value = null;
     }
 }, { immediate: true });
+
 
 
 

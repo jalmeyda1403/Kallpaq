@@ -1,15 +1,18 @@
 <template>
-  <div class="card h-100">
-    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-      <h6 class="mb-0">Distribución de Hallazgos por Estado</h6>
+  <div class="card shadow-sm border-0 h-100">
+    <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+      <h6 class="font-weight-bold text-dark mb-0 section-header">Distribución de Hallazgos</h6>
+      <p class="text-muted small mb-0">Estado actual de registros</p>
     </div>
-    <div class="card-body d-flex align-items-center justify-content-center">
+    <div class="card-body px-4 pb-4 d-flex align-items-center justify-content-center">
       <div v-if="isLoading" class="text-center">
-        <div class="spinner-border text-danger" role="status">
+        <div class="spinner-border text-primary" role="status">
           <span class="sr-only">Cargando...</span>
         </div>
       </div>
-      <canvas v-show="!isLoading" ref="chartCanvas" height="300"></canvas>
+      <div v-show="!isLoading" class="w-100" style="height: 300px; position: relative;">
+        <canvas ref="chartCanvas"></canvas>
+      </div>
     </div>
   </div>
 </template>
@@ -47,7 +50,6 @@ export default {
     async fetchData() {
       this.isLoading = true;
       try {
-        // Incluir parámetros de filtrado en la solicitud
         let url = '/api/dashboard/mejora';
         const params = [];
 
@@ -62,7 +64,6 @@ export default {
         const response = await axios.get(url);
         const data = response.data;
 
-        // Contar hallazgos por estado
         const estadoCounts = data.hallazgos.reduce((acc, hallazgo) => {
           const estado = hallazgo.hallazgo_estado || 'Sin estado';
           acc[estado] = (acc[estado] || 0) + 1;
@@ -72,21 +73,21 @@ export default {
         const estados = Object.keys(estadoCounts);
         const cantidades = Object.values(estadoCounts);
 
-        // Mapeo de colores alineado con las tarjetas
+        // Updated colors to be slightly more pastel/modern if needed, 
+        // keeping mostly consistent but ensuring good contrast
         const colorMap = {
-          'creado': '#e83e8c',           // bg-pink (rosa)
-          'modificado': '#e83e8c',       // bg-pink (rosa)
-          'aprobado': '#6610f2',         // bg-indigo (púrpura)
-          'desestimado': '#6c757d',      // bg-secondary (gris)
-          'en proceso': '#007bff',       // bg-primary (azul)
-          'concluido': '#28a745',        // bg-success (verde)
-          'cerrado': '#17a2b8',          // bg-info (cyan)
-          'evaluado': '#17a2b8',         // bg-info (cyan)
-          'Sin estado': '#f5f5f5'        // whitesmoke
+          'creado': '#e83e8c',
+          'modificado': '#d63384',
+          'aprobado': '#6f42c1',
+          'desestimado': '#6c757d',
+          'en proceso': '#4e73df', // Bootstrap Primary / AdminLTE Blue
+          'concluido': '#1cc88a',  // Green
+          'cerrado': '#36b9cc',    // Cyan
+          'evaluado': '#36b9cc',
+          'Sin estado': '#858796'
         };
 
-        // Asignar colores según el estado
-        const colores = estados.map(estado => colorMap[estado] || '#6c757d');
+        const colores = estados.map(estado => colorMap[estado] || '#858796');
 
         this.renderChart(estados, cantidades, colores);
       } catch (error) {
@@ -107,8 +108,10 @@ export default {
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: backgroundColor.slice(0, labels.length),
-            borderWidth: 1
+            backgroundColor: backgroundColor,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverBorderColor: '#ffffff'
           }]
         },
         options: {
@@ -117,8 +120,21 @@ export default {
           plugins: {
             legend: {
               position: 'right',
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true,
+                font: {
+                  family: "'Inter', sans-serif",
+                  size: 11
+                },
+                padding: 20
+              }
             }
-          }
+          },
+          layout: {
+            padding: 20
+          },
+          cutout: '70%' // Thinner doughnut for modern look
         }
       });
     }
@@ -138,3 +154,7 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+/* Scoped styles mainly handled by classes */
+</style>

@@ -59,6 +59,13 @@
                     <Column field="proceso_nombre" header="Nombre" sortable style="width: 20%"></Column>
                     <Column field="proceso_tipo" header="Tipo" sortable></Column>
                     <Column field="proceso_sigla" header="Sigla" sortable></Column>
+                    <Column field="proceso_producto" header="Producto" sortable style="width: 25%">
+                         <template #body="slotProps">
+                            <span :title="slotProps.data.proceso_producto">
+                                {{ slotProps.data.proceso_producto ? (slotProps.data.proceso_producto.length > 50 ? slotProps.data.proceso_producto.substring(0, 50) + '...' : slotProps.data.proceso_producto) : '-' }}
+                            </span>
+                        </template>
+                    </Column>
                     <Column field="proceso_nivel" header="Nivel" sortable></Column>
                     <Column field="responsable" header="Responsable" style="width: 20%">
                         <template #body="slotProps">

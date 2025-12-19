@@ -251,4 +251,25 @@ class AIService
 
         return json_decode($this->callOpenAI($prompt, true), true)['relevantes'] ?? [];
     }
+    public function generateIndicatorDescription(string $name): string
+    {
+        $prompt = "Actúa como un experto en gestión de calidad y procesos (ISO 9001).
+        Tu tarea es generar una descripción corta y precisa para un indicador de gestión basado en su nombre.
+        
+        Nombre del Indicador: \"$name\"
+        
+        Instrucciones:
+        1. La descripción debe explicar qué mide este indicador de forma clara.
+        2. Mantén un tono técnico y formal.
+        3. Longitud máxima: 300 caracteres (para asegurar que quepa en el campo).
+        4. Inicia directamente con la descripción (ej: 'Mide el porcentaje de...', 'Calcula la cantidad de...').
+        
+        Ejemplos:
+        - Nombre: 'Satisfacción del Cliente' -> Descripción: 'Mide el nivel de satisfacción de los clientes respecto al servicio recibido a través de encuestas.'
+        - Nombre: 'Tiempo de Respuesta' -> Descripción: 'Calcula el tiempo promedio transcurrido desde la recepción de una solicitud hasta su atención final.'
+        
+        Devuelve SOLO la descripción generada.";
+
+        return $this->callOpenAI($prompt);
+    }
 }

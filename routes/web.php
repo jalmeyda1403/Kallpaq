@@ -579,6 +579,10 @@ Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->gr
 // Ruta para el dashboard de mejora
 Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraController::class, 'index'])->name('dashboard.mejora.api');
 
+// Ruta para el dashboard de procesos (Nuevo)
+Route::get('/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'index'])->name('dashboard.procesos.view')->middleware('auth');
+Route::get('/api/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'data'])->name('dashboard.procesos.data')->middleware('auth');
+
 // Rutas para el módulo de Indicadores (Vue)
 // Rutas para el módulo de Indicadores (Refactorizado)
 Route::get('/indicadores-gestion', function () {
@@ -594,6 +598,7 @@ Route::prefix('api/indicadores-gestion')->middleware('auth')->name('api.indicado
     Route::post('/avance', [IndicadorController::class, 'storeAvance'])->name('avances.store');
     Route::post('/avance/{id}', [IndicadorController::class, 'updateAvance'])->name('avances.update');
     Route::post('/next-period', [IndicadorController::class, 'getNextPeriod'])->name('next-period');
+    Route::post('/generate-description', [IndicadorController::class, 'generateDescription'])->name('generate-description');
 });
 
 // Route to handle Vue SPA pages, prefixed with /vue/

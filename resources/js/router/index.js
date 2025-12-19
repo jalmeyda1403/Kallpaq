@@ -145,7 +145,7 @@ const routes = [
             {
                 path: 'dashboard/procesos',
                 name: 'dashboard.procesos',
-                component: BladeViewPlaceholder // Placeholder
+                component: () => import('@/components/dashboard/DashboardProcesos.vue')
             },
 
             // Gestión de la Mejora

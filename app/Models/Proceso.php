@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Proceso extends Model
 {
-    use HasFactory;    protected $table = 'procesos';
+    use HasFactory;
+    protected $table = 'procesos';
     protected $cachedDescDocs = null;
 
     protected $fillable = [
@@ -25,7 +26,8 @@ class Proceso extends Model
         'sgas',
         'sgcm',
         'sgsi',
-        'sgco',        
+        'sgco',
+        'proceso_producto',
         'inactivated_at'
     ];
 
@@ -56,7 +58,7 @@ class Proceso extends Model
     public function hallazgos()
     {
         return $this->belongsToMany(Hallazgo::class, 'hallazgo_proceso', 'proceso_id', 'hallazgo_id')
-                    ->using(HallazgoProceso::class);
+            ->using(HallazgoProceso::class);
     }
 
     public function hallazgoProcesos()
@@ -68,7 +70,7 @@ class Proceso extends Model
     {
         return $this->belongsToMany(Ouo::class, 'procesos_ouo', 'id_proceso', 'id_ouo')
             ->using(ProcesoOuo::class) // Use the pivot model
-            ->withPivot('propietario', 'delegado','ejecutor','sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
+            ->withPivot('propietario', 'delegado', 'ejecutor', 'sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
     }
     public function obligaciones()
     {

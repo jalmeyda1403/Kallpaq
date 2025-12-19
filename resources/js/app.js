@@ -32,6 +32,7 @@ import ResumenAlertas from './components/dashboard/ResumenAlertas.vue';
 import ResumenEspecialistas from './components/dashboard/ResumenEspecialistas.vue';
 import DetalleEspecialistaModal from './components/dashboard/DetalleEspecialistaModal.vue';
 import IndicadoresIndex from './components/indicadores/IndicadoresIndex.vue';
+import DashboardProcesos from './components/dashboard/DashboardProcesos.vue';
 
 import router from './router/index.js';
 
@@ -81,6 +82,7 @@ if (rootAppElement) {
 
     // Indicadores
     vueApp.component('indicadores-index', IndicadoresIndex);
+    vueApp.component('dashboard-procesos', DashboardProcesos);
 
     vueApp.mount('#app');
 }
