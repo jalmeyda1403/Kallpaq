@@ -330,8 +330,14 @@
                                 </li>
                                 <li class="nav-item">
                                     <router-link to="/continuidad/activos" class="nav-link">
-                                        <i class="nav-icon fas fa-tasks"></i>
+                                        <i class="nav-icon fas fa-layer-group"></i>
                                         <p>Activos Críticos</p>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item">
+                                    <router-link to="/continuidad/pruebas" class="nav-link">
+                                        <i class="nav-icon fas fa-vial"></i>
+                                        <p>Pruebas y Ejercicios</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
@@ -369,6 +375,26 @@
                                     <router-link to="/encuestas-satisfaccion" class="nav-link">
                                         <i class="fas fa-poll fa-xs nav-icon"></i>
                                         <p>Encuestas de Satisfacción</p>
+                                    </router-link>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Alta Dirección -->
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('direccion') }"
+                            v-if="hasAnyRole(['admin', 'especialista', 'propietario', 'subgerente'])">
+                            <a href="#" class="nav-link" @click.prevent="toggleMenu('direccion')">
+                                <i class="nav-icon fas fa-user-tie"></i>
+                                <p>
+                                    Alta Dirección
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview" v-show="isMenuOpen('direccion')">
+                                <li class="nav-item">
+                                    <router-link to="/revision-direccion" class="nav-link">
+                                        <i class="fas fa-calendar-check nav-icon"></i>
+                                        <p>Revisión por la Dirección</p>
                                     </router-link>
                                 </li>
                             </ul>
@@ -428,11 +454,12 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const userRole = computed(() => {
-    return authStore.roles.length > 0 ? authStore.roles[0] : '';
+    return authStore.primaryRole || (authStore.roles.length > 0 ? authStore.roles[0] : '');
 });
 
 const hasRole = (role) => authStore.hasRole(role);
 const hasAnyRole = (roles) => authStore.hasAnyRole(roles);
+const canAccessModule = (module) => authStore.canAccessModule(module);
 
 const openMenus = ref({});
 

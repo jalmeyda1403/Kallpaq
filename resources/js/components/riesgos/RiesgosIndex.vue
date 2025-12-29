@@ -81,7 +81,10 @@
                 <div class="tab-content" id="riesgosTabsContent">
                     <!-- Tab Listado -->
                     <div class="tab-pane fade show active" id="listado" role="tabpanel" aria-labelledby="listado-tab">
-                        <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10" :loading="loading"
+                        <!-- Loading State - Spinner circular rojo -->
+                        <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando riesgos..." />
+                        
+                        <DataTable v-else ref="dt" :value="riesgos" :paginator="true" :rows="10"
                             :rowsPerPageOptions="[5, 10, 20, 50]"
                             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
                             responsiveLayout="scroll">
@@ -199,6 +202,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
 import MapaCalor from './MapaCalor.vue';
 import RiesgoModal from './RiesgoModal.vue';
+import LoadingState from '@/components/generales/LoadingState.vue';
 
 // PrimeVue
 import DataTable from 'primevue/datatable';

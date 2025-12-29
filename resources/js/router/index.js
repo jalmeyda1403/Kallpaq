@@ -240,22 +240,33 @@ const routes = [
             {
                 path: 'continuidad/planes',
                 name: 'continuidad.planes',
-                component: BladeViewPlaceholder
+                component: () => import('@/components/continuidad/PlanesIndex.vue')
+            },
+            {
+                path: 'continuidad/planes/:id',
+                name: 'continuidad.plan.detalle',
+                component: () => import('@/components/continuidad/PlanDetalle.vue'),
+                props: true
             },
             {
                 path: 'continuidad/escenarios',
                 name: 'continuidad.escenarios',
-                component: BladeViewPlaceholder
+                component: () => import('@/components/continuidad/EscenariosIndex.vue')
             },
             {
                 path: 'continuidad/activos',
                 name: 'continuidad.activos',
-                component: BladeViewPlaceholder
+                component: () => import('@/components/continuidad/ActivosIndex.vue')
+            },
+            {
+                path: 'continuidad/pruebas',
+                name: 'continuidad.pruebas',
+                component: () => import('@/components/continuidad/PruebasIndex.vue')
             },
             {
                 path: 'dashboard/continuidad',
                 name: 'dashboard.continuidad',
-                component: BladeViewPlaceholder
+                component: () => import('@/components/continuidad/DashboardContinuidad.vue')
             },
 
             // Satisfacción del Cliente
@@ -278,6 +289,19 @@ const routes = [
                 path: 'encuestas-satisfaccion/dashboard',
                 name: 'encuestas.dashboard',
                 component: () => import('@/components/encuestas/EncuestasDashboard.vue'),
+            },
+
+            // Alta Dirección - Revisión por la Dirección
+            {
+                path: 'revision-direccion',
+                name: 'revision-direccion.index',
+                component: () => import('@/components/revision-direccion/RevisionDireccionIndex.vue'),
+            },
+            {
+                path: 'revision-direccion/:id',
+                name: 'revision-direccion.detalle',
+                component: () => import('@/components/revision-direccion/RevisionDireccionDetalle.vue'),
+                props: true
             },
 
             // Administración

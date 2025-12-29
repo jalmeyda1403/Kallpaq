@@ -45,7 +45,10 @@
             </form>
         </div>
         <div class="card-body">
-            <DataTable :value="indicadores" :paginator="true" :rows="10"
+            <!-- Loading State - Spinner circular rojo -->
+            <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando indicadores..." />
+            
+            <DataTable v-else :value="indicadores" :paginator="true" :rows="10"
                 paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                 :rowsPerPageOptions="[10, 20, 50]" responsiveLayout="scroll"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
@@ -123,6 +126,7 @@ import Swal from 'sweetalert2';
 import IndicadorForm from './IndicadorForm.vue';
 import IndicadorAvanceForm from './IndicadorAvanceForm.vue';
 import IndicadorGrafico from './IndicadorGrafico.vue';
+import LoadingState from '@/components/generales/LoadingState.vue';
 
 const props = defineProps({
     procesoId: {
@@ -132,6 +136,7 @@ const props = defineProps({
 });
 
 const indicadores = ref([]);
+const loading = ref(false);
 const showFormModal = ref(false);
 const showAvanceModal = ref(false);
 const showGraficoModal = ref(false);
@@ -179,6 +184,7 @@ const debounceLoad = () => {
 };
 
 const loadIndicadores = async () => {
+    loading.value = true;
     try {
         const params = { ...filters.value };
         if (props.procesoId) {
@@ -191,6 +197,8 @@ const loadIndicadores = async () => {
     } catch (error) {
         console.error('Error cargando indicadores:', error);
         Swal.fire('Error', 'No se pudieron cargar los indicadores', 'error');
+    } finally {
+        loading.value = false;
     }
 };
 

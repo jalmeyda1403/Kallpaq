@@ -73,15 +73,13 @@
             </div>
 
             <div class="card-body">
-                <div v-if="isLoading" class="loading-spinner w-100 text-center my-5">
-                    <div class="spinner-border text-danger" role="status">
-                        <span class="sr-only">Cargando...</span>
-                    </div>
-                </div>
+                <!-- Loading State - Spinner circular rojo -->
+                <LoadingState v-if="isLoading" variant="danger" size="lg" text="Cargando documentos..." />
+                
                 <div v-else>
                     <DataTable :value="documentos" selectionMode="single" v-model:selection="selectedDocumento"
-                        dataKey="id" :paginator="true" :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]"
-                        :loading="isLoading">
+                        dataKey="id" :paginator="true" :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]">
+
 
                         <Column field="cod_documento" header="Código Documento" sortable></Column>
                         <Column field="nombre_documento" header="Nombre Documento"></Column>
@@ -153,6 +151,7 @@ import axios from 'axios';
 import { route } from 'ziggy-js';
 
 import DocumentoModal from '@/components/documentos/DocumentoModal.vue';
+import LoadingState from '@/components/generales/LoadingState.vue';
 import { useDocumentoStore } from '@/stores/documentoStore'; // Importa la tienda
 
 // PrimeVue Components

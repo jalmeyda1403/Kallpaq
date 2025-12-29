@@ -71,7 +71,10 @@
             </div>
 
             <div class="card-body">
-                <DataTable ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
+                <!-- Loading State - Spinner circular rojo -->
+                <LoadingState v-if="isLoading" variant="danger" size="lg" text="Cargando solicitudes..." />
+                
+                <DataTable v-else ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['hallazgo_cod', 'hallazgo_clasificacion', 'hallazgo_resumen', 'procesos.proceso_nombre', 'hallazgo_estado']"
                     :loading="isLoading">
@@ -188,6 +191,7 @@ import Button from 'primevue/button';
 import { FilterMatchMode } from 'primevue/api';
 
 import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
+import LoadingState from '@/components/generales/LoadingState.vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const router = useRouter();

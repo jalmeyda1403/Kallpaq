@@ -68,7 +68,10 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
+                        <!-- Loading State - Spinner circular rojo -->
+                        <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando requerimientos..." />
+                        
+                        <DataTable v-else ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
                             :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                             :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']"
                             :loading="loading">
@@ -201,6 +204,9 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown'; // Added Dropdown import
 import { FilterMatchMode } from 'primevue/api';
+
+// Components
+import LoadingState from '@/components/generales/LoadingState.vue';
 
 const router = useRouter();
 

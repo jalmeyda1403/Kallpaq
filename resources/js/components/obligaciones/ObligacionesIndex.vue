@@ -56,7 +56,10 @@
             </div>
 
             <div class="card-body">
-                <DataTable ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
+                <!-- Loading State - Spinner circular rojo -->
+                <LoadingState v-if="obligacionStore.loading" variant="danger" size="lg" text="Cargando obligaciones..." />
+                
+                <DataTable v-else ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['proceso.proceso_nombre', 'documento_tecnico_normativo', 'obligacion_principal', 'consecuencia_incumplimiento', 'estado_obligacion']"
                     :loading="obligacionStore.loading">
@@ -208,6 +211,7 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
 import Dropdown from 'primevue/dropdown';
+import LoadingState from '@/components/generales/LoadingState.vue';
 
 const router = useRouter();
 const obligacionStore = useObligacionStore();

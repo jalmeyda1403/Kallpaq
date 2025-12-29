@@ -49,7 +49,10 @@
             </div>
 
             <div class="card-body">
-                <DataTable :value="procesos" :paginator="true" :rows="25" :loading="loading" stripedRows
+                <!-- Loading State - Spinner circular rojo -->
+                <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando procesos..." />
+                
+                <DataTable v-else :value="procesos" :paginator="true" :rows="25" stripedRows
                     tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
@@ -162,6 +165,9 @@ import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import Dialog from 'primevue/dialog';
+
+// Components
+import LoadingState from '@/components/generales/LoadingState.vue';
 
 const toast = useToast();
 const router = useRouter();
