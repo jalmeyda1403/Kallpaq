@@ -72,9 +72,7 @@
 
             <div class="card-body">
                 <!-- Loading State - Spinner circular rojo -->
-                <LoadingState v-if="isLoading" variant="danger" size="lg" text="Cargando solicitudes..." />
-                
-                <DataTable v-else ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
+                <DataTable ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['hallazgo_cod', 'hallazgo_clasificacion', 'hallazgo_resumen', 'procesos.proceso_nombre', 'hallazgo_estado']"
                     :loading="isLoading">
@@ -115,7 +113,7 @@
                             {{ formatDate(data.hallazgo_fecha_conclusion) }}
                         </template>
                     </Column>
-                    <Column field="hallazgo_estado" header="Estado" style="width:10%; text-align: center;" >
+                    <Column field="hallazgo_estado" header="Estado" style="width:10%; text-align: center;">
                         <template #body="{ data }">
                             {{ data.hallazgo_estado }}
                         </template>

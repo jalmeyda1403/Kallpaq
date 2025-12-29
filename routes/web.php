@@ -683,23 +683,25 @@ Route::prefix('api/revision-direccion')->middleware('auth')->name('revision-dire
     Route::put('/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/acta', [\App\Http\Controllers\RevisionDireccionController::class, 'subirActa'])->name('acta');
-    
+
     // Entradas
     Route::get('/tipos/entradas', [\App\Http\Controllers\RevisionDireccionController::class, 'getTiposEntrada'])->name('tipos.entradas');
     Route::post('/{revisionId}/entradas', [\App\Http\Controllers\RevisionDireccionController::class, 'storeEntrada'])->name('entradas.store');
     Route::put('/entradas/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'updateEntrada'])->name('entradas.update');
     Route::delete('/entradas/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'destroyEntrada'])->name('entradas.destroy');
-    
+
     // Salidas
     Route::get('/tipos/salidas', [\App\Http\Controllers\RevisionDireccionController::class, 'getTiposSalida'])->name('tipos.salidas');
     Route::post('/{revisionId}/salidas', [\App\Http\Controllers\RevisionDireccionController::class, 'storeSalida'])->name('salidas.store');
-    
+    Route::put('/salidas/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'updateSalida'])->name('salidas.update');
+    Route::delete('/salidas/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'destroySalida'])->name('salidas.destroy');
+
     // Compromisos
     Route::post('/{revisionId}/compromisos', [\App\Http\Controllers\RevisionDireccionController::class, 'storeCompromiso'])->name('compromisos.store');
     Route::put('/compromisos/{id}', [\App\Http\Controllers\RevisionDireccionController::class, 'updateCompromiso'])->name('compromisos.update');
     Route::post('/compromisos/{id}/seguimiento', [\App\Http\Controllers\RevisionDireccionController::class, 'registrarSeguimiento'])->name('compromisos.seguimiento');
     Route::post('/compromisos/{id}/evidencia', [\App\Http\Controllers\RevisionDireccionController::class, 'subirEvidencia'])->name('compromisos.evidencia');
-    
+
     // Dashboard
     Route::get('/dashboard/compromisos', [\App\Http\Controllers\RevisionDireccionController::class, 'dashboardCompromisos'])->name('dashboard.compromisos');
     Route::get('/datos/entradas', [\App\Http\Controllers\RevisionDireccionController::class, 'getDatosParaEntradas'])->name('datos.entradas');
@@ -716,13 +718,13 @@ Route::prefix('api/continuidad')->middleware('auth')->name('continuidad.')->grou
     Route::put('/activos/{id}', [\App\Http\Controllers\ContinuidadController::class, 'updateActivo'])->name('activos.update');
     Route::delete('/activos/{id}', [\App\Http\Controllers\ContinuidadController::class, 'destroyActivo'])->name('activos.destroy');
     Route::get('/tipos/activos', [\App\Http\Controllers\ContinuidadController::class, 'getTiposActivo'])->name('tipos.activos');
-    
+
     // Escenarios
     Route::get('/escenarios', [\App\Http\Controllers\ContinuidadController::class, 'indexEscenarios'])->name('escenarios.index');
     Route::post('/escenarios', [\App\Http\Controllers\ContinuidadController::class, 'storeEscenario'])->name('escenarios.store');
     Route::put('/escenarios/{id}', [\App\Http\Controllers\ContinuidadController::class, 'updateEscenario'])->name('escenarios.update');
     Route::get('/tipos/categorias', [\App\Http\Controllers\ContinuidadController::class, 'getCategoriasEscenario'])->name('tipos.categorias');
-    
+
     // Planes
     Route::get('/planes', [\App\Http\Controllers\ContinuidadController::class, 'indexPlanes'])->name('planes.index');
     Route::post('/planes', [\App\Http\Controllers\ContinuidadController::class, 'storePlan'])->name('planes.store');
@@ -730,13 +732,13 @@ Route::prefix('api/continuidad')->middleware('auth')->name('continuidad.')->grou
     Route::put('/planes/{id}', [\App\Http\Controllers\ContinuidadController::class, 'updatePlan'])->name('planes.update');
     Route::post('/planes/{id}/documento', [\App\Http\Controllers\ContinuidadController::class, 'subirDocumentoPlan'])->name('planes.documento');
     Route::get('/tipos/planes', [\App\Http\Controllers\ContinuidadController::class, 'getTiposPlan'])->name('tipos.planes');
-    
+
     // Pruebas
     Route::get('/pruebas', [\App\Http\Controllers\ContinuidadController::class, 'indexPruebas'])->name('pruebas.index');
     Route::post('/pruebas', [\App\Http\Controllers\ContinuidadController::class, 'storePrueba'])->name('pruebas.store');
     Route::post('/pruebas/{id}/resultados', [\App\Http\Controllers\ContinuidadController::class, 'registrarResultados'])->name('pruebas.resultados');
     Route::get('/tipos/pruebas', [\App\Http\Controllers\ContinuidadController::class, 'getTiposPrueba'])->name('tipos.pruebas');
-    
+
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\ContinuidadController::class, 'dashboard'])->name('dashboard');
 });

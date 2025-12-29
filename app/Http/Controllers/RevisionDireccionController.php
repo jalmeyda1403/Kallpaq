@@ -31,14 +31,12 @@ class RevisionDireccionController extends Controller
         if ($request->filled('buscar')) {
             $query->where(function ($q) use ($request) {
                 $q->where('codigo', 'like', "%{$request->buscar}%")
-                  ->orWhere('titulo', 'like', "%{$request->buscar}%");
+                    ->orWhere('titulo', 'like', "%{$request->buscar}%");
             });
         }
 
         $revisiones = $query->get()->map(function ($revision) {
-            $revision->avance_general = $revision->avance_general;
             $revision->compromisos_pendientes_count = $revision->compromisosPendientes()->count();
-            $revision->estado_color = $revision->estado_color;
             return $revision;
         });
 
@@ -80,13 +78,10 @@ class RevisionDireccionController extends Controller
             'responsable',
             'creador',
             'entradas',
-            'salidas.compromisos',
+            'salidas.compromisos.responsable',
             'compromisos.responsable',
             'compromisos.seguimientos.usuario'
         ])->findOrFail($id);
-
-        $revision->avance_general = $revision->avance_general;
-        $revision->estado_color = $revision->estado_color;
 
         return response()->json($revision);
     }
@@ -254,6 +249,36 @@ class RevisionDireccionController extends Controller
         return response()->json(RevisionSalida::getTiposSalida());
     }
 
+    /**
+     * Actualizar salida/decisión
+     */
+    public function updateSalida(Request $request, $id)
+    {
+        $salida = RevisionSalida::findOrFail($id);
+
+        $validated = $request->validate([
+            'tipo_salida' => 'sometimes|string',
+            'descripcion' => 'sometimes|string',
+            'justificacion' => 'nullable|string',
+        ]);
+
+        $salida->update($validated);
+
+        return response()->json([
+            'message' => 'Salida actualizada exitosamente',
+            'data' => $salida
+        ]);
+    }
+
+    /**
+     * Eliminar salida/decisión
+     */
+    public function destroySalida($id)
+    {
+        RevisionSalida::findOrFail($id)->delete();
+        return response()->json(['message' => 'Salida eliminada exitosamente']);
+    }
+
     // ========== COMPROMISOS ==========
 
     /**
@@ -268,7 +293,8 @@ class RevisionDireccionController extends Controller
             'descripcion' => 'required|string',
             'responsable_id' => 'required|exists:users,id',
             'fecha_limite' => 'required|date|after:today',
-            'observaciones' => 'nullable|string',
+            'recursos_necesarios' => 'nullable|string|max:1000',
+            'observaciones' => 'nullable|string|max:500',
         ]);
 
         $compromiso = $revision->compromisos()->create($validated);
@@ -292,7 +318,8 @@ class RevisionDireccionController extends Controller
             'fecha_limite' => 'sometimes|date',
             'estado' => 'sometimes|in:pendiente,en_proceso,completado,cancelado',
             'avance' => 'sometimes|integer|min:0|max:100',
-            'observaciones' => 'nullable|string',
+            'recursos_necesarios' => 'nullable|string|max:1000',
+            'observaciones' => 'nullable|string|max:500',
         ]);
 
         // Si hay cambio de estado o avance, registrar seguimiento
@@ -339,7 +366,7 @@ class RevisionDireccionController extends Controller
         return response()->json([
             'message' => 'Seguimiento registrado exitosamente',
             'data' => $seguimiento->load('usuario'),
-            'compromiso' => $compromiso->fresh(['responsable'])
+            'compromiso' => $compromiso->fresh(['responsable', 'seguimientos.usuario'])
         ]);
     }
 

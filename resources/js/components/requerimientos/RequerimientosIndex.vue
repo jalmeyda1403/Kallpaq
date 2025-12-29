@@ -69,16 +69,15 @@
                     </div>
                     <div class="card-body">
                         <!-- Loading State - Spinner circular rojo -->
-                        <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando requerimientos..." />
-                        
-                        <DataTable v-else ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
+                        <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
                             :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                             :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']"
                             :loading="loading">
                             <template #header>
-                               <div class="d-flex align-items-center">
+                                <div class="d-flex align-items-center">
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
-                                        severity="secondary" @click="exportCSV($event)"  class="btn btn-secondary ml-auto" >
+                                        severity="secondary" @click="exportCSV($event)"
+                                        class="btn btn-secondary ml-auto">
                                     </Button>
                                 </div>
                             </template>

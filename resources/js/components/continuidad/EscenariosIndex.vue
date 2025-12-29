@@ -31,50 +31,41 @@
             </div>
 
             <div class="card-body">
-                <SkeletonLoader v-if="isLoading" type="table" :rows="5" />
+                <!-- Empty -->
+                <EmptyState v-if="!isLoading && escenarios.length === 0" title="No hay escenarios definidos"
+                    description="Identifica los posibles escenarios de interrupción" icon="fas fa-bolt"
+                    action-text="Nuevo Escenario" @action="showModal = true" />
 
-                <EmptyState 
-                    v-else-if="!isLoading && escenarios.length === 0"
-                    title="No hay escenarios definidos"
-                    description="Identifica los posibles escenarios de interrupción"
-                    icon="fas fa-bolt"
-                    action-text="Nuevo Escenario"
-                    @action="showModal = true"
-                />
-
-                <div v-else class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Nombre</th>
-                                <th>Categoría</th>
-                                <th>Probabilidad</th>
-                                <th>Impacto</th>
-                                <th>Nivel Riesgo</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="esc in escenarios" :key="esc.id">
-                                <td><strong>{{ esc.codigo }}</strong></td>
-                                <td>{{ esc.nombre }}</td>
-                                <td>{{ categorias[esc.categoria] || esc.categoria }}</td>
-                                <td>{{ esc.probabilidad }}</td>
-                                <td>{{ esc.impacto }}</td>
-                                <td>
-                                    <span class="badge badge-pill" :class="'badge-' + esc.nivel_riesgo_color">
-                                        {{ esc.nivel_riesgo_label }} ({{ esc.nivel_riesgo }})
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info mr-1" @click="editar(esc)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div v-else>
+                    <DataTable :value="escenarios" :loading="isLoading" :paginator="true" :rows="10"
+                        responsiveLayout="scroll">
+                        <Column field="codigo" header="Código">
+                            <template #body="{ data }">
+                                <strong>{{ data.codigo }}</strong>
+                            </template>
+                        </Column>
+                        <Column field="nombre" header="Nombre"></Column>
+                        <Column field="categoria" header="Categoría">
+                            <template #body="{ data }">
+                                {{ categorias[data.categoria] || data.categoria }}
+                            </template>
+                        </Column>
+                        <Column field="probabilidad" header="Probabilidad"></Column>
+                        <Column field="impacto" header="Impacto"></Column>
+                        <Column header="Nivel Riesgo">
+                            <template #body="{ data }">
+                                <span class="badge badge-pill" :class="'badge-' + data.nivel_riesgo_color">
+                                    {{ data.nivel_riesgo_label }} ({{ data.nivel_riesgo }})
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Acciones">
+                            <template #body="{ data }">
+                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-info p-button-text mr-1"
+                                    @click="editar(data)" />
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
             </div>
         </div>
@@ -153,8 +144,10 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useContinuidadStore } from '@/stores/continuidadStore';
-import SkeletonLoader from '@/components/generales/SkeletonLoader.vue';
 import EmptyState from '@/components/generales/EmptyState.vue';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 const store = useContinuidadStore();
 
@@ -218,6 +211,23 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-label.required::after { content: ' *'; color: red; }
-.badge-orange { background-color: #fd7e14; color: white; }
+label.required::after {
+    content: ' *';
+    color: red;
+}
+
+.badge-orange {
+    background-color: #fd7e14;
+    color: white;
+}
+
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
 </style>

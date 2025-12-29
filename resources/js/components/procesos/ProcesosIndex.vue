@@ -50,9 +50,7 @@
 
             <div class="card-body">
                 <!-- Loading State - Spinner circular rojo -->
-                <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando procesos..." />
-                
-                <DataTable v-else :value="procesos" :paginator="true" :rows="25" stripedRows
+                <DataTable :value="procesos" :paginator="true" :rows="25" stripedRows :loading="loading"
                     tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
@@ -63,9 +61,11 @@
                     <Column field="proceso_tipo" header="Tipo" sortable></Column>
                     <Column field="proceso_sigla" header="Sigla" sortable></Column>
                     <Column field="proceso_producto" header="Producto" sortable style="width: 25%">
-                         <template #body="slotProps">
+                        <template #body="slotProps">
                             <span :title="slotProps.data.proceso_producto">
-                                {{ slotProps.data.proceso_producto ? (slotProps.data.proceso_producto.length > 50 ? slotProps.data.proceso_producto.substring(0, 50) + '...' : slotProps.data.proceso_producto) : '-' }}
+                                {{ slotProps.data.proceso_producto ? (slotProps.data.proceso_producto.length > 50 ?
+                                    slotProps.data.proceso_producto.substring(0, 50) + '...' :
+                                slotProps.data.proceso_producto) : '-' }}
                             </span>
                         </template>
                     </Column>
@@ -403,5 +403,18 @@ const uploadImport = async () => {
 .p-button-sm {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
+}
+
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
 }
 </style>

@@ -233,7 +233,19 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="avance in avances" :key="avance.id">
+                                            <tr v-if="isLoadingHistory">
+                                                <td colspan="6" class="text-center py-4">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="sr-only">Cargando historial...</span>
+                                                    </div>
+                                                    <p class="text-muted mt-2 mb-0 small">Cargando historial...</p>
+                                                </td>
+                                            </tr>
+                                            <tr v-else-if="avances.length === 0">
+                                                <td colspan="6" class="text-center text-muted">No hay avances
+                                                    registrados.</td>
+                                            </tr>
+                                            <tr v-else v-for="avance in avances" :key="avance.id">
                                                 <td class="text-center">{{ avance.is_periodo }}</td>
                                                 <td class="text-center">{{ avance.is_numero_periodo }}</td>
                                                 <td class="text-center">{{ avance.is_meta }}</td>
@@ -251,10 +263,7 @@
                                                     </button>
                                                 </td>
                                             </tr>
-                                            <tr v-if="avances.length === 0">
-                                                <td colspan="6" class="text-center text-muted">No hay avances
-                                                    registrados.</td>
-                                            </tr>
+
                                         </tbody>
                                     </table>
                                 </div>
@@ -266,7 +275,7 @@
                                 <button type="button" class="btn btn-secondary" @click="close">
                                     <i class="fas fa-times mr-1"></i> Cerrar
                                 </button>
-                                <button type="submit" class="btn btn-danger ml-2">
+                                <button type="submit" class="btn btn-danger ml-2" :disabled="isSaveDisabled">
                                     <i class="fas fa-save mr-1"></i> {{ editingAvanceId ? 'Actualizar' : 'Guardar' }}
                                 </button>
                             </div>
@@ -304,6 +313,8 @@ const editingAvanceId = ref(null);
 
 const avances = ref([]); // Historial de avances
 const isLoadingPeriod = ref(false);
+const isLoadingHistory = ref(false);
+const isPeriodFull = ref(false);
 
 // Generar lista de años (actual +/- 1)
 const years = computed(() => {
@@ -334,6 +345,14 @@ const isMetaReadonly = computed(() => {
     return props.indicador?.indicador_sentido === 'lineal';
 });
 
+const isSaveDisabled = computed(() => {
+    // Disable if periods are full AND we are NOT editing (creating new)
+    if (isPeriodFull.value && !editingAvanceId.value) {
+        return true;
+    }
+    return false;
+});
+
 const fetchNextPeriod = async () => {
     if (!props.indicador?.id || !form.value.is_periodo) return;
     isLoadingPeriod.value = true;
@@ -344,12 +363,29 @@ const fetchNextPeriod = async () => {
         });
         form.value.is_numero_periodo = response.data.periodo;
         if (response.data.full) {
-            // Opcional: Mostrar alerta de que ya se completaron los periodos
-            alert('Se ha alcanzado el número máximo de periodos para este año según la frecuencia del indicador.');
+            isPeriodFull.value = true;
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: 'Máximo de periodos alcanzado',
+                text: 'Se ha completado el número de periodos para este año.',
+                showConfirmButton: false,
+                timer: 4000
+            });
+        } else {
+            isPeriodFull.value = false;
         }
     } catch (error) {
         console.error("Error fetching next period", error);
-        alert("Error al obtener el siguiente periodo: " + (error.response?.data?.message || error.message));
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'Error',
+            text: "Error al obtener periodo: " + (error.response?.data?.message || error.message),
+            timer: 3000
+        });
     } finally {
         isLoadingPeriod.value = false;
     }
@@ -357,11 +393,21 @@ const fetchNextPeriod = async () => {
 
 const fetchHistory = async () => {
     if (!props.indicador?.id) return;
+    isLoadingHistory.value = true;
     try {
         const response = await axios.get(`/api/indicadores-gestion/${props.indicador.id}/avances`);
         avances.value = response.data;
     } catch (error) {
         console.error("Error fetching history", error);
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo cargar el historial.'
+        });
+    } finally {
+        isLoadingHistory.value = false;
     }
 };
 

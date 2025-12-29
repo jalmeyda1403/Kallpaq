@@ -135,6 +135,34 @@ export const useRevisionDireccionStore = defineStore('revisionDireccion', () => 
         }
     };
 
+    const updateEntrada = async (entradaId, data) => {
+        try {
+            const response = await axios.put(`/api/revision-direccion/entradas/${entradaId}`, data);
+            if (revisionActual.value?.entradas) {
+                const index = revisionActual.value.entradas.findIndex(e => e.id === entradaId);
+                if (index !== -1) {
+                    revisionActual.value.entradas[index] = response.data.data;
+                }
+            }
+            return response.data;
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Error al actualizar entrada';
+            throw err;
+        }
+    };
+
+    const deleteEntrada = async (entradaId) => {
+        try {
+            await axios.delete(`/api/revision-direccion/entradas/${entradaId}`);
+            if (revisionActual.value?.entradas) {
+                revisionActual.value.entradas = revisionActual.value.entradas.filter(e => e.id !== entradaId);
+            }
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Error al eliminar entrada';
+            throw err;
+        }
+    };
+
     // Salidas
     const fetchTiposSalida = async () => {
         try {
@@ -159,12 +187,50 @@ export const useRevisionDireccionStore = defineStore('revisionDireccion', () => 
         }
     };
 
+    const updateSalida = async (salidaId, data) => {
+        try {
+            const response = await axios.put(`/api/revision-direccion/salidas/${salidaId}`, data);
+            if (revisionActual.value?.salidas) {
+                const index = revisionActual.value.salidas.findIndex(s => s.id === salidaId);
+                if (index !== -1) {
+                    revisionActual.value.salidas[index] = response.data.data;
+                }
+            }
+            return response.data;
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Error al actualizar salida';
+            throw err;
+        }
+    };
+
+    const deleteSalida = async (salidaId) => {
+        try {
+            await axios.delete(`/api/revision-direccion/salidas/${salidaId}`);
+            if (revisionActual.value?.salidas) {
+                revisionActual.value.salidas = revisionActual.value.salidas.filter(s => s.id !== salidaId);
+            }
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Error al eliminar salida';
+            throw err;
+        }
+    };
+
     // Compromisos
     const addCompromiso = async (revisionId, data) => {
         try {
             const response = await axios.post(`/api/revision-direccion/${revisionId}/compromisos`, data);
             if (revisionActual.value?.id === revisionId) {
-                revisionActual.value.compromisos.push(response.data.data);
+                const nuevoCompromiso = response.data.data;
+                revisionActual.value.compromisos.push(nuevoCompromiso);
+
+                // Si está vinculado a una salida, actualizar la salida localmente
+                if (nuevoCompromiso.salida_id && revisionActual.value.salidas) {
+                    const salida = revisionActual.value.salidas.find(s => s.id == nuevoCompromiso.salida_id);
+                    if (salida) {
+                        if (!salida.compromisos) salida.compromisos = [];
+                        salida.compromisos.push(nuevoCompromiso);
+                    }
+                }
             }
             return response.data;
         } catch (err) {
@@ -254,8 +320,12 @@ export const useRevisionDireccionStore = defineStore('revisionDireccion', () => 
         deleteRevision,
         fetchTiposEntrada,
         addEntrada,
+        updateEntrada,
+        deleteEntrada,
         fetchTiposSalida,
         addSalida,
+        updateSalida,
+        deleteSalida,
         addCompromiso,
         updateCompromiso,
         registrarSeguimiento,

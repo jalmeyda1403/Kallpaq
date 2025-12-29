@@ -2,9 +2,9 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
-Use App\Models\Proceso;
-Use App\Models\Especialista;
-Use App\Models\Auditor;
+use App\Models\Proceso;
+use App\Models\Especialista;
+use App\Models\Auditor;
 use App\Models\OUO; // Added OUO model
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -25,7 +25,7 @@ class UserController extends Controller
 
     public function index()
     {
-      
+
         $users = User::all();
         return view('user.index', compact('users'));
     }
@@ -33,7 +33,7 @@ class UserController extends Controller
     public function create()
     {
         // Código para cargar los datos necesarios para la creación
-        
+
         return view('user.create');
     }
 
@@ -68,7 +68,7 @@ class UserController extends Controller
         // Redireccionar a la vista de gestión de usuarios
         return redirect()->route('user.index')->with('success', 'Usuario creado exitosamente.');
     }
-    
+
     public function destroy(User $user)
     {
         $user->delete();
@@ -80,44 +80,44 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->password = Hash::make('nuevacontraseña');
         $user->save();
-        
+
         $user->notify(new ResetPasswordNotification());
         return redirect()->route('user.index')->with('success', 'Contraseña reiniciada exitosamente. Se ha enviado un correo electrónico al usuario.');
     }
-//Asignar Procesos
+    //Asignar Procesos
     public function asignarProcesos($id)
     {
         $user = User::findOrFail($id);
         // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
         $procesosAsignados = $user->procesos;
- 
+
         $procesosDisponibles = Proceso::whereNotIn('id', $procesosAsignados->pluck('id'))
-        ->paginate(15);
-        
+            ->paginate(15);
+
         return view('user.asignarprocesos', compact('user', 'procesosAsignados', 'procesosDisponibles'));
-        
+
     }
 
     public function listarProcesos($id)
     {
         $user = User::findOrFail($id);
-      
+
         $procesosAsignados = $user->procesos;
 
-              
+
         if ($user->hasRole('facilitador')) {
-             return view('user.listarprocesos', compact('user','procesosAsignados'));
+            return view('user.listarprocesos', compact('user', 'procesosAsignados'));
         }
 
-             
-         
+
+
     }
 
     public function guardarProcesos(Request $request, $id)
     {
         $user = User::findOrFail($id);
         $procesosSeleccionados = $request->input('proceso-id', []);
-     
+
         // Asignar los procesos seleccionados al usuario
         $user->procesos()->attach($procesosSeleccionados);
 
@@ -125,77 +125,83 @@ class UserController extends Controller
     }
 
     public function eliminarProceso($id, $proceso_id)
-    {   
+    {
         $user = User::findOrFail($id);
         $user->procesos()->detach($proceso_id);
         return redirect()->back()->with('success', 'Proceso eliminado correctamente.');
     }
 
-//Asignar Roles
-public function asignarRoles($id)
-{
-    $user = User::findOrFail($id);
-    // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
-    $rolesAsignados = $user->roles;
-    $rolesDisponibles = Role::all();
-
-    
-    return view('user.asignarroles', compact('user', 'rolesAsignados', 'rolesDisponibles'));  
-}
-
-public function guardarRoles(Request $request, $id)
-{
-    $user = User::findOrFail($id);
-    $roles = $request->input('rol-id', []);
- 
-    // Asignar los procesos seleccionados al usuario
-    $user->syncRoles($roles);
-
-    return redirect()->back()->with('success', 'Roles asignados correctamente.');
-}
-
-//Asignar Permisos
-public function asignarPermisos($id)
-{
-    $user = User::findOrFail($id);
-    // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
-    $permisosAsignados = $user->permissions;
-    $permisosDisponibles = Permission::all();
-
-    
-    return view('user.asignarpermisos', compact('user', 'permisosAsignados', 'permisosDisponibles'));  
-}
-
-public function guardarPermisos(Request $request, $id)
-{
-    $user = User::findOrFail($id);
-    $permisos = $request->input('permiso-id', []);
-    // Asignar los procesos seleccionados al usuario
-    $user->syncPermissions($permisos);
-
-    return redirect()->back()->with('success', 'Permisos asignados correctamente.');
-}
-
-//Mostrar Especialistas
-
-public function showAuditores()
-{
-    // Obtener todos los auditores con su información de usuario
-    $auditores = Auditor::with('user')->get();
-
-    $auditores = $auditores->map(function ($auditor) {
-        return [
-            'id' => $auditor->user_id,
-            'descripcion' => $auditor->user ? $auditor->user->name : 'Usuario no encontrado', // Usar el nombre del usuario
-        ];
-    });
-
-    return response()->json($auditores);
-}
-
-    public function listUsers()
+    //Asignar Roles
+    public function asignarRoles($id)
     {
-        $users = User::select('id', 'name')->get();
+        $user = User::findOrFail($id);
+        // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
+        $rolesAsignados = $user->roles;
+        $rolesDisponibles = Role::all();
+
+
+        return view('user.asignarroles', compact('user', 'rolesAsignados', 'rolesDisponibles'));
+    }
+
+    public function guardarRoles(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $roles = $request->input('rol-id', []);
+
+        // Asignar los procesos seleccionados al usuario
+        $user->syncRoles($roles);
+
+        return redirect()->back()->with('success', 'Roles asignados correctamente.');
+    }
+
+    //Asignar Permisos
+    public function asignarPermisos($id)
+    {
+        $user = User::findOrFail($id);
+        // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
+        $permisosAsignados = $user->permissions;
+        $permisosDisponibles = Permission::all();
+
+
+        return view('user.asignarpermisos', compact('user', 'permisosAsignados', 'permisosDisponibles'));
+    }
+
+    public function guardarPermisos(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $permisos = $request->input('permiso-id', []);
+        // Asignar los procesos seleccionados al usuario
+        $user->syncPermissions($permisos);
+
+        return redirect()->back()->with('success', 'Permisos asignados correctamente.');
+    }
+
+    //Mostrar Especialistas
+
+    public function showAuditores()
+    {
+        // Obtener todos los auditores con su información de usuario
+        $auditores = Auditor::with('user')->get();
+
+        $auditores = $auditores->map(function ($auditor) {
+            return [
+                'id' => $auditor->user_id,
+                'descripcion' => $auditor->user ? $auditor->user->name : 'Usuario no encontrado', // Usar el nombre del usuario
+            ];
+        });
+
+        return response()->json($auditores);
+    }
+
+    public function listUsers(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->has('role')) {
+            $query->role($request->role);
+        }
+
+        $users = $query->select('id', 'name')->orderBy('name')->get();
         return response()->json($users);
     }
 
@@ -214,7 +220,7 @@ public function showAuditores()
             $searchTerm = $request->input('search');
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -226,7 +232,7 @@ public function showAuditores()
         $users = $query->paginate($perPage);
 
         return response()->json([
-            'data' => $users->map(function ($user) {
+            'data' => collect($users->items())->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,

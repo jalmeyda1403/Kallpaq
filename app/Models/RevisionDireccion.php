@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class RevisionDireccion extends Model
 {
@@ -30,6 +31,11 @@ class RevisionDireccion extends Model
     protected $casts = [
         'fecha_programada' => 'date',
         'fecha_reunion' => 'date',
+    ];
+
+    protected $appends = [
+        'avance_general',
+        'estado_color',
     ];
 
     /**
@@ -100,7 +106,8 @@ class RevisionDireccion extends Model
     public function getAvanceGeneralAttribute()
     {
         $compromisos = $this->compromisos;
-        if ($compromisos->count() === 0) return 0;
+        if ($compromisos->count() === 0)
+            return 0;
         return round($compromisos->avg('avance'));
     }
 
@@ -109,9 +116,14 @@ class RevisionDireccion extends Model
      */
     public function getEstaVencidaAttribute()
     {
-        return $this->estado === 'programada' && 
-               $this->fecha_programada && 
-               $this->fecha_programada->isPast();
+        if (!$this->fecha_programada)
+            return false;
+
+        $fecha = $this->fecha_programada instanceof Carbon
+            ? $this->fecha_programada
+            : Carbon::parse($this->fecha_programada);
+
+        return $this->estado === 'programada' && $fecha->isPast();
     }
 
     /**

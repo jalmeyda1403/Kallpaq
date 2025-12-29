@@ -1,98 +1,172 @@
 <template>
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-warning">
-                    <h5 class="modal-title">
-                        <i class="fas fa-tasks mr-2"></i> 
-                        {{ isEdit ? 'Editar Compromiso' : 'Nuevo Compromiso de la Dirección' }}
-                    </h5>
-                    <button type="button" class="close" @click="$emit('close')">×</button>
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); overflow-y: auto;">
+
+        <!-- El modal siempre muestra su estructura básica para evitar el "salto" visual -->
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-xl overflow-hidden">
+                <!-- Header con diseño premium -->
+                <div class="modal-header bg-dark text-white border-0 py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning rounded p-2 mr-3 shadow-sm">
+                            <i class="fas fa-tasks text-dark"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title font-weight-bold mb-0">
+                                {{ isEdit ? 'Editar Compromiso' : 'Nuevo Compromiso' }}
+                            </h5>
+                            <small class="text-warning font-weight-bold">Revisión por la Dirección</small>
+                        </div>
+                    </div>
+                    <button type="button" class="close text-white" @click="$emit('close')">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
                 <form @submit.prevent="guardar">
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label class="required">Descripción del Compromiso</label>
-                            <textarea v-model="form.descripcion" class="form-control" rows="3" required
-                                placeholder="Describa el compromiso adquirido por la Alta Dirección..."></textarea>
+                    <div class="modal-body p-4 bg-light position-relative" style="min-height: 400px;">
+
+                        <!-- Overlay de carga sutil (solo sobre el cuerpo si los datos no están listos) -->
+                        <div v-if="!isDataLoaded"
+                            class="loading-overlay rounded-lg d-flex align-items-center justify-content-center">
+                            <i class="fas fa-circle-notch fa-spin fa-2x text-warning"></i>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="required">Responsable</label>
-                                    <select v-model="form.responsable_id" class="form-control" required>
-                                        <option value="">Seleccionar responsable...</option>
-                                        <option v-for="user in usuarios" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                        <!-- Contenido que se muestra "suave" cuando está listo -->
+                        <div :class="{ 'opacity-0': !isDataLoaded, 'transition-opacity': true }">
+                            <!-- Campo: Descripción -->
+                            <div class="form-group mb-4">
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <label class="font-weight-bold text-dark mb-0 required">Descripción del
+                                        Compromiso</label>
+                                    <span class="char-counter-top"
+                                        :class="{ 'text-danger': form.descripcion.length >= 500 }">
+                                        {{ form.descripcion.length }} / 500
+                                    </span>
                                 </div>
+                                <textarea v-model="form.descripcion"
+                                    class="form-control shadow-sm border-0 rounded-lg no-focus-outline" rows="4"
+                                    required maxlength="500"
+                                    placeholder="Describa claramente el compromiso adquirido..."></textarea>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="required">Fecha Límite</label>
-                                    <input type="date" v-model="form.fecha_limite" class="form-control" required>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Prioridad</label>
-                                    <select v-model="form.prioridad" class="form-control">
-                                        <option value="baja">Baja</option>
-                                        <option value="media">Media</option>
-                                        <option value="alta">Alta</option>
-                                        <option value="critica">Crítica</option>
-                                    </select>
+                            <div class="row">
+                                <!-- Campo: Responsable -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-1 required">Responsable</label>
+                                        <div class="input-group shadow-sm rounded-lg overflow-hidden">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-white border-0 text-muted"><i
+                                                        class="fas fa-user"></i></span>
+                                            </div>
+                                            <select v-model="form.responsable_id"
+                                                class="form-control border-0 no-focus-outline" required>
+                                                <option value="">Seleccionar...</option>
+                                                <option v-for="user in usuarios" :key="user.id" :value="user.id">
+                                                    {{ user.name }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Campo: Fecha Límite -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-1 required">Fecha Límite</label>
+                                        <div class="input-group shadow-sm rounded-lg overflow-hidden">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-white border-0 text-muted"><i
+                                                        class="fas fa-calendar-alt"></i></span>
+                                            </div>
+                                            <input type="date" v-model="form.fecha_limite"
+                                                class="form-control border-0 no-focus-outline" required>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6" v-if="isEdit">
-                                <div class="form-group">
-                                    <label>Estado</label>
-                                    <select v-model="form.estado" class="form-control">
-                                        <option value="pendiente">Pendiente</option>
-                                        <option value="en_proceso">En Proceso</option>
-                                        <option value="completado">Completado</option>
-                                        <option value="cancelado">Cancelado</option>
-                                    </select>
+
+                            <div class="row">
+                                <!-- Campo: Prioridad -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-1">Prioridad</label>
+                                        <div class="input-group shadow-sm rounded-lg overflow-hidden">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-white border-0 text-muted"><i
+                                                        class="fas fa-layer-group"></i></span>
+                                            </div>
+                                            <select v-model="form.prioridad"
+                                                class="form-control border-0 no-focus-outline">
+                                                <option value="baja">Baja</option>
+                                                <option value="media">Media</option>
+                                                <option value="alta">Alta</option>
+                                                <option value="critica">Crítica</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Campo: Estado (Solo en Edición) -->
+                                <div class="col-md-6" v-if="isEdit">
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-1">Estado</label>
+                                        <div class="input-group shadow-sm rounded-lg overflow-hidden">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-white border-0 text-muted"><i
+                                                        class="fas fa-info-circle"></i></span>
+                                            </div>
+                                            <select v-model="form.estado"
+                                                class="form-control border-0 no-focus-outline">
+                                                <option value="pendiente">Pendiente</option>
+                                                <option value="en_proceso">En Proceso</option>
+                                                <option value="completado">Completado</option>
+                                                <option value="cancelado">Cancelado</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row" v-if="isEdit">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Avance (%)</label>
-                                    <input type="range" v-model.number="form.avance" class="form-control-range" 
-                                           min="0" max="100" step="5">
-                                    <div class="text-center">{{ form.avance }}%</div>
+                            <!-- Campo: Recursos Necesarios -->
+                            <div class="form-group mb-4">
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <label class="font-weight-bold text-dark mb-0">Recursos Necesarios</label>
+                                    <span class="char-counter-top"
+                                        :class="{ 'text-danger': (form.recursos_necesarios?.length || 0) >= 1000 }">
+                                        {{ form.recursos_necesarios?.length || 0 }} / 1000
+                                    </span>
                                 </div>
+                                <textarea v-model="form.recursos_necesarios"
+                                    class="form-control shadow-sm border-0 rounded-lg no-focus-outline text-area-custom"
+                                    rows="2" maxlength="1000"
+                                    placeholder="Personal, herramientas, infraestructura..."></textarea>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label>Recursos Necesarios</label>
-                            <textarea v-model="form.recursos_necesarios" class="form-control" rows="2"
-                                placeholder="Recursos requeridos para cumplir el compromiso (opcional)"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Observaciones</label>
-                            <textarea v-model="form.observaciones" class="form-control" rows="2"
-                                placeholder="Notas u observaciones adicionales (opcional)"></textarea>
+                            <!-- Campo: Observaciones -->
+                            <div class="form-group mb-0">
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <label class="font-weight-bold text-dark mb-0">Observaciones / Notas</label>
+                                    <span class="char-counter-top"
+                                        :class="{ 'text-danger': (form.observaciones?.length || 0) >= 500 }">
+                                        {{ form.observaciones?.length || 0 }} / 500
+                                    </span>
+                                </div>
+                                <textarea v-model="form.observaciones"
+                                    class="form-control shadow-sm border-0 rounded-lg no-focus-outline text-area-custom"
+                                    rows="2" maxlength="500" placeholder="Comentarios adicionales..."></textarea>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="$emit('close')">
+                    <div class="modal-footer bg-white border-top py-3">
+                        <button type="button" class="btn btn-light rounded-pill px-4 font-weight-bold shadow-sm"
+                            @click="$emit('close')">
                             Cancelar
                         </button>
-                        <button type="submit" class="btn btn-warning" :disabled="isLoading">
-                            <i class="fas fa-save mr-1"></i>
+                        <button type="submit"
+                            class="btn btn-warning rounded-pill px-5 font-weight-bold shadow transition-all hover-up"
+                            :disabled="isLoading || !isDataLoaded">
+                            <i class="fas fa-save mr-1" v-if="!isLoading"></i>
+                            <i class="fas fa-spinner fa-spin mr-1" v-else></i>
                             {{ isLoading ? 'Guardando...' : 'Guardar Compromiso' }}
                         </button>
                     </div>
@@ -116,6 +190,7 @@ const emit = defineEmits(['close', 'saved']);
 const store = useRevisionDireccionStore();
 
 const isLoading = ref(false);
+const isDataLoaded = ref(false);
 const usuarios = ref([]);
 
 const isEdit = computed(() => !!props.compromiso);
@@ -126,14 +201,14 @@ const form = reactive({
     fecha_limite: '',
     prioridad: 'media',
     estado: 'pendiente',
-    avance: 0,
     recursos_necesarios: '',
     observaciones: ''
 });
 
 onMounted(async () => {
+    // Si ya tenemos datos de usuarios en el store (opcional) o si es rápido, quitar la pantalla de carga
     try {
-        const res = await axios.get('/users/list');
+        const res = await axios.get('/users/list', { params: { role: 'propietario' } });
         usuarios.value = res.data;
     } catch (err) {
         console.error('Error cargando usuarios');
@@ -142,16 +217,17 @@ onMounted(async () => {
     // Si es edición, poblar el formulario
     if (isEdit.value) {
         Object.assign(form, {
-            descripcion: props.compromiso.descripcion,
-            responsable_id: props.compromiso.responsable_id,
-            fecha_limite: props.compromiso.fecha_limite?.split('T')[0] || '',
+            descripcion: props.compromiso.descripcion || '',
+            responsable_id: props.compromiso.responsable_id || '',
+            fecha_limite: props.compromiso.fecha_limite ? new Date(props.compromiso.fecha_limite).toISOString().split('T')[0] : '',
             prioridad: props.compromiso.prioridad || 'media',
-            estado: props.compromiso.estado,
-            avance: props.compromiso.avance || 0,
+            estado: props.compromiso.estado || 'pendiente',
             recursos_necesarios: props.compromiso.recursos_necesarios || '',
             observaciones: props.compromiso.observaciones || ''
         });
     }
+
+    isDataLoaded.value = true;
 });
 
 const guardar = async () => {
@@ -174,8 +250,68 @@ const guardar = async () => {
 </script>
 
 <style scoped>
+.rounded-xl {
+    border-radius: 1rem !important;
+}
+
+.no-focus-outline:focus {
+    outline: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075), 0 0 0 0.1rem rgba(255, 193, 7, 0.25) !important;
+}
+
 label.required::after {
     content: ' *';
-    color: red;
+    color: #dc3545;
+}
+
+.text-area-custom {
+    resize: none;
+}
+
+.char-counter-top {
+    font-size: 0.75rem;
+    color: #ADB5BD;
+    font-weight: 600;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.hover-up:hover {
+    transform: translateY(-2px);
+}
+
+/* Overlay de carga sutil dentro del cuerpo del modal */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(248, 249, 250, 0.8);
+    z-index: 10;
+}
+
+.opacity-0 {
+    opacity: 0;
+}
+
+.transition-opacity {
+    transition: opacity 0.4s ease-in-out;
+}
+
+/* Scrollbar personalizado */
+textarea::-webkit-scrollbar {
+    width: 4px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #ADB5BD;
+    border-radius: 10px;
 }
 </style>

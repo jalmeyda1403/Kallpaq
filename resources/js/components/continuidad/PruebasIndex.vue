@@ -31,67 +31,62 @@
             </div>
 
             <div class="card-body">
-                <SkeletonLoader v-if="isLoading" type="table" :rows="5" />
+                <!-- Empty -->
+                <EmptyState v-if="!isLoading && pruebas.length === 0" title="No hay pruebas programadas"
+                    description="Programa pruebas para validar tus planes de continuidad" icon="fas fa-clipboard-check"
+                    action-text="Nueva Prueba" @action="showModal = true" />
 
-                <EmptyState 
-                    v-else-if="!isLoading && pruebas.length === 0"
-                    title="No hay pruebas programadas"
-                    description="Programa pruebas para validar tus planes de continuidad"
-                    icon="fas fa-clipboard-check"
-                    action-text="Nueva Prueba"
-                    @action="showModal = true"
-                />
-
-                <div v-else class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Nombre</th>
-                                <th>Plan</th>
-                                <th>Tipo</th>
-                                <th>Fecha</th>
-                                <th>Estado</th>
-                                <th>Calificación</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="prueba in pruebas" :key="prueba.id" 
-                                :class="{ 'table-warning': prueba.esta_vencida }">
-                                <td><strong>{{ prueba.codigo }}</strong></td>
-                                <td>{{ prueba.nombre }}</td>
-                                <td>{{ prueba.plan?.codigo }}</td>
-                                <td>{{ tiposPrueba[prueba.tipo_prueba] || prueba.tipo_prueba }}</td>
-                                <td>
-                                    {{ formatDate(prueba.fecha_programada) }}
-                                    <span v-if="prueba.esta_vencida" class="badge badge-danger ml-1">Vencida</span>
-                                </td>
-                                <td>
-                                    <span class="badge" :class="'badge-' + prueba.estado_color">
-                                        {{ prueba.estado }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span v-if="prueba.calificacion">
-                                        <i v-for="i in 5" :key="i" class="fas fa-star" 
-                                           :class="i <= prueba.calificacion ? 'text-warning' : 'text-muted'"></i>
-                                    </span>
-                                    <span v-else class="text-muted">-</span>
-                                </td>
-                                <td>
-                                    <button v-if="prueba.estado === 'programada'" 
-                                            class="btn btn-sm btn-success mr-1" @click="registrar(prueba)"
-                                            title="Registrar Resultados">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info" @click="verDetalle(prueba)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div v-else>
+                    <DataTable :value="pruebas" :loading="isLoading" :paginator="true" :rows="10"
+                        responsiveLayout="scroll" :rowClass="rowClass">
+                        <Column field="codigo" header="Código">
+                            <template #body="{ data }">
+                                <strong>{{ data.codigo }}</strong>
+                            </template>
+                        </Column>
+                        <Column field="nombre" header="Nombre"></Column>
+                        <Column field="plan.codigo" header="Plan">
+                            <template #body="{ data }">
+                                {{ data.plan?.codigo }}
+                            </template>
+                        </Column>
+                        <Column field="tipo_prueba" header="Tipo">
+                            <template #body="{ data }">
+                                {{ tiposPrueba[data.tipo_prueba] || data.tipo_prueba }}
+                            </template>
+                        </Column>
+                        <Column field="fecha_programada" header="Fecha">
+                            <template #body="{ data }">
+                                {{ formatDate(data.fecha_programada) }}
+                                <span v-if="data.esta_vencida" class="badge badge-danger ml-1">Vencida</span>
+                            </template>
+                        </Column>
+                        <Column header="Estado">
+                            <template #body="{ data }">
+                                <span class="badge" :class="'badge-' + data.estado_color">
+                                    {{ data.estado }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Calificación">
+                            <template #body="{ data }">
+                                <span v-if="data.calificacion">
+                                    <i v-for="i in 5" :key="i" class="fas fa-star"
+                                        :class="i <= data.calificacion ? 'text-warning' : 'text-muted'"></i>
+                                </span>
+                                <span v-else class="text-muted">-</span>
+                            </template>
+                        </Column>
+                        <Column header="Acciones">
+                            <template #body="{ data }">
+                                <Button v-if="data.estado === 'programada'" icon="pi pi-check"
+                                    class="p-button-rounded p-button-success p-button-text mr-1"
+                                    @click="registrar(data)" title="Registrar Resultados" />
+                                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text"
+                                    @click="verDetalle(data)" />
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
             </div>
         </div>
@@ -139,7 +134,8 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="required">Fecha Programada</label>
-                                        <input type="date" v-model="form.fecha_programada" class="form-control" required>
+                                        <input type="date" v-model="form.fecha_programada" class="form-control"
+                                            required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -177,9 +173,11 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useContinuidadStore } from '@/stores/continuidadStore';
-import SkeletonLoader from '@/components/generales/SkeletonLoader.vue';
 import EmptyState from '@/components/generales/EmptyState.vue';
 import axios from 'axios';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 const store = useContinuidadStore();
 
@@ -233,6 +231,10 @@ const formatDate = (date) => {
     return new Date(date).toLocaleDateString('es-PE');
 };
 
+const rowClass = (data) => {
+    return data.esta_vencida ? 'bg-warning-light' : '';
+};
+
 onMounted(async () => {
     try {
         const res = await axios.get('/users/list');
@@ -247,5 +249,22 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-label.required::after { content: ' *'; color: red; }
+label.required::after {
+    content: ' *';
+    color: red;
+}
+
+.bg-warning-light {
+    background-color: #fff3cd !important;
+}
+
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
 </style>

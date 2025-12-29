@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     /**
@@ -11,8 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        // Use raw SQL to avoid Doctrine DBAL enum issues
-        DB::statement('ALTER TABLE riesgos MODIFY riesgo_nivel_rr VARCHAR(255) NULL');
+        Schema::table('revision_compromisos', function (Blueprint $table) {
+            $table->text('recursos_necesarios')->nullable()->after('estado');
+        });
     }
 
     /**
@@ -20,7 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        // Revert to int if needed (though unlikely)
-        DB::statement('ALTER TABLE riesgos MODIFY riesgo_nivel_rr INT NULL');
+        Schema::table('revision_compromisos', function (Blueprint $table) {
+            $table->dropColumn('recursos_necesarios');
+        });
     }
 };

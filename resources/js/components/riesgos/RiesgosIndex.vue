@@ -82,9 +82,7 @@
                     <!-- Tab Listado -->
                     <div class="tab-pane fade show active" id="listado" role="tabpanel" aria-labelledby="listado-tab">
                         <!-- Loading State - Spinner circular rojo -->
-                        <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando riesgos..." />
-                        
-                        <DataTable v-else ref="dt" :value="riesgos" :paginator="true" :rows="10"
+                        <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10" :loading="loading"
                             :rowsPerPageOptions="[5, 10, 20, 50]"
                             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
                             responsiveLayout="scroll">

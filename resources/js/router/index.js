@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import DocumentoIndex from '@/components/documentos/DocumentoIndex.vue';
 import HallazgosIndex from '@/components/hallazgos/HallazgoIndex.vue';
 import RequerimientosIndex from '@/components/requerimientos/RequerimientosIndex.vue';
-import RequerimientosIndexMe from '@/components/requerimientos/RequerimientosIndexMe.vue';
+import MisRequerimientos from '@/components/requerimientos/MisRequerimientos.vue';
 import RequerimientoFormWizard from '@/components/requerimientos/RequerimientoFormWizard.vue';
 import UsuariosIndex from '@/components/administracion/UsuariosIndex.vue';
 import ProcesosIndex from '../components/procesos/ProcesosIndex.vue';
@@ -99,7 +99,7 @@ const routes = [
             {
                 path: 'mis-requerimientos',
                 name: 'requerimientos.mine',
-                component: RequerimientosIndexMe,
+                component: MisRequerimientos,
             },
             {
                 path: 'requerimientos/asignados/:rol',

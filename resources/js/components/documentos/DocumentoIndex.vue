@@ -57,9 +57,9 @@
                             </div>
                             <div class="col-md-4">
                                 <MultiSelect v-model="filters.tipo_documento" :options="tipoDocumentoOptions"
-                                    optionLabel="nombre_tipodocumento" optionValue="id" placeholder="Seleccione Tipo de Documento"
-                                    class="w-100 custom-multiselect" display="chip" :filter="true" 
-                                    panelClass="custom-multiselect-panel" />
+                                    optionLabel="nombre_tipodocumento" optionValue="id"
+                                    placeholder="Seleccione Tipo de Documento" class="w-100 custom-multiselect"
+                                    display="chip" :filter="true" panelClass="custom-multiselect-panel" />
                             </div>
                             <div class="col-md-auto">
                                 <button type="submit" class="btn bg-dark btn-sm">
@@ -74,11 +74,10 @@
 
             <div class="card-body">
                 <!-- Loading State - Spinner circular rojo -->
-                <LoadingState v-if="isLoading" variant="danger" size="lg" text="Cargando documentos..." />
-                
-                <div v-else>
+                <div>
                     <DataTable :value="documentos" selectionMode="single" v-model:selection="selectedDocumento"
-                        dataKey="id" :paginator="true" :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]">
+                        :loading="isLoading" dataKey="id" :paginator="true" :rows="20"
+                        :rowsPerPageOptions="[5, 10, 25, 50]">
 
 
                         <Column field="cod_documento" header="Código Documento" sortable></Column>
@@ -196,7 +195,7 @@ const fetchDocumentos = async () => {
         // Prepare filters for API
         // MultiSelect v-model returns an array of selected values (IDs if optionValue is set)
         const params = { ...filters };
-        
+
         const response = await axios.get(route('api.documentos'), {
             params: params
         });
@@ -251,7 +250,7 @@ const showRelatedDocs = (documentoId) => {
 // Lifecycle Hooks
 onMounted(() => {
     fetchTiposDocumento();
-    
+
     // Check for query parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('buscar_proceso')) {
@@ -287,7 +286,8 @@ onMounted(() => {
 
 ::v-deep(.custom-multiselect .p-multiselect-label) {
     font-size: 13px;
-    padding: 0.375rem 0.75rem; /* Match Bootstrap form-control padding */
+    padding: 0.375rem 0.75rem;
+    /* Match Bootstrap form-control padding */
 }
 
 ::v-deep(.custom-multiselect .p-multiselect-label.p-placeholder) {
@@ -296,7 +296,8 @@ onMounted(() => {
 
 ::v-deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
     font-size: 11px;
-    padding: 0.25rem 0.5rem; /* Reduce padding for more compact list */
+    padding: 0.25rem 0.5rem;
+    /* Reduce padding for more compact list */
 }
 
 ::v-deep(.p-multiselect-panel .p-multiselect-header) {

@@ -22,6 +22,7 @@ class RevisionCompromiso extends Model
         'fecha_cierre',
         'estado',
         'evidencia_path',
+        'recursos_necesarios',
         'observaciones',
         'avance',
     ];
@@ -92,9 +93,11 @@ class RevisionCompromiso extends Model
      */
     public function getDiasRestantesAttribute()
     {
-        if (!$this->fecha_limite) return null;
-        if ($this->estado === 'completado') return null;
-        
+        if (!$this->fecha_limite)
+            return null;
+        if ($this->estado === 'completado')
+            return null;
+
         return Carbon::now()->startOfDay()->diffInDays($this->fecha_limite, false);
     }
 
@@ -151,7 +154,7 @@ class RevisionCompromiso extends Model
             $this->estado = $nuevoEstado;
         }
         if ($nuevoEstado === 'completado') {
-            $this->fecha_cierre = Carbon::now();
+            $this->fecha_cierre = Carbon::now()->toDateString();
         }
 
         $this->save();

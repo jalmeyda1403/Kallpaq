@@ -52,69 +52,67 @@
             </div>
 
             <div class="card-body">
-                <SkeletonLoader v-if="isLoading" type="card" :count="4" />
+                <!-- Empty -->
+                <EmptyState v-if="!isLoading && planes.length === 0" title="No hay planes de continuidad"
+                    description="Crea planes BCP, DRP o de respuesta a incidentes" icon="fas fa-shield-alt"
+                    action-text="Nuevo Plan" @action="showModal = true" />
 
-                <EmptyState 
-                    v-else-if="!isLoading && planes.length === 0"
-                    title="No hay planes de continuidad"
-                    description="Crea planes BCP, DRP o de respuesta a incidentes"
-                    icon="fas fa-shield-alt"
-                    action-text="Nuevo Plan"
-                    @action="showModal = true"
-                />
-
-                <div v-else class="row">
-                    <div v-for="plan in planes" :key="plan.id" class="col-md-6 mb-3">
-                        <div class="card h-100" :class="{ 'border-warning': plan.necesita_revision }">
-                            <div class="card-header d-flex justify-content-between align-items-center"
-                                 :class="'bg-' + plan.estado_color">
-                                <span class="text-white">
-                                    <strong>{{ plan.codigo }}</strong> - {{ tiposPlan[plan.tipo_plan] }}
+                <div v-else>
+                    <DataTable :value="planes" :loading="isLoading" :paginator="true" :rows="10"
+                        responsiveLayout="scroll">
+                        <Column field="codigo" header="Código">
+                            <template #body="{ data }">
+                                <strong>{{ data.codigo }}</strong>
+                            </template>
+                        </Column>
+                        <Column field="tipo_plan" header="Tipo">
+                            <template #body="{ data }">
+                                {{ tiposPlan[data.tipo_plan] }}
+                            </template>
+                        </Column>
+                        <Column field="nombre" header="Nombre"></Column>
+                        <Column field="version" header="Versión">
+                            <template #body="{ data }">
+                                <span class="badge badge-light">{{ data.version }}</span>
+                            </template>
+                        </Column>
+                        <Column field="responsable.name" header="Responsable">
+                            <template #body="{ data }">
+                                {{ data.responsable?.name || '-' }}
+                            </template>
+                        </Column>
+                        <Column field="fecha_aprobacion" header="Aprobado">
+                            <template #body="{ data }">
+                                {{ formatDate(data.fecha_aprobacion) }}
+                            </template>
+                        </Column>
+                        <Column header="Última Prueba">
+                            <template #body="{ data }">
+                                {{ data.ultima_prueba ? formatDate(data.ultima_prueba.fecha_ejecucion) : 'Sin probar' }}
+                            </template>
+                        </Column>
+                        <Column header="Estado">
+                            <template #body="{ data }">
+                                <span class="badge"
+                                    :class="'badge-' + (data.necesita_revision ? 'warning' : 'success')">
+                                    {{ data.necesita_revision ? 'Requiere Revisión' : 'OK' }}
                                 </span>
-                                <span class="badge badge-light">{{ plan.version }}</span>
-                            </div>
-                            <div class="card-body">
-                                <h5 class="card-title">{{ plan.nombre }}</h5>
-                                <p class="card-text text-muted small">{{ plan.objetivo?.substring(0, 150) }}...</p>
-                                
-                                <div class="row text-center mt-3">
-                                    <div class="col-4">
-                                        <i class="fas fa-user text-primary"></i><br>
-                                        <small>{{ plan.responsable?.name || '-' }}</small>
-                                    </div>
-                                    <div class="col-4">
-                                        <i class="fas fa-calendar-check text-success"></i><br>
-                                        <small>{{ formatDate(plan.fecha_aprobacion) }}</small>
-                                    </div>
-                                    <div class="col-4">
-                                        <i class="fas fa-vial text-info"></i><br>
-                                        <small>{{ plan.ultima_prueba ? formatDate(plan.ultima_prueba.fecha_ejecucion) : 'Sin probar' }}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-white">
-                                <button class="btn btn-sm btn-info mr-1" @click="verDetalle(plan)">
-                                    <i class="fas fa-eye"></i> Ver
-                                </button>
-                                <button class="btn btn-sm btn-warning mr-1" @click="editar(plan)">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <span v-if="plan.necesita_revision" class="badge badge-warning float-right">
-                                    <i class="fas fa-exclamation-triangle"></i> Requiere revisión
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                            </template>
+                        </Column>
+                        <Column header="Acciones">
+                            <template #body="{ data }">
+                                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text mr-1"
+                                    @click="verDetalle(data)" />
+                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-text"
+                                    @click="editar(data)" />
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
             </div>
         </div>
 
-        <PlanContinuidadModal 
-            v-if="showModal"
-            :plan="planEditar"
-            @saved="onSaved"
-            @close="cerrarModal"
-        />
+        <PlanContinuidadModal v-if="showModal" :plan="planEditar" @saved="onSaved" @close="cerrarModal" />
     </div>
 </template>
 
@@ -122,9 +120,11 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useContinuidadStore } from '@/stores/continuidadStore';
-import SkeletonLoader from '@/components/generales/SkeletonLoader.vue';
 import EmptyState from '@/components/generales/EmptyState.vue';
 import PlanContinuidadModal from './PlanContinuidadModal.vue';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 const router = useRouter();
 const store = useContinuidadStore();
@@ -173,3 +173,15 @@ onMounted(async () => {
     await buscar();
 });
 </script>
+
+<style scoped>
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
+</style>

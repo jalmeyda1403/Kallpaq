@@ -18,7 +18,8 @@
                         <div v-else>
                             <div class="card border-0 shadow-none mb-0">
                                 <div class="card-body p-2">
-                                    <Chart type="bar" :data="chartData" :options="chartOptions" class="h-25rem" :plugins="[dataLabelsPlugin]" />
+                                    <Chart type="bar" :data="chartData" :options="chartOptions" class="h-25rem"
+                                        :plugins="[dataLabelsPlugin]" />
                                 </div>
                             </div>
                         </div>
@@ -77,8 +78,8 @@ const dataLabelsPlugin = {
         chart.data.datasets.forEach((dataset, i) => {
             const meta = chart.getDatasetMeta(i);
             // Only draw labels for bar datasets (Valor)
-            if (dataset.type === 'bar' || dataset.type === undefined) { 
-                 meta.data.forEach((bar, index) => {
+            if (dataset.type === 'bar' || dataset.type === undefined) {
+                meta.data.forEach((bar, index) => {
                     const value = dataset.data[index];
                     if (value !== null && value !== undefined) {
                         ctx.fillStyle = '#495057';
@@ -196,7 +197,7 @@ const loadData = async () => {
             },
             layout: {
                 padding: {
-                    top: 10,
+                    top: 40,
                     bottom: 0,
                     left: 0,
                     right: 0

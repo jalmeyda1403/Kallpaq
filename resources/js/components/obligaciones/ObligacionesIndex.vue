@@ -57,9 +57,7 @@
 
             <div class="card-body">
                 <!-- Loading State - Spinner circular rojo -->
-                <LoadingState v-if="obligacionStore.loading" variant="danger" size="lg" text="Cargando obligaciones..." />
-                
-                <DataTable v-else ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
+                <DataTable ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['proceso.proceso_nombre', 'documento_tecnico_normativo', 'obligacion_principal', 'consecuencia_incumplimiento', 'estado_obligacion']"
                     :loading="obligacionStore.loading">

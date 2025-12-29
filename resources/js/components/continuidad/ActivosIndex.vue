@@ -35,8 +35,8 @@
                 <!-- Filtros -->
                 <div class="row mt-3">
                     <div class="col-md-3">
-                        <input type="text" v-model="filtros.buscar" class="form-control"
-                            placeholder="Buscar..." @input="buscarDebounced">
+                        <input type="text" v-model="filtros.buscar" class="form-control" placeholder="Buscar..."
+                            @input="buscarDebounced">
                     </div>
                     <div class="col-md-3">
                         <select v-model="filtros.tipo" class="form-control" @change="buscar">
@@ -50,82 +50,77 @@
             </div>
 
             <div class="card-body">
-                <!-- Loading -->
-                <SkeletonLoader v-if="isLoading" type="table" :rows="5" :columns="7" />
-
                 <!-- Empty -->
-                <EmptyState 
-                    v-else-if="!isLoading && activos.length === 0"
-                    title="No hay activos críticos"
-                    description="Comienza identificando los activos críticos de tu organización"
-                    icon="fas fa-cubes"
-                    action-text="Nuevo Activo"
-                    @action="showModal = true"
-                />
+                <EmptyState v-if="!isLoading && activos.length === 0" title="No hay activos críticos"
+                    description="Comienza identificando los activos críticos de tu organización" icon="fas fa-cubes"
+                    action-text="Nuevo Activo" @action="showModal = true" />
 
                 <!-- Tabla -->
-                <div v-else class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Nombre</th>
-                                <th>Tipo</th>
-                                <th>Proceso</th>
-                                <th>Criticidad</th>
-                                <th>RTO</th>
-                                <th>Responsable</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="activo in activos" :key="activo.id">
-                                <td><strong>{{ activo.codigo }}</strong></td>
-                                <td>{{ activo.nombre }}</td>
-                                <td>
-                                    <span class="badge badge-secondary">
-                                        {{ tiposActivo[activo.tipo] || activo.tipo }}
-                                    </span>
-                                </td>
-                                <td>{{ activo.proceso?.proceso_nombre || '-' }}</td>
-                                <td>
-                                    <span class="badge" :class="'badge-' + getCriticidadColor(activo.nivel_criticidad)">
-                                        {{ activo.nivel_criticidad }}
-                                    </span>
-                                </td>
-                                <td>{{ formatRTO(activo.rto) }}</td>
-                                <td>{{ activo.responsable?.name || '-' }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-info mr-1" @click="editar(activo)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" @click="eliminar(activo)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div v-else>
+                    <DataTable :value="activos" :loading="isLoading" :paginator="true" :rows="10"
+                        responsiveLayout="scroll">
+                        <Column field="codigo" header="Código">
+                            <template #body="slotProps">
+                                <strong>{{ slotProps.data.codigo }}</strong>
+                            </template>
+                        </Column>
+                        <Column field="nombre" header="Nombre"></Column>
+                        <Column header="Tipo">
+                            <template #body="slotProps">
+                                <span class="badge badge-secondary">
+                                    {{ tiposActivo[slotProps.data.tipo] || slotProps.data.tipo }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Proceso">
+                            <template #body="slotProps">
+                                {{ slotProps.data.proceso?.proceso_nombre || '-' }}
+                            </template>
+                        </Column>
+                        <Column header="Criticidad">
+                            <template #body="slotProps">
+                                <span class="badge"
+                                    :class="'badge-' + getCriticidadColor(slotProps.data.nivel_criticidad)">
+                                    {{ slotProps.data.nivel_criticidad }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="RTO">
+                            <template #body="slotProps">
+                                {{ formatRTO(slotProps.data.rto) }}
+                            </template>
+                        </Column>
+                        <Column header="Responsable">
+                            <template #body="slotProps">
+                                {{ slotProps.data.responsable?.name || '-' }}
+                            </template>
+                        </Column>
+                        <Column header="Acciones">
+                            <template #body="slotProps">
+                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-info p-button-text mr-1"
+                                    @click="editar(slotProps.data)" />
+                                <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-text"
+                                    @click="eliminar(slotProps.data)" />
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
             </div>
         </div>
 
         <!-- Modal -->
-        <ActivoCriticoModal 
-            v-if="showModal"
-            :activo="activoEditar"
-            @saved="onSaved"
-            @close="cerrarModal"
-        />
+        <ActivoCriticoModal v-if="showModal" :activo="activoEditar" @saved="onSaved" @close="cerrarModal" />
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useContinuidadStore } from '@/stores/continuidadStore';
-import SkeletonLoader from '@/components/generales/SkeletonLoader.vue';
 import EmptyState from '@/components/generales/EmptyState.vue';
 import ActivoCriticoModal from './ActivoCriticoModal.vue';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 const store = useContinuidadStore();
 
@@ -194,5 +189,15 @@ onMounted(async () => {
 .badge-orange {
     background-color: #fd7e14;
     color: white;
+}
+
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
 }
 </style>

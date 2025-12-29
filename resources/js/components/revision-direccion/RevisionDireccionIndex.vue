@@ -62,91 +62,70 @@
             </div>
 
             <div class="card-body">
-                <!-- Loading Skeleton -->
-                <SkeletonLoader v-if="isLoading" type="table" :rows="5" :columns="6" />
-
                 <!-- Empty State -->
-                <EmptyState 
-                    v-else-if="!isLoading && revisiones.length === 0"
-                    title="No hay revisiones registradas"
-                    description="Comienza programando una nueva revisión por la dirección"
-                    icon="fas fa-calendar-plus"
-                    action-text="Nueva Revisión"
-                    @action="openCreateModal"
-                />
+                <EmptyState v-if="!isLoading && revisiones.length === 0" title="No hay revisiones registradas"
+                    description="Comienza programando una nueva revisión por la dirección" icon="fas fa-calendar-plus"
+                    action-text="Nueva Revisión" @action="openCreateModal" />
 
                 <!-- Tabla de Revisiones -->
-                <div v-else class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Título</th>
-                                <th>Fecha Programada</th>
-                                <th>Periodo</th>
-                                <th>Estado</th>
-                                <th>Compromisos</th>
-                                <th>Avance</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="revision in revisiones" :key="revision.id">
-                                <td>
-                                    <strong>{{ revision.codigo }}</strong>
-                                </td>
-                                <td>{{ revision.titulo }}</td>
-                                <td>{{ formatDate(revision.fecha_programada) }}</td>
-                                <td>{{ revision.periodo }}</td>
-                                <td>
-                                    <span class="badge" :class="'badge-' + revision.estado_color">
-                                        {{ getEstadoLabel(revision.estado) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge badge-secondary">
-                                        {{ revision.compromisos?.length || 0 }}
-                                    </span>
-                                    <span v-if="revision.compromisos_pendientes_count > 0" 
-                                          class="badge badge-warning ml-1">
-                                        {{ revision.compromisos_pendientes_count }} pendientes
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="progress progress-sm" style="height: 10px;">
-                                        <div class="progress-bar bg-info" 
-                                             :style="{ width: revision.avance_general + '%' }">
-                                        </div>
+                <div v-else>
+                    <DataTable :value="revisiones" :loading="isLoading" :paginator="true" :rows="10"
+                        responsiveLayout="scroll">
+                        <Column field="codigo" header="Código">
+                            <template #body="{ data }">
+                                <strong>{{ data.codigo }}</strong>
+                            </template>
+                        </Column>
+                        <Column field="titulo" header="Título"></Column>
+                        <Column field="fecha_programada" header="Fecha Programada">
+                            <template #body="{ data }">
+                                {{ formatDate(data.fecha_programada) }}
+                            </template>
+                        </Column>
+                        <Column field="periodo" header="Periodo"></Column>
+                        <Column header="Estado">
+                            <template #body="{ data }">
+                                <span class="badge" :class="'badge-' + data.estado_color">
+                                    {{ getEstadoLabel(data.estado) }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Compromisos" class="text-center">
+                            <template #body="{ data }">
+                                <span class="badge badge-secondary">
+                                    {{ data.compromisos?.length || 0 }}
+                                </span>
+                                <span v-if="data.compromisos_pendientes_count > 0" class="badge badge-warning ml-1">
+                                    {{ data.compromisos_pendientes_count }} pendientes
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Avance">
+                            <template #body="{ data }">
+                                <div class="progress progress-sm" style="height: 10px;">
+                                    <div class="progress-bar bg-info" :style="{ width: data.avance_general + '%' }">
                                     </div>
-                                    <small class="text-muted">{{ revision.avance_general }}%</small>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info mr-1" 
-                                            @click="verDetalle(revision)" title="Ver detalle">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-warning mr-1" 
-                                            @click="editarRevision(revision)" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" 
-                                            @click="confirmarEliminar(revision)" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                                <small class="text-muted">{{ data.avance_general }}%</small>
+                            </template>
+                        </Column>
+                        <Column header="Acciones">
+                            <template #body="{ data }">
+                                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text mr-1"
+                                    @click="verDetalle(data)" title="Ver detalle" />
+                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-text mr-1"
+                                    @click="editarRevision(data)" title="Editar" />
+                                <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-text"
+                                    @click="confirmarEliminar(data)" title="Eliminar" />
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
             </div>
         </div>
 
         <!-- Modal de Creación/Edición -->
-        <RevisionDireccionModal 
-            v-if="modalVisible"
-            @saved="onRevisionSaved"
-            @close="closeModal"
-        />
+        <RevisionDireccionModal v-if="modalVisible" @saved="onRevisionSaved" @close="closeModal" />
     </div>
 </template>
 
@@ -154,9 +133,11 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRevisionDireccionStore } from '@/stores/revisionDireccionStore';
-import SkeletonLoader from '@/components/generales/SkeletonLoader.vue';
 import EmptyState from '@/components/generales/EmptyState.vue';
 import RevisionDireccionModal from './RevisionDireccionModal.vue';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
 const router = useRouter();
 const store = useRevisionDireccionStore();
@@ -245,7 +226,18 @@ onMounted(() => {
 .progress-sm {
     height: 8px;
 }
+
 .badge {
     font-size: 0.85em;
+}
+
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
 }
 </style>

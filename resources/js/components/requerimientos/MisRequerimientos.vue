@@ -55,12 +55,13 @@
 
                     <div class="card-body">
                         <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
-                            :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
+                            :loading="loading" :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                             :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']">
                             <template #header>
                                 <div class="d-flex align-items-center">
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
-                                        severity="secondary" @click="exportCSV($event)"  class="btn btn-secondary ml-auto" >
+                                        severity="secondary" @click="exportCSV($event)"
+                                        class="btn btn-secondary ml-auto">
                                     </Button>
                                 </div>
                             </template>
@@ -201,6 +202,7 @@ const statuses = ref([]);
 const complejidadOptions = ref(['Baja', 'Media', 'Alta', 'Muy Alta']);
 const dt = ref(null); // Reference to the DataTable component
 const selectedRequerimientoId = ref(null); // Declare selectedRequerimientoId
+const loading = ref(false);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -221,6 +223,7 @@ const serverFilters = ref({
 const isMyRequerimientosView = computed(() => true); // Always true for this component
 
 const fetchRequerimientos = async () => {
+    loading.value = true;
     console.log('fetchRequerimientos called');
     console.log('serverFilters.value:', serverFilters.value);
     try {
@@ -233,6 +236,8 @@ const fetchRequerimientos = async () => {
         console.log('Fetched requerimientos:', requerimientos.value);
     } catch (error) {
         console.error('Error fetching requerimientos:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -280,3 +285,15 @@ onMounted(() => {
     fetchRequerimientos();
 });
 </script>
+
+<style scoped>
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
+.p-datatable-loading-icon {
+    color: red !important;
+    font-size: 2rem !important;
+}
+</style>
