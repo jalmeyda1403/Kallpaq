@@ -116,12 +116,6 @@ export default {
       backdrop: 'static',
       keyboard: false
     });
-    window.addEventListener('abrirProcesoModal', () => {
-      this.openNewProcesoModal();
-    });
-    window.addEventListener('editarProceso', (event) => {
-      this.openEditProcesoModal(event.detail.id);
-    });
     // Lógica para restaurar el scroll del padre al cerrar un modal hijo
     const setupChildModalListener = (modalRef) => {
       const modalEl = this.$refs[modalRef]?.$refs.modalEl;
@@ -133,6 +127,17 @@ export default {
     };
     // setupChildModalListener('modalPei'); // Comentado si no se usa o verificar si existe
     // setupChildModalListener('modalProceso');
+
+    // Store references to handlers for removal
+    this.openNewHandler = () => this.openNewProcesoModal();
+    this.openEditHandler = (event) => this.openEditProcesoModal(event.detail.id);
+
+    window.addEventListener('abrirProcesoModal', this.openNewHandler);
+    window.addEventListener('editarProceso', this.openEditHandler);
+  },
+  beforeUnmount() {
+    window.removeEventListener('abrirProcesoModal', this.openNewHandler);
+    window.removeEventListener('editarProceso', this.openEditHandler);
   },
   methods: {
     setActiveComponent(componentName) {

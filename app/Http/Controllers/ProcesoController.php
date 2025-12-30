@@ -161,7 +161,7 @@ class ProcesoController extends Controller
 
     public function show($proceso_id)
     {
-        $proceso = Proceso::with('planificacion_pei')->findOrFail($proceso_id);
+        $proceso = Proceso::with(['planificacion_pei', 'procesoPadre'])->findOrFail($proceso_id);
 
 
         return response()->json($proceso);

@@ -125,7 +125,8 @@
         <div class="row mt-3">
           <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label for="proceso_producto" class="form-label text-danger font-weight-bold p-0 m-0 small">Producto y/o Servicio</label>
+              <label for="proceso_producto" class="form-label text-danger font-weight-bold p-0 m-0 small">Producto y/o
+                Servicio</label>
               <small class="text-muted">{{ form.proceso_producto?.length || 0 }}/500</small>
             </div>
 
@@ -137,7 +138,7 @@
             <small v-if="errors.proceso_producto" class="text-danger">{{ errors.proceso_producto }}</small>
           </div>
         </div>
-        
+
         <div class="row mt-3">
           <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -158,7 +159,8 @@
         <div class="row mt-3">
           <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label for="planificacion_pei_nombre" class="form-label text-danger font-weight-bold p-0 m-0 small">Objetivo
+              <label for="planificacion_pei_nombre"
+                class="form-label text-danger font-weight-bold p-0 m-0 small">Objetivo
                 Estratégico</label>
             </div>
             <input type="hidden" v-model="form.planificacion_pei_id" />
@@ -325,7 +327,7 @@ export default {
         this.form.proceso_producto = data.proceso_producto;
         this.form.proceso_nivel = data.proceso_nivel; // Asigna el nivel
         this.form.cod_proceso_padre = data.cod_proceso_padre; // Asigna el id del padre
-        this.form.proceso_nombre_padre = data.proceso_nombre_padre; // Asigna el nombre del padre
+        this.form.proceso_nombre_padre = data.proceso_padre ? data.proceso_padre.proceso_nombre : ''; // Asigna el nombre del padre
         this.form.planificacion_pei_id = data.planificacion_pei_id;
         this.form.planificacion_pei_nombre = data.planificacion_pei?.planificacion_pei_nombre;
       } catch (error) {
@@ -413,6 +415,4 @@ export default {
 }
 
 /* Estilos de los campos de formulario */
-
-
 </style>
