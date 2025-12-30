@@ -24,12 +24,8 @@
                     <div class="row no-gutters">
                         <div class="col-lg-8 p-4 d-flex flex-column justify-content-center">
                             <div class="d-flex align-items-center mb-3">
-                                <div class="badge-status shadow-sm mr-3"
-                                    :class="'bg-' + getEstadoColor(revision.estado)">
-                                    <i class="fas fa-calendar-check text-white"></i>
-                                </div>
                                 <div>
-                                    <h2 class="h3 font-weight-bold mb-0 text-dark">{{ revision.titulo }}</h2>
+                                    <h3 class="h3 font-weight-bold mb-0 text-dark">{{ revision.titulo }}</h3>
                                     <div class="d-flex align-items-center mt-1">
                                         <span class="text-muted mr-3 small"><i class="fas fa-fingerprint mr-1"></i> {{
                                             revision.codigo }}</span>
@@ -687,12 +683,24 @@ const formatDate = (date) => {
 };
 
 const getEstadoColor = (estado) => {
-    const colors = { programada: 'info', en_preparacion: 'warning', realizada: 'success', cancelada: 'secondary' };
+    const colors = {
+        programada: 'info',
+        aprobada: 'info',
+        en_preparacion: 'info',
+        realizada: 'success',
+        cancelada: 'secondary'
+    };
     return colors[estado] || 'primary';
 };
 
 const getEstadoLabel = (estado) => {
-    const labels = { programada: 'Programada', en_preparacion: 'En Preparación', realizada: 'Realizada', cancelada: 'Cancelada' };
+    const labels = {
+        programada: 'Programada',
+        aprobada: 'Aprobada',
+        en_preparacion: 'En Preparación',
+        realizada: 'Realizada',
+        cancelada: 'Cancelada'
+    };
     return labels[estado] || estado;
 };
 
@@ -724,7 +732,17 @@ const getSalidaIcon = (tipo) => {
 };
 
 const getEntradaEstadoClass = (e) => ({ 'badge-warning-soft': e === 'pendiente', 'badge-info-soft': e === 'revisado', 'badge-success-soft': e === 'aprobado' });
-const getCompromisoEstadoClass = (e) => ({ 'badge-warning': e === 'pendiente', 'badge-info': e === 'en_proceso', 'badge-success': e === 'completado', 'badge-danger': e === 'vencido' });
+const getCompromisoEstadoClass = (e) => {
+    const classes = {
+        'programada': 'badge-info',
+        'en_proceso': 'badge-info',
+        'pendiente': 'badge-warning',
+        'completado': 'badge-success',
+        'vencido': 'badge-danger',
+        'cancelado': 'badge-secondary'
+    };
+    return classes[e] || 'badge-secondary';
+};
 const getTimerBadgeClass = (d) => d <= 3 ? 'timer-danger' : d <= 7 ? 'timer-warning' : 'timer-normal';
 
 onMounted(cargarRevision);

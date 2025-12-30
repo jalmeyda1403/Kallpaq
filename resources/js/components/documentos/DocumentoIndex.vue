@@ -280,38 +280,38 @@ onMounted(() => {
 
 <style scoped>
 /* Estilos para el MultiSelect de PrimeVue */
-::v-deep(.custom-multiselect) {
+:deep(.custom-multiselect) {
     font-size: 13px;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-label) {
+:deep(.custom-multiselect .p-multiselect-label) {
     font-size: 13px;
     padding: 0.375rem 0.75rem;
     /* Match Bootstrap form-control padding */
 }
 
-::v-deep(.custom-multiselect .p-multiselect-label.p-placeholder) {
+:deep(.custom-multiselect .p-multiselect-label.p-placeholder) {
     font-size: 13px;
 }
 
-::v-deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
+:deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
     font-size: 11px;
     padding: 0.25rem 0.5rem;
     /* Reduce padding for more compact list */
 }
 
-::v-deep(.p-multiselect-panel .p-multiselect-header) {
+:deep(.p-multiselect-panel .p-multiselect-header) {
     font-size: 11px;
     padding: 0.25rem 0.5rem;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-token) {
+:deep(.custom-multiselect .p-multiselect-token) {
     font-size: 12px;
     background-color: #dc3545;
     color: white;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
+:deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
     color: white;
 }
 
@@ -319,7 +319,7 @@ onMounted(() => {
 
 
 /* Improve row spacing in PrimeVue DataTable */
-::v-deep(.p-datatable .p-datatable-tbody > tr > td) {
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
     padding: 0.75rem 0.5rem !important;
     /* Adjust as needed, e.g., 0.75rem for more space */
 }

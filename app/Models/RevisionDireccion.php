@@ -132,8 +132,7 @@ class RevisionDireccion extends Model
     public function getEstadoColorAttribute()
     {
         return match ($this->estado) {
-            'programada' => $this->esta_vencida ? 'danger' : 'info',
-            'en_preparacion' => 'warning',
+            'programada', 'aprobada', 'en_preparacion' => 'info',
             'realizada' => 'success',
             'cancelada' => 'secondary',
             default => 'primary',

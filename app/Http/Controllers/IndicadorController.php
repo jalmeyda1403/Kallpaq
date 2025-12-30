@@ -132,7 +132,8 @@ class IndicadorController extends Controller
                         ->where('is_periodo', $request->is_periodo);
                 })
             ],
-            'is_evidencias.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240'
+            'is_evidencias.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
+            'is_comentario' => 'nullable|string'
         ], [
             'is_numero_periodo.unique' => 'Ya existe un avance registrado para este N° de Periodo en el año seleccionado.'
         ]);
@@ -201,7 +202,8 @@ class IndicadorController extends Controller
                         ->where('is_periodo', $request->is_periodo);
                 })
             ],
-            'is_evidencias.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240'
+            'is_evidencias.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
+            'is_comentario' => 'nullable|string'
         ], [
             'is_numero_periodo.unique' => 'Ya existe un avance registrado para este N° de Periodo en el año seleccionado.'
         ]);

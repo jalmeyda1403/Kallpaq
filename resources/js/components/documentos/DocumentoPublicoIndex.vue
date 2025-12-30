@@ -31,12 +31,10 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <MultiSelect v-model="filters.tipo_documento" :options="tipoDocumentoOptions" 
-                                    optionLabel="nombre_tipodocumento" optionValue="id" 
-                                    placeholder="Seleccione Tipo de Documento..." 
-                                    display="chip" 
-                                    class="w-100 custom-multiselect"
-                                    :maxSelectedLabels="3"
+                                <MultiSelect v-model="filters.tipo_documento" :options="tipoDocumentoOptions"
+                                    optionLabel="nombre_tipodocumento" optionValue="id"
+                                    placeholder="Seleccione Tipo de Documento..." display="chip"
+                                    class="w-100 custom-multiselect" :maxSelectedLabels="3"
                                     panelClass="custom-multiselect-panel" />
                             </div>
                             <div class="col-md-auto">
@@ -58,11 +56,13 @@
                 </div>
                 <div v-else>
                     <!-- Manual List/Grid View -->
-                    <div class="row" :class="{ 'row-cols-1': layout === 'list', 'row-cols-md-2 row-cols-xl-3 g-4': layout === 'grid' }">
+                    <div class="row"
+                        :class="{ 'row-cols-1': layout === 'list', 'row-cols-md-2 row-cols-xl-3 g-4': layout === 'grid' }">
                         <div v-for="(doc, index) in documentos" :key="doc.id" class="col">
-                            
+
                             <!-- List View Item -->
-                            <div v-if="layout === 'list'" class="document-list-item" :class="{ 'border-bottom-divider': index < documentos.length - 1 }">
+                            <div v-if="layout === 'list'" class="document-list-item"
+                                :class="{ 'border-bottom-divider': index < documentos.length - 1 }">
                                 <div class="p-3 d-flex flex-column">
                                     <div class="d-flex align-items-center justify-content-between mb-1">
                                         <div class="d-flex align-items-center flex-grow-1 me-3">
@@ -71,13 +71,18 @@
                                                     {{ doc.nombre_documento }}
                                                 </h6>
                                                 <small class="badge-container mt-1">
-                                                    <span class="badge badge-pill badge-danger text-white">{{ doc.tipo_documento?.nombre_tipodocumento || 'N/A' }}</span>
+                                                    <span class="badge badge-pill badge-danger text-white">{{
+                                                        doc.tipo_documento?.nombre_tipodocumento || 'N/A' }}</span>
                                                 </small>
                                             </div>
                                         </div>
                                         <div class="d-flex justify-content-end flex-shrink-0">
-                                            <Button v-if="getPdfPath(doc)" icon="pi pi-file-pdf" class="p-button-rounded p-button-danger p-button-text btn-icon" @click="openPdf(doc)" v-tooltip.top="'Ver PDF'" />
-                                            <Button icon="pi pi-sitemap" class="p-button-rounded p-button-secondary p-button-text btn-icon" @click="showRelated(doc)" v-tooltip.top="'Relacionados'" />
+                                            <Button v-if="getPdfPath(doc)" icon="pi pi-file-pdf"
+                                                class="p-button-rounded p-button-danger p-button-text btn-icon"
+                                                @click="openPdf(doc)" v-tooltip.top="'Ver PDF'" />
+                                            <Button icon="pi pi-sitemap"
+                                                class="p-button-rounded p-button-secondary p-button-text btn-icon"
+                                                @click="showRelated(doc)" v-tooltip.top="'Relacionados'" />
                                         </div>
                                     </div>
 
@@ -87,9 +92,11 @@
                                             <span class="mx-1">|</span>
                                             v{{ String(doc.ultima_version?.version || 0).padStart(2, '0') }}
                                             <span class="mx-1">|</span>
-                                            <i class="fas fa-layer-group me-1"></i> Área: {{ doc.area_compliance?.area_compliance_nombre || 'N/A' }}
+                                            <i class="fas fa-layer-group me-1"></i> Área: {{
+                                                doc.area_compliance?.area_compliance_nombre || 'N/A' }}
                                             <span class="mx-1">|</span>
-                                            <i class="fas fa-clock me-1"></i> Vigencia: {{ formatDate(doc.fecha_vigencia) }}
+                                            <i class="fas fa-clock me-1"></i> Vigencia: {{
+                                            formatDate(doc.fecha_vigencia) }}
                                         </div>
                                     </div>
 
@@ -104,7 +111,8 @@
                                 <div class="card-body d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="card-title mb-0 me-2">{{ doc.nombre_documento }}</h6>
-                                        <span class="badge bg-danger text-white flex-shrink-0">{{ doc.tipo_documento?.nombre_tipodocumento || 'N/A' }}</span>
+                                        <span class="badge bg-danger text-white flex-shrink-0">{{
+                                            doc.tipo_documento?.nombre_tipodocumento || 'N/A' }}</span>
                                     </div>
 
                                     <div class="text-muted small mb-2">
@@ -119,7 +127,8 @@
                                     </p>
 
                                     <div class="mt-auto">
-                                        <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+                                        <div
+                                            class="d-flex justify-content-between align-items-center small text-muted mb-3">
                                             <div class="d-flex align-items-center" title="Área temática">
                                                 <i class="fas fa-layer-group me-1 text-secondary"></i>
                                                 <span>{{ doc.area_compliance?.area_compliance_nombre || 'N/A' }}</span>
@@ -131,8 +140,12 @@
                                         </div>
 
                                         <div class="d-flex justify-content-end">
-                                            <Button v-if="getPdfPath(doc)" label="PDF" icon="pi pi-file-pdf" class="p-button-outlined p-button-danger p-button-sm me-2" @click="openPdf(doc)" />
-                                            <Button label="Relacionados" icon="pi pi-sitemap" class="p-button-outlined p-button-secondary p-button-sm" @click="showRelated(doc)" />
+                                            <Button v-if="getPdfPath(doc)" label="PDF" icon="pi pi-file-pdf"
+                                                class="p-button-outlined p-button-danger p-button-sm me-2"
+                                                @click="openPdf(doc)" />
+                                            <Button label="Relacionados" icon="pi pi-sitemap"
+                                                class="p-button-outlined p-button-secondary p-button-sm"
+                                                @click="showRelated(doc)" />
                                         </div>
                                     </div>
                                 </div>
@@ -239,7 +252,7 @@ const openPdf = (documento) => {
     const path = getPdfPath(documento);
     if (path) {
         const url = `/documento/mostrar/${encodeURIComponent(path)}`;
-         document.dispatchEvent(new CustomEvent('open-pdf-modal', { detail: url }));
+        document.dispatchEvent(new CustomEvent('open-pdf-modal', { detail: url }));
     }
 };
 
@@ -248,7 +261,7 @@ const showRelated = (documento) => {
 };
 
 const getSeverity = (documento) => {
-    return 'success'; 
+    return 'success';
 };
 
 const formatDate = (dateString) => {
@@ -258,12 +271,12 @@ const formatDate = (dateString) => {
 
 onMounted(() => {
     fetchTiposDocumento();
-    
+
     // Check URL params for initial filters using Vue Router
     if (route.query.buscar_proceso) {
         filters.buscar_proceso = route.query.buscar_proceso;
     }
-    
+
     fetchDocumentos();
 });
 </script>
@@ -330,48 +343,53 @@ onMounted(() => {
 
 /* Custom styles for PrimeVue MultiSelect to match Bootstrap inputs */
 /* Custom styles for PrimeVue MultiSelect to match Bootstrap inputs */
-::v-deep(.custom-multiselect) {
-    border: 1px solid #ced4da; /* Bootstrap border color */
-    border-radius: 0.25rem; /* Bootstrap border radius */
+:deep(.custom-multiselect) {
+    border: 1px solid #ced4da;
+    /* Bootstrap border color */
+    border-radius: 0.25rem;
+    /* Bootstrap border radius */
     padding: 0;
     font-size: 13px;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-label) {
-    padding: 0.375rem 0.75rem; /* Bootstrap padding */
+:deep(.custom-multiselect .p-multiselect-label) {
+    padding: 0.375rem 0.75rem;
+    /* Bootstrap padding */
     font-size: 13px;
-    line-height: 1.5; /* Bootstrap line height */
+    line-height: 1.5;
+    /* Bootstrap line height */
 }
 
-::v-deep(.custom-multiselect .p-multiselect-label.p-placeholder) {
+:deep(.custom-multiselect .p-multiselect-label.p-placeholder) {
     font-size: 13px;
 }
 
-::v-deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
+:deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
     font-size: 11px;
-    padding: 0.25rem 0.5rem; /* Reduce padding for more compact list */
+    padding: 0.25rem 0.5rem;
+    /* Reduce padding for more compact list */
 }
 
-::v-deep(.p-multiselect-panel .p-multiselect-header) {
+:deep(.p-multiselect-panel .p-multiselect-header) {
     font-size: 11px;
     padding: 0.25rem 0.5rem;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-token) {
+:deep(.custom-multiselect .p-multiselect-token) {
     font-size: 12px;
     background-color: #dc3545;
     color: white;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
+:deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
     color: white;
 }
 
-::v-deep(.custom-multiselect:not(.p-disabled):hover) {
+:deep(.custom-multiselect:not(.p-disabled):hover) {
     border-color: #b3b7bb;
 }
 
-::v-deep(.custom-multiselect:not(.p-disabled).p-focus) {
+:deep(.custom-multiselect:not(.p-disabled).p-focus) {
     border-color: #80bdff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
@@ -386,6 +404,7 @@ onMounted(() => {
 }
 
 .border-bottom-divider {
-    border-bottom: 1px solid #d6d6d6; /* Faint divider color */
+    border-bottom: 1px solid #d6d6d6;
+    /* Faint divider color */
 }
 </style>

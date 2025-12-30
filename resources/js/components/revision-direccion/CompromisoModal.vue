@@ -116,6 +116,7 @@
                                             </div>
                                             <select v-model="form.estado"
                                                 class="form-control border-0 no-focus-outline">
+                                                <option value="programada">Programada</option>
                                                 <option value="pendiente">Pendiente</option>
                                                 <option value="en_proceso">En Proceso</option>
                                                 <option value="completado">Completado</option>

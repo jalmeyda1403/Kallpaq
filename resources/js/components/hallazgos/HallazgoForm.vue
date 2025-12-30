@@ -98,9 +98,8 @@
                   <div class="form-group small">
                     <label for="hallazgo_sig" class="form-label font-weight-bold">Sistemas de Gestión</label>
                     <MultiSelect v-model="hallazgoStore.hallazgoForm.hallazgo_sig" :options="sigOptions"
-                      optionLabel="label" optionValue="value" placeholder="Seleccione los sistemas..."
-                      display="chip" class="w-100 custom-multiselect"
-                      :class="{ 'p-invalid': hallazgoStore.errors.hallazgo_sig }" />
+                      optionLabel="label" optionValue="value" placeholder="Seleccione los sistemas..." display="chip"
+                      class="w-100 custom-multiselect" :class="{ 'p-invalid': hallazgoStore.errors.hallazgo_sig }" />
                     <div class="invalid-feedback d-block" v-if="hallazgoStore.errors.hallazgo_sig">
                       {{ hallazgoStore.errors.hallazgo_sig[0] }}
                     </div>
@@ -121,7 +120,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-1">
                       <label for="hallazgo_resumen">Resumen </label>
                       <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_resumen?.length || 0
-                      }}/255</small>
+                        }}/255</small>
                     </div>
 
                     <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_resumen" class="form-control"
@@ -141,7 +140,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-1">
                       <label for="hallazgo_descripcion">Descripción (Condición)</label>
                       <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_descripcion?.length || 0
-                      }}/1000</small>
+                        }}/1000</small>
                     </div>
 
                     <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_descripcion" class="form-control"
@@ -161,7 +160,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-1">
                       <label for="hallazgo_criterio">Referencia (Criterio)</label>
                       <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_criterio?.length || 0
-                      }}/500</small>
+                        }}/500</small>
                     </div>
 
                     <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_criterio" class="form-control"
@@ -178,7 +177,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-1">
                       <label for="evidencia">Evidencias</label>
                       <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_evidencia?.length || 0
-                      }}/500</small>
+                        }}/500</small>
                     </div>
                     <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_evidencia" class="form-control"
                       id="hallazgo_evidencia" rows="6"
@@ -216,22 +215,22 @@ const hallazgoStore = useHallazgoStore();
 const localLoading = ref(false);
 
 const hallazgoOrigenOptions = [
-    { value: 'RD', text: 'RD - Revisión por la Dirección' },
-    { value: 'IN', text: 'IN - Resultados de Auditorías Internas' },
-    { value: 'EX', text: 'EX - Resultados de Auditorías Externas' },
-    { value: 'SN', text: 'SN - Resultado de la detección de Salidas No Conformes' },
-    { value: 'GI', text: 'GI - Resultado del análisis de la Gestión de indicadores / objetivos de la calidad' },
-    { value: 'GR', text: 'GR - Resultado de la gestión de riesgos' },
-    { value: 'SC', text: 'SC - Satisfacción, reclamos y quejas de los clientes' },
-    { value: 'OT', text: 'OT - Otros' },
+  { value: 'RD', text: 'RD - Revisión por la Dirección' },
+  { value: 'IN', text: 'IN - Resultados de Auditorías Internas' },
+  { value: 'EX', text: 'EX - Resultados de Auditorías Externas' },
+  { value: 'SN', text: 'SN - Resultado de la detección de Salidas No Conformes' },
+  { value: 'GI', text: 'GI - Resultado del análisis de la Gestión de indicadores / objetivos de la calidad' },
+  { value: 'GR', text: 'GR - Resultado de la gestión de riesgos' },
+  { value: 'SC', text: 'SC - Satisfacción, reclamos y quejas de los clientes' },
+  { value: 'OT', text: 'OT - Otros' },
 ];
 
 const sigOptions = [
-    { value: 'sgc', label: 'ISO 9001 (Calidad)' },
-    { value: 'sgas', label: 'ISO 37001 (Antisoborno)' },
-    { value: 'sgcm', label: 'ISO 37301 (Compliance)' },
-    { value: 'sgsi', label: 'ISO 27001 (Seguridad Información)' },
-    { value: 'sgco', label: 'ISO 21001 (Calidad Educativa)' },
+  { value: 'sgc', label: 'ISO 9001 (Calidad)' },
+  { value: 'sgas', label: 'ISO 37001 (Antisoborno)' },
+  { value: 'sgcm', label: 'ISO 37301 (Compliance)' },
+  { value: 'sgsi', label: 'ISO 27001 (Seguridad Información)' },
+  { value: 'sgco', label: 'ISO 21001 (Calidad Educativa)' },
 ];
 
 // Hook de ciclo de vida para cargar datos globales cuando el componente se monta
@@ -239,7 +238,7 @@ onMounted(() => {
   console.log("HallazgoForm Mounted.");
   // Asegurar que hallazgo_sig sea un array
   if (!Array.isArray(hallazgoStore.hallazgoForm.hallazgo_sig)) {
-      hallazgoStore.hallazgoForm.hallazgo_sig = [];
+    hallazgoStore.hallazgoForm.hallazgo_sig = [];
   }
 });
 
@@ -292,24 +291,24 @@ onMounted(() => {
 }
 
 /* Estilos para el MultiSelect de PrimeVue */
-::v-deep(.custom-multiselect) {
-    font-size: 13px;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
+:deep(.custom-multiselect) {
+  font-size: 13px;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-label) {
-    font-size: 13px;
-    padding: 0.375rem 0.75rem;
+:deep(.custom-multiselect .p-multiselect-label) {
+  font-size: 13px;
+  padding: 0.375rem 0.75rem;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-token) {
-    font-size: 12px;
-    background-color: #dc3545;
-    color: white;
+:deep(.custom-multiselect .p-multiselect-token) {
+  font-size: 12px;
+  background-color: #dc3545;
+  color: white;
 }
 
-::v-deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
-    color: white;
+:deep(.custom-multiselect .p-multiselect-token .p-multiselect-token-icon) {
+  color: white;
 }
 </style>

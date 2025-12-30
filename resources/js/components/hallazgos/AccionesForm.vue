@@ -9,11 +9,7 @@
                 <div class="row">
                     <div class="col-md-12 form-group">
                         <label for="accion_tipo">Tipo de Acción</label>
-                        <select
-                            class="form-control"
-                            id="accion_tipo"
-                            :disabled="disabled"
-                            :required="!disabled"
+                        <select class="form-control" id="accion_tipo" :disabled="disabled" :required="!disabled"
                             v-model="nuevaAccion.accion_tipo">
                             <option value="">Seleccione un tipo...</option>
                             <option value="inmediata">Inmediata</option>
@@ -25,19 +21,15 @@
                     <div class="col-md-12 form-group">
                         <label for="accion_descripcion">Descripción de la Acción</label>
                         <div class="input-group">
-                            <textarea
-                                class="form-control"
-                                id="accion_descripcion"
-                                rows="5"
+                            <textarea class="form-control" id="accion_descripcion" rows="5"
                                 placeholder="Describe la acción para atacar la causa raíz..."
-                                v-model="nuevaAccion.accion_descripcion"
-                                :disabled="disabled"
-                                :required="!disabled"
+                                v-model="nuevaAccion.accion_descripcion" :disabled="disabled" :required="!disabled"
                                 maxlength="200">
                             </textarea>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <small class="form-text text-muted">{{ nuevaAccion.accion_descripcion.length }} / 200</small>
+                            <small class="form-text text-muted">{{ nuevaAccion.accion_descripcion.length }} /
+                                200</small>
                         </div>
                     </div>
                 </div>
@@ -48,13 +40,8 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
                             </div>
-                            <input
-                                type="text"
-                                class="form-control form-control-sm"
-                                id="accion_responsable"
-                                placeholder="Responsable"
-                                v-model="nuevaAccion.accion_responsable"
-                                :disabled="disabled"
+                            <input type="text" class="form-control form-control-sm" id="accion_responsable"
+                                placeholder="Responsable" v-model="nuevaAccion.accion_responsable" :disabled="disabled"
                                 :required="!disabled">
                         </div>
                     </div>
@@ -64,13 +51,8 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                             </div>
-                            <input
-                                type="date"
-                                class="form-control form-control-sm"
-                                id="accion_fecha_inicio"
-                                :disabled="disabled"
-                                :required="!disabled"
-                                v-model="nuevaAccion.accion_fecha_inicio">
+                            <input type="date" class="form-control form-control-sm" id="accion_fecha_inicio"
+                                :disabled="disabled" :required="!disabled" v-model="nuevaAccion.accion_fecha_inicio">
                         </div>
                     </div>
                     <div class="col-md-3 form-group">
@@ -79,41 +61,26 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
                             </div>
-                            <input
-                                type="date"
-                                class="form-control form-control-sm"
-                                id="accion_fecha_fin_planificada"
-                                :disabled="disabled"
-                                :required="!disabled"
+                            <input type="date" class="form-control form-control-sm" id="accion_fecha_fin_planificada"
+                                :disabled="disabled" :required="!disabled"
                                 v-model="nuevaAccion.accion_fecha_fin_planificada">
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12 d-flex justify-content-end">
-                        <button
-                            type="button"
-                            class="btn btn-secondary btn-sm mr-2"
-                            @click="resetForm"
-                            v-if="editingAccionId"
-                            :disabled="disabled">
+                        <button type="button" class="btn btn-secondary btn-sm mr-2" @click="resetForm"
+                            v-if="editingAccionId" :disabled="disabled">
                             <i class="fas fa-times"></i> Cancelar Edición
                         </button>
-                        <button
-                            type="submit"
-                            class="btn btn-danger btn-sm"
-                            :disabled="disabled">
+                        <button type="submit" class="btn btn-danger btn-sm" :disabled="disabled">
                             <i class="fas fa-plus"></i> {{ editingAccionId ? 'Actualizar Acción' : 'Agregar Acción' }}
                         </button>
                     </div>
                 </div>
             </form>
 
-            <div
-                v-if="disabled"
-                class="alert alert-warning"
-                role="alert"
-            >
+            <div v-if="disabled" class="alert alert-warning" role="alert">
                 <i class="fas fa-exclamation-triangle mr-1"></i>
                 Las acciones están deshabilitadas para este estado de hallazgo
             </div>
@@ -148,7 +115,8 @@
                             <td style="width: 10%;">{{ accion.accion_cod }}</td>
                             <td>{{ accion.accion_descripcion }}</td>
                             <td>
-                                <span v-if="accion.accion_tipo" class="badge" :class="getTipoAccionClass(accion.accion_tipo)">
+                                <span v-if="accion.accion_tipo" class="badge"
+                                    :class="getTipoAccionClass(accion.accion_tipo)">
                                     {{ getTipoAccionLabel(accion.accion_tipo) }}
                                 </span>
                                 <span v-else class="text-muted">N/A</span>
@@ -159,15 +127,11 @@
                             <td><span class="badge badge-pill badge-info">{{ accion.accion_estado }}</span></td>
                             <td style="width: 5%;">{{ accion.accion_ciclo }} </td>
                             <td style="width: 10%;">
-                                <button
-                                    class="btn btn-secondary btn-sm ml-1"
-                                    @click="editAccion(accion)"
+                                <button class="btn btn-secondary btn-sm ml-1" @click="editAccion(accion)"
                                     :disabled="disabled">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button
-                                    class="btn btn-danger btn-sm ml-1"
-                                    @click="$emit('eliminar', accion.id)"
+                                <button class="btn btn-danger btn-sm ml-1" @click="$emit('eliminar', accion.id)"
                                     :disabled="disabled">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -181,7 +145,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore';
 
 const props = defineProps({

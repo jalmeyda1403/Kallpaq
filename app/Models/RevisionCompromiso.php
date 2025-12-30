@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * @property Carbon|null $fecha_limite
+ * @property Carbon|null $fecha_cierre
+ */
 class RevisionCompromiso extends Model
 {
     use HasFactory;
@@ -154,7 +158,7 @@ class RevisionCompromiso extends Model
             $this->estado = $nuevoEstado;
         }
         if ($nuevoEstado === 'completado') {
-            $this->fecha_cierre = Carbon::now()->toDateString();
+            $this->fecha_cierre = Carbon::now();
         }
 
         $this->save();

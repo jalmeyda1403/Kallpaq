@@ -49,6 +49,12 @@ const routes = [
                 props: true
             },
             {
+                path: 'inventario-publico/explorador/:id',
+                name: 'inventario.explorador',
+                component: () => import('@/components/inventario/InventarioExplorador.vue'),
+                props: true
+            },
+            {
                 path: 'procesos',
                 name: 'procesos.index',
                 component: ProcesosIndex

@@ -21,7 +21,8 @@ class IndicadorSeguimiento extends Model
         'is_var6',
         'is_evidencias',
         'is_numero_periodo',
-        'is_periodo'
+        'is_periodo',
+        'is_comentario'
     ];
 
     protected $casts = [

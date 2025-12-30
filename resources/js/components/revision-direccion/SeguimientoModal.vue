@@ -44,7 +44,7 @@
                                         Consolidado</span>
                                     <span class="small font-weight-bold"
                                         :class="compromiso.avance >= 100 ? 'text-success' : 'text-info'">{{
-                                        compromiso.avance }}%</span>
+                                            compromiso.avance }}%</span>
                                 </div>
                                 <div class="progress rounded-pill overflow-hidden shadow-inner"
                                     style="height: 12px; background-color: #eee;">
@@ -101,7 +101,7 @@
                                                                 seg.usuario?.name || 'Usuario desconocido' }}</div>
                                                             <div class="text-muted extra-small"><i
                                                                     class="far fa-clock mr-1"></i> {{
-                                                                formatDate(seg.created_at, true) }}</div>
+                                                                        formatDate(seg.created_at, true) }}</div>
                                                         </div>
                                                         <div class="badge-soft-info border px-2 py-1 rounded">
                                                             <span class="font-weight-bold" style="font-size: 0.9rem;">{{
@@ -250,8 +250,9 @@ const formatDate = (date, withTime = false) => {
  */
 const getBadgeClass = (estado) => {
     const classes = {
-        pendiente: 'badge-warning',
+        programada: 'badge-info',
         en_proceso: 'badge-info',
+        pendiente: 'badge-warning',
         completado: 'badge-success',
         vencido: 'badge-danger',
         cancelado: 'badge-secondary'
@@ -264,8 +265,9 @@ const getBadgeClass = (estado) => {
  */
 const getEstadoLabel = (estado) => {
     const labels = {
-        pendiente: 'Pendiente',
+        programada: 'Programada',
         en_proceso: 'En Proceso',
+        pendiente: 'Pendiente',
         completado: 'Completado',
         vencido: 'Vencido',
         cancelado: 'Cancelado'

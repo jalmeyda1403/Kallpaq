@@ -61,10 +61,11 @@
                                         <div class="process-icon">
                                             <i class="fas fa-chess-knight"></i>
                                         </div>
-                                        <a :href="`/caracterizacion/${proceso.id}/mcar`" class="action-icon"
-                                            title="Caracterización">
+                                        <button class="btn btn-link action-icon p-0"
+                                            @click.prevent="navigateToExplorer(proceso.id)"
+                                            title="Explorar Subprocesos y Documentación">
                                             <i class="fas fa-external-link-alt"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                     <h6 class="process-title">{{ proceso.proceso_nombre }}</h6>
                                 </div>
@@ -98,10 +99,11 @@
                                         <div class="process-icon">
                                             <i class="fas fa-cogs"></i>
                                         </div>
-                                        <a :href="`/caracterizacion/${proceso.id}/mcar`" class="action-icon"
-                                            title="Caracterización">
+                                        <button class="btn btn-link action-icon p-0"
+                                            @click.prevent="navigateToExplorer(proceso.id)"
+                                            title="Explorar Subprocesos y Documentación">
                                             <i class="fas fa-external-link-alt"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                     <h6 class="process-title">{{ proceso.proceso_nombre }}</h6>
                                 </div>
@@ -135,10 +137,11 @@
                                         <div class="process-icon">
                                             <i class="fas fa-hands-helping"></i>
                                         </div>
-                                        <a :href="`/caracterizacion/${proceso.id}/mcar`" class="action-icon"
-                                            title="Caracterización">
+                                        <button class="btn btn-link action-icon p-0"
+                                            @click.prevent="navigateToExplorer(proceso.id)"
+                                            title="Explorar Subprocesos y Documentación">
                                             <i class="fas fa-external-link-alt"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                     <h6 class="process-title">{{ proceso.proceso_nombre }}</h6>
                                 </div>
@@ -180,7 +183,7 @@
                     <Column field="vigencia" header="Vigencia" sortable>
                         <template #body="slotProps">
                             <span class="badge bg-light text-dark border">{{ formatDate(slotProps.data.vigencia)
-                            }}</span>
+                                }}</span>
                         </template>
                     </Column>
                     <Column header="Acción" class="text-center">
@@ -234,6 +237,13 @@ const searchProceso = () => {
     if (searchQuery.value) {
         router.push({ name: 'documentos.listado', query: { buscar_proceso: searchQuery.value } });
     }
+};
+
+const navigateToExplorer = (processId) => {
+    router.push({
+        name: 'inventario.explorador',
+        params: { id: processId }
+    });
 };
 
 const matchSearch = (proceso) => {

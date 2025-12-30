@@ -21,9 +21,9 @@
     </div>
 </template>
 <style scoped>
-::v-deep td.text-left,
-::v-deep td.text-left>div,
-::v-deep td.text-left>span {
+:deep(td.text-left),
+:deep(td.text-left > div),
+:deep(td.text-left > span) {
     text-align: left !important;
 }
 </style>
@@ -55,4 +55,3 @@ const save = () => {
     inventarioStore.assignProcesos(selectedProcesos.value);
 };
 </script>
-

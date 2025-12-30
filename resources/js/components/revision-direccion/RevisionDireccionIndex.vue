@@ -6,57 +6,67 @@
             <button type="button" class="close" @click="successMessage = ''">×</button>
         </div>
 
-        <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">Home</li>
-                <li class="breadcrumb-item">Alta Dirección</li>
-                <li class="breadcrumb-item active">Revisión por la Dirección</li>
+            <ol class="breadcrumb bg-transparent p-0 mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }">Inicio</router-link></li>
+                <li class="breadcrumb-item active" aria-current="page">Revisión por la Dirección</li>
             </ol>
         </nav>
 
         <!-- Card Principal -->
-        <div class="card">
-            <div class="card-header">
+        <div class="card shadow-sm border-0 rounded-xl mb-4">
+            <div class="card-header bg-white border-0 py-3">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-users-cog mr-2"></i>
+                        <h3 class="card-title font-weight-bold text-dark">
+                            <i class="fas fa-users-cog mr-2 text-primary"></i>
                             Revisiones por la Dirección
                         </h3>
                     </div>
                     <div class="col-md-6 text-md-right">
-                        <button class="btn btn-primary" @click="openCreateModal">
+                        <button class="btn btn-primary rounded-pill px-4 shadow-sm" @click="openCreateModal">
                             <i class="fas fa-plus-circle mr-1"></i> Nueva Revisión
                         </button>
                     </div>
                 </div>
-
-                <!-- Filtros -->
-                <div class="row mt-3">
-                    <div class="col-md-3">
-                        <input type="text" v-model="filtros.buscar" class="form-control"
-                            placeholder="Buscar por código o título...">
-                    </div>
-                    <div class="col-md-2">
-                        <select v-model="filtros.anio" class="form-control">
-                            <option value="">Todos los años</option>
-                            <option v-for="a in aniosDisponibles" :key="a" :value="a">{{ a }}</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <select v-model="filtros.estado" class="form-control">
-                            <option value="">Todos los estados</option>
-                            <option value="programada">Programada</option>
-                            <option value="en_preparacion">En Preparación</option>
-                            <option value="realizada">Realizada</option>
-                            <option value="cancelada">Cancelada</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-secondary" @click="buscar">
-                            <i class="fas fa-search"></i> Buscar
-                        </button>
+                <hr class="my-3">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form @submit.prevent="buscar">
+                            <div class="form-row">
+                                <div class="col">
+                                    <div class="input-group bg-light rounded-lg overflow-hidden border">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-transparent border-0"><i
+                                                    class="fas fa-search text-muted"></i></span>
+                                        </div>
+                                        <input type="text" v-model="filtros.buscar"
+                                            class="form-control border-0 bg-transparent"
+                                            placeholder="Buscar por código o título...">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <select v-model="filtros.anio" class="form-control bg-light border rounded-lg">
+                                        <option value="">Todos los años</option>
+                                        <option v-for="a in aniosDisponibles" :key="a" :value="a">{{ a }}</option>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select v-model="filtros.estado" class="form-control bg-light border rounded-lg">
+                                        <option value="">Todos los estados</option>
+                                        <option value="programada">Programada</option>
+                                        <option value="en_preparacion">En Preparación</option>
+                                        <option value="realizada">Realizada</option>
+                                        <option value="cancelada">Cancelada</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn bg-dark btn-block shadow-sm rounded-lg">
+                                        <i class="fas fa-filter mr-1"></i> Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -70,22 +80,23 @@
                 <!-- Tabla de Revisiones -->
                 <div v-else>
                     <DataTable :value="revisiones" :loading="isLoading" :paginator="true" :rows="10"
-                        responsiveLayout="scroll">
+                        responsiveLayout="scroll" class="p-datatable-sm p-datatable-striped">
                         <Column field="codigo" header="Código">
                             <template #body="{ data }">
-                                <strong>{{ data.codigo }}</strong>
+                                <strong class="text-primary">{{ data.codigo }}</strong>
                             </template>
                         </Column>
                         <Column field="titulo" header="Título"></Column>
                         <Column field="fecha_programada" header="Fecha Programada">
                             <template #body="{ data }">
+                                <i class="far fa-calendar-alt mr-1 text-muted"></i>
                                 {{ formatDate(data.fecha_programada) }}
                             </template>
                         </Column>
                         <Column field="periodo" header="Periodo"></Column>
                         <Column header="Estado">
                             <template #body="{ data }">
-                                <span class="badge" :class="'badge-' + data.estado_color">
+                                <span class="badge px-3 py-2 rounded-pill" :class="'badge-' + data.estado_color">
                                     {{ getEstadoLabel(data.estado) }}
                                 </span>
                             </template>
@@ -93,30 +104,46 @@
                         <Column header="Compromisos" class="text-center">
                             <template #body="{ data }">
                                 <span class="badge badge-secondary">
-                                    {{ data.compromisos?.length || 0 }}
+                                    {{ data.compromisos?.length || 0 }} total
                                 </span>
                                 <span v-if="data.compromisos_pendientes_count > 0" class="badge badge-warning ml-1">
                                     {{ data.compromisos_pendientes_count }} pendientes
+                                </span>
+                                <span v-else-if="data.compromisos?.length > 0" class="badge badge-success ml-1">
+                                    <i class="fas fa-check mr-1"></i> Todo al día
                                 </span>
                             </template>
                         </Column>
                         <Column header="Avance">
                             <template #body="{ data }">
-                                <div class="progress progress-sm" style="height: 10px;">
-                                    <div class="progress-bar bg-info" :style="{ width: data.avance_general + '%' }">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 mr-2" style="height: 6px;">
+                                        <div class="progress-bar rounded-pill"
+                                            :class="'bg-' + getAvanceColor(data.avance_general)"
+                                            :style="{ width: data.avance_general + '%' }">
+                                        </div>
                                     </div>
+                                    <span class="small font-weight-bold text-dark ml-2">{{ data.avance_general
+                                        }}%</span>
                                 </div>
-                                <small class="text-muted">{{ data.avance_general }}%</small>
                             </template>
                         </Column>
-                        <Column header="Acciones">
+                        <Column header="Acciones" headerStyle="width: 120px" bodyStyle="text-align: center">
                             <template #body="{ data }">
-                                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text mr-1"
-                                    @click="verDetalle(data)" title="Ver detalle" />
-                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-text mr-1"
-                                    @click="editarRevision(data)" title="Editar" />
-                                <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-text"
-                                    @click="confirmarEliminar(data)" title="Eliminar" />
+                                <div class="d-flex justify-content-center">
+                                    <button class="btn btn-sm btn-light-info mr-1" @click="verDetalle(data)"
+                                        title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-light-warning mr-1" @click="editarRevision(data)"
+                                        title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @click="confirmarEliminar(data)"
+                                        title="Eliminar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
                             </template>
                         </Column>
                     </DataTable>
@@ -209,11 +236,18 @@ const formatDate = (date) => {
 const getEstadoLabel = (estado) => {
     const labels = {
         programada: 'Programada',
+        aprobada: 'Aprobada',
         en_preparacion: 'En Preparación',
         realizada: 'Realizada',
         cancelada: 'Cancelada'
     };
     return labels[estado] || estado;
+};
+
+const getAvanceColor = (avance) => {
+    if (avance < 30) return 'danger';
+    if (avance < 70) return 'warning';
+    return 'success';
 };
 
 // Lifecycle

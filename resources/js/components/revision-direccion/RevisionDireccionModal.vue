@@ -95,7 +95,7 @@
                                     <label>Estado</label>
                                     <select v-model="form.estado" class="form-control">
                                         <option value="programada">Programada</option>
-                                        <option value="en_preparacion">En Preparación</option>
+                                        <option value="aprobada">Aprobada</option>
                                         <option value="realizada">Realizada</option>
                                         <option value="cancelada">Cancelada</option>
                                     </select>
@@ -202,6 +202,7 @@ const guardar = async () => {
 .modal.show {
     display: block;
 }
+
 label.required::after {
     content: ' *';
     color: red;

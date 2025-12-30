@@ -20,13 +20,27 @@ class DashboardProcesosController extends Controller
     {
         $year = $request->query('year', now()->year);
 
-        // Fetch all indicators with their relevant relationships
-        $indicadores = Indicador::with(['proceso', 'objetivoSIG', 'objetivoPEI'])
-            ->get();
+        // Fetch and process indicators
+        $indicadores = Indicador::with(['proceso', 'objetivoSIG', 'objetivoPEI'])->get();
+        $indicadoresProcessed = $this->processIndicadores($indicadores, $year);
 
-        // Process indicators to attach the latest compliance for the selected year
-        $indicadoresProcessed = $indicadores->map(function ($indicador) use ($year) {
-            // Get latest tracking for the year
+        // Calculate and collect metrics
+        $processTypesData = $this->groupByProcessType($indicadoresProcessed);
+
+        return response()->json([
+            'general' => round($indicadoresProcessed->avg('current_cumplimiento') ?? 0, 2),
+            'lowest_type' => collect($processTypesData)->sortBy('promedio')->first(),
+            'process_types' => $processTypesData,
+            'indicator_types' => $this->getIndicatorTypesData($indicadoresProcessed),
+            'sig_objectives' => $this->getSigData($indicadoresProcessed),
+            'pei_perspectives' => $this->getPeiData($indicadoresProcessed),
+            'years' => range(2023, now()->year + 1)
+        ]);
+    }
+
+    private function processIndicadores($indicadores, $year)
+    {
+        return $indicadores->map(function ($indicador) use ($year) {
             $ultimoSeguimiento = $indicador->seguimientos()
                 ->where('is_periodo', $year)
                 ->orderBy('is_numero_periodo', 'desc')
@@ -38,81 +52,52 @@ class DashboardProcesosController extends Controller
             }
 
             $indicador->current_cumplimiento = $cumplimiento;
-            $indicador->has_data = $ultimoSeguimiento ? true : false;
+            $indicador->has_data = (bool) $ultimoSeguimiento;
 
             return $indicador;
-        })->filter(function ($indicador) {
-            return $indicador->has_data; // Only consider indicators with data for accurate averages
-        });
+        })->filter(fn($i) => $i->has_data);
+    }
 
-        // 1. General Metric
-        $generalAverage = $indicadoresProcessed->avg('current_cumplimiento') ?? 0;
-
-        // 2. Process Types (Estratégico, Misional, Apoyo)
-        $processTypesData = $this->groupByProcessType($indicadoresProcessed);
-
-        // Find lowest performing type for alert
-        $lowestType = collect($processTypesData)->sortBy('promedio')->first();
-
-        // 3. Indicator Types
-        // Force all types to appear even if empty
+    private function getIndicatorTypesData($indicadores)
+    {
         $definedTypes = ['producto', 'servicio', 'resultado', 'calidad'];
-        $groupedIndicators = $indicadoresProcessed->groupBy('indicador_tipo_indicador');
+        $grouped = $indicadores->groupBy('indicador_tipo_indicador');
 
-        $indicatorTypesData = collect($definedTypes)->map(function ($type) use ($groupedIndicators) {
-            $group = $groupedIndicators->get($type);
-            return [
-                'nombre' => ucfirst($type),
-                'promedio' => $group ? round($group->avg('current_cumplimiento'), 2) : 0,
-                'count' => $group ? $group->count() : 0
-            ];
-        });
+        return collect($definedTypes)->map(fn($type) => [
+            'nombre' => ucfirst($type),
+            'promedio' => round($grouped->get($type)?->avg('current_cumplimiento') ?? 0, 2),
+            'count' => $grouped->get($type)?->count() ?? 0
+        ]);
+    }
 
-        // 4. SIG Objectives - Grouped by System
-        $sigDataBySystem = $indicadoresProcessed->groupBy(function ($item) {
-            return $item->objetivoSIG ? $item->objetivoSIG->sistema : 'Otras';
-        })->map(function ($systemGroup, $systemName) {
-
-            // Now within this system, group by specific Objective
-            $objectives = $systemGroup->groupBy('planificacion_sig_id')->map(function ($objGroup) {
-                $sig = $objGroup->first()->objetivoSIG;
-                return [
-                    'nombre' => $sig ? $sig->objetivo . ' - ' . $sig->nombre_objetivo : 'Desconocido',
-                    'promedio' => round($objGroup->avg('current_cumplimiento'), 2),
-                ];
-            })->values();
-
-            return [
+    private function getSigData($indicadores)
+    {
+        return $indicadores->groupBy(fn($item) => $item->objetivoSIG ? $item->objetivoSIG->sistema : 'Otras')
+            ->map(fn($systemGroup, $systemName) => [
                 'sistema' => $systemName,
                 'promedio_sistema' => round($systemGroup->avg('current_cumplimiento'), 2),
-                'objetivos' => $objectives
-            ];
-        });
+                'objetivos' => $systemGroup->groupBy('planificacion_sig_id')->map(function ($objGroup) {
+                    $sig = $objGroup->first()->objetivoSIG;
+                    return [
+                        'nombre' => $sig ? $sig->objetivo . ' - ' . $sig->nombre_objetivo : 'Desconocido',
+                        'promedio' => round($objGroup->avg('current_cumplimiento'), 2),
+                    ];
+                })->values()
+            ])->values();
+    }
 
-        $sigData = $sigDataBySystem->values();
-
-        // 5. PEI Perspectives
-        $peiData = $indicadoresProcessed->groupBy('planificacion_pei_id')->map(function ($group, $key) {
-            $pei = $group->first()->objetivoPEI;
-            return [
-                'nombre' => $pei ? $pei->planificacion_pei_nombre : 'Sin PEI',
-                'promedio' => round($group->avg('current_cumplimiento'), 2),
-                'ponderado' => 0
-            ];
-        })->values()->filter(fn($i) => $i['nombre'] !== 'Sin PEI');
-
-        // Available years for filter (mock or query)
-        $years = range(2023, now()->year + 1);
-
-        return response()->json([
-            'general' => round($generalAverage, 2),
-            'lowest_type' => $lowestType,
-            'process_types' => $processTypesData,
-            'indicator_types' => $indicatorTypesData,
-            'sig_objectives' => $sigData,
-            'pei_perspectives' => $peiData,
-            'years' => $years
-        ]);
+    private function getPeiData($indicadores)
+    {
+        return $indicadores->groupBy('planificacion_pei_id')
+            ->map(function ($group) {
+                $pei = $group->first()->objetivoPEI;
+                return [
+                    'nombre' => $pei ? $pei->planificacion_pei_nombre : 'Sin PEI',
+                    'promedio' => round($group->avg('current_cumplimiento'), 2),
+                ];
+            })
+            ->values()
+            ->filter(fn($i) => $i['nombre'] !== 'Sin PEI');
     }
 
     private function groupByProcessType($indicadores)

@@ -267,14 +267,15 @@ const guardar = async () => {
 };
 
 const getCompromisoEstadoClass = (estado) => {
-    switch (estado) {
-        case 'pendiente': return 'badge-primary';
-        case 'en_proceso': return 'badge-info';
-        case 'completado': return 'badge-success';
-        case 'vencido': return 'badge-danger';
-        case 'cancelado': return 'badge-secondary';
-        default: return 'badge-light';
-    }
+    const classes = {
+        'programada': 'badge-info',
+        'en_proceso': 'badge-info',
+        'pendiente': 'badge-warning',
+        'completado': 'badge-success',
+        'vencido': 'badge-danger',
+        'cancelado': 'badge-secondary'
+    };
+    return classes[estado] || 'badge-secondary';
 };
 </script>
 

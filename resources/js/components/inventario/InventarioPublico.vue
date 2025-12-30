@@ -294,6 +294,7 @@ const navigateToSubprocesses = (processId) => {
   });
 };
 
+
 // Función para establecer filtro de proceso padre
 const setParentProcessFilter = (processId) => {
   parentProcessFilter.value = processId;
