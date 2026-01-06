@@ -7,7 +7,7 @@
         </div>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent p-0 mb-4">
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
                 <li class="breadcrumb-item"><router-link :to="{ name: 'home' }">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Revisión por la Dirección</li>
             </ol>

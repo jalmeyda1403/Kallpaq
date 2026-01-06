@@ -26,7 +26,7 @@
                 data-toggle="tooltip" data-placement="top" title="Clasifica el tipo de documento.">
                 <option value="">Seleccione Tipo Documento...</option>
                 <option v-for="tipo in documentoStore.tipoDocumento" :key="tipo.id" :value="tipo.id">
-                  {{ tipo.nombre_tipodocumento }}
+                  {{ tipo.td_nombre }}
                 </option>
               </select>
               <div class="invalid-feedback">{{ documentoStore.errors.tipo_documento_id ?
@@ -133,7 +133,7 @@
               documentoStore.errors.resumen_documento[0] : '' }}</div>
           </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-3" v-if="documentoStore.documentoForm.usa_versiones_documento != '1'">
           <div class="col-md-6">
             <div class="form-group small">
               <label for="instrumento_aprueba_documento">Instrumento que aprueba</label>

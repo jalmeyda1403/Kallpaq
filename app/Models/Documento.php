@@ -82,6 +82,10 @@ class Documento extends Model
     {
         return $this->hasMany(DocumentoVersion::class);
     }
+    public function anexos()
+    {
+        return $this->hasMany(DocumentoAnexo::class, 'documento_id')->where('da_estado', 'VIGENTE');
+    }
 
     public function ultimaVersion()
     {

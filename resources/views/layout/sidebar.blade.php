@@ -88,8 +88,9 @@
                     @endphp
                     <!-- Configuración Requerimientos-->
                     <li
-                        class="nav-item has-treeview {{ request()->is('requerimientos*') || request()->is('mis-requerimientos*') || request()->is('seguimiento*') || request()->is('vue/requerimientos*') || request()->is('vue/mis-requerimientos*') || request()->is('api/requerimientos*') ? 'menu-open active' : '' }}">
-                        <a href="#" class="nav-link">
+                        class="nav-item has-treeview {{ request()->is('requerimientos*', 'mis-requerimientos*', 'seguimiento*', 'vue/requerimientos*', 'vue/mis-requerimientos*', 'api/requerimientos*') ? 'menu-open' : '' }}">
+                        <a href="#"
+                            class="nav-link {{ request()->is('requerimientos*', 'mis-requerimientos*', 'seguimiento*', 'vue/requerimientos*', 'vue/mis-requerimientos*', 'api/requerimientos*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-tasks"></i>
                             <p>
                                 Gestión de Requerimientos
@@ -97,15 +98,17 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            {{-- Acceso común para creación --}}
+                            <li class="nav-item">
+                                <a href="/vue/requerimientos/crear"
+                                    class="nav-link {{ request()->is('requerimientos/crear', 'vue/requerimientos/crear') ? 'active' : '' }}">
+                                    <i class="far fa-edit nav-icon"></i>
+                                    <p>Crear Requerimiento</p>
+                                </a>
+                            </li>
+
                             {{-- Bandejas para Facilitador y Subgerente --}}
                             @if (in_array($rol, ['facilitador', 'subgerente']))
-                                <li class="nav-item">
-                                    <a href="{{ route('requerimientos.crear') }}"
-                                        class="nav-link {{ request()->is('requerimientos/crear') ? 'active' : '' }}">
-                                        <i class="far fa-edit nav-icon"></i>
-                                        <p>Crear Requerimiento</p>
-                                    </a>
-                                </li>
                                 <li class="nav-item">
                                     <a href="/vue/mis-requerimientos"
                                         class="nav-link {{ request()->is('vue/mis-requerimientos*') ? 'active' : '' }}">

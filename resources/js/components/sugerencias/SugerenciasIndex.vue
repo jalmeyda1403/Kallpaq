@@ -1,8 +1,8 @@
 <template>
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Consolidado de Sugerencias</li>
             </ol>
         </nav>

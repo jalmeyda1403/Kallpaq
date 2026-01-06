@@ -67,13 +67,10 @@
                     <div class="col-md-6">
                         <div class="form-group small">
                             <label for="tags">Etiquetas (Tags)</label>
-                            <select ref="tagSelectElementRef" id="tags" class="form-control select2" multiple="multiple"
-                                style="width: 100%;">
-                                <option v-for="tag in documentoStore.tagsDisponibles" :key="tag.id" :value="tag.id">
-                                    {{ tag.nombre }}
-                                </option>
-                            </select>
-
+                            <AutoComplete v-model="selectedTags" :suggestions="filteredTags"
+                                @complete="searchTags" @keydown.enter.prevent="onTagInputEnter" 
+                                optionLabel="nombre" multiple class="w-100"
+                                placeholder="Seleccione o escriba un tag..." />
                         </div>
                     </div>
                 </div>
@@ -91,15 +88,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount} from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useDocumentoStore } from '@/stores/documentoStore';
 import { route } from 'ziggy-js';
-
+import axios from 'axios';
+import AutoComplete from 'primevue/autocomplete';
 
 const documentoStore = useDocumentoStore();
-const tagSelectElementRef = ref(null);
 const localLoading = ref(false);
-
+const selectedTags = ref([]);
+const filteredTags = ref([]);
 
 const filteredSubareaCompliance = computed(() => {
     if (!documentoStore.metadatosForm.area_compliance_id) {
@@ -112,57 +110,114 @@ const filteredSubareaCompliance = computed(() => {
 
 // Llama a la acción correcta del store, pasando 'metadatos' como tipo de formulario
 const submitForm = async () => {
+    // Map selected objects back to IDs (or names for new tags) for the store
+    documentoStore.metadatosForm.tags = selectedTags.value.map(tag => {
+        return typeof tag === 'object' ? tag.id : tag;
+    });
     await documentoStore.saveDocumento('metadatos');
 };
 
-const initializeSelect2 = () => {
+const onTagInputEnter = (event) => {
+    // Prevent form submission or other default actions
+    event.preventDefault();
+    
+    // The input value is usually in event.target.value for native input, 
+    // but for AutoComplete it might be managed differently.
+    // PrimeVue AutoComplete doesn't expose the input value in the event directly in all versions.
+    // However, event.target.value works on the underlying input.
+    const inputValue = event.target.value.trim();
+    
+    if (inputValue) {
+        // Check if already selected
+        const alreadySelected = selectedTags.value.some(t => 
+            (t.nombre && t.nombre.toLowerCase() === inputValue.toLowerCase()) || 
+            (typeof t === 'string' && t.toLowerCase() === inputValue.toLowerCase())
+        );
 
-    const el = $(tagSelectElementRef.value);
-
-    if (el.data('select2')) {
-        el.select2('destroy');
-    }
-    documentoStore.tagsDisponibles.forEach(tag => {
-        if (!el.find(`option[value='${tag.id}']`).length) {
-            const option = new Option(tag.nombre, tag.id, true, true);
-            el.append(option);
+        if (!alreadySelected) {
+            // Check if it exists in filteredTags (suggestions)
+            const existingTag = filteredTags.value.find(t => t.nombre.toLowerCase() === inputValue.toLowerCase());
+            
+            if (existingTag) {
+                selectedTags.value.push(existingTag);
+            } else {
+                // Add as new tag (string or object with same structure)
+                // Using object structure to match optionLabel="nombre"
+                selectedTags.value.push({ nombre: inputValue, id: inputValue });
+            }
         }
-    });
-    el.select2({
-        width: '100%',
-        placeholder: 'Seleccione o escriba un tag...',
-        allowClear: true,
-        dropdownParent: el.closest('.modal-content'),
-        ajax: {
-            url: route('tag.buscar'),
-            dataType: 'json',
-            delay: 250,
-            data: params => ({ q: params.term }),
-            processResults: data => ({
-                results: data.map(tag => ({ id: tag.id, text: tag.nombre }))
-            }),
-            cache: true,
-        },
-        tags: true,
-    }).on('change', function () {
-        documentoStore.metadatosForm.tags = $(this).val();
-    });
-    el.val(documentoStore.metadatosForm.tags).trigger('change.select2');
-   
+        
+        // Clear input (This might effectively require clearing the internal Model if bound)
+        // PrimeVue AutoComplete manages its own input value, resetting it can be tricky without internal ref access.
+        // A common trick is to clear the search query or rely on v-model update.
+        // But since we are intercepting the event, we might need to manually clear the input element.
+        event.target.value = '';
+        filteredTags.value = []; 
+    }
+};
+
+const searchTags = async (event) => {
+    try {
+        const response = await axios.get(route('tag.buscar'), {
+            params: { q: event.query }
+        });
+        filteredTags.value = response.data;
+    } catch (error) {
+        console.error('Error searching tags:', error);
+        filteredTags.value = [];
+    }
+};
+
+// Sync store tags (IDs) to local selectedTags (Objects)
+const syncTagsFromStore = () => {
+    if (documentoStore.metadatosForm.tags && documentoStore.metadatosForm.tags.length > 0) {
+         // Reconstruct objects from available tags
+         selectedTags.value = documentoStore.metadatosForm.tags.map(tagId => {
+            // Check if it's an ID or a String (new tag not saved yet)
+            const found = documentoStore.tagsDisponibles.find(t => t.id == tagId);
+            if (found) return found;
+            // If not found in disponibles, and is string, treat as new tag text
+            if (typeof tagId === 'string' && isNaN(tagId)) return { nombre: tagId, id: tagId }; // temporary object for display
+            return null;
+         }).filter(t => t !== null);
+    } else {
+        selectedTags.value = [];
+    }
 };
 
 onMounted(() => {
     documentoStore.loadAreasCompliance();
-    initializeSelect2();
+    syncTagsFromStore();
 });
 
+// Watch for changes in selectedTags to populate tagsDisponibles (Preserve state across tab switches)
+watch(selectedTags, (newTags) => {
+    newTags.forEach(tag => {
+        if (typeof tag === 'object' && tag.id) {
+             const exists = documentoStore.tagsDisponibles.find(t => t.id === tag.id);
+             if (!exists) {
+                 documentoStore.tagsDisponibles.push(tag);
+             }
+        }
+    });
+}, { deep: true });
 
-onBeforeUnmount(() => {
-    const el = $(tagSelectElementRef.value);
-    if (el.data('select2')) {
-        el.select2('destroy');
+// Watch for store changes (External load or Reset)
+watch(() => documentoStore.metadatosForm.tags, (newVal) => {
+    // Only sync if the length implies a major change (like reset to 0) OR if we are just loading
+    // We avoid syncing if we just performed the save logic which converts objects to IDs, 
+    // because that might cause a brief flash if IDs are numbers and we need objects.
+    // However, fetchDocumento populates tagsDisponibles, so syncTagsFromStore SHOULD work fine.
+    
+    // Check if we need to sync:
+    const currentIds = selectedTags.value.map(t => t.id || t);
+    const arraysEqual = currentIds.length === newVal.length && currentIds.every((value, index) => value == newVal[index]);
+    
+    if (!arraysEqual) {
+        syncTagsFromStore();
     }
-});
+}, { deep: true });
+
 </script>
 
 <style scoped>
@@ -197,48 +252,43 @@ onBeforeUnmount(() => {
     font-weight: bold;
 }
 
-/* Estilo general de opciones */
-.select2-container--default .select2-results__option {
-    font-size: 12px;
+/* PrimeVue AutoComplete Customization */
+:deep(.p-autocomplete) {
+    display: block;
 }
 
-/* Hover en opciones */
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #6c757d !important;
-    /* grey */
-    color: white !important;
+:deep(.p-autocomplete-multiple-container) {
+    width: 100%;
+    border: 1px solid #ced4da; /* Bootstrap border */
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.875rem; 
 }
 
-/* Estilo de etiquetas seleccionadas */
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-    background-color: #dc3545 !important;
-    /* danger */
-    border-color: #dc3545 !important;
-    color: white !important;
-    font-size: 12px;
+:deep(.p-autocomplete-multiple-container:focus-within) {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* Estilo del botón de cerrar en etiquetas */
-.select2-container--default .select2-selection__choice__remove {
-    color: white !important;
-    font-size: 12px;
+:deep(.p-autocomplete-token) {
+    background-color: #dc3545; /* Danger color */
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
 }
 
-.select2-container--default .select2-selection__choice__remove:hover {
-    color: #ffcccc !important;
+:deep(.p-autocomplete-token-icon) {
+    color: white;
+    font-size: 0.75rem;
 }
 
-/* Estilo del campo de búsqueda interno (placeholder y texto) */
-.select2-container--default .select2-selection--multiple .select2-search__field {
-    font-size: 13px !important;
+:deep(.p-autocomplete-input-token input) {
+    font-size: 0.875rem;
+    font-family: inherit;
 }
 
 select:invalid {
     color: #94939a;
-}
-
-.select2-hidden-init {
-    visibility: hidden;
 }
 
 .header-container {

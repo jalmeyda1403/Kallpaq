@@ -9,7 +9,7 @@ class TipoDocumentoController extends Controller
       public function findTipoDocumento(Request $request)
     {
   
-        $tipoDocumento = TipoDocumento::select('id', 'nombre_tipodocumento')->orderBy("id")->get();       
+        $tipoDocumento = TipoDocumento::select('id', 'td_nombre')->orderBy("id")->get();       
 
         return response()->json($tipoDocumento);
     }  

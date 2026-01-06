@@ -146,6 +146,8 @@ class DocumentoController extends Controller
             $total = $documentos->count();
             $items = $documentos->slice(($page - 1) * $perPage, $perPage)->values();
 
+            $items->load(['procesos', 'tipo_documento', 'ultimaVersion', 'area_compliance', 'anexos']);
+
             $documentos = new LengthAwarePaginator($items, $total, $perPage, $page, [
                 'path' => request()->url(),
                 'query' => request()->query(),
@@ -169,7 +171,7 @@ class DocumentoController extends Controller
 
 
 
-            $documentos = $documentos->with('procesos', 'tipo_documento', 'ultimaVersion', 'area_compliance')->paginate($perPage);
+            $documentos = $documentos->with('procesos', 'tipo_documento', 'ultimaVersion', 'area_compliance', 'anexos')->paginate($perPage);
         }
 
         return response()->json($documentos);
@@ -310,8 +312,10 @@ class DocumentoController extends Controller
 
                         // Subir el nuevo archivo
                         $file = $request->file('archivo');
-                        $fileName = $request->input('cod_documento') . '.' . $file->getClientOriginalExtension();
-                        $path = Storage::putFileAs('', $file, $fileName, ['disk' => 'documentos']);
+                        $codDocumento = $request->input('cod_documento');
+                        $fileName = $codDocumento . '.' . $file->getClientOriginalExtension();
+                        // Guardar en la carpeta del documento dentro del disco 'documentos'
+                        $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
                         $data['archivo_path_documento'] = $path;
                     } else {
                         // Si no se sube un nuevo archivo, mantener el path existente si es un archivo local
@@ -381,8 +385,8 @@ class DocumentoController extends Controller
                         DocumentoMovimiento::create([
                             'documento_id' => $documento->id,
                             'usuario_id' => Auth::id(),
-                            'accion' => 'ACTUALIZACIÓN',
-                            'descripcion' => 'Se modificaron las etiquetas (Tags) asociadas.'
+                            'accion' => 'modificado',
+                            'observacion' => 'Se modificaron las etiquetas (Tags) asociadas.'
                         ]);
                     }
                 } else {
@@ -391,8 +395,8 @@ class DocumentoController extends Controller
                         DocumentoMovimiento::create([
                             'documento_id' => $documento->id,
                             'usuario_id' => Auth::id(),
-                            'accion' => 'ACTUALIZACIÓN DE METADATOS',
-                            'descripcion' => 'Se eliminaron todas las etiquetas (Tags) asociadas.'
+                            'accion' => 'modificado',
+                            'observacion' => 'Se eliminaron todas las etiquetas (Tags) asociadas.'
                         ]);
                     }
                 }
@@ -486,11 +490,17 @@ class DocumentoController extends Controller
         return $httpCode >= 200 && $httpCode < 400;
     }
 
-    public function versiones($documento_id)
+    public function versiones(Request $request, $documento_id)
     {
-        $documento = Documento::with(['versiones'])->findOrFail($documento_id);
+        $documento = Documento::findOrFail($documento_id);
+        
+        $query = $documento->versiones();
+        
+        if ($request->has('trashed') && $request->trashed == 1) {
+            $query->onlyTrashed();
+        }
 
-        return response()->json($documento->versiones);
+        return response()->json($query->get());
     }
 
     public function listarProcesosAsociados(Documento $documento)
@@ -603,35 +613,119 @@ class DocumentoController extends Controller
         return response()->json(['message' => 'Hijo desvinculado con éxito.']);
     }
     //methodos Dependencias
-    public function crearNuevaVersionConDependencias(Request $request, Documento $documento)
-    {
-        $data = $request->validate([
-            'dv_version' => 'required|string|max:255',
-            'dv_control_cambios' => 'nullable|string',
-            'dv_fecha_aprobacion' => 'nullable|date',
-            // ... (añade aquí las validaciones para otros campos que envíes desde el modal de nueva versión)
+    // Versiones Management
+    public function storeVersion(Request $request) {
+         $data = $request->validate([
+            'documento_id' => 'required|exists:documentos,id',
+            'version' => 'required|integer',
+            'control_cambios' => 'nullable|string',
+            'fecha_aprobacion' => 'nullable|date',
+            'fecha_publicacion' => 'nullable|date',
+            'instrumento_aprueba' => 'nullable|string|max:255',
+            'enlace_valido' => 'nullable|boolean',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:20480'
         ]);
 
         try {
-            $nuevaVersion = DB::transaction(function () use ($documento, $data) {
-                $ultimaVersion = $documento->versiones()->latest('id')->first();
+            return DB::transaction(function () use ($data, $request) {
+                $documento = Documento::findOrFail($data['documento_id']);
+                
+                // Handle file upload
+                if ($request->hasFile('archivo')) {
+                     $file = $request->file('archivo');
+                     $codDocumento = $documento->cod_documento;
+                     $fileName = $codDocumento . '_v' . $data['version'] . '.' . $file->getClientOriginalExtension();
+                     // Guardar en la carpeta del documento dentro del disco 'documentos'
+                     $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
+                     $data['archivo_path'] = $path;
+                     unset($data['archivo']);
+                }
+                
+                // Create new version
                 $nuevaVersion = $documento->versiones()->create($data);
+
+                // Logic to copy dependencies from latest version (optional, based on previous logic finding)
+                // If previous version exists, copy dependencias pivot
+                /* 
+                $ultimaVersion = $documento->versiones()->where('id', '!=', $nuevaVersion->id)->latest('id')->first();
                 if ($ultimaVersion) {
                     $dependenciasIds = $ultimaVersion->dependencias()->pluck('documentos.id');
                     if ($dependenciasIds->isNotEmpty()) {
                         $nuevaVersion->dependencias()->attach($dependenciasIds);
                     }
                 }
+                */
 
-                return $nuevaVersion;
+                return response()->json($nuevaVersion, 201);
             });
 
-            return response()->json($nuevaVersion, 201);
+        } catch (\Throwable $e) {
+            Log::error('Error creating version: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al crear la versión.'], 500);
+        }
+    }
+
+    public function updateVersion(Request $request, $id) {
+        $version = DocumentoVersion::findOrFail($id);
+        
+        $data = $request->validate([
+            'version' => 'required|integer',
+            'control_cambios' => 'nullable|string',
+            'fecha_aprobacion' => 'nullable|date',
+            'fecha_publicacion' => 'nullable|date',
+            'instrumento_aprueba' => 'nullable|string|max:255',
+            'enlace_valido' => 'nullable|boolean',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:20480'
+        ]);
+
+         try {
+            if ($request->hasFile('archivo')) {
+                // Delete old file if exists
+                if ($version->archivo_path && Storage::disk('documentos')->exists($version->archivo_path)) {
+                     Storage::disk('documentos')->delete($version->archivo_path);
+                }
+                
+                 $documento = $version->documento;
+                 $codDocumento = $documento->cod_documento;
+                 $file = $request->file('archivo');
+                 $fileName = $codDocumento . '_v' . $data['version'] . '.' . $file->getClientOriginalExtension();
+                 // Guardar en la carpeta del documento dentro del disco 'documentos'
+                 $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
+                 $data['archivo_path'] = $path;
+                 unset($data['archivo']);
+            }
+
+            $version->update($data);
+            return response()->json($version);
 
         } catch (\Throwable $e) {
-            \Log::error('Error al crear nueva versión con dependencias: ' . $e->getMessage());
-            return response()->json(['message' => 'Ocurrió un error al crear la nueva versión.'], 500);
+            Log::error('Error updating version: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al actualizar la versión.'], 500);
         }
+    }
+
+    public function destroyVersion($id) {
+        $version = DocumentoVersion::findOrFail($id);
+        
+        // Soft Delete
+        $version->delete();
+
+        return response()->json(['message' => 'Versión eliminada con éxito.']);
+    }
+
+    public function restoreVersion($id) {
+        $version = DocumentoVersion::onlyTrashed()->findOrFail($id);
+        $version->restore();
+        
+        return response()->json(['message' => 'Versión restaurada con éxito.']);
+    }
+
+    public function crearNuevaVersionConDependencias(Request $request, Documento $documento)
+    {
+        // Deprecated or can alias to storeVersion logic if strictly needed distinct logic
+        // For now, keeping as is or replacing if it conflicts. 
+        // Since I'm replacing the block, I'll just use storeVersion for the route.
+        return $this->storeVersion($request->merge(['documento_id' => $documento->id]));
     }
 
     public function getDependencias(DocumentoVersion $version)

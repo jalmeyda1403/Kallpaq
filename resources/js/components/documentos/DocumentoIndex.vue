@@ -8,8 +8,8 @@
         </div>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">Home</li>
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Documentos</li>
             </ol>
         </nav>
@@ -25,10 +25,6 @@
                             title="Nuevo Documento">
                             <i class="fas fa-plus-circle"></i> Agregar
                         </a>
-                        <button class="btn btn-warning btn-sm mr-1" :disabled="!selectedDocumento"
-                            @click.prevent="editDocumento" title="Editar Documento">
-                            <i class="fas fa-pencil-alt"></i> Editar
-                        </button>
                         <button class="btn btn-danger btn-sm" :disabled="!selectedDocumento"
                             @click.prevent="deleteDocumento" title="Eliminar Documento">
                             <i class="fas fa-trash-alt"></i> Eliminar
@@ -57,7 +53,7 @@
                             </div>
                             <div class="col-md-4">
                                 <MultiSelect v-model="filters.tipo_documento" :options="tipoDocumentoOptions"
-                                    optionLabel="nombre_tipodocumento" optionValue="id"
+                                    optionLabel="td_nombre" optionValue="id"
                                     placeholder="Seleccione Tipo de Documento" class="w-100 custom-multiselect"
                                     display="chip" :filter="true" panelClass="custom-multiselect-panel" />
                             </div>
@@ -85,7 +81,7 @@
                         <Column header="Tipo de Documento">
                             <template #body="slotProps">
                                 {{ slotProps.data.tipo_documento ?
-                                    slotProps.data.tipo_documento.nombre_tipodocumento :
+                                    slotProps.data.tipo_documento.td_nombre :
                                     '' }}
                             </template>
                         </Column>
@@ -103,39 +99,48 @@
                         </Column>
                         <Column header="Versión" class="text-center">
                             <template #body="slotProps">
-                                {{ slotProps.data.usa_versiones_documento && slotProps.data.ultima_version &&
-                                    slotProps.data.ultima_version.dv_version ?
-                                    String(slotProps.data.ultima_version.dv_version).padStart(2, '0') : '00' }}
+                                <span class="badge badge-pill badge-light border">
+                                    {{ slotProps.data.usa_versiones_documento == '1' && slotProps.data.ultima_version ?
+                                        'v' + String(slotProps.data.ultima_version.version).padStart(2, '0') : 'v01' }}
+                                </span>
                             </template>
                         </Column>
                         <Column header="Vigencia" class="text-center">
                             <template #body="slotProps">
-                                {{ slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version ? new
-                                    Intl.DateTimeFormat('es-PE', {
-                                        year: 'numeric', month: '2-digit', day: '2-digit'
-                                    }).format(new Date(slotProps.data.ultima_version.dv_fecha_vigencia)) : '') :
-                                    (slotProps.data.fecha_vigencia_documento ? new Intl.DateTimeFormat('es-PE', {
-                                        year:
-                                            'numeric', month: '2-digit', day: '2-digit'
-                                    }).format(new
-                                        Date(slotProps.data.fecha_vigencia_documento)) : '') }}
+                                {{ slotProps.data.usa_versiones_documento == '1' ?
+                                    (slotProps.data.ultima_version ? formatDate(slotProps.data.ultima_version.fecha_publicacion) : '')
+                                    : formatDate(slotProps.data.fecha_aprobacion_documento) }}
                             </template>
                         </Column>
-                        <Column header="Info" class="text-center">
-                            <template #body="slotProps">
-                                <i class="fas"
-                                    :class="{ 'fa-check-circle text-success': slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1) : (slotProps.data.enlace_valido === 1), 'fa-exclamation-circle text-warning': !(slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1) : (slotProps.data.enlace_valido === 1)) }"
-                                    :title="slotProps.data.usa_versiones_documento ? (slotProps.data.ultima_version?.dv_enlace_valido === 1 ? 'Enlace válido' : 'Enlace no válido') : (slotProps.data.enlace_valido === 1 ? 'Enlace válido' : 'Enlace no válido')"></i>
+                        <Column header="Archivo" class="text-center">
+                             <template #body="slotProps">
+                                <a v-if="getFileUrl(slotProps.data) !== '#'" 
+                                   :href="getFileUrl(slotProps.data)" 
+                                   target="_blank"
+                                   class="btn btn-outline-danger btn-sm border-0 rounded-circle"
+                                   data-toggle="tooltip" 
+                                   title="Ver / Descargar Archivo">
+                                    <i class="fas fa-file-pdf fa-lg"></i>
+                                </a>
+                                <span v-else class="text-muted"><i class="fas fa-file-excel fa-lg opacity-25"></i></span>
                             </template>
                         </Column>
                         <Column header="Acciones" class="text-center">
                             <template #body="slotProps">
-                                <a href="#" class="px-1" @click.prevent="openPdfModal(slotProps.data)"
-                                    title="Abrir Pdf"><i class="fas fa-file-pdf fa-lg text-danger"></i></a>
-                                <a href="#" class="px-1" @click.prevent="showRelatedDocs(slotProps.data.id)"
-                                    title="Ver Documentos Relacionados"><i class="fas fa-copy"></i></a>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <Button icon="pi pi-pencil"
+                                        class="p-button-rounded p-button-warning p-button-text p-button-sm"
+                                        @click="editDocumento(slotProps.data)" v-tooltip.top="'Editar'" />
+                                    <Button icon="pi pi-folder-open"
+                                        class="p-button-rounded p-button-info p-button-text p-button-sm"
+                                        @click="openAnexos(slotProps.data)" v-tooltip.top="'Gestionar Anexos'" />
+                                    <Button icon="pi pi-history"
+                                        class="p-button-rounded p-button-secondary p-button-text p-button-sm"
+                                        @click="openHistorial(slotProps.data)" v-tooltip.top="'Ver Historial'" />
+                                </div>
                             </template>
                         </Column>
+
 
                     </DataTable>
                 </div>
@@ -156,6 +161,7 @@ import { useDocumentoStore } from '@/stores/documentoStore'; // Importa la tiend
 // PrimeVue Components
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Button from 'primevue/button'; // Import Button
 import Tag from 'primevue/tag'; // Re-introduce Tag
 import { useToast } from 'primevue/usetoast'; // Re-introduce useToast
 import MultiSelect from 'primevue/multiselect';
@@ -215,9 +221,23 @@ const openNewDocumentModal = () => {
     documentoStore.openModal();
 };
 
-const editDocumento = () => {
-    if (selectedDocumento.value) {
-        documentoStore.openModal(selectedDocumento.value);
+const editDocumento = (documento) => {
+    if (documento) {
+        documentoStore.openModal(documento.id);
+    }
+};
+
+const openAnexos = async (documento) => {
+    if (documento) {
+        await documentoStore.openModal(documento.id);
+        documentoStore.setCurrentTab('DocumentoAnexos');
+    }
+};
+
+const openHistorial = async (documento) => {
+    if (documento) {
+        await documentoStore.openModal(documento.id);
+        documentoStore.setCurrentTab('DocumentoHistorial');
     }
 };
 
@@ -237,9 +257,29 @@ const deleteDocumento = async () => {
     }
 };
 
+const getFileUrl = (documento) => {
+    let path = null;
+    if (documento.usa_versiones_documento == '1' && documento.ultima_version) {
+        path = documento.ultima_version.archivo_path;
+    } else if (documento.archivo_path_documento) {
+        path = documento.archivo_path_documento;
+    }
+
+    if (!path) return '#';
+    
+    // Si el path ya es una URL externa (http), retornarla directamente
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+
+    return route('documento.mostrar', { path: path });
+};
+
 const openPdfModal = (documento) => {
-    console.log('Abrir PDF de:', documento);
-    // Lógica para abrir tu modal de PDF
+    const url = getFileUrl(documento);
+    if (url !== '#') {
+        window.open(url, '_blank');
+    }
 };
 
 const showRelatedDocs = (documentoId) => {
@@ -248,6 +288,23 @@ const showRelatedDocs = (documentoId) => {
 };
 
 // Lifecycle Hooks
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return ''; // Check for Invalid Date
+        // Adjust for timezone offset to prevent off-by-one errors if dateString is YYYY-MM-DD
+         const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+         const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+
+        return new Intl.DateTimeFormat('es-PE', {
+            year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'
+        }).format(date);
+    } catch (e) {
+        return '';
+    }
+};
+
 onMounted(() => {
     fetchTiposDocumento();
 
@@ -320,8 +377,8 @@ onMounted(() => {
 
 /* Improve row spacing in PrimeVue DataTable */
 :deep(.p-datatable .p-datatable-tbody > tr > td) {
-    padding: 0.75rem 0.5rem !important;
-    /* Adjust as needed, e.g., 0.75rem for more space */
+    padding: 0.4rem 0.5rem !important;
+    /* Reduced padding for compact rows */
 }
 
 

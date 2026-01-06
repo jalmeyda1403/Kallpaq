@@ -1,8 +1,8 @@
 <template>
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">Home</li>
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Gestión de Riesgos</li>
             </ol>
         </nav>
@@ -105,6 +105,22 @@
                                 <template #body="{ data }">
                                     <span :class="['badge', 'badge-lg', getBadgeClass(data.riesgo_nivel)]">{{
                                         data.riesgo_nivel }}</span>
+                                </template>
+                            </Column>
+                            <Column field="especialista.name" header="Especialista" sortable style="width:15%">
+                                <template #body="{ data }">
+                                    <div class="d-flex align-items-center">
+                                        <div v-if="data.especialista" class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mr-2" 
+                                                 style="width: 24px; height: 24px; font-size: 10px; font-weight: bold; color: #555;">
+                                                {{ data.especialista.name.charAt(0) }}
+                                            </div>
+                                            <span class="text-truncate" style="max-width: 150px;" :title="data.especialista.name">
+                                                {{ data.especialista.name }}
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-muted small font-italic">Sin asignar</span>
+                                    </div>
                                 </template>
                             </Column>
                             <Column field="riesgo_estado" header="Estado" sortable style="width:10%"></Column>
@@ -233,15 +249,15 @@ const localFilters = ref({
 
 const search = () => {
     store.filters = { ...localFilters.value };
-    store.fetchMisRiesgos();
+    store.fetchMisRiesgos({ scope: null });
 };
 
 onMounted(() => {
-    store.fetchMisRiesgos();
+    store.fetchMisRiesgos({ scope: null });
 });
 
 const refreshList = () => {
-    store.fetchMisRiesgos();
+    store.fetchMisRiesgos({ scope: null });
 };
 
 const openAccionesModal = (riesgo) => {

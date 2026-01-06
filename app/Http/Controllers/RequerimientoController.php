@@ -58,6 +58,30 @@ class RequerimientoController extends Controller
         return response()->json(compact('requerimientos', 'especialistas', 'statuses'));
     }
 
+    // Método para obtener requerimientos asignados al especialista actual
+    public function webApiEspecialista(Request $request)
+    {
+        $user = Auth::user();
+        
+        $statuses = ['asignado', 'finalizado', 'desestimado'];
+        
+        $requerimientos = Requerimiento::with('proceso', 'avance', 'movimientos')
+            ->where('especialista_id', $user->id)
+            ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
+                return $query->where(function($q) use ($request) {
+                    $q->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%')
+                      ->orWhere('id', 'like', '%' . $request->buscar_requerimiento . '%');
+                });
+            })
+            ->when($request->filled('estado'), function ($query) use ($request) {
+                return $query->where('estado', $request->estado);
+            })
+            ->orderByRaw("FIELD(estado, 'asignado', 'finalizado', 'desestimado')")
+            ->get();
+
+        return response()->json(compact('requerimientos', 'statuses'));
+    }
+
     // Método para mostrar la lista de requerimientos
     public function index(Request $request)
     {

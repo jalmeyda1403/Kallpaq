@@ -26,11 +26,6 @@ import RequerimientoSeguimientoModal from './components/requerimientos/Requerimi
 import RequerimientoAvanceModal from './components/requerimientos/RequerimientoAvanceModal.vue';
 // import RequerimientoFormWizard from './components/requerimientos/RequerimientoFormWizard.vue'; // This is used as a route component, not global
 import EvidenciasModal from './components/requerimientos/EvidenciasModal.vue';
-import ResumenGeneral from './components/dashboard/ResumenGeneral.vue';
-import ResumenGrafico from './components/dashboard/ResumenGrafico.vue';
-import ResumenAlertas from './components/dashboard/ResumenAlertas.vue';
-import ResumenEspecialistas from './components/dashboard/ResumenEspecialistas.vue';
-import DetalleEspecialistaModal from './components/dashboard/DetalleEspecialistaModal.vue';
 import IndicadoresIndex from './components/indicadores/IndicadoresIndex.vue';
 import DashboardProcesos from './components/dashboard/DashboardProcesos.vue';
 
@@ -74,11 +69,6 @@ if (rootAppElement) {
     vueApp.component('requerimiento-seguimiento-modal', RequerimientoSeguimientoModal);
     vueApp.component('requerimiento-avance-modal', RequerimientoAvanceModal);
     vueApp.component('evidencias-modal', EvidenciasModal);
-    vueApp.component('resumen-general', ResumenGeneral);
-    vueApp.component('resumen-grafico', ResumenGrafico);
-    vueApp.component('resumen-alertas', ResumenAlertas);
-    vueApp.component('resumen-especialistas', ResumenEspecialistas);
-    vueApp.component('detalle-especialista-modal', DetalleEspecialistaModal);
 
     // Indicadores
     vueApp.component('indicadores-index', IndicadoresIndex);

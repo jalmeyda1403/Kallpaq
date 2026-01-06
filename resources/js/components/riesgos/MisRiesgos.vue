@@ -1,9 +1,9 @@
 <template>
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">Home</li>
-                <li class="breadcrumb-item active" aria-current="page">Mis Riesgos (OUO)</li>
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
+                <li class="breadcrumb-item active" aria-current="page">Mis Riesgos Asignados</li>
             </ol>
         </nav>
 
@@ -11,7 +11,7 @@
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
-                        <h3 class="card-title mb-0">Mis Riesgos Asignados</h3>
+                        <h3 class="card-title mb-0">Mis Riesgos (Especialista)</h3>
                     </div>
                     <div class="col-md-6 text-md-right">
                         <button class="btn btn-info btn-sm ml-1" @click="showMapaCalor = true">
@@ -106,6 +106,29 @@
                                         data.riesgo_nivel }}</span>
                                 </template>
                             </Column>
+                            <Column header="Avance Acciones" style="width:10%" class="text-center">
+                                <template #body="{ data }">
+                                    <a href="#" @click.prevent="store.openAccionesModal(data)"
+                                        class="font-weight-bold text-dark" title="Gestionar Avance">
+                                        {{ data.acciones_completadas_count }} / {{ data.acciones_total_count }}
+                                    </a>
+                                    <i v-if="data.reprogramaciones_pendientes_count > 0"
+                                        class="fas fa-exclamation-triangle text-warning ml-1"
+                                        title="Tiene reprogramaciones pendientes de aprobación"></i>
+                                </template>
+                            </Column>
+                            <Column header="% Avance" style="width:15%">
+                                <template #body="{ data }">
+                                    <div class="small text-center">
+                                        {{ calculateProgress(data) }}%
+                                        <div class="progress progress-xs">
+                                            <div class="progress-bar bg-info"
+                                                :style="{ width: calculateProgress(data) + '%' }">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </Column>
                             <Column field="riesgo_estado" header="Estado" sortable style="width:10%"></Column>
                             <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
                                 bodyStyle="width: 12%">
@@ -187,6 +210,13 @@ const dt = ref(null);
 const showMapaCalor = ref(false);
 const selectedRiesgo = ref(null);
 
+const calculateProgress = (data) => {
+    const total = data.acciones_total_count || 0;
+    const completed = data.acciones_completadas_count || 0;
+    if (total === 0) return 0;
+    return Math.round((completed / total) * 100);
+};
+
 const localFilters = ref({
     codigo: store.filters.codigo,
     nombre: store.filters.nombre,
@@ -198,15 +228,15 @@ const localFilters = ref({
 
 const search = () => {
     store.filters = { ...localFilters.value };
-    store.fetchMisRiesgos({ scope: 'ouo' });
+    store.fetchMisRiesgos({ scope: 'specialist' });
 };
 
 onMounted(() => {
-    store.fetchMisRiesgos({ scope: 'ouo' });
+    store.fetchMisRiesgos({ scope: 'specialist' });
 });
 
 const refreshList = () => {
-    store.fetchMisRiesgos({ scope: 'ouo' });
+    store.fetchMisRiesgos({ scope: 'specialist' });
 };
 
 const openAccionesModal = (riesgo) => {

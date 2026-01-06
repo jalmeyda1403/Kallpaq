@@ -183,7 +183,7 @@ export const useAuthStore = defineStore('auth', () => {
     });
 
     const hasRole = (roleName) => {
-        return roles.value.includes(roleName);
+        return roles.value.some(role => role.toLowerCase() === roleName.toLowerCase());
     };
 
     const hasAnyRole = (roleNames) => {

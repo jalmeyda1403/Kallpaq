@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('inventarios/{inventario}/procesos/{proceso}', [InventarioController::class, 'disassociateProcess'])->name('api.inventario-proceso.destroy');
     Route::post('inventarios/{inventario}/procesos/add', [InventarioController::class, 'addProcesos'])->name('api.inventarios.procesos.add');
     Route::get('/requerimientos-data', [RequerimientoController::class, 'webApiIndex'])->name('web.requerimientos.data');
+    Route::get('/requerimientos-especialista', [RequerimientoController::class, 'webApiEspecialista'])->name('web.requerimientos.especialista');
     Route::get('/dashboard/resumen-general', [DashboardController::class, 'getResumenGeneral'])->name('dashboard.resumenGeneral');
     Route::get('/dashboard/resumen-grafico', [DashboardController::class, 'getResumenGrafico'])->name('dashboard.resumenGrafico');
     Route::get('/dashboard/alertas', [DashboardController::class, 'getResumenAlertas'])->name('dashboard.alertas');
@@ -430,6 +431,19 @@ Route::controller(DocumentoController::class)
         Route::post('/set-hijo', 'setHijo')->name('setHijo');
         Route::post('/remove-hijo/{hijo}', 'removeHijo')->name('removeHijo');
     });
+
+// Ruta Anexos de Documentos
+Route::controller(App\Http\Controllers\DocumentoAnexoController::class)
+    ->prefix('documento-anexos')
+    ->name('documento.anexos.')
+    ->group(function () {
+        Route::get('/{documentoId}', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::post('/{id}', 'update')->name('update'); // POST for file handling
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::post('/{id}/restore', 'restore')->name('restore');
+        Route::get('/history/{codigo}', 'history')->name('history');
+    });
 // Ruta para el nuevo flujo de creación de versión "inteligente"
 Route::post('documentos/{documento}/versiones/crear-con-dependencias', [DocumentoController::class, 'crearNuevaVersionConDependencias'])
     ->name('documentos.versiones.crearConDependencias');
@@ -461,7 +475,10 @@ Route::delete('/documento/delete/{id}', [DocumentoController::class, 'destroy'])
 Route::get('/documentos/descargar/{id}', [DocumentoController::class, 'descargarArchivo'])->name('documentos.descargar');
 
 Route::get('/documento/{documento_id}/versiones', [DocumentoController::class, 'versiones'])->name('documento.versiones');
-Route::put('/documento/version/update/{id}', [DocumentoVersionController::class, 'update'])->name('documento.version.update');
+Route::post('/documentos/versiones/store', [DocumentoController::class, 'storeVersion'])->name('documento.versiones.store');
+Route::put('/documento/version/update/{id}', [DocumentoController::class, 'updateVersion'])->name('documento.versiones.update');
+Route::delete('/documento/version/delete/{id}', [DocumentoController::class, 'destroyVersion'])->name('documento.versiones.destroy');
+Route::post('/documento/version/restore/{id}', [DocumentoController::class, 'restoreVersion'])->name('documento.versiones.restore');
 Route::get('/buscar-documento', [DocumentoController::class, 'findDocumento'])->name('documento.buscar');
 Route::get('/documentos/{proceso_id}/validar', [DocumentoController::class, 'validarEnlaces'])->name('documentos.validar.enlaces');
 
@@ -530,7 +547,9 @@ Route::get('/requerimientos/seguimiento', function () {
 })->name('requerimientos.seguimiento');
 
 Route::get('/mis-requerimientos', [RequerimientoController::class, 'index'])->name('requerimientos.mine');
-
+Route::get('/requerimientos/crear', function() {
+    return view('app');
+})->name('requerimientos.crear');
 Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
 
 

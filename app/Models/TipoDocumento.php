@@ -10,8 +10,8 @@ class TipoDocumento extends Model
     protected $table = 'tipo_documentos';
     
         protected $fillable = [
-            'sigla_tipodocumento',
-            'nombre_tipodocumento',
+            'td_sigla',
+            'td_nombre',
             'estado',
             'inactive_at',
         ];

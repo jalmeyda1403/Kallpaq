@@ -1,8 +1,8 @@
 <template>
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent pl-0">
-                <li class="breadcrumb-item"><a href="/home" class="text-secondary">Home</a></li>
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home" class="text-secondary">Inicio</router-link></li>
                 <li class="breadcrumb-item"><router-link :to="{ name: 'hallazgos.mine.vue' }" class="text-secondary">Mis
                         Hallazgos</router-link></li>
                 <li class="breadcrumb-item active text-danger" aria-current="page">Planes de Acción</li>

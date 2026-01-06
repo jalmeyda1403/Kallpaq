@@ -1,7 +1,7 @@
 <template>
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
                 <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }">Inicio</router-link>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Bandeja de Requerimientos</li>
@@ -106,19 +106,19 @@
                                     {{ formatDate(data.fecha_asignacion) }}
                                 </template>
                             </Column>
-                            <Column field="fecha_limite" header="Fecha Límite" sortable style="width:10%">
+                            <Column header="Fin Prog./Real" sortable style="width:12%">
                                 <template #body="{ data }">
-                                    {{ formatDate(data.fecha_limite) }}
-                                </template>
-                            </Column>
-                            <Column field="fecha_fin" header="Fecha Atención" sortable style="width:10%">
-                                <template #body="{ data }">
-                                    {{ formatDate(data.fecha_fin) }}
-                                </template>
-                            </Column>
-                            <Column field="avance.updated_at" header="Ultimo Avance" sortable style="width:10%">
-                                <template #body="{ data }">
-                                    {{ formatDate(data.avance?.updated_at) }}
+                                    <div class="small">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-calendar-alt text-primary mr-1" title="Fecha Programada"></i>
+                                            <span class="text-primary font-weight-bold">{{ formatDate(data.fecha_limite) || '-' }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center" v-if="data.fecha_fin">
+                                            <i class="fas fa-calendar-check text-success mr-1" title="Fecha Real"></i>
+                                            <span class="text-success">{{ formatDate(data.fecha_fin) }}</span>
+                                        </div>
+                                        <span v-else class="text-muted small"><i class="fas fa-clock mr-1"></i>Pendiente</span>
+                                    </div>
                                 </template>
                             </Column>
                             <Column header="Avance" style="width:10%">
@@ -149,16 +149,13 @@
                                             @click.prevent="openModal('mostrarEvaluacion', data)">
                                             <i class="fas fa-clipboard-check fa-lg text-primary"></i>
                                         </a>
+                                        <!-- Asignar especialista: solo activo cuando está evaluado o asignado -->
                                         <a href="#" title="Asignar Requerimiento"
                                             class="mr-1 d-inline-block btn-modal-trigger"
-                                            @click.prevent="openModal('mostrarAsignacion', data)">
-                                            <i class="fas fa-user-check fa-lg text-dark"></i>
-                                        </a>
-                                        <a href="#" title="Registrar Avance Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
-                                            @click.prevent="openModal('abrirAvanceRequerimientoModal', data)">
-
-                                            <i class="fas fa-list-alt text-dark fa-lg"></i>
+                                            :class="{ 'disabled-action': !['evaluado', 'asignado'].includes(data.estado) }"
+                                            @click.prevent="['evaluado', 'asignado'].includes(data.estado) && openModal('mostrarAsignacion', data)">
+                                            <i class="fas fa-user-check fa-lg" 
+                                               :class="['evaluado', 'asignado'].includes(data.estado) ? 'text-dark' : 'text-secondary'"></i>
                                         </a>
                                     </template>
                                     <a href="#" title="Ver Avance Requerimiento"
@@ -308,5 +305,10 @@ onMounted(() => {
 .p-datatable-loading-icon {
     color: red !important;
     font-size: 2rem !important;
+}
+
+.disabled-action {
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 </style>

@@ -59,13 +59,13 @@ class RiesgoController extends Controller
         $user = auth()->user();
         $scope = $request->query('scope');
 
-        // Si es admin y NO se fuerza un scope específico, devolver todos
-        if ($user->hasRole('admin') && !$scope) {
-            $query = Riesgo::with(['proceso', 'factor', 'revisiones.responsable']);
+        // Si NO se fuerza un scope específico, devolver todos (para vista general)
+        if (!$scope) {
+            $query = Riesgo::with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         } elseif ($scope === 'specialist') {
             // Scope: Specialist - Risks where the user is the assigned specialist
             $query = Riesgo::where('especialista_id', $user->id)
-                ->with(['proceso', 'factor', 'revisiones.responsable']);
+                ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         } else {
             // Default Scope: OUO - Risks related to user's OUOs
             // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs
@@ -77,7 +77,7 @@ class RiesgoController extends Controller
             // $procesosIds = $procesosIds->merge($procesosDirectos)->unique();
 
             $query = Riesgo::whereIn('proceso_id', $procesosIds)
-                ->with(['proceso', 'factor', 'revisiones.responsable']);
+                ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         }
 
         // Add counts for actions and reprogrammings

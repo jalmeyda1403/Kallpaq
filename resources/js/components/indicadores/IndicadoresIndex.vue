@@ -1,4 +1,11 @@
 <template>
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
+                <li class="breadcrumb-item active" aria-current="page">Indicadores de Gestión</li>
+            </ol>
+        </nav>
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
@@ -114,6 +121,7 @@
             @close="closeAvanceModal" @saved="loadIndicadores" />
         <IndicadorGrafico v-if="showGraficoModal" :visible="showGraficoModal" :indicador="selectedIndicador"
             @close="closeGraficoModal" />
+    </div>
     </div>
 </template>
 

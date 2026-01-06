@@ -122,8 +122,13 @@ const routes = [
             {
                 path: 'requerimientos/seguimiento/:rol?',
                 name: 'requerimientos.seguimiento',
-                component: () => import('@/components/requerimientos/RequerimientosSeguimiento.vue'),
+                component: () => import('@/components/dashboard/DashboardRequerimientos.vue'),
                 props: true
+            },
+            {
+                path: 'requerimientos/especialista',
+                name: 'requerimientos.especialista',
+                component: () => import('@/components/requerimientos/RequerimientosEspecialista.vue'),
             },
 
             // Gestión por Procesos

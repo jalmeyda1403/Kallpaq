@@ -1,8 +1,8 @@
 <template>
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">Home</li>
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Verificación de Eficacia (Mis Asignaciones)</li>
             </ol>
         </nav>
@@ -73,7 +73,7 @@
             </div>
 
             <div class="card-body">
-                <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10" :loading="loading"
+                <DataTable ref="dt" :value="filteredRiesgos" :paginator="true" :rows="10" :loading="loading"
                     :rowsPerPageOptions="[5, 10, 20, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
                     responsiveLayout="scroll">
@@ -95,6 +95,28 @@
                         <template #body="{ data }">
                             <span :class="['badge', 'badge-lg', getBadgeClass(data.riesgo_nivel)]">{{
                                 data.riesgo_nivel }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Avance Acciones" style="width:10%" class="text-center">
+                        <template #body="{ data }">
+                            <span class="font-weight-bold text-dark">
+                                {{ data.acciones_completadas_count }} / {{ data.acciones_total_count }}
+                            </span>
+                            <i v-if="data.reprogramaciones_pendientes_count > 0"
+                                class="fas fa-exclamation-triangle text-warning ml-1"
+                                title="Tiene reprogramaciones pendientes de aprobación"></i>
+                        </template>
+                    </Column>
+                    <Column header="% Avance" style="width:15%">
+                        <template #body="{ data }">
+                            <div class="small text-center">
+                                {{ calculateProgress(data) }}%
+                                <div class="progress progress-xs">
+                                    <div class="progress-bar bg-info"
+                                        :style="{ width: calculateProgress(data) + '%' }">
+                                    </div>
+                                </div>
+                            </div>
                         </template>
                     </Column>
                     <Column field="riesgo_estado" header="Estado" sortable style="width:10%"></Column>
@@ -134,6 +156,17 @@ const store = useRiesgoStore();
 const riesgos = computed(() => store.riesgos);
 const loading = computed(() => store.loading);
 const dt = ref(null);
+
+const calculateProgress = (data) => {
+    const total = data.acciones_total_count || 0;
+    const completed = data.acciones_completadas_count || 0;
+    if (total === 0) return 0;
+    return Math.round((completed / total) * 100);
+};
+
+const filteredRiesgos = computed(() => {
+    return store.riesgos.filter(riesgo => calculateProgress(riesgo) === 100);
+});
 
 const localFilters = ref({
     codigo: store.filters.codigo,

@@ -344,11 +344,20 @@ export default {
   },
   mounted() {
     this.modal = new Modal(this.$el);
-    document.addEventListener('abrirAvanceRequerimientoModal', (event) => {
+    this.handleOpenModal = (event) => {
+      // Prevenir múltiples aperturas
+      if (this.modal._isShown) return;
       this.currentRequerimientoId = event.detail.id;
       this.requerimientoEstado = event.detail.estado;
       this.openModal();
-    });
+    };
+    document.addEventListener('abrirAvanceRequerimientoModal', this.handleOpenModal);
+  },
+  beforeUnmount() {
+    document.removeEventListener('abrirAvanceRequerimientoModal', this.handleOpenModal);
+    if (this.modal) {
+      this.modal.dispose();
+    }
   },
 };
 </script>

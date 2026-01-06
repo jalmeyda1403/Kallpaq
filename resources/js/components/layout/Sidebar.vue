@@ -41,7 +41,7 @@
 
                     <!-- Documentación por Procesos -->
                     <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }">
-                        <a href="#" class="nav-link" @click.prevent="toggleMenu('documentacion')">
+                        <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/inventario-publico') || isModuleActive('/procesos/mapa') }" @click.prevent="toggleMenu('documentacion')">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
                                 Documentación por Procesos
@@ -73,8 +73,8 @@
                     <template v-if="authStore.isAuthenticated">
                         <!-- Gestión de Requerimientos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('requerimientos') }"
-                            v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'supervisor', 'admin'])">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('requerimientos')">
+                            v-if="canAccessModule('requerimientos')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('requerimientos') || isModuleActive('mis-requerimientos') }" @click.prevent="toggleMenu('requerimientos')">
                                 <i class="nav-icon fas fa-tasks"></i>
                                 <p>
                                     Gestión de Requerimientos
@@ -82,43 +82,40 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('requerimientos')">
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente'])">
-                                    <router-link to="/requerimientos/crear" class="nav-link">
-                                        <i class="far fa-edit nav-icon"></i>
-                                        <p>Crear Requerimiento</p>
-                                    </router-link>
-                                </li>
-                                <li class="nav-item"
-                                    v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'supervisor', 'admin'])">
-                                    <router-link to="/mis-requerimientos" class="nav-link">
-                                        <i class="fas fa-user-check nav-icon"></i>
-                                        <p>Mis Requerimientos</p>
-                                    </router-link>
-                                </li>
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista'])">
-                                    <router-link :to="{ name: 'requerimientos.asignados', params: { rol: userRole } }"
-                                        class="nav-link">
-                                        <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>Requerimientos Asignados</p>
-                                    </router-link>
-                                </li>
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista'])">
-                                    <router-link :to="{ name: 'requerimientos.atendidos', params: { rol: userRole } }"
-                                        class="nav-link">
-                                        <i class="fas fa-check-circle fa-xs nav-icon"></i>
-                                        <p>Requerimientos Atendidos</p>
-                                    </router-link>
-                                </li>
+                                <!-- Bandeja de Requerimientos -->
                                 <li class="nav-item"
                                     v-if="hasAnyRole(['supervisor', 'admin', 'facilitador', 'subgerente', 'especialista'])">
-                                    <router-link to="/requerimientos/index" class="nav-link">
+                                    <router-link to="/requerimientos/index" class="nav-link" active-class="active">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
                                     </router-link>
                                 </li>
+                                <!-- Crear Requerimiento -->
+                                <li class="nav-item">
+                                    <router-link to="/requerimientos/crear" class="nav-link" active-class="active">
+                                        <i class="far fa-edit nav-icon"></i>
+                                        <p>Crear Requerimiento</p>
+                                    </router-link>
+                                </li>
+                                <!-- Mis Requerimientos -->
+                                <li class="nav-item"
+                                    v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'supervisor', 'admin'])">
+                                    <router-link to="/mis-requerimientos" class="nav-link" active-class="active">
+                                        <i class="fas fa-user-check nav-icon"></i>
+                                        <p>Mis Requerimientos</p>
+                                    </router-link>
+                                </li>
+                                <!-- Mis Req. Asignados (Especialista) -->
+                                <li class="nav-item" v-if="hasAnyRole(['especialista', 'admin'])">
+                                    <router-link to="/requerimientos/especialista" class="nav-link" active-class="active">
+                                        <i class="fas fa-user-cog nav-icon"></i>
+                                        <p>Mis Req. Asignados</p>
+                                    </router-link>
+                                </li>
+                                <!-- Dashboard Requerimientos -->
                                 <li class="nav-item">
                                     <router-link :to="{ name: 'requerimientos.seguimiento', params: { rol: userRole } }"
-                                        class="nav-link">
+                                        class="nav-link" active-class="active">
                                         <i class="fas fa-tachometer-alt fa-xs nav-icon"></i>
                                         <p>Dashboard Requerimientos</p>
                                     </router-link>
@@ -128,7 +125,7 @@
 
                         <!-- Gestión por Procesos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('procesos') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('procesos')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/inventario-gestion') || isModuleActive('/procesos/index') || isModuleActive('/documentos') || isModuleActive('/indicadores-gestion') }" @click.prevent="toggleMenu('procesos')">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     Gestión por Procesos
@@ -177,7 +174,7 @@
 
                         <!-- Gestión de la Mejora -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('mejora') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('mejora')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/mejora') || isModuleActive('/mis-hallazgos') || isModuleActive('/bandeja-eficacia') }" @click.prevent="toggleMenu('mejora')">
                                 <i class="nav-icon fas fa-sync-alt"></i>
                                 <p>
                                     Gestión de la Mejora
@@ -214,7 +211,7 @@
 
                         <!-- Gestión de Obligaciones -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('obligaciones') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('obligaciones')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/obligaciones') || isModuleActive('/mis-obligaciones') || isModuleActive('/radar-obligaciones') }" @click.prevent="toggleMenu('obligaciones')">
                                 <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>
                                     Gestión de Obligaciones
@@ -251,7 +248,7 @@
 
                         <!-- Gestión de Riesgos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('riesgos') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('riesgos')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/riesgos') }" @click.prevent="toggleMenu('riesgos')">
                                 <i class="nav-icon fas fa-exclamation-triangle"></i>
                                 <p>
                                     Gestión de Riesgos
@@ -289,7 +286,7 @@
 
                         <!-- Gestión de Auditorías -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('auditoria')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/programa') }" @click.prevent="toggleMenu('auditoria')">
                                 <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>
                                     Gestión de Auditorías
@@ -308,7 +305,7 @@
 
                         <!-- Gestión de Continuidad -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('continuidad') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('continuidad')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/continuidad') }" @click.prevent="toggleMenu('continuidad')">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
                                     Gestión de Continuidad
@@ -351,7 +348,7 @@
 
                         <!-- Satisfacción del Cliente -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('satisfaccion') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('satisfaccion')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/salidas-nc') || isModuleActive('/sugerencias') || isModuleActive('/encuestas-satisfaccion') }" @click.prevent="toggleMenu('satisfaccion')">
                                 <i class="nav-icon fas fa-smile"></i>
                                 <p>
                                     Satisfacción del Cliente
@@ -383,7 +380,7 @@
                         <!-- Alta Dirección -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('direccion') }"
                             v-if="hasAnyRole(['admin', 'especialista', 'propietario', 'subgerente'])">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('direccion')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/revision-direccion') }" @click.prevent="toggleMenu('direccion')">
                                 <i class="nav-icon fas fa-user-tie"></i>
                                 <p>
                                     Alta Dirección
@@ -392,7 +389,7 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('direccion')">
                                 <li class="nav-item">
-                                    <router-link to="/revision-direccion" class="nav-link">
+                                    <router-link to="/revision-direccion" class="nav-link" active-class="active">
                                         <i class="fas fa-calendar-check nav-icon"></i>
                                         <p>Revisión por la Dirección</p>
                                     </router-link>
@@ -402,7 +399,7 @@
 
                         <!-- Administración -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('administracion') }">
-                            <a href="#" class="nav-link" @click.prevent="toggleMenu('administracion')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/administracion') }" @click.prevent="toggleMenu('administracion')">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     Administración
@@ -411,13 +408,13 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('administracion')">
                                 <li class="nav-item">
-                                    <router-link to="/administracion/usuarios" class="nav-link">
+                                    <router-link to="/administracion/usuarios" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-users"></i>
                                         <p>Gestionar Usuarios</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/administracion/asignacion-ouos" class="nav-link">
+                                    <router-link to="/administracion/asignacion-ouos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-sitemap"></i>
                                         <p>Asignación OUO-Procesos</p>
                                     </router-link>
@@ -445,7 +442,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -471,6 +468,10 @@ const isMenuOpen = (menuKey) => {
     return !!openMenus.value[menuKey];
 };
 
+const isModuleActive = (pathPrefix) => {
+    return router.currentRoute.value.path.includes(pathPrefix);
+};
+
 const logout = async () => {
     try {
         await axios.post('/logout');
@@ -479,6 +480,27 @@ const logout = async () => {
         console.error('Logout failed', error);
     }
 };
+
+const updateOpenMenus = (path) => {
+    if (path.includes('requerimientos')) openMenus.value['requerimientos'] = true;
+    if (path.includes('procesos') || path.includes('inventario-gestion') || path.includes('documentos') || path.includes('indicadores-gestion')) openMenus.value['procesos'] = true;
+    if (path.includes('mejora') || path.includes('mis-hallazgos') || path.includes('bandeja-eficacia')) openMenus.value['mejora'] = true;
+    if (path.includes('obligaciones')) openMenus.value['obligaciones'] = true;
+    if (path.includes('riesgos')) openMenus.value['riesgos'] = true;
+    if (path.includes('programa')) openMenus.value['auditoria'] = true;
+    if (path.includes('continuidad')) openMenus.value['continuidad'] = true;
+    if (path.includes('salidas-nc') || path.includes('sugerencias') || path.includes('encuestas-satisfaccion')) openMenus.value['satisfaccion'] = true;
+    if (path.includes('revision-direccion')) openMenus.value['direccion'] = true;
+    if (path.includes('administracion')) openMenus.value['administracion'] = true;
+};
+
+onMounted(() => {
+    updateOpenMenus(router.currentRoute.value.path);
+});
+
+watch(() => router.currentRoute.value.path, (newPath) => {
+    updateOpenMenus(newPath);
+}, { immediate: true });
 </script>
 
 <style scoped>

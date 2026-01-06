@@ -30,7 +30,12 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer d-flex justify-content-between">
+          <div class="text-muted small" v-if="ultimoAvance">
+            <i class="fas fa-clock mr-1"></i>
+            <span>Último avance: <strong>{{ formatDate(ultimoAvance) }}</strong></span>
+          </div>
+          <div v-else></div>
           <button class="btn btn-secondary btn-sm" @click="closeModal">Cerrar</button>
         </div>
       </div>
@@ -138,7 +143,9 @@ export default {
       modalInstance: null,
       requerimientoId: null,
       avance: 0,
+      ultimoAvance: null,
       isLoading: false,
+      isModalVisible: false,
       etapas: [
         { titulo: 'Enviado', porcentaje: 0 },
         { titulo: 'Asignado', porcentaje: 2 },
@@ -150,20 +157,28 @@ export default {
         { titulo: 'Revisión técnica', porcentaje: 90 },
         { titulo: 'Firma o aprobación', porcentaje: 95 },
         { titulo: 'Publicado', porcentaje: 100 },
-        { titulo: 'Finalizado', porcentaje: 100 },
       ],
     };
   },
   methods: {
+    handleMostrarSeguimiento(event) {
+      // Prevenir múltiples aperturas
+      if (this.isModalVisible) return;
+      this.mostrarSeguimiento(event.detail);
+    },
     mostrarSeguimiento(requerimiento) {
       this.requerimientoId = requerimiento.id;
       this.isLoading = true;
+      this.isModalVisible = true;
+      
       axios.get(route('requerimientos.getAvance', { id: this.requerimientoId }, false, Ziggy))
         .then(response => {
           if (response.data) {
             this.avance = response.data.avance_registrado;
+            this.ultimoAvance = response.data.updated_at;
           } else {
             this.avance = 0;
+            this.ultimoAvance = null;
           }
         })
         .catch(error => {
@@ -173,14 +188,11 @@ export default {
           this.isLoading = false;
         });
 
-      if (this.modalInstance) {
-        this.modalInstance.show();
-      } else {
-        console.error('¡Error! La instancia del modal es nula.');
-      }
+      this.modalInstance?.show();
     },
     closeModal() {
-      this.modalInstance.hide();
+      this.isModalVisible = false;
+      this.modalInstance?.hide();
     },
     getEstado(etapa) {
       if (this.avance >= etapa.porcentaje) {
@@ -191,13 +203,36 @@ export default {
       }
       return 'pendiente';
     },
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    },
   },
   mounted() {
-    this.modalInstance = new Modal(this.$refs.modal);
-
-    document.addEventListener('mostrarSeguimiento', (event) => {
-      this.mostrarSeguimiento(event.detail);
-    });
+    const modalEl = this.$refs.modal;
+    if (modalEl) {
+      this.modalInstance = new Modal(modalEl);
+      // Sincronizar estado cuando se cierra con backdrop o ESC
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        this.isModalVisible = false;
+      });
+    }
+    document.addEventListener('mostrarSeguimiento', this.handleMostrarSeguimiento);
   },
+  beforeUnmount() {
+    document.removeEventListener('mostrarSeguimiento', this.handleMostrarSeguimiento);
+    // Limpiar el modal de Bootstrap
+    if (this.modalInstance) {
+      this.modalInstance.dispose();
+      this.modalInstance = null;
+    }
+  }
 };
 </script>

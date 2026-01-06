@@ -31,13 +31,13 @@
                                     @click="documentoStore.setCurrentTab('MetadatosForm')"><i class="fas fa-tags"></i>
                                     Metadatos</a>
                                 <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'ProcesosList' }"
-                                    @click="documentoStore.setCurrentTab('ProcesosList')"><i class="fas fa-cogs"></i>
+                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoProcesos' }"
+                                    @click="documentoStore.setCurrentTab('DocumentoProcesos')"><i class="fas fa-cogs"></i>
                                     Procesos</a>
                                 <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoJerarquia' }"
-                                    @click="documentoStore.setCurrentTab('DocumentoJerarquia')"><i
-                                        class="fas fa-sitemap"></i> Jeararquia (Padre/Hijos)</a>
+                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoAnexos' }"
+                                    @click="documentoStore.setCurrentTab('DocumentoAnexos')"><i
+                                        class="fas fa-paperclip"></i> Documentos Anexos</a>
 
                                 <a class="nav-link"
                                     :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentosRelacionados' }"
@@ -50,8 +50,8 @@
                             <h6 class="text-secondary mx-3 mt-3">Gestión y Ciclo de Vida</h6>
                              <div v-if="documentoStore.isEditing && documentoStore.documentoForm.usa_versiones_documento == '1'">
                                 <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'VersionesList' }"
-                                    @click="documentoStore.setCurrentTab('VersionesList')" id="v-pills-versionestab"
+                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoVersiones' }"
+                                    @click="documentoStore.setCurrentTab('DocumentoVersiones')" id="v-pills-versionestab"
                                     role="tab">
                                     <i class="fas fa-code-branch"></i> Versiones
                                 </a>
@@ -83,38 +83,40 @@
 <script setup>
 import { onMounted, ref, shallowRef, watch } from 'vue';
 import { useDocumentoStore } from '@/stores/documentoStore';
+import { Modal } from 'bootstrap';
 
 // Importa los demás componentes aquí
 import DocumentoForm from './DocumentoForm.vue';
 import MetadatosForm from './MetadatosForm.vue';
-import VersionesList from './VersionesList.vue';
-import ProcesosList from './ProcesosList.vue';
+import DocumentoVersiones from './DocumentoVersiones.vue'; // Renamed
+import DocumentoProcesos from './DocumentoProcesos.vue'; // Renamed
 import DocumentoHistorial from './DocumentoHistorial.vue';
 import DocumentosRelacionados from './DocumentosRelacionados.vue';
-import DocumentoJerarquia from './DocumentoJerarquia.vue';
+import DocumentoAnexos from './DocumentoAnexos.vue';
 
 
 
 
 const documentoStore = useDocumentoStore();
 const modal = ref(null);
+const dynamicComponent = ref(null);
+let modalInstance = null;
 
 
-const tabs = shallowRef({
+const tabs = {
     DocumentoForm,
     MetadatosForm,
-    VersionesList,
-    ProcesosList,
+    DocumentoVersiones,
+    DocumentoProcesos,
     DocumentoHistorial,
     DocumentosRelacionados,
-    DocumentoJerarquia
-
-});
+    DocumentoAnexos
+};
 
 
 
 onMounted(() => {
-    $(modal.value).modal({
+    modalInstance = new Modal(modal.value, {
         backdrop: 'static',
         keyboard: false
     });
@@ -122,25 +124,28 @@ onMounted(() => {
     // Observa el estado isModalOpen del store para mostrar/ocultar el modal
     documentoStore.$subscribe((mutation, state) => {
         if (state.isModalOpen) {
-            $(modal.value).modal('show');
+            modalInstance.show();
             // Asegúrate de que el tab por defecto sea HallazgoForm al abrir el modal
             if (!documentoStore.currentTab) {
                 documentoStore.setCurrentTab('DocumentoForm');
             }
         } else {
-            $(modal.value).modal('hide');
+            modalInstance.hide();
         }
     });
     // --- CAMBIO CLAVE: Usa el evento shown.bs.modal ---
-    $(modal.value).on('shown.bs.modal', () => {
+    modal.value.addEventListener('shown.bs.modal', () => {
 
-        if (documentoStore.currentTab === 'MetadatosForm' && documentoFormRef.value) {
-            documentoFormRef.value.reInitializeSelect2(); // Llama a un método expuesto por HallazgoForm
+        if (documentoStore.currentTab === 'MetadatosForm' && dynamicComponent.value) {
+            // Check if the component exposes reInitializeSelect2 (it might need defineExpose in child)
+            if (typeof dynamicComponent.value.reInitializeSelect2 === 'function') {
+                dynamicComponent.value.reInitializeSelect2(); 
+            }
         }
     });
 
     // Manejar el evento 'hidden.bs.modal' para limpiar el store
-    $(modal.value).on('hidden.bs.modal', () => {
+    modal.value.addEventListener('hidden.bs.modal', (event) => {
         if (event.target === modal.value) {
             documentoStore.resetForm();
         }

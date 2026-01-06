@@ -30,6 +30,7 @@
         "admin-lte": "^4.0.0-rc3",
         "chart.js": "^4.5.1",
         "html2canvas": "^1.4.1",
+        "html2pdf.js": "^0.12.1",
         "jquery": "^3.7.1",
         "jspdf": "^3.0.4",
         "overlayscrollbars": "^2.12.0",

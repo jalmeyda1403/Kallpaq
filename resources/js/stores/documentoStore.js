@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { route } from 'ziggy-js';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 
 export const useDocumentoStore = defineStore('documento', {
@@ -175,7 +176,7 @@ export const useDocumentoStore = defineStore('documento', {
                 this.loading = true;
                 const response = await axios.get(route('documentos.show', id));
                 const data = response.data;
-                
+
                 // Asigna los datos recibidos al estado del formulario
                 Object.assign(this.documentoForm, data);
                 this.documentoForm.fecha_aprobacion_documento = this.formatDateForInput(data.fecha_aprobacion_documento);
@@ -486,34 +487,46 @@ export const useDocumentoStore = defineStore('documento', {
             this.showVersionForm = true;
             this.isEditingVersion = false;
             this.resetVersionForm();
+
+            // Auto-calculate next version
+            let maxVersion = -1;
+            if (this.versiones && this.versiones.length > 0) {
+                // Extract numeric part if version matches expected integer format
+                const versions = this.versiones.map(v => parseInt(v.version || 0));
+                maxVersion = Math.max(...versions);
+            }
+            this.versionForm.version = maxVersion + 1;
         },
         resetVersionForm() {
             this.versionForm = {
                 id: null,
                 documento_id: this.documentoForm.id,
-                dv_version: '',
-                dv_archivo: null,
-                dv_control_cambios: '',
-                dv_enlace_valido: false,
-                dv_instrumento_aprueba: '',
-                dv_fecha_aprobacion: '',
-                dv_fecha_vigencia: '',
+                version: '',
+                control_cambios: '',
+                fecha_aprobacion: '',
+                fecha_publicacion: '',
+                instrumento_aprueba: '',
+                enlace_valido: false,
+                archivo: null,
             };
         },
-        // Abre el formulario para editar una versión existente
         editVersion(version) {
             this.showVersionForm = true;
             this.isEditingVersion = true;
             this.versionForm = {
-                ...version,
-                dv_enlace_valido: version.dv_enlace_valido === 1,
+                id: version.id,
+                documento_id: version.documento_id,
+                version: version.version,
+                control_cambios: version.control_cambios,
+                fecha_aprobacion: version.fecha_aprobacion,
+                fecha_publicacion: version.fecha_publicacion,
+                instrumento_aprueba: version.instrumento_aprueba,
+                enlace_valido: Boolean(version.enlace_valido),
+                archivo: null,
             };
         },
-
-        // Cierra el formulario de versiones y lo resetea
         closeVersionForm() {
             this.showVersionForm = false;
-            this.isEditingVersion = false;
             this.resetVersionForm();
         },
 
@@ -521,18 +534,16 @@ export const useDocumentoStore = defineStore('documento', {
         formatDateForInput(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            return `${date.getFullYear()} -${String(date.getMonth() + 1).padStart(2, '0')} -${String(date.getDate()).padStart(2, '0')} `;
         },
         async validateUrl() {
             this.errors.archivo_path_documento = [];
             this.documentoForm.enlace_valido = false;
 
             try {
-                const response = await axios.post(route('documento.validarUrl'), {
-                    url: this.documentoForm.archivo_path_documento
-                });
+                const url = route('documento.validarUrl');
+                const response = await axios.get(url, { params: { url: this.documentoForm.archivo_path_documento } });
 
-                // Actualiza el estado del store
                 this.documentoForm.enlace_valido = response.data.isValid;
 
                 if (!response.data.isValid) {
@@ -544,9 +555,140 @@ export const useDocumentoStore = defineStore('documento', {
 
                 this.documentoForm.enlace_valido = false;
                 this.errors.archivo_path_documento = ["Ocurrió un error al validar la URL."];
+            }
+        },
 
-                // DEVUELVE false en caso de error
-                return false;
+        async fetchVersiones(documentoId, trashed = false) {
+            if (!documentoId) return;
+            this.loadingVersiones = true;
+            try {
+                const url = route('documento.versiones', { documento_id: documentoId });
+                const response = await axios.get(url, { params: { trashed: trashed ? 1 : 0 } });
+                this.versiones = response.data;
+            } catch (error) {
+                console.error("Error al cargar las versiones:", error);
+                this.versiones = [];
+            } finally {
+                this.loadingVersiones = false;
+            }
+        },
+
+        async saveVersion() {
+            this.loading = true;
+            try {
+                const formData = new FormData();
+                formData.append('documento_id', this.versionForm.documento_id);
+                formData.append('version', this.versionForm.version);
+
+                if (this.versionForm.archivo) {
+                    formData.append('archivo', this.versionForm.archivo);
+                }
+
+                formData.append('control_cambios', this.versionForm.control_cambios || '');
+                formData.append('instrumento_aprueba', this.versionForm.instrumento_aprueba || '');
+                formData.append('fecha_aprobacion', this.versionForm.fecha_aprobacion || '');
+                formData.append('fecha_publicacion', this.versionForm.fecha_publicacion || '');
+                formData.append('enlace_valido', this.versionForm.enlace_valido ? 1 : 0);
+
+                let url;
+                let message = '';
+                if (this.isEditingVersion) {
+                    url = route('documento.versiones.update', { id: this.versionForm.id });
+                    formData.append('_method', 'PUT');
+                    await axios.post(url, formData);
+                    message = 'Versión actualizada correctamente.';
+                } else {
+                    // Using the route for creation
+                    url = route('documento.versiones.store');
+                    await axios.post(url, formData);
+                    message = 'Nueva versión creada correctamente.';
+                }
+
+                // Refresh the list
+                await this.fetchVersiones(this.versionForm.documento_id);
+
+                this.closeVersionForm();
+
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: message,
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#d33' // Matches red theme
+                });
+
+            } catch (error) {
+                console.error("Error saving version:", error);
+                if (error.response?.status === 422) {
+                    this.errors.version = error.response.data.errors;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Validación',
+                        text: 'Por favor, revise los campos obligatorios.',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#d33'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al guardar la versión.',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async deleteVersion(versionId) {
+            try {
+                const url = route('documento.versiones.destroy', { id: versionId });
+                await axios.delete(url);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Eliminado',
+                    text: 'Versión eliminada correctamente.',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#d33'
+                });
+            } catch (error) {
+                console.error("Error deleting version:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al eliminar la versión.',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#d33'
+                });
+                throw error;
+            }
+        },
+
+        async restoreVersion(versionId) {
+            try {
+                const url = route('documento.versiones.restore', { id: versionId });
+                await axios.post(url);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Restaurado',
+                    text: 'Versión restaurada correctamente.',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#d33'
+                });
+            } catch (error) {
+                console.error("Error restoring version:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al restaurar la versión.',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#d33'
+                });
+                throw error;
             }
         },
     },

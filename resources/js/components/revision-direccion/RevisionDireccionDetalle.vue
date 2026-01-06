@@ -2,7 +2,7 @@
     <div class="container-fluid py-4 min-vh-100 bg-light-gray animate-fade-in">
         <!-- Breadcrumb Superior -->
         <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb bg-transparent p-0 mb-0">
+            <ol class="breadcrumb bg-light py-2 px-3 rounded">
                 <li class="breadcrumb-item"><router-link to="/home" class="text-muted"><i class="fas fa-home mr-1"></i>
                         Inicio</router-link></li>
                 <li class="breadcrumb-item"><router-link to="/revision-direccion" class="text-muted">Revisiones por

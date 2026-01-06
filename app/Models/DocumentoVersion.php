@@ -4,22 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentoVersion extends Model
 {
+    use SoftDeletes;
+    protected $table = 'documento_versions';
+
     protected $fillable = [
         'documento_id',
-        'dv_version',
-        'dv_archivo_path',
-        'dv_control_cambios',
-        'dv_enlace_valido',
-        'dv_instrumento_aprueba',
-        'dv_fecha_aprobacion',
-        'dv_fecha_vigencia'
+        'version',
+        'archivo_path',
+        'control_cambios',
+        'enlace_valido',
+        'instrumento_aprueba',
+        'fecha_aprobacion',
+        'fecha_publicacion',
     ];
     protected $dates = [
-        'dv_fecha_aprobacion',
-        'dv_fecha_vigencia'
+        'fecha_aprobacion',
+        'fecha_publicacion'
     ];
     public function documento()
     {

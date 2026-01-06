@@ -1,4 +1,6 @@
-// import 'bootstrap';
+import 'bootstrap'; // If you are using bootstrap JS
+import $ from 'jquery';
+window.$ = window.jQuery = $;
 
 
 /**
