@@ -63,6 +63,7 @@
 <script setup>
 import { ref, onMounted, shallowRef } from 'vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore';
+import { Modal } from 'bootstrap';
 
 // Importa todos tus componentes de las pestañas
 import HallazgoForm from './HallazgoForm.vue';
@@ -74,6 +75,7 @@ import GestionarPlan from './GestionarPlan.vue';
 
 const hallazgoStore = useHallazgoStore();
 const modal = ref(null); // Ref para el elemento modal de Bootstrap
+let modalInstance = null;
 const hallazgoFormRef = ref(null); // <-- NUEVO ref para el componente HallazgoForm
 
 const tabs = shallowRef({
@@ -86,7 +88,7 @@ const tabs = shallowRef({
 
 onMounted(() => {
     // Inicializa el modal de Bootstrap manualmente para controlar su ciclo de vida
-    $(modal.value).modal({
+    modalInstance = new Modal(modal.value, {
         backdrop: 'static',
         keyboard: false
     });
@@ -94,18 +96,18 @@ onMounted(() => {
     // Observa el estado isModalOpen del store para mostrar/ocultar el modal
     hallazgoStore.$subscribe((mutation, state) => {
         if (state.isModalOpen) {
-            $(modal.value).modal('show');
+            modalInstance.show();
             // Asegúrate de que el tab por defecto sea HallazgoForm al abrir el modal
             if (!hallazgoStore.currentTab) {
                 hallazgoStore.setCurrentTab('HallazgoForm');
             }
         } else {
-            $(modal.value).modal('hide');
+            modalInstance.hide();
         }
     });
 
     // --- CAMBIO CLAVE: Usa el evento shown.bs.modal ---
-    $(modal.value).on('shown.bs.modal', () => {
+    modal.value.addEventListener('shown.bs.modal', () => {
 
         if (hallazgoStore.currentTab === 'HallazgoForm' && hallazgoFormRef.value) {
            
@@ -114,11 +116,10 @@ onMounted(() => {
     });
 
     // Manejar el evento 'hidden.bs.modal' para limpiar el store
-    $(modal.value).on('hidden.bs.modal', () => {
+    modal.value.addEventListener('hidden.bs.modal', (event) => {
         if (event.target === modal.value) {
             hallazgoStore.resetForm();
         }
-
     });
 });
 </script>
