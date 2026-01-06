@@ -18,6 +18,8 @@
 </template>
 
 <script>
+import { Modal } from 'bootstrap';
+
 export default {
   props: {
     initialPdfUrl: {
@@ -27,16 +29,24 @@ export default {
   },
   data() {
     return {
-      pdfUrl: this.initialPdfUrl
+      pdfUrl: this.initialPdfUrl,
+      modalInstance: null
     };
   },
   methods: {
     openModal(pdfPath) {
       this.pdfUrl = pdfPath;
-      $('#pdfModal').modal('show');
+      if (this.modalInstance) {
+          this.modalInstance.show();
+      }
     }
   },
   mounted() {
+    this.modalInstance = new Modal(document.getElementById('pdfModal'), {
+      backdrop: 'static',
+      keyboard: false
+    });
+
     document.addEventListener('open-pdf-modal', (event) => {
       this.openModal(event.detail);
     });

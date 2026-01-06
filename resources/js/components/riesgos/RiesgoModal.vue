@@ -62,6 +62,7 @@
 <script setup>
 import { ref, onMounted, shallowRef } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
+import { Modal } from 'bootstrap';
 
 // Importar componentes de los tabs
 import RiesgoForm from './RiesgoForm.vue';
@@ -72,6 +73,7 @@ import RiesgoVerificacionForm from './RiesgoVerificacionForm.vue';
 
 const store = useRiesgoStore();
 const modalRef = ref(null);
+let modalInstance = null;
 
 const tabs = shallowRef({
     RiesgoForm,
@@ -83,23 +85,22 @@ const tabs = shallowRef({
 
 onMounted(() => {
     // Initialize modal manually
-    $(modalRef.value).modal({
+    modalInstance = new Modal(modalRef.value, {
         backdrop: 'static',
-        keyboard: false,
-        show: false
+        keyboard: false
     });
 
     // Subscribe to store changes
     store.$subscribe((mutation, state) => {
         if (state.isModalOpen) {
-            $(modalRef.value).modal('show');
+            modalInstance.show();
         } else {
-            $(modalRef.value).modal('hide');
+            modalInstance.hide();
         }
     });
 
     // Handle hidden event
-    $(modalRef.value).on('hidden.bs.modal', () => {
+    modalRef.value.addEventListener('hidden.bs.modal', () => {
         if (store.isModalOpen) {
             store.fetchMisRiesgos(); // Refresh list on close
             store.closeModal();
