@@ -106,8 +106,9 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from 'vue';
+import { onMounted, watch, ref } from 'vue';
 import { useInventarioStore } from '@/stores/inventarioStore';
+import { Modal } from 'bootstrap';
 
 // PrimeVue components
 import DataTable from 'primevue/datatable';
@@ -121,36 +122,39 @@ import ModificarPropietarioModal from './ModificarPropietarioModal.vue';
 
 const inventarioStore = useInventarioStore();
 
+const newProcessModalRef = ref(null);
+const assignProcessModalRef = ref(null);
+const modifyOwnerModalRef = ref(null);
+
+let newProcessModalInstance = null;
+let assignProcessModalInstance = null;
+let modifyOwnerModalInstance = null;
+
 // Watch for modal state changes to show/hide Bootstrap modals
 watch(() => inventarioStore.displayNewProcessModal, (newValue) => {
-    const modal = document.getElementById('newProcessModal');
-    if (newValue) {
-        $(modal).modal('show');
-    } else {
-        $(modal).modal('hide');
+    if (newProcessModalInstance) {
+        newValue ? newProcessModalInstance.show() : newProcessModalInstance.hide();
     }
 });
 
 watch(() => inventarioStore.displayAssignProcessModal, (newValue) => {
-    const modal = document.getElementById('assignProcessModal');
-    if (newValue) {
-        $(modal).modal('show');
-    } else {
-        $(modal).modal('hide');
+    if (assignProcessModalInstance) {
+        newValue ? assignProcessModalInstance.show() : assignProcessModalInstance.hide();
     }
 });
 
 watch(() => inventarioStore.displayModifyOwnerModal, (newValue) => {
-    const modal = document.getElementById('modifyOwnerModal');
-    if (newValue) {
-        $(modal).modal('show');
-    } else {
-        $(modal).modal('hide');
+    if (modifyOwnerModalInstance) {
+        newValue ? modifyOwnerModalInstance.show() : modifyOwnerModalInstance.hide();
     }
 });
 
 // Lifecycle hook
 onMounted(() => {
+    newProcessModalInstance = new Modal(newProcessModalRef.value);
+    assignProcessModalInstance = new Modal(assignProcessModalRef.value);
+    modifyOwnerModalInstance = new Modal(modifyOwnerModalRef.value);
+    
     inventarioStore.loadProcesos();
 });
 </script>

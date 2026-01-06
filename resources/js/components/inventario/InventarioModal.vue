@@ -57,6 +57,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useInventarioStore } from '@/stores/inventarioStore';
+import { Modal } from 'bootstrap';
 
 // Importa todos tus componentes de las pestañas
 import InventarioForm from './InventarioForm.vue';
@@ -67,6 +68,7 @@ import axios from 'axios';
 
 const inventarioStore = useInventarioStore();
 const modal = ref(null); // Ref para el elemento modal de Bootstrap
+let modalInstance = null;
 
 // Componentes disponibles para las pestañas
 const tabs = {
@@ -163,7 +165,7 @@ const onInventarioSaved = async (inventarioData) => {
 
 onMounted(() => {
     // Inicializa el modal de Bootstrap manualmente para controlar su ciclo de vida
-    $(modal.value).modal({
+    modalInstance = new Modal(modal.value, {
         backdrop: 'static',
         keyboard: false
     });
@@ -171,19 +173,19 @@ onMounted(() => {
     // Observa el estado isModalOpen del store para mostrar/ocultar el modal
     inventarioStore.$subscribe((mutation, state) => {
         if (state.isModalOpen) {
-            $(modal.value).modal('show');
+            modalInstance.show();
             // Asegúrate de que el tab por defecto sea InventarioForm al abrir el modal
             if (!inventarioStore.currentTab) {
                 inventarioStore.setCurrentTab('InventarioForm');
             }
         }
         else {
-            $(modal.value).modal('hide');
+            modalInstance.hide();
         }
     });
 
     // Manejar el evento 'hidden.bs.modal' para limpiar el store
-    $(modal.value).on('hidden.bs.modal', (event) => {
+    modal.value.addEventListener('hidden.bs.modal', (event) => {
         if (event.target === modal.value) {
             inventarioStore.resetForm();
         }

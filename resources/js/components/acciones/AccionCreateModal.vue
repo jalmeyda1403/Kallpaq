@@ -91,6 +91,7 @@ import { ref, reactive, onMounted } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import Swal from 'sweetalert2';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
     hallazgoId: {
@@ -115,6 +116,7 @@ const form = reactive({
 });
 
 const isSaving = ref(false);
+let modalInstance = null;
 
 const saveAccion = async () => {
     if (!form.proceso_id) {
@@ -147,7 +149,7 @@ const saveAccion = async () => {
 };
 
 const closeModal = () => {
-    $('#accionCreateModal').modal('hide');
+    if (modalInstance) modalInstance.hide();
 };
 
 const resetForm = () => {
@@ -161,12 +163,17 @@ const resetForm = () => {
 
 // Listen for open event
 onMounted(() => {
+    modalInstance = new Modal(document.getElementById('accionCreateModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+
     document.addEventListener('open-create-accion-modal', () => {
         // Auto-select first process if available and none selected
         if (!form.proceso_id && props.procesos.length > 0) {
             form.proceso_id = props.procesos[0].id;
         }
-        $('#accionCreateModal').modal('show');
+        if (modalInstance) modalInstance.show();
     });
 });
 </script>

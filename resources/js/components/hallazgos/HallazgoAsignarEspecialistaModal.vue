@@ -37,6 +37,7 @@
 import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
     visible: Boolean,
@@ -46,6 +47,7 @@ const props = defineProps({
 const emit = defineEmits(['cerrar', 'asignado']);
 
 const modalRef = ref(null);
+let modalInstance = null;
 const users = ref([]);
 const loading = ref(false);
 const form = reactive({
@@ -100,11 +102,11 @@ const asignarEspecialista = async () => {
 
 const cerrarModal = () => {
     emit('cerrar');
-    $(modalRef.value).modal('hide');
+    if (modalInstance) modalInstance.hide();
 };
 
 const abrirModal = () => {
-    $(modalRef.value).modal('show');
+    if (modalInstance) modalInstance.show();
 };
 
 watch(() => props.visible, (newVal) => {
@@ -118,6 +120,9 @@ watch(() => props.visible, (newVal) => {
 });
 
 onMounted(() => {
-    // Inicialización si es necesaria
+    modalInstance = new Modal(modalRef.value, {
+        backdrop: 'static',
+        keyboard: false
+    });
 });
 </script>

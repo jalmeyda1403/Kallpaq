@@ -53,10 +53,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { route } from 'ziggy-js';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
     visible: Boolean,
@@ -66,6 +67,7 @@ const props = defineProps({
 const emit = defineEmits(['cerrar', 'guardado']);
 
 const modalRef = ref(null);
+let modalInstance = null;
 const loading = ref(false);
 const form = reactive({
     he_resultado: '',
@@ -108,12 +110,19 @@ const guardarEvaluacion = async () => {
 
 const cerrarModal = () => {
     emit('cerrar');
-    $(modalRef.value).modal('hide');
+    if (modalInstance) modalInstance.hide();
 };
 
 const abrirModal = () => {
-    $(modalRef.value).modal('show');
+    if (modalInstance) modalInstance.show();
 };
+
+onMounted(() => {
+    modalInstance = new Modal(modalRef.value, {
+        backdrop: 'static',
+        keyboard: false
+    });
+});
 
 watch(() => props.visible, (newVal) => {
     if (newVal) {

@@ -58,10 +58,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { route } from 'ziggy-js';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
     visible: Boolean,
@@ -71,6 +72,7 @@ const props = defineProps({
 const emit = defineEmits(['cerrar', 'archivos-subidos']);
 
 const modalRef = ref(null);
+let modalInstance = null;
 const loading = ref(false);
 const evidencias = ref([]);
 const selectedFiles = ref([]);
@@ -138,12 +140,19 @@ const subirArchivos = async () => {
 
 const cerrarModal = () => {
     emit('cerrar');
-    $(modalRef.value).modal('hide');
+    if (modalInstance) modalInstance.hide();
 };
 
 const abrirModal = () => {
-    $(modalRef.value).modal('show');
+    if (modalInstance) modalInstance.show();
 };
+
+onMounted(() => {
+    modalInstance = new Modal(modalRef.value, {
+        backdrop: 'static',
+        keyboard: false
+    });
+});
 
 watch(() => props.visible, (newVal) => {
     if (newVal) {
