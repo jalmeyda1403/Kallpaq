@@ -104,96 +104,72 @@ class HallazgoController extends Controller
     }
     public function apiMyHallazgos(Request $request)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        // 1. Verificar si el usuario tiene OUOs asignadas
-        if ($user->ouos()->count() === 0) {
-            // Buscar la OUO "Subgerencia de Modernización"
-            $ouoModernizacion = \App\Models\OUO::where('ouo_nombre', 'like', '%Subgerencia de Modernización%')->first();
+            // 1. Verificar si el usuario tiene OUOs asignadas
+            if ($user->ouos()->count() === 0) {
+                // Buscar la OUO "Subgerencia de Modernización"
+                $ouoModernizacion = \App\Models\OUO::where('ouo_nombre', 'like', '%Subgerencia de Modernización%')->first();
 
-            if ($ouoModernizacion) {
-                // Asignar el usuario a esta OUO
-                $user->ouos()->attach($ouoModernizacion->id, ['activo' => 1, 'role_in_ouo' => 'miembro']);
-            }
-        }
-
-        // Recargar las OUOs del usuario
-        $user->load('ouos');
-        $userOuos = $user->ouos;
-        $ouoIds = $userOuos->pluck('id');
-
-        // Obtener los procesos asociados a esas OUOs
-        $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $ouoIds)->pluck('id_proceso')->unique();
-
-        // Verificar si hay hallazgos para estos procesos
-        $hallazgosCount = Hallazgo::whereHas('procesos', function ($q) use ($procesoIds) {
-            $q->whereIn('procesos.id', $procesoIds);
-        })->count();
-
-        // Si no hay hallazgos y tenemos procesos, crear 2 hallazgos de prueba
-        if ($hallazgosCount === 0 && $procesoIds->isNotEmpty()) {
-            $procesoId = $procesoIds->first();
-            $proceso = Proceso::find($procesoId);
-
-            if ($proceso) {
-                for ($i = 1; $i <= 2; $i++) {
-                    // Generar código simple para prueba
-                    $correlativo = Hallazgo::where('proceso_id', $procesoId)->count() + $i;
-                    $hallazgo_cod = 'SMP-' . $proceso->proceso_sigla . '-INT-' . sprintf('%03d', $correlativo);
-
-                    Hallazgo::create([
-                        'hallazgo_cod' => $hallazgo_cod,
-                        'proceso_id' => $procesoId,
-                        'hallazgo_resumen' => "Hallazgo de prueba generado automáticamente $i",
-                        'hallazgo_descripcion' => "Este es un hallazgo generado automáticamente porque la unidad orgánica no tenía hallazgos previos.",
-                        'hallazgo_clasificacion' => 'NCM',
-                        'hallazgo_origen' => 'Auditoría Interna',
-                        'hallazgo_fecha_identificacion' => now(),
-                        'hallazgo_estado' => 'creado',
-                        'informe_id' => 'INF-AUTO-' . date('Y'),
-                    ]);
+                if ($ouoModernizacion) {
+                    // Asignar el usuario a esta OUO
+                    $user->ouos()->syncWithoutDetaching([$ouoModernizacion->id => ['activo' => 1, 'role_in_ouo' => 'miembro']]);
                 }
             }
+
+            // Recargar las OUOs del usuario
+            $user->load('ouos');
+            $userOuos = $user->ouos;
+            $ouoIds = $userOuos->pluck('id');
+
+            // Obtener los procesos asociados a esas OUOs
+            $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $ouoIds)->pluck('id_proceso')->unique();
+
+            /* Lógica de dummy hallazgos eliminada por incompatibilidad con esquema (falta proceso_id) */
+
+            // Filtrar hallazgos relacionados con esos procesos
+            $query = Hallazgo::with('procesos', 'acciones');
+
+            if ($procesoIds->isNotEmpty()) {
+                $query->whereHas('procesos', function ($q) use ($procesoIds) {
+                    $q->whereIn('procesos.id', $procesoIds);
+                });
+            } else {
+                // Si no hay procesos asociados, retornar colección vacía
+                $query->whereRaw('1 = 0');
+            }
+
+            // Aplicar filtros adicionales si existen
+            if ($request->filled('descripcion')) {
+                $searchTerm = '%' . $request->descripcion . '%';
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('hallazgo_resumen', 'like', $searchTerm)
+                        ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
+                });
+            }
+
+            if ($request->filled('proceso_id')) {
+                $query->whereHas('procesos', function ($q) use ($request) {
+                    $q->where('procesos.id', $request->proceso_id);
+                });
+            }
+
+            if ($request->filled('clasificacion')) {
+                $query->where('hallazgo_clasificacion', $request->clasificacion);
+            }
+
+            if ($request->filled('estado')) {
+                $query->where('hallazgo_estado', $request->estado);
+            }
+
+            $hallazgos = $query->get();
+
+            return response()->json($hallazgos);
+        } catch (\Throwable $e) {
+            \Log::error("Error en apiMyHallazgos: " . $e->getMessage() . " line " . $e->getLine());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        // Filtrar hallazgos relacionados con esos procesos (Lógica original recuperada)
-        $query = Hallazgo::with('procesos', 'acciones');
-
-        if ($procesoIds->isNotEmpty()) {
-            $query->whereHas('procesos', function ($q) use ($procesoIds) {
-                $q->whereIn('procesos.id', $procesoIds);
-            });
-        } else {
-            // Si no hay procesos asociados, retornar colección vacía
-            $query->whereRaw('1 = 0');
-        }
-
-        // Aplicar filtros adicionales si existen
-        if ($request->filled('descripcion')) {
-            $searchTerm = '%' . $request->descripcion . '%';
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('hallazgo_resumen', 'like', $searchTerm)
-                    ->orWhere('hallazgo_descripcion', 'like', $searchTerm);
-            });
-        }
-
-        if ($request->filled('proceso_id')) {
-            $query->whereHas('procesos', function ($q) use ($request) {
-                $q->where('procesos.id', $request->proceso_id);
-            });
-        }
-
-        if ($request->filled('clasificacion')) {
-            $query->where('hallazgo_clasificacion', $request->clasificacion);
-        }
-
-        if ($request->filled('estado')) {
-            $query->where('hallazgo_estado', $request->estado);
-        }
-
-        $hallazgos = $query->get();
-
-        return response()->json($hallazgos);
     }
 
     /**
@@ -669,5 +645,47 @@ class HallazgoController extends Controller
     public function getEvaluacion(Hallazgo $hallazgo)
     {
         return response()->json($hallazgo->evaluaciones()->first());
+    }
+
+    public function uploadPlanAccion(Request $request, Hallazgo $hallazgo)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf|max:20480', // 20MB Max
+        ]);
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            // Limpiar nombre de archivo
+            $originalName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $file->getClientOriginalName());
+            $filename = time() . '_' . $originalName;
+            
+            // Guardar en disco publico
+            $path = $file->storeAs('hallazgos/planes', $filename, 'public');
+
+            $hallazgo->ruta_plan_accion = $path;
+            $hallazgo->save();
+
+            return response()->json([
+                'path' => $path, 
+                'url' => asset('storage/' . $path),
+                'message' => 'Plan de acción subido correctamente.'
+            ]);
+        }
+
+        return response()->json(['error' => 'No se ha subido ningún archivo.'], 400);
+    }
+
+    public function enviarPlanAccion(Hallazgo $hallazgo)
+    {
+        if (!$hallazgo->ruta_plan_accion) {
+            return response()->json(['error' => 'Debe adjuntar el plan de acción firmado antes de enviar.'], 422);
+        }
+
+        // Cambiar estado para indicar que el plan ha sido enviado
+        // Ajustar según flujo real: 'plan_enviado', 'respondido', 'en_validacion'
+        $hallazgo->hallazgo_estado = 'plan_enviado'; 
+        $hallazgo->save();
+
+        return response()->json(['message' => 'Plan de acción enviado correctamente.', 'estado' => $hallazgo->hallazgo_estado]);
     }
 }

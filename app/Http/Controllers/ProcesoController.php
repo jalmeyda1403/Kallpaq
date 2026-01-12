@@ -403,9 +403,13 @@ class ProcesoController extends Controller
     //Asociar Documentos
     public function listarDocumentos($proceso_id)
     {
-        $proceso = Proceso::with('documentos')->findOrFail($proceso_id);
-        // Carga la relación 'documentos' de forma anticipada y retorna la colección
-        return response()->json($proceso->documentos()->with('ultimaVersion')->get());
+        $proceso = Proceso::findOrFail($proceso_id);
+        // Carga la relación 'documentos' junto con su última versión y anexos
+        $documentos = $proceso->documentos()
+            ->with(['ultimaVersion', 'tipo_documento', 'anexos'])
+            ->get();
+            
+        return response()->json($documentos);
     }
 
     public function asociarDocumentos(Request $request, Proceso $proceso)

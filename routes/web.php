@@ -33,6 +33,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EspecialistaController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\CompromisoController;
 
 
 // ... existing routes ...
@@ -174,8 +175,15 @@ Route::post('/partes', [ParteInteresadaController::class, 'store'])->name('parte
 Route::put('/partes/update/{id}', [ParteInteresadaController::class, 'update'])->name('partes.update');
 Route::delete('/partes/{id}', [ParteInteresadaController::class, 'destroy'])->name('partes.destroy');
 
+// Compromisos (Expectativas)
+Route::post('/compromisos', [CompromisoController::class, 'store'])->name('compromisos.store');
+Route::put('/compromisos/{id}', [CompromisoController::class, 'update'])->name('compromisos.update');
+Route::delete('/compromisos/{id}', [CompromisoController::class, 'destroy'])->name('compromisos.destroy');
+
 //Procesos
 Route::get('/buscarProcesos', [ProcesoController::class, 'buscar'])->name('procesos.buscar');
+Route::get('/buscarRiesgos', [RiesgoController::class, 'buscar'])->name('riesgos.buscar');
+Route::get('/buscarObligaciones', [ObligacionController::class, 'buscar'])->name('obligaciones.buscar');
 
 Route::get('/proceso/{proceso_id?}/show', [ProcesoController::class, 'show'])->name('procesos.show');
 Route::get('/listarProcesos', [ProcesoController::class, 'listar'])->name('procesos.listar');
@@ -280,6 +288,8 @@ Route::controller(HallazgoController::class)
         Route::put('/update/{hallazgo}', 'update')->name('hallazgo.update');
         Route::post('/{hallazgo}/aprobar', 'aprobar')->name('hallazgo.aprobar');
         Route::post('/{hallazgo}/adjuntos', 'subirAdjunto')->name('hallazgo.adjuntos.store');
+        Route::post('/{hallazgo}/plan-accion/upload', 'uploadPlanAccion')->name('hallazgo.plan-accion.upload');
+        Route::post('/{hallazgo}/plan-accion/enviar', 'enviarPlanAccion')->name('hallazgo.plan-accion.enviar');
 
         // Rutas para Verificación de Eficacia
         Route::get('/eficacia/listar', 'apiListarEficacia')->name('hallazgo.eficacia.listar');
@@ -480,10 +490,12 @@ Route::put('/documento/version/update/{id}', [DocumentoController::class, 'updat
 Route::delete('/documento/version/delete/{id}', [DocumentoController::class, 'destroyVersion'])->name('documento.versiones.destroy');
 Route::post('/documento/version/restore/{id}', [DocumentoController::class, 'restoreVersion'])->name('documento.versiones.restore');
 Route::get('/buscar-documento', [DocumentoController::class, 'findDocumento'])->name('documento.buscar');
+Route::get('/api/documentos/validar-url', [DocumentoController::class, 'validarUrl'])->name('api.documentos.validarUrl');
 Route::get('/documentos/{proceso_id}/validar', [DocumentoController::class, 'validarEnlaces'])->name('documentos.validar.enlaces');
 
 Route::get('/api/documentos', [DocumentoController::class, 'apiListar'])->name('api.documentos');
 Route::get('/api/documentos/buscar', [DocumentoController::class, 'apiFindDocumento'])->name('api.documentos.buscar');
+Route::post('/api/documentos/improve-summary', [DocumentoController::class, 'improveSummary'])->middleware('auth')->name('api.documentos.improve-summary');
 
 //Pemisos asignados al Usuario
 Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
@@ -581,6 +593,7 @@ Route::get('/test-styles', function () {
 
 // Ruta para imprimir plan de acción
 Route::get('/acciones/imprimir/{hallazgo}', [AccionController::class, 'imprimirPlanAccion'])->name('acciones.imprimir');
+Route::get('/acciones/plan/{hallazgo}/pdf', [AccionController::class, 'descargarPdfPlanAccion'])->name('acciones.plan.pdf');
 
 // Rutas para Salidas No Conformes
 Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->group(function () {
@@ -601,6 +614,29 @@ Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraControl
 // Ruta para el dashboard de procesos (Nuevo)
 Route::get('/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'index'])->name('dashboard.procesos.view')->middleware('auth');
 Route::get('/api/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'data'])->name('dashboard.procesos.data')->middleware('auth');
+
+// ========================================
+// PARTES INTERESADAS (ISO 4.2)
+// ========================================
+Route::prefix('api/partes-interesadas')->middleware('auth')->name('api.partes.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ParteInteresadaController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\ParteInteresadaController::class, 'store'])->name('store');
+    Route::put('/{id}', [App\Http\Controllers\ParteInteresadaController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\ParteInteresadaController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('api/expectativas')->middleware('auth')->name('api.expectativas.')->group(function () {
+    Route::get('/{id}', [App\Http\Controllers\ExpectativaController::class, 'show'])->name('show');
+    Route::post('/', [App\Http\Controllers\ExpectativaController::class, 'store'])->name('store');
+    Route::put('/{id}', [App\Http\Controllers\ExpectativaController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\ExpectativaController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('api/compromisos')->middleware('auth')->name('api.compromisos.')->group(function () {
+    Route::post('/', [App\Http\Controllers\CompromisoController::class, 'store'])->name('store');
+    Route::put('/{id}', [App\Http\Controllers\CompromisoController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\CompromisoController::class, 'destroy'])->name('destroy');
+});
 
 // Rutas para el módulo de Indicadores (Vue)
 // Rutas para el módulo de Indicadores (Refactorizado)
@@ -762,5 +798,19 @@ Route::prefix('api/continuidad')->middleware('auth')->name('continuidad.')->grou
     Route::get('/dashboard', [\App\Http\Controllers\ContinuidadController::class, 'dashboard'])->name('dashboard');
 });
 
+
+// Reportes de Satisfacción
+    Route::prefix('api/reportes-satisfaccion')->middleware('auth')->name('api.reportes-satisfaccion.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ReporteSatisfaccionController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\ReporteSatisfaccionController::class, 'store'])->name('store');
+        Route::get('/quarter-data', [App\Http\Controllers\ReporteSatisfaccionController::class, 'getData'])->name('quarter-data');
+        Route::post('/generate-draft', [App\Http\Controllers\ReporteSatisfaccionController::class, 'generateDraft'])->name('generate-draft');
+        Route::get('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'show'])->name('show');
+        Route::put('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/upload-firma', [App\Http\Controllers\ReporteSatisfaccionController::class, 'uploadFirma'])->name('upload-firma');
+        Route::get('/{id}/download', [App\Http\Controllers\ReporteSatisfaccionController::class, 'downloadWord'])->name('download');
+        Route::post('/{id}/upload-signed', [App\Http\Controllers\ReporteSatisfaccionController::class, 'uploadSigned'])->name('uploadSigned');
+    });
 
 // Catch-all route for Vue SPA

@@ -272,4 +272,50 @@ class AIService
 
         return $this->callOpenAI($prompt);
     }
+    public function improveDocumentSummary(string $summary): string
+    {
+        $prompt = "Actúa como un experto en gestión documental y normas ISO.
+        Tu tarea es mejorar la redacción del siguiente 'Resumen del Documento' para que sea más claro, conciso y profesional.
+        Debe explicar brevemente el propósito y alcance del documento.
+        
+        Texto original: \"$summary\"
+        
+        Instrucciones:
+        1. Mantén un tono formal y técnico.
+        2. Corrige errores gramaticales o de sintaxis.
+        3. Si el texto es muy corto, expande ligeramente para darle contexto (asumiendo un contexto corporativo estándar).
+        4. Longitud máxima: 400 caracteres.
+        5. Devuelve SOLO el texto mejorado.
+        
+        Ejemplo entrada: 'manual para vender mejor'
+        Ejemplo salida: 'Este documento establece los lineamientos y técnicas fundamentales para optimizar el proceso de ventas, asegurando un enfoque estandarizado y efectivo en la atención al cliente.'";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    public function generateQuarterlyReportAnalysis(array $data): array
+    {
+        $prompt = "Actúa como un analista de satisfacción del cliente para una institución pública peruana.
+
+        Datos del trimestre {$data['trimestre']} del año {$data['anio']} para el proceso '{$data['proceso_nombre']}':
+
+        1. Resultados Encuestas (NPS/Satisfacción): {$data['resumen_encuestas']}
+        2. Sugerencias recibidas: {$data['resumen_sugerencias']}
+        3. Reclamos reportados: {$data['reclamos']}
+        4. Salidas No Conformes (SNC): {$data['resumen_snc']}
+
+        Genera dos secciones de redacción profesional, técnica y ejecutiva, actuando como el Propietario del Proceso que presenta su informe trimestral a la Alta Dirección.
+        
+        Instrucciones de Redacción:
+        - Tono: Formal, objetivo, orientado a la mejora continua y basado en evidencia.
+        - Formato: TEXTO PLANO, sin HTML ni Markdown. Usa saltos de línea para separar párrafos y guiones (-) para listas.
+        
+        Secciones requeridas:
+        1. 'oportunidades': Basado en las debilidades o áreas de mejora (bajas encuestas, quejas, SNCs), propón 2-3 acciones concretas. Si los resultados son excelentes, propón acciones para la sostenibilidad o innovación. Usa guiones para cada punto.
+        2. 'conclusiones': Redacta 2-3 párrafos analizando el desempeño integral del trimestre. Conecta los puntos (ej. \"A pesar del aumento en quejas, el NPS se mantuvo alto debido a...\"). Evita frases genéricas.
+
+        Devuelve un objeto JSON con las claves exactas: { \"oportunidades\": \"...\", \"conclusiones\": \"...\" }";
+
+        return json_decode($this->callOpenAI($prompt, true), true) ?? ['oportunidades' => 'No se pudo generar análisis.', 'conclusiones' => 'No se pudo generar conclusiones.'];
+    }
 }

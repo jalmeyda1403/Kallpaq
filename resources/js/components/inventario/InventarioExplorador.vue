@@ -129,9 +129,15 @@
                                                                         class="d-flex align-items-center text-decoration-none text-dark hover:text-primary">
                                                                         <i :class="getDocumentIcon(doc)"
                                                                             class="mr-2 fa-sm"></i>
-                                                                        <span class="text-sm">{{ doc.codigo }} - {{
-                                                                            doc.nombre }} (v{{ doc.versionActual
-                                                                            }})</span>
+                                                                        <div class="d-flex align-items-center flex-wrap">
+                                                                            <span class="text-sm border-right pr-2 mr-2">{{ doc.codigo }} - {{ doc.nombre }} (v{{ doc.versionActual }})</span>
+                                                                            <button v-if="doc.anexos && doc.anexos.length > 0" 
+                                                                                    @click.stop.prevent="openAnexosModal(doc)"
+                                                                                    class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill shadow-xs"
+                                                                                    title="Ver Anexos">
+                                                                                <i class="fas fa-paperclip mr-1"></i> {{ doc.anexos.length }}
+                                                                            </button>
+                                                                        </div>
                                                                     </a>
                                                                 </li>
                                                             </ul>
@@ -180,7 +186,13 @@
                                                                 doc.versionActual }}
                                                         </div>
                                                     </div>
-                                                    <div class="ml-auto pl-2">
+                                                    <div class="ml-auto pl-2 d-flex align-items-center">
+                                                        <button v-if="doc.anexos && doc.anexos.length > 0" 
+                                                                @click.stop.prevent="openAnexosModal(doc)"
+                                                                class="btn btn-xs btn-outline-secondary mr-2 py-0 px-2 rounded-pill shadow-xs"
+                                                                title="Ver Anexos">
+                                                            <i class="fas fa-paperclip mr-1"></i> {{ doc.anexos.length }}
+                                                        </button>
                                                         <i class="fas fa-external-link-alt text-muted small"></i>
                                                     </div>
                                                 </a>
@@ -194,6 +206,75 @@
                 </div>
             </div>
         </div>
+
+        <!-- Anexos Modal -->
+        <div class="modal fade" id="anexosModal" tabindex="-1" role="dialog" aria-hidden="true" ref="anexosModalRef">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-dark text-white border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white rounded-circle p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-paperclip text-dark"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title font-weight-bold mb-0">Documentos Anexos</h5>
+                                <p class="mb-0 small opacity-75" v-if="selectedDoc">{{ selectedDoc.codigo }} - {{ selectedDoc.nombre }}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="close text-white opacity-100" @click="closeAnexosModal" aria-label="Cerrar">
+                            <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div v-if="selectedDoc && selectedDoc.anexos && selectedDoc.anexos.length > 0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light text-muted">
+                                        <tr>
+                                            <th class="border-0 px-4 py-3 text-xs text-uppercase font-weight-bold">Código / Nombre</th>
+                                            <th class="border-0 py-3 text-xs text-uppercase font-weight-bold text-center">Versión</th>
+                                            <th class="border-0 py-3 text-xs text-uppercase font-weight-bold text-center">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="anexo in selectedDoc.anexos" :key="anexo.id" class="transition-colors">
+                                            <td class="px-4 py-3 border-top-0 border-bottom align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="mr-3 text-center" style="width: 32px;">
+                                                        <i :class="getDocumentIcon({extension: getExtension(anexo.da_archivo_path)})" class="fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-weight-bold text-dark text-sm mb-0">{{ anexo.da_nombre }}</div>
+                                                        <div class="text-muted text-xs">{{ anexo.da_codigo }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 border-top-0 border-bottom align-middle text-center">
+                                                <span class="badge badge-pill badge-light border px-3">v{{ anexo.da_version }}</span>
+                                            </td>
+                                            <td class="py-3 border-top-0 border-bottom align-middle text-center">
+                                                <a :href="anexo.da_archivo_path ? `/documento/mostrar/${anexo.da_archivo_path}` : '#'" 
+                                                   target="_blank"
+                                                   class="btn btn-sm btn-action-compact rounded-pill">
+                                                    <i class="fas fa-eye mr-1"></i> Abrir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-5">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-25"></i>
+                            <h6 class="text-muted">No hay anexos disponibles para este documento.</h6>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 bg-light py-3">
+                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" @click="closeAnexosModal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -202,6 +283,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { route as ziggyRoute } from 'ziggy-js';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
     id: {
@@ -216,6 +298,9 @@ const router = useRouter();
 const parentProcess = ref(null);
 const subProcesos = ref([]);
 const loading = ref(true);
+const selectedDoc = ref(null);
+const anexosModalRef = ref(null);
+let anexosModalInstance = null;
 
 const fetchParentProcess = async () => {
     try {
@@ -314,16 +399,22 @@ const loadDocuments = async (subproceso) => {
         const response = await axios.get(`/procesos/${subproceso.id}/listardocumentos`);
 
         // Transform the response to be cleaner if needed
-        subproceso.documentos = response.data.map(doc => ({
-            id: doc.id,
-            codigo: doc.cod_documento, // Assuming cod_documento based on model
-            nombre: doc.nombre_documento, // Model has nombre_documento
-            tipo: doc.tipo_documento ? doc.tipo_documento.nombre : 'Documento',
-            // Access latest version info safely using correct column names
-            versionActual: doc.ultima_version ? doc.ultima_version.dv_version : 'N/A',
-            enlaceActual: doc.ultima_version ? doc.ultima_version.dv_archivo_path : '#',
-            extension: getExtension(doc.ultima_version ? doc.ultima_version.dv_archivo_path : '')
-        }));
+        subproceso.documentos = response.data.map(doc => {
+            const lastVersion = doc.ultima_version;
+            const filePath = lastVersion ? lastVersion.archivo_path : '';
+            
+            return {
+                id: doc.id,
+                codigo: doc.cod_documento, 
+                nombre: doc.nombre_documento, 
+                tipo: doc.tipo_documento ? doc.tipo_documento.nombre : 'Documento',
+                // Access latest version info safely using correct column names from DocumentoVersion model
+                versionActual: lastVersion ? lastVersion.version : 'N/A',
+                enlaceActual: filePath ? `/documento/mostrar/${filePath}` : '#',
+                extension: getExtension(filePath),
+                anexos: doc.anexos || []
+            };
+        });
 
         subproceso.docsLoaded = true;
     } catch (error) {
@@ -345,11 +436,13 @@ const groupDocumentsByType = (docs) => {
 };
 
 const getExtension = (filename) => {
-    return filename.split('.').pop().toLowerCase();
+    if (!filename || typeof filename !== 'string') return '';
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts.pop().toLowerCase() : '';
 };
 
 const getDocumentIcon = (doc) => {
-    const ext = doc.extension;
+    const ext = doc.extension || '';
     if (['pdf'].includes(ext)) return 'fas fa-file-pdf text-danger';
     if (['doc', 'docx'].includes(ext)) return 'fas fa-file-word text-primary';
     if (['xls', 'xlsx'].includes(ext)) return 'fas fa-file-excel text-success';
@@ -357,11 +450,30 @@ const getDocumentIcon = (doc) => {
     return 'fas fa-file-alt text-secondary';
 };
 
+const openAnexosModal = (doc) => {
+    selectedDoc.value = doc;
+    if (anexosModalInstance) {
+        anexosModalInstance.show();
+    }
+};
+
+const closeAnexosModal = () => {
+    if (anexosModalInstance) {
+        anexosModalInstance.hide();
+    }
+};
+
 const goBack = () => {
     router.go(-1); // Simplest way to go back to history state (likely the map map)
 };
 
 onMounted(async () => {
+    if (anexosModalRef.value) {
+        anexosModalInstance = new Modal(anexosModalRef.value, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
     await Promise.all([fetchParentProcess(), fetchSubProcesos()]);
 });
 
@@ -395,6 +507,37 @@ onMounted(async () => {
 
 .doc-item:hover {
     background-color: #f1f5f9 !important;
-    /* Slate 100 */
+}
+
+.btn-xs {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.65rem;
+}
+
+.shadow-xs {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.opacity-75 { opacity: 0.75; }
+.opacity-100 { opacity: 1 !important; }
+
+.btn-action-compact {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-action-compact:hover {
+    background-color: #e9ecef;
+    color: #212529;
+    border-color: #adb5bd;
+    transform: translateY(-1px);
+}
+
+.transition-colors {
+    transition: background-color 0.2s ease;
 }
 </style>

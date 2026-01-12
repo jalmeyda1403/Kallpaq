@@ -6,12 +6,20 @@ use App\Models\Sugerencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class SugerenciaController extends Controller
 {
     public function index(Request $request)
     {
         $query = Sugerencia::with('proceso');
+
+        // Filtro para Facilitador: solo procesos vinculados a su OUO
+        if (Auth::user() && Auth::user()->hasRole('facilitador')) {
+            $userOuoIds = Auth::user()->ouos()->pluck('ouos.id');
+            $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $userOuoIds)->pluck('id_proceso');
+            $query->whereIn('proceso_id', $procesoIds);
+        }
 
         $query->filterByEstado($request->estado)
             ->filterByProceso($request->proceso_id)
@@ -191,14 +199,14 @@ class SugerenciaController extends Controller
         $fileData = [];
         if (is_array($files)) {
             foreach ($files as $file) {
-                $path = $file->store("satisfaccion/{$sugerencia->proceso_id}/sugerencias/{$sugerencia->id}", 'public');
+                $path = $file->store("satisfaccion/sugerencias/{$sugerencia->proceso_id}/{$sugerencia->id}", 'public');
                 $fileData[] = [
                     'path' => $path,
                     'name' => $file->getClientOriginalName()
                 ];
             }
         } else {
-            $path = $files->store("satisfaccion/{$sugerencia->proceso_id}/sugerencias/{$sugerencia->id}", 'public');
+            $path = $files->store("satisfaccion/sugerencias/{$sugerencia->proceso_id}/{$sugerencia->id}", 'public');
             $fileData[] = [
                 'path' => $path,
                 'name' => $files->getClientOriginalName()

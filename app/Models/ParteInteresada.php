@@ -47,6 +47,8 @@ class ParteInteresada extends Model
             ],
         ];
 
+        if (!$influencia || !$interes) return 'Evaluación Pendiente';
+
         return $valoraciones[$influencia][$interes] ?? 'Evaluación No Definida';
     }
     public function getCuadranteAttribute()
@@ -70,6 +72,7 @@ class ParteInteresada extends Model
                 'bajo' => 'IV',
             ],
         ];
+        if (!$influencia || !$interes) return 'Pendiente';
         return $cuadrantes[$influencia][$interes] ?? 'Sin Clasificar';
     }
 
@@ -109,4 +112,8 @@ class ParteInteresada extends Model
 
     }
 
+    public function expectativas()
+    {
+        return $this->hasMany(Expectativa::class, 'parte_interesada_id');
+    }
 }

@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('reportes_satisfaccion', function (Blueprint $table) {
+            if (!Schema::hasColumn('reportes_satisfaccion', 'archivo_firmado')) {
+                $table->string('archivo_firmado')->nullable()->after('estado');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('reportes_satisfaccion', function (Blueprint $table) {
+            $table->dropColumn('archivo_firmado');
+        });
+    }
+};

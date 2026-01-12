@@ -76,8 +76,7 @@ const props = defineProps({
     required: true
   },
   hallazgoId: {
-    type: [Number, String],
-    required: true
+    required: false
   }
 });
 

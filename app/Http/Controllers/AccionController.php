@@ -532,22 +532,56 @@ class AccionController extends Controller
             ->select([
                 'id',
                 'hallazgo_id',
-                'causa_metodo',
-                'causa_por_que1',
-                'causa_por_que2',
-                'causa_por_que3',
-                'causa_por_que4',
-                'causa_por_que5',
-                'causa_mano_obra',
-                'causa_metodologias',
-                'causa_materiales',
-                'causa_maquinas',
-                'causa_medicion',
-                'causa_medio_ambiente',
-                'causa_resultado'
+                'hc_metodo',
+                'hc_por_que1',
+                'hc_por_que2',
+                'hc_por_que3',
+                'hc_por_que4',
+                'hc_por_que5',
+                'hc_mano_obra',
+                'hc_metodologias',
+                'hc_materiales',
+                'hc_maquinas',
+                'hc_medicion',
+                'hc_medio_ambiente',
+                'hc_resultado'
             ])
             ->first();
 
         return view('acciones.imprimir-plan-accion', compact('hallazgo', 'acciones', 'causaRaiz'));
+    }
+    public function descargarPdfPlanAccion(Hallazgo $hallazgo)
+    {
+        $acciones = $hallazgo->acciones;
+
+        // Obtener la causa raíz (reusing query logic)
+        $causaRaiz = $hallazgo->causa()
+            ->select([
+                'id',
+                'hallazgo_id',
+                'hc_metodo',
+                'hc_por_que1',
+                'hc_por_que2',
+                'hc_por_que3',
+                'hc_por_que4',
+                'hc_por_que5',
+                'hc_mano_obra',
+                'hc_metodologias',
+                'hc_materiales',
+                'hc_maquinas',
+                'hc_medicion',
+                'hc_medio_ambiente',
+                'hc_resultado'
+            ])
+            ->first();
+
+        // Generate PDF using DomPDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('acciones.imprimir-plan-accion', compact('hallazgo', 'acciones', 'causaRaiz'));
+        
+        // Optional: Set options if needed, e.g., enable remote images (like the logo)
+        $pdf->setOptions(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true]);
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download('Plan_Accion_' . $hallazgo->hallazgo_cod . '.pdf');
     }
 }

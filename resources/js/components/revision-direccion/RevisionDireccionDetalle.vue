@@ -405,6 +405,9 @@
                                                 class="px-4 py-3 text-uppercase extra-small font-weight-bold text-muted">
                                                 Vencimiento</th>
                                             <th
+                                                class="px-4 py-3 text-uppercase extra-small font-weight-bold text-muted">
+                                                Sistemas</th>
+                                            <th
                                                 class="px-4 py-3 text-uppercase extra-small font-weight-bold text-muted text-center">
                                                 Avance</th>
                                             <th
@@ -443,6 +446,14 @@
                                                     :class="getTimerBadgeClass(comp.dias_restantes)">
                                                     <i class="far fa-clock mr-1"></i> {{ comp.dias_restantes }}d rest.
                                                 </div>
+                                            </td>
+                                            <td class="px-4 py-3 small">
+                                                <div v-if="comp.sistemas_gestion && comp.sistemas_gestion.length">
+                                                    <span v-for="sys in comp.sistemas_gestion" :key="sys" class="badge badge-light border mr-1">
+                                                        {{ sys }}
+                                                    </span>
+                                                </div>
+                                                <span v-else class="text-muted text-xs">-</span>
                                             </td>
                                             <td class="px-4 py-3 text-center">
                                                 <div class="d-inline-flex flex-column align-items-center">

@@ -198,10 +198,24 @@ class UserController extends Controller
         $query = User::query();
 
         if ($request->has('role')) {
-            $query->role($request->role);
+            if ($request->role === 'propietario') {
+                // Filtrar usuarios que tienen el rol de 'owner' O 'propietario' en alguna OUO usando JOIN explícito
+                $query->join('ouo_user', 'users.id', '=', 'ouo_user.user_id')
+                      ->where(function($q) {
+                          $q->where('ouo_user.role_in_ouo', 'owner')
+                            ->orWhere('ouo_user.role_in_ouo', 'propietario');
+                      });
+            } else {
+                $query->role($request->role);
+            }
         }
 
-        $users = $query->select('id', 'name')->orderBy('name')->get();
+        // Seleccionar id y name como descripcion para compatibilidad con ModalHijo
+        $users = $query->select('users.id', 'users.name as descripcion')
+                       ->distinct()
+                       ->orderBy('users.name')
+                       ->get();
+                       
         return response()->json($users);
     }
 

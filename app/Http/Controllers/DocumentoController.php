@@ -16,9 +16,16 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Services\AIService;
 
 class DocumentoController extends Controller
 {
+    protected $aiService;
+
+    public function __construct(AIService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
 
     private function obtenerDocumentosPorProcesos(string $buscar_proceso)
     {
@@ -464,30 +471,34 @@ class DocumentoController extends Controller
 
     public function validarUrl(Request $request)
     {
+        $url = $request->input('url');
+
+        if (empty($url)) {
+            return response()->json(['isValid' => false]);
+        }
+
         try {
-            $isValid = $this->urlEsValida($request->input('url'));
+            // Asegurar que tenga protocolo
+            if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                $url = "https://" . $url;
+            }
+
+            \Illuminate\Support\Facades\Log::info("Validando URL: " . $url);
+
+            $response = \Illuminate\Support\Facades\Http::timeout(8)
+                ->withoutVerifying() // Ignorar errores SSL locales
+                ->get($url);
+
+            $isValid = $response->successful() || $response->redirect();
+
+            \Illuminate\Support\Facades\Log::info("Resultado validación: " . ($isValid ? 'Valida' : 'Invalida') . " Status: " . $response->status());
 
             return response()->json(['isValid' => $isValid]);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error validando URL: " . $e->getMessage());
             return response()->json(['isValid' => false]);
         }
-    }
-    private function urlEsValida($url)
-    {
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_NOBODY, true); // Solo cabeceras
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // ⚠️ Ignora errores SSL
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // ⚠️ Ignora verificación de host
-
-        curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        return $httpCode >= 200 && $httpCode < 400;
     }
 
     public function versiones(Request $request, $documento_id)
@@ -748,6 +759,20 @@ class DocumentoController extends Controller
      
         $version->dependencias()->detach($hijo->id);
         return response()->json($version->dependencias()->get());
+    }
+
+    public function improveSummary(Request $request)
+    {
+        $request->validate([
+            'resumen' => 'required|string|max:1000',
+        ]);
+
+        try {
+            $improvedSummary = $this->aiService->improveDocumentSummary($request->resumen);
+            return response()->json(['improved_summary' => $improvedSummary]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al procesar la solicitud con IA: ' . $e->getMessage()], 500);
+        }
     }
 
 

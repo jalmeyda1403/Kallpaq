@@ -27,40 +27,45 @@
                             <h6 class="text-secondary mx-3 mt-3">Asociaciones</h6>
                             <div :class="{ 'disabled-links': !documentoStore.isEditing }">
                                 <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'MetadatosForm' }"
-                                    @click="documentoStore.setCurrentTab('MetadatosForm')"><i class="fas fa-tags"></i>
+                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoMetadatos' }"
+                                    @click="documentoStore.setCurrentTab('DocumentoMetadatos')"><i class="fas fa-tags"></i>
                                     Metadatos</a>
                                 <a class="nav-link"
                                     :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoProcesos' }"
                                     @click="documentoStore.setCurrentTab('DocumentoProcesos')"><i class="fas fa-cogs"></i>
                                     Procesos</a>
-                                <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoAnexos' }"
-                                    @click="documentoStore.setCurrentTab('DocumentoAnexos')"><i
-                                        class="fas fa-paperclip"></i> Documentos Anexos</a>
+                                <div v-if="!documentoStore.isLMDE">
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoAnexos' }"
+                                        @click="documentoStore.setCurrentTab('DocumentoAnexos')"><i
+                                            class="fas fa-paperclip"></i> Documentos Anexos</a>
 
-                                <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentosRelacionados' }"
-                                    @click="documentoStore.setCurrentTab('DocumentosRelacionados')"><i
-                                        class="fas fa-project-diagram"></i> Documentos Relacionados</a>
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentosRelacionados' }"
+                                        @click="documentoStore.setCurrentTab('DocumentosRelacionados')"><i
+                                            class="fas fa-project-diagram"></i> Documentos Relacionados</a>
+                                </div>
                             </div>
 
-                            <hr class="my-2 border-secondary">
+                            <div v-if="!documentoStore.isLMDE">
+                                <hr class="my-2 border-secondary">
 
-                            <h6 class="text-secondary mx-3 mt-3">Gestión y Ciclo de Vida</h6>
-                             <div v-if="documentoStore.isEditing && documentoStore.documentoForm.usa_versiones_documento == '1'">
-                                <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoVersiones' }"
-                                    @click="documentoStore.setCurrentTab('DocumentoVersiones')" id="v-pills-versionestab"
-                                    role="tab">
-                                    <i class="fas fa-code-branch"></i> Versiones
-                                </a>
-                            </div>
-                            <div :class="{ 'disabled-links': !documentoStore.isEditing }">
-                                <a class="nav-link"
-                                    :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoHistorial' }"
-                                    @click="documentoStore.setCurrentTab('DocumentoHistorial')"><i
-                                        class="fas fa-history"></i> Historial de Cambios</a>
+                                <h6 class="text-secondary mx-3 mt-3">Gestión y Ciclo de Vida</h6>
+                                <div
+                                    v-if="documentoStore.isEditing && documentoStore.documentoForm.usa_versiones_documento == '1'">
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoVersiones' }"
+                                        @click="documentoStore.setCurrentTab('DocumentoVersiones')"
+                                        id="v-pills-versionestab" role="tab">
+                                        <i class="fas fa-code-branch"></i> Versiones
+                                    </a>
+                                </div>
+                                <div :class="{ 'disabled-links': !documentoStore.isEditing }">
+                                    <a class="nav-link"
+                                        :class="{ 'text-danger active': documentoStore.currentTab === 'DocumentoHistorial' }"
+                                        @click="documentoStore.setCurrentTab('DocumentoHistorial')"><i
+                                            class="fas fa-history"></i> Historial de Cambios</a>
+                                </div>
                             </div>
 
 
@@ -87,7 +92,7 @@ import { Modal } from 'bootstrap';
 
 // Importa los demás componentes aquí
 import DocumentoForm from './DocumentoForm.vue';
-import MetadatosForm from './MetadatosForm.vue';
+import DocumentoMetadatos from './DocumentoMetadatos.vue';
 import DocumentoVersiones from './DocumentoVersiones.vue'; // Renamed
 import DocumentoProcesos from './DocumentoProcesos.vue'; // Renamed
 import DocumentoHistorial from './DocumentoHistorial.vue';
@@ -105,7 +110,7 @@ let modalInstance = null;
 
 const tabs = {
     DocumentoForm,
-    MetadatosForm,
+    DocumentoMetadatos,
     DocumentoVersiones,
     DocumentoProcesos,
     DocumentoHistorial,
@@ -136,7 +141,7 @@ onMounted(() => {
     // --- CAMBIO CLAVE: Usa el evento shown.bs.modal ---
     modal.value.addEventListener('shown.bs.modal', () => {
 
-        if (documentoStore.currentTab === 'MetadatosForm' && dynamicComponent.value) {
+        if (documentoStore.currentTab === 'DocumentoMetadatos' && dynamicComponent.value) {
             // Check if the component exposes reInitializeSelect2 (it might need defineExpose in child)
             if (typeof dynamicComponent.value.reInitializeSelect2 === 'function') {
                 dynamicComponent.value.reInitializeSelect2(); 

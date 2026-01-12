@@ -60,6 +60,14 @@
                                         <option value="cancelada">Cancelada</option>
                                     </select>
                                 </div>
+
+                                <div class="col" style="min-width: 200px;">
+                                    <MultiSelect v-model="filtros.sistema_gestion" :options="availableSystems" 
+                                        placeholder="Sistemas de Gestión" 
+                                        class="w-100 custom-multiselect"
+                                        panelClass="custom-multiselect-panel"
+                                        display="chip" />
+                                </div>
                                 <div class="col-auto">
                                     <button type="submit" class="btn bg-dark btn-block shadow-sm rounded-lg">
                                         <i class="fas fa-filter mr-1"></i> Filtrar
@@ -87,6 +95,16 @@
                             </template>
                         </Column>
                         <Column field="titulo" header="Título"></Column>
+                        <Column header="Sistemas">
+                            <template #body="{ data }">
+                                <div v-if="data.sistemas_gestion && data.sistemas_gestion.length">
+                                    <span v-for="sys in data.sistemas_gestion" :key="sys" class="badge badge-info mr-1">
+                                        {{ sys }}
+                                    </span>
+                                </div>
+                                <span v-else class="text-muted small">N/A</span>
+                            </template>
+                        </Column>
                         <Column field="fecha_programada" header="Fecha Programada">
                             <template #body="{ data }">
                                 <i class="far fa-calendar-alt mr-1 text-muted"></i>
@@ -165,15 +183,19 @@ import RevisionDireccionModal from './RevisionDireccionModal.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import MultiSelect from 'primevue/multiselect';
 
 const router = useRouter();
 const store = useRevisionDireccionStore();
+
+const availableSystems = ['SGC', 'SGCM', 'SGCO', 'SGAS', 'SGSI', 'Riesgos'];
 
 const successMessage = ref('');
 const filtros = reactive({
     buscar: '',
     anio: '',
-    estado: ''
+    estado: '',
+    sistema_gestion: null
 });
 
 // Computed
@@ -185,6 +207,7 @@ const aniosDisponibles = computed(() => {
     const currentYear = new Date().getFullYear();
     return [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
 });
+
 
 // Métodos
 const buscar = async () => {
@@ -273,5 +296,43 @@ onMounted(() => {
 .p-datatable-loading-icon {
     color: red !important;
     font-size: 2rem !important;
+}
+
+/* MultiSelect custom styling to match form-control */
+::v-deep(.custom-multiselect) {
+    background: #f8f9fa; /* bg-light */
+    border: 1px solid #ced4da;
+    border-radius: 0.3rem; /* rounded-lg equivalent */
+}
+
+::v-deep(.custom-multiselect .p-multiselect-label) {
+    padding: 0.375rem 0.75rem;
+    font-weight: 400;
+    font-size: 0.85rem; /* Reduced from 1rem */
+    color: #495057;
+}
+
+::v-deep(.custom-multiselect .p-multiselect-token) {
+    font-size: 0.85rem; /* Smaller chips */
+    padding: 0.1rem 0.5rem;
+}
+
+::v-deep(.custom-multiselect .p-multiselect-token-icon) {
+    font-size: 0.85rem;
+}
+
+::v-deep(.custom-multiselect:not(.p-disabled).p-focus) {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: #80bdff;
+}
+</style>
+
+<style>
+/* Global style or non-scoped for the portal panel */
+.custom-multiselect-panel .p-multiselect-item {
+    font-size: 0.85rem !important;
+}
+.custom-multiselect-panel .p-multiselect-header {
+    padding: 0.5rem 1rem !important;
 }
 </style>

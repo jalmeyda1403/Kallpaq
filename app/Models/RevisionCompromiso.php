@@ -29,12 +29,14 @@ class RevisionCompromiso extends Model
         'recursos_necesarios',
         'observaciones',
         'avance',
+        'sistemas_gestion',
     ];
 
     protected $casts = [
         'fecha_limite' => 'date',
         'fecha_cierre' => 'date',
         'evidencia_path' => 'array',
+        'sistemas_gestion' => 'array',
     ];
 
     /**

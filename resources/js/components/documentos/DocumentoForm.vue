@@ -37,10 +37,11 @@
             <div class="form-group small">
               <label for="fuente_documento" class="form-label text-danger font-weight-bold">Fuente</label>
               <select id="fuente_documento" v-model="documentoStore.documentoForm.fuente_documento" class="form-control"
-                data-toggle="tooltip" data-placement="top" title="Fuente del documento.">
+                data-toggle="tooltip" data-placement="top" title="Fuente del documento."
+                :disabled="documentoStore.isLMDE">
                 <option value="">Seleccione</option>
-                <option value="1">Interno</option>
-                <option value="0">Externo</option>
+                <option value="interno">Interno</option>
+                <option value="externo">Externo</option>
               </select>
               <div class="invalid-feedback">{{ documentoStore.errors.fuente_documento ?
                 documentoStore.errors.fuente_documento[0] : '' }}</div>
@@ -78,11 +79,11 @@
                 revisión</label>
               <select id="frecuencia_revision_documento"
                 v-model="documentoStore.documentoForm.frecuencia_revision_documento" class="form-control"
-                data-toggle="tooltip" data-placement="top" title="Frecuencia de revisión del documento en meses.">
-                <option value="0.25">Trimestral</option>
-                <option value="0.5">Semestral</option>
-                <option value="1">Anual</option>
-                <option value="2">Bianual</option>
+                data-toggle="tooltip" data-placement="top" title="Frecuencia de revisión del documento.">
+                <option value="Trimestral">Trimestral</option>
+                <option value="Semestral">Semestral</option>
+                <option value="Anual">Anual</option>
+                <option value="Bianual">Bianual</option>
               </select>
               <div class="invalid-feedback">{{ documentoStore.errors.frecuencia_revision_documento ?
                 documentoStore.errors.frecuencia_revision_documento[0] : '' }}</div>
@@ -93,7 +94,7 @@
               <label for="usa_versiones_documento" class="form-label text-danger font-weight-bold">Usa versiones</label>
               <select id="usa_versiones_documento" v-model="documentoStore.documentoForm.usa_versiones_documento"
                 class="form-control" data-toggle="tooltip" data-placement="top"
-                title="Define si el documento usa versiones.">
+                title="Define si el documento usa versiones." :disabled="documentoStore.isLMDE">
                 <option value="1">Si</option>
                 <option value="0">No</option>
               </select>
@@ -122,12 +123,20 @@
           <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label for="resumen_documento" class="form-label text-danger font-weight-bold">Resumen</label>
-              <small class="text-muted">{{ documentoStore.documentoForm.resumen_documento?.length || 0 }}/500</small>
+              <div class="d-flex align-items-center">
+                  <button type="button" class="btn btn-sm btn-outline-info mr-2"
+                      @click="improveDescription" :disabled="improvingDescription || !documentoStore.documentoForm.resumen_documento"
+                      title="Mejorar redacción con IA">
+                      <i class="fas fa-magic" :class="{ 'fa-spin': improvingDescription }"></i>
+                      <span v-if="improvingDescription"> Mejorando...</span>
+                  </button>
+                  <small class="text-muted">{{ documentoStore.documentoForm.resumen_documento?.length || 0 }}/400</small>
+              </div>
             </div>
-            <textarea id="resumen_documento" v-model="documentoStore.documentoForm.resumen_documento" maxlength="500"
+            <textarea id="resumen_documento" v-model="documentoStore.documentoForm.resumen_documento" maxlength="400"
               placeholder="Describe el resumen del documento." rows="4" class="form-control" required
               data-toggle="tooltip" data-placement="top"
-              title="Describe el resumen del documento en no más de 500 caracteres."
+              title="Describe el resumen del documento en no más de 400 caracteres."
               :class="{ 'is-invalid': documentoStore.errors.resumen_documento }"></textarea>
             <div class="invalid-feedback">{{ documentoStore.errors.resumen_documento ?
               documentoStore.errors.resumen_documento[0] : '' }}</div>
@@ -193,10 +202,18 @@
                 </div>
 
                 <div v-if="!documentoStore.documentoForm.archivo_path_documento || showFileUploader">
-                  <input type="file" id="archivo" ref="archivoInput" class="form-control-file" @change="onFileChange"
-                    :class="{ 'is-invalid': documentoStore.errors.archivo_path_documento }">
-                  <div class="invalid-feedback">{{ documentoStore.errors.archivo_path_documento ?
-                    documentoStore.errors.archivo_path_documento[0] : '' }}</div>
+                  <div class="input-group">
+                    <div class="custom-file">
+                      <input type="file" class="custom-file-input" id="archivo" ref="archivoInput" @change="onFileChange"
+                        :class="{ 'is-invalid': documentoStore.errors.archivo_path_documento }" style="cursor: pointer;">
+                      <label class="custom-file-label" for="archivo" data-browse="Examinar">
+                         {{ fileName || 'Seleccionar archivo...' }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="invalid-feedback d-block" v-if="documentoStore.errors.archivo_path_documento">
+                    {{ documentoStore.errors.archivo_path_documento[0] }}
+                  </div>
                 </div>
               </div>
               <div v-else-if="documentoStore.documentoForm.origen_documento === 'url'">
@@ -247,15 +264,36 @@ const isUrlInvalid = ref(false);
 const validationMessage = ref('');
 const validationMessageClass = ref('');
 const showFileUploader = ref(false);
+const improvingDescription = ref(false);
+
+const improveDescription = async () => {
+    if (!documentoStore.documentoForm.resumen_documento) return;
+    
+    improvingDescription.value = true;
+    try {
+        const improved = await documentoStore.improveDocumentSummary(documentoStore.documentoForm.resumen_documento);
+        documentoStore.documentoForm.resumen_documento = improved;
+    } catch (error) {
+        console.error('Error improving description:', error);
+        // Could add a toast notification here
+    } finally {
+        improvingDescription.value = false;
+    }
+};
+
 // Método para manejar el cambio de archivo
 const onFileChange = (e) => {
   documentoStore.documentoForm.archivo_path_documento = e.target.files[0];
 };
 
 const fileName = computed(() => {
-  if (documentoStore.documentoForm.archivo_path_documento) {
+  const file = documentoStore.documentoForm.archivo_path_documento;
+  if (file) {
+    if (file instanceof File) {
+      return file.name;
+    }
     // Asumiendo que la ruta del archivo tiene el nombre al final
-    return documentoStore.documentoForm.archivo_path_documento.split('/').pop();
+    return typeof file === 'string' ? file.split('/').pop() : '';
   }
   return '';
 });

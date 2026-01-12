@@ -72,6 +72,16 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Sistemas de Gestión</label>
+                            <div class="d-flex flex-wrap">
+                                <div v-for="sys in availableSystems" :key="sys" class="custom-control custom-checkbox mr-3 mb-2">
+                                    <input type="checkbox" class="custom-control-input" :id="'sys-' + sys" :value="sys" v-model="form.sistemas_gestion">
+                                    <label class="custom-control-label" :for="'sys-' + sys">{{ sys }}</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <label>Participantes</label>
                             <textarea v-model="form.participantes" class="form-control" rows="2"
                                 placeholder="Lista de participantes de la reunión..."></textarea>
@@ -147,7 +157,8 @@ const form = reactive({
     responsable_id: '',
     participantes: '',
     agenda: '',
-    estado: 'programada'
+    estado: 'programada',
+    sistemas_gestion: []
 });
 
 // Cargar datos si es edición
@@ -171,10 +182,13 @@ onMounted(async () => {
             responsable_id: store.revisionActual.responsable_id,
             participantes: store.revisionActual.participantes || '',
             agenda: store.revisionActual.agenda || '',
-            estado: store.revisionActual.estado
+            estado: store.revisionActual.estado,
+            sistemas_gestion: store.revisionActual.sistemas_gestion || []
         });
     }
 });
+
+const availableSystems = ['SGC', 'SGCM', 'SGCO', 'SGAS', 'SGSI', 'Riesgos'];
 
 const guardar = async () => {
     Object.keys(errors).forEach(k => delete errors[k]);

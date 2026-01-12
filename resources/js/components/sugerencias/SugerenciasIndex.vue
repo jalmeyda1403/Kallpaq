@@ -14,7 +14,7 @@
                         <h3 class="card-title mb-0">Consolidado de Sugerencias</h3>
                     </div>
                     <div class="col-md-6 text-md-right">
-                        <button class="btn btn-primary btn-sm ml-1" @click="openModal()">
+                        <button class="btn btn-primary btn-sm ml-1" @click="openModal()" v-if="!authStore.hasRole('facilitador')">
                             <i class="fa fa-plus-circle"></i> Nueva Sugerencia
                         </button>
                     </div>
@@ -112,7 +112,7 @@
                         bodyStyle="width: 15%">
                         <template #body="{ data }">
                             <a href="#" title="Editar" class="mr-2 d-inline-block"
-                                @click.prevent="editSugerencia(data)">
+                                @click.prevent="editSugerencia(data)" v-if="!authStore.hasRole('facilitador')">
                                 <i class="fas fa-pencil-alt text-warning fa-lg"></i>
                             </a>
                             <a href="#" title="Tratamiento" class="mr-2 d-inline-block"
@@ -147,6 +147,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useSugerenciasStore } from '@/stores/sugerenciasStore';
+import { useAuthStore } from '@/stores/authStore';
 import { storeToRefs } from 'pinia';
 import SugerenciaModal from './SugerenciaModal.vue';
 import SugerenciaTratamiento from './SugerenciaTratamiento.vue';
@@ -161,6 +162,7 @@ import { FilterMatchMode } from 'primevue/api';
 
 // Usamos el store
 const sugerenciasStore = useSugerenciasStore();
+const authStore = useAuthStore();
 const { sugerencias, loading: storeLoading } = storeToRefs(sugerenciasStore);
 
 const showModal = ref(false);

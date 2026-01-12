@@ -197,29 +197,41 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <!-- 1. Gestión del Inventario -->
-                            <li class="nav-item">
-                                <a href="/vue/inventario-gestion"
-                                    class="nav-link {{ request()->is('vue/inventario-gestion*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-cubes"></i>
-                                    <p>Gestión del Inventario</p>
-                                </a>
-                            </li>
-                            <!-- 2. Gestión de Procesos (listado de procesos) -->
-                            <li class="nav-item">
-                                <a href="{{ route('procesos.index') }}"
-                                    class="nav-link {{ request()->is('procesos*') && !request()->is('procesos.mapa') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-clipboard-list"></i>
-                                    <p>Listado de Procesos</p>
-                                </a>
-                            </li>
-                            <!-- 3. Gestión de Documentos (listado de documentos) -->
-                            <li class="nav-item">
-                                <a href="{{ url('/vue/documentos') }}"
-                                    class="nav-link {{ request()->is('vue/documentos*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-clipboard-list"></i>
-                                    <p>Listado de Documentos</p>
-                                </a>
-                            </li>
+                            @if (auth()->user()->hasRole('admin'))
+                                <li class="nav-item">
+                                    <a href="/vue/inventario-gestion"
+                                        class="nav-link {{ request()->is('vue/inventario-gestion*') ? 'active' : '' }}">
+                                        <i class="nav-icon fas fa-cubes"></i>
+                                        <p>Gestión del Inventario</p>
+                                    </a>
+                                </li>
+                                <!-- 2. Gestión de Procesos (listado de procesos) -->
+                                <li class="nav-item">
+                                    <a href="{{ route('procesos.index') }}"
+                                        class="nav-link {{ request()->is('procesos*') && !request()->is('procesos.mapa') ? 'active' : '' }}">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Listado de Procesos</p>
+                                    </a>
+                                </li>
+                                <!-- 3. Gestión de Documentos (listado de documentos) -->
+                                <li class="nav-item">
+                                    <a href="{{ url('/vue/documentos') }}"
+                                        class="nav-link {{ request()->is('vue/documentos*') ? 'active' : '' }}">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Listado de Documentos</p>
+                                    </a>
+                                </li>
+                            @endif
+                            <!-- Lista Maestra de Documentos Externos (LMDE) -->
+                            @if (auth()->user()->hasAnyRole(['facilitador', 'admin']))
+                                <li class="nav-item">
+                                    <a href="{{ url('/vue/lmde') }}"
+                                        class="nav-link {{ request()->is('vue/lmde*') ? 'active' : '' }}">
+                                        <i class="nav-icon fas fa-book-open"></i>
+                                        <p>LMDE</p>
+                                    </a>
+                                </li>
+                            @endif
                             <!-- 4. Gestión del Desempeño (indicadores) -->
                             <li class="nav-item">
                                 <a href="{{ route('indicadores-gestion.view') }}"

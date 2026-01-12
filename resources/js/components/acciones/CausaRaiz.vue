@@ -16,13 +16,13 @@
             </div>
         </div>
 
-        <div :class="{ 'card-body': !embedded, 'mt-3': embedded }">
+        <div :class="{ 'card-body': !embedded, 'mt-1': embedded && !hideTitle, 'mt-0': embedded && hideTitle }">
             <!-- Header de controles si ESTÁ embebido -->
-            <div v-if="embedded" class="d-flex justify-content-between align-items-center mb-3">
+            <div v-if="embedded && !hideTitle" class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0 text-secondary font-weight-bold">
                     <i class="fas fa-search-location text-danger mr-2"></i>Análisis de Causa Raíz
                 </h5>
-                <div v-if="!isEditing && hasCausa">
+                <div v-if="!isEditing && hasCausa && !hideEditButton">
                     <button :disabled="!hallazgoStore.accionesPermitidas"
                         class="btn btn-outline-danger btn-sm rounded-pill px-3" @click="enableEdit"
                         :title="!hallazgoStore.accionesPermitidas ? 'No se puede editar en este estado de hallazgo' : ''">
@@ -35,15 +35,15 @@
             <div v-if="!isEditing && hasCausa" class="animate__animated animate__fadeIn">
                 <div class="d-flex align-items-center mb-3">
                     <span class="text-muted mr-2">Método aplicado:</span>
-                    <span class="badge badge-light text-danger border border-danger px-3 py-2 rounded-pill"
+                    <span class="badge badge-secondary px-3 py-2 rounded-pill"
                         style="font-size: 0.9rem;">
                         {{ getMetodoLabel(causa.hc_metodo) }}
                     </span>
                 </div>
 
-                <div class="bg-light p-4 rounded-lg position-relative" style="border-left: 4px solid #dc3545;">
-                    <h6 class="text-danger font-weight-bold mb-2">Causa Raíz Identificada</h6>
-                    <p class="mb-0 text-dark" style="font-size: 1.05rem; line-height: 1.6;">
+                <div class="bg-light p-3 rounded-lg position-relative" style="border-left: 4px solid #dc3545;">
+                    <div class="small text-danger font-weight-bold mb-1 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Causa Raíz Identificada</div>
+                    <p class="mb-0 text-dark small" style="line-height: 1.5;">
                         {{ causa.hc_resultado || 'No especificado' }}
                     </p>
                 </div>
@@ -138,6 +138,7 @@
                         :disabled="isSaving || !canSave || !hallazgoStore.accionesPermitidas">
                         <i class="fas fa-save mr-1"></i> {{ isSaving ? 'Guardando...' : 'Guardar Análisis' }}
                     </button>
+
                     <div v-if="!hallazgoStore.accionesPermitidas" class="alert alert-warning mt-3" role="alert">
                         <i class="fas fa-exclamation-triangle mr-1"></i>
                         El análisis de causa raíz está deshabilitado para este estado de hallazgo
@@ -162,6 +163,14 @@ const props = defineProps({
         required: true
     },
     embedded: {
+        type: Boolean,
+        default: false
+    },
+    hideTitle: {
+        type: Boolean,
+        default: false
+    },
+    hideEditButton: {
         type: Boolean,
         default: false
     }
@@ -233,6 +242,10 @@ const resetFields = () => {
 };
 
 // No necesitamos onMounted fetch aquí porque lo hará el padre (AccionesIndex)
+
+defineExpose({
+    enableEdit
+});
 </script>
 
 <style scoped>

@@ -7,6 +7,7 @@ use App\Models\Indicador;
 use App\Models\Proceso;
 use App\Models\PlanificacionSIG;
 use App\Models\PlanificacionPEI;
+use App\Models\ParteInteresada;
 use Illuminate\Support\Facades\DB;
 
 class DashboardProcesosController extends Controller
@@ -26,6 +27,9 @@ class DashboardProcesosController extends Controller
 
         // Calculate and collect metrics
         $processTypesData = $this->groupByProcessType($indicadoresProcessed);
+        
+        // Stakeholders Data
+        $stakeholderData = $this->getStakeholdersData();
 
         return response()->json([
             'general' => round($indicadoresProcessed->avg('current_cumplimiento') ?? 0, 2),
@@ -34,8 +38,42 @@ class DashboardProcesosController extends Controller
             'indicator_types' => $this->getIndicatorTypesData($indicadoresProcessed),
             'sig_objectives' => $this->getSigData($indicadoresProcessed),
             'pei_perspectives' => $this->getPeiData($indicadoresProcessed),
+            'stakeholders_compliance' => $stakeholderData,
             'years' => range(2023, now()->year + 1)
         ]);
+    }
+
+    // ... existing methods ...
+
+    private function getStakeholdersData()
+    {
+        $partes = ParteInteresada::with('expectativas')->get();
+        
+        $totalReq = 0;
+        $implementedReq = 0;
+        
+        $details = $partes->map(function($parte) use (&$totalReq, &$implementedReq) {
+            $total = $parte->expectativas->count();
+            $implemented = $parte->expectativas->where('exp_estado', 'implementado')->count();
+            
+            $totalReq += $total;
+            $implementedReq += $implemented;
+            
+            return [
+                'id' => $parte->id,
+                'nombre' => $parte->pi_nombre,
+                'total' => $total,
+                'implementado' => $implemented,
+                'porcentaje' => $total > 0 ? round(($implemented / $total) * 100, 1) : 0
+            ];
+        })->sortByDesc('total')->values(); // Sort by most requirements
+
+        return [
+            'global_percentage' => $totalReq > 0 ? round(($implementedReq / $totalReq) * 100, 2) : 0,
+            'total_requirements' => $totalReq,
+            'implemented_requirements' => $implementedReq,
+            'details' => $details
+        ];
     }
 
     private function processIndicadores($indicadores, $year)

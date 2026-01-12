@@ -21,6 +21,14 @@ class SalidaNoConformeController extends Controller
     {
         $query = SalidaNoConforme::with(['proceso']);
 
+        // Filtro para Facilitador: solo procesos vinculados a su OUO
+        if (Auth::user()->hasRole('facilitador')) {
+            $userOuoIds = Auth::user()->ouos()->pluck('ouos.id');
+            // Obtener los IDs de procesos relacionados con las OUOs del usuario
+            $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $userOuoIds)->pluck('id_proceso');
+            $query->whereIn('proceso_id', $procesoIds);
+        }
+
         // Aplicar filtros
         $query->filterByDescripcion($request->buscar_snc)
             ->filterByEstado($request->estado)
@@ -77,7 +85,7 @@ class SalidaNoConformeController extends Controller
             // Manejar la subida de archivos de registro (snc_archivos)
             if ($request->hasFile('snc_archivos')) {
                 $files = $request->file('snc_archivos');
-                $fileData = $this->processNewFiles($files, $snc->id);
+                $fileData = $this->processNewFiles($files, $snc);
                 $snc->snc_archivos = $fileData; // El cast 'array' se encarga de la conversión
                 $snc->save();
             }
@@ -199,19 +207,21 @@ class SalidaNoConformeController extends Controller
     /**
      * Helper to process new file uploads
      */
-    private function processNewFiles($files, $sncId)
+    private function processNewFiles($files, $snc)
     {
+        $sncId = $snc->id;
+        $procesoId = $snc->proceso_id ?? 'sin-proceso';
         $fileData = [];
         if (is_array($files)) {
             foreach ($files as $file) {
-                $path = $file->store("snc/{$sncId}", 'public');
+                $path = $file->store("satisfaccion/snc/{$procesoId}/{$sncId}", 'public');
                 $fileData[] = [
                     'path' => $path,
                     'name' => $file->getClientOriginalName()
                 ];
             }
         } else {
-            $path = $files->store("snc/{$sncId}", 'public');
+            $path = $files->store("satisfaccion/snc/{$procesoId}/{$sncId}", 'public');
             $fileData[] = [
                 'path' => $path,
                 'name' => $files->getClientOriginalName()
@@ -260,7 +270,7 @@ class SalidaNoConformeController extends Controller
         // Verificar si hay archivos nuevos para subir
         if ($request->hasFile($dbField)) {
             $files = $request->file($dbField);
-            $newFiles = $this->processNewFiles($files, $snc->id);
+            $newFiles = $this->processNewFiles($files, $snc);
             $finalFiles = array_merge($finalFiles, $newFiles);
         }
 

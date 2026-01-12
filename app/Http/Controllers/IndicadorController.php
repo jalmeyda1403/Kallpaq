@@ -29,8 +29,32 @@ class IndicadorController extends Controller
 
     public function index()
     {
-        $procesos = Proceso::select('id', 'proceso_nombre')->get();
+        $user = auth()->user();
         $query = Indicador::with(['proceso', 'objetivoPEI', 'objetivoSIG']);
+
+        // Filtrado por Rol (Facilitador / Propietario)
+        // Si NO es admin, aplicamos filtro por OUO
+        if (!$user->hasRole('admin') && $user->hasAnyRole(['facilitador', 'propietario'])) {
+            // 1. Obtener IDs de OUOs asignadas al usuario
+            $userOuoIds = $user->ouos()->pluck('ouos.id');
+
+            // 2. Obtener IDs de Procesos asociados a esas OUOs
+            // Usamos la tabla pivote procesos_ouo
+            $allowedProcesoIds = DB::table('procesos_ouo')
+                ->whereIn('id_ouo', $userOuoIds)
+                ->pluck('id_proceso');
+
+            // 3. Filtrar query de indicadores
+            $query->whereIn('proceso_id', $allowedProcesoIds);
+
+            // 4. Filtrar lista de procesos para el dropdown (solo los permitidos)
+            $procesos = Proceso::select('id', 'proceso_nombre')
+                ->whereIn('id', $allowedProcesoIds)
+                ->get();
+        } else {
+            // Admin o rol sin restricción: ve todo
+            $procesos = Proceso::select('id', 'proceso_nombre')->get();
+        }
 
         if (request()->has('proceso_id') && request()->proceso_id) {
             $query->where('proceso_id', request()->proceso_id);

@@ -144,6 +144,11 @@ const routes = [
                 component: DocumentoIndex,
             },
             {
+                path: 'lmde',
+                name: 'documentos.lmde',
+                component: () => import('@/components/documentos/DocumentoLMDEIndex.vue'),
+            },
+            {
                 path: 'indicadores-gestion',
                 name: 'indicadores.gestion',
                 component: () => import('@/components/indicadores/IndicadoresIndex.vue'),
@@ -151,7 +156,7 @@ const routes = [
             {
                 path: 'partes',
                 name: 'partes.index',
-                component: BladeViewPlaceholder // Placeholder
+                component: () => import('@/components/partes/PartesInteresadasIndex.vue')
             },
             {
                 path: 'dashboard/procesos',
@@ -300,6 +305,17 @@ const routes = [
                 path: 'encuestas-satisfaccion/dashboard',
                 name: 'encuestas.dashboard',
                 component: () => import('@/components/encuestas/EncuestasDashboard.vue'),
+            },
+            {
+                path: 'reportes-satisfaccion',
+                name: 'reportes-satisfaccion.index',
+                component: () => import('@/components/satisfaccion/ReporteSatisfaccionIndex.vue')
+            },
+            {
+                path: 'reportes-satisfaccion/nuevo/:id?',
+                name: 'reportes-satisfaccion.wizard',
+                component: () => import('@/components/satisfaccion/ReporteSatisfaccionWizard.vue'),
+                props: true // Pass route params as props
             },
 
             // Alta Dirección - Revisión por la Dirección

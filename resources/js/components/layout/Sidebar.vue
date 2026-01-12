@@ -50,19 +50,19 @@
                         </a>
                         <ul class="nav nav-treeview" v-show="isMenuOpen('documentacion')">
                             <li class="nav-item">
-                                <router-link to="/inventario-publico/0" class="nav-link">
+                                <router-link to="/inventario-publico/0" class="nav-link" active-class="active">
                                     <i class="nav-icon fas fa-book"></i>
                                     <p>Inventario de Procesos</p>
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link to="/procesos/mapa" class="nav-link">
+                                <router-link to="/procesos/mapa" class="nav-link" active-class="active">
                                     <i class="nav-icon fas fa-sitemap"></i>
                                     <p>Mapa de Procesos</p>
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link to="/documentos/listado" class="nav-link">
+                                <router-link to="/documentos/listado" class="nav-link" active-class="active">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de documentos</p>
                                 </router-link>
@@ -84,7 +84,7 @@
                             <ul class="nav nav-treeview" v-show="isMenuOpen('requerimientos')">
                                 <!-- Bandeja de Requerimientos -->
                                 <li class="nav-item"
-                                    v-if="hasAnyRole(['supervisor', 'admin', 'facilitador', 'subgerente', 'especialista'])">
+                                    v-if="hasRole('admin')">
                                     <router-link to="/requerimientos/index" class="nav-link" active-class="active">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
@@ -113,7 +113,7 @@
                                     </router-link>
                                 </li>
                                 <!-- Dashboard Requerimientos -->
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="hasRole('admin')">
                                     <router-link :to="{ name: 'requerimientos.seguimiento', params: { rol: userRole } }"
                                         class="nav-link" active-class="active">
                                         <i class="fas fa-tachometer-alt fa-xs nav-icon"></i>
@@ -133,38 +133,45 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('procesos')">
-                                <li class="nav-item">
-                                    <router-link to="/inventario-gestion" class="nav-link">
+                                <li class="nav-item" v-if="hasRole('admin')">
+                                    <router-link to="/inventario-gestion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-cubes"></i>
                                         <p>Gestión del Inventario</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
-                                    <router-link to="/procesos/index" class="nav-link">
+                                <li class="nav-item" v-if="hasRole('admin')">
+                                    <router-link to="/procesos/index" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Listado de Procesos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
-                                    <router-link to="/documentos" class="nav-link">
+                                <li class="nav-item" v-if="hasRole('admin')">
+                                    <router-link to="/documentos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Listado de Documentos</p>
                                     </router-link>
                                 </li>
+                                <!-- Listado de Documentos Externos (LMDE) -->
+                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'admin'])">
+                                    <router-link to="/lmde" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-book-open"></i>
+                                        <p>Listado de Doc Externos</p>
+                                    </router-link>
+                                </li>
                                 <li class="nav-item">
-                                    <router-link to="/indicadores-gestion" class="nav-link">
+                                    <router-link to="/indicadores-gestion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-chart-bar"></i>
                                         <p>Listado de Indicadores</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/partes" class="nav-link">
+                                    <router-link to="/partes" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-users"></i>
                                         <p>Partes Interesadas</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
-                                    <router-link to="/dashboard/procesos" class="nav-link">
+                                <li class="nav-item" v-if="hasAnyRole(['admin', 'especialista'])">
+                                    <router-link to="/dashboard/procesos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Procesos</p>
                                     </router-link>
@@ -183,25 +190,25 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('mejora')">
                                 <li class="nav-item">
-                                    <router-link to="/mejora" class="nav-link">
+                                    <router-link to="/mejora" class="nav-link" active-class="active">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
-                                        <p>Bandeja de Hallazgos</p>
+                                        <p>Bandeja de SMP</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
-                                    <router-link to="/mis-hallazgos" class="nav-link">
+                                <li class="nav-item" v-if="hasAnyRole(['admin', 'especialista', 'facilitador', 'propietario'])">
+                                    <router-link to="/mis-hallazgos" class="nav-link" active-class="active">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
-                                        <p>Mis Hallazgos</p>
+                                        <p>Mis Solicitudes de Mejora</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item" v-if="hasAnyRole(['admin', 'especialista'])">
-                                    <router-link to="/bandeja-eficacia" class="nav-link">
+                                    <router-link to="/bandeja-eficacia" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tasks"></i>
                                         <p>Verificar Eficacia Mejora</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/dashboard/mejora" class="nav-link">
+                                    <router-link to="/dashboard/mejora" class="nav-link" active-class="active">
                                         <i class="fas fa-tachometer-alt fa-xs nav-icon"></i>
                                         <p>Dashboard de Mejora</p>
                                     </router-link>
@@ -220,25 +227,25 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('obligaciones')">
                                 <li class="nav-item">
-                                    <router-link to="/obligaciones" class="nav-link">
+                                    <router-link to="/obligaciones" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Obligaciones</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/mis-obligaciones" class="nav-link">
+                                    <router-link to="/mis-obligaciones" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Obligaciones</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/obligaciones/seguimiento" class="nav-link">
+                                    <router-link to="/obligaciones/seguimiento" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tasks"></i>
                                         <p>Seguimiento de Acciones</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/dashboard/obligaciones" class="nav-link">
+                                    <router-link to="/dashboard/obligaciones" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Obligaciones</p>
                                     </router-link>
@@ -257,26 +264,26 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('riesgos')">
                                 <li class="nav-item">
-                                    <router-link to="/riesgos/index" class="nav-link">
+                                    <router-link to="/riesgos/index" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Riesgos</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/riesgos/mis-riesgos" class="nav-link">
+                                    <router-link to="/riesgos/mis-riesgos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Riesgos Asignados</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item"
                                     v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'gestor', 'admin'])">
-                                    <router-link to="/riesgos/verificacion" class="nav-link">
+                                    <router-link to="/riesgos/verificacion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tasks"></i>
                                         <p>Verificar Eficacia Riesgos</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/dashboard/riesgos" class="nav-link">
+                                    <router-link to="/dashboard/riesgos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Riesgos</p>
                                     </router-link>
@@ -285,7 +292,7 @@
                         </li>
 
                         <!-- Gestión de Auditorías -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }">
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }" v-if="!hasRole('facilitador')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/programa') }" @click.prevent="toggleMenu('auditoria')">
                                 <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>
@@ -295,7 +302,7 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('auditoria')">
                                 <li class="nav-item">
-                                    <router-link to="/programa" class="nav-link">
+                                    <router-link to="/programa" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-calendar-alt"></i>
                                         <p>Programa de Auditoría</p>
                                     </router-link>
@@ -304,7 +311,7 @@
                         </li>
 
                         <!-- Gestión de Continuidad -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('continuidad') }">
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('continuidad') }" v-if="!hasRole('facilitador')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/continuidad') }" @click.prevent="toggleMenu('continuidad')">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
@@ -314,31 +321,31 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('continuidad')">
                                 <li class="nav-item">
-                                    <router-link to="/continuidad/planes" class="nav-link">
+                                    <router-link to="/continuidad/planes" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Planes de Continuidad</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/continuidad/escenarios" class="nav-link">
+                                    <router-link to="/continuidad/escenarios" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-exclamation-circle"></i>
                                         <p>Escenarios de Riesgo</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/continuidad/activos" class="nav-link">
+                                    <router-link to="/continuidad/activos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-layer-group"></i>
                                         <p>Activos Críticos</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/continuidad/pruebas" class="nav-link">
+                                    <router-link to="/continuidad/pruebas" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-vial"></i>
                                         <p>Pruebas y Ejercicios</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/dashboard/continuidad" class="nav-link">
+                                    <router-link to="/dashboard/continuidad" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Continuidad</p>
                                     </router-link>
@@ -357,21 +364,27 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('satisfaccion')">
                                 <li class="nav-item">
-                                    <router-link to="/salidas-nc" class="nav-link">
-                                        <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
-                                        <p>Salidas No Conformes</p>
+                                    <router-link to="/encuestas-satisfaccion" class="nav-link" active-class="active">
+                                        <i class="fas fa-poll fa-xs nav-icon"></i>
+                                        <p>Encuestas de Satisfacción</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/sugerencias" class="nav-link">
+                                    <router-link to="/sugerencias" class="nav-link" active-class="active">
                                         <i class="fas fa-lightbulb fa-xs nav-icon"></i>
                                         <p>Consolidado Sugerencias</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/encuestas-satisfaccion" class="nav-link">
-                                        <i class="fas fa-poll fa-xs nav-icon"></i>
-                                        <p>Encuestas de Satisfacción</p>
+                                    <router-link to="/salidas-nc" class="nav-link" active-class="active">
+                                        <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
+                                        <p>Salidas No Conformes</p>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item">
+                                    <router-link to="/reportes-satisfaccion" class="nav-link" active-class="active">
+                                        <i class="fas fa-file-alt fa-xs nav-icon"></i>
+                                        <p>Reporte Trimestral</p>
                                     </router-link>
                                 </li>
                             </ul>
@@ -398,7 +411,7 @@
                         </li>
 
                         <!-- Administración -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('administracion') }">
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('administracion') }" v-if="!hasRole('facilitador')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/administracion') }" @click.prevent="toggleMenu('administracion')">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
@@ -420,13 +433,13 @@
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/administracion/configuracion" class="nav-link">
+                                    <router-link to="/administracion/configuracion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-file-alt"></i>
                                         <p>Configuración General</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/dashboard/administracion" class="nav-link">
+                                    <router-link to="/dashboard/administracion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Administración</p>
                                     </router-link>
@@ -483,7 +496,7 @@ const logout = async () => {
 
 const updateOpenMenus = (path) => {
     if (path.includes('requerimientos')) openMenus.value['requerimientos'] = true;
-    if (path.includes('procesos') || path.includes('inventario-gestion') || path.includes('documentos') || path.includes('indicadores-gestion')) openMenus.value['procesos'] = true;
+    if (path.includes('procesos') || path.includes('inventario-gestion') || path.includes('documentos') || path.includes('indicadores-gestion') || path.includes('lmde') || path.includes('partes')) openMenus.value['procesos'] = true;
     if (path.includes('mejora') || path.includes('mis-hallazgos') || path.includes('bandeja-eficacia')) openMenus.value['mejora'] = true;
     if (path.includes('obligaciones')) openMenus.value['obligaciones'] = true;
     if (path.includes('riesgos')) openMenus.value['riesgos'] = true;
@@ -504,5 +517,77 @@ watch(() => router.currentRoute.value.path, (newPath) => {
 </script>
 
 <style scoped>
-/* Add any specific styles here if needed, otherwise AdminLTE styles apply */
+/* Transiciones suaves para todos los elementos del menú */
+.nav-pills .nav-link {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Movimiento fluido */
+    border-radius: 6px;
+    margin-bottom: 4px;
+    border: 1px solid transparent; /* Evita saltos al agregar bordes */
+}
+
+/* --- Menú Padre Activo --- */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    /* Gradiente moderno en rojo "Premium" */
+    background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%) !important;
+    color: #fff !important;
+    
+    /* Efecto 3D sutil para elevación */
+    box-shadow: 0 4px 15px rgba(211, 47, 47, 0.35);
+    
+    /* Pequeño desplazamiento para feedback táctil visual */
+    transform: translateX(2px);
+}
+
+/* Hover en Menú Padre (No activo) */
+.nav-pills .nav-link:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: translateX(2px);
+}
+
+/* --- Submenú (Hijo) --- */
+.nav-treeview {
+    background-color: rgba(0, 0, 0, 0.15); /* Fondo ligeramente más oscuro para el contenedor hijo */
+    border-radius: 8px;
+    margin-top: 5px;
+    padding: 5px 0;
+}
+
+.nav-treeview > .nav-item > .nav-link {
+    padding-left: 2.8rem; /* Mayor indentación para jerarquía */
+    font-size: 0.95em;
+    opacity: 0.85; /* Texto un poco apagado por defecto */
+}
+
+/* --- Submenú Activo --- */
+/* --- Submenú Activo --- */
+.nav-treeview > .nav-item > .nav-link.active,
+.nav-treeview > .nav-item > .nav-link.active:hover {
+    /* Estilo "Mouseover" / Sutil solicitado */
+    background-color: rgba(255, 255, 255, 0.15) !important; /* Un poco más visible que el hover normal */
+    
+    /* Texto Blanco para mantener consistencia con el tema oscuro */
+    color: #fff !important;
+    
+    font-weight: 600;
+    opacity: 1;
+    
+    /* Borde de acento a la izquierda (Opcional, pero ayuda a identificar activo) */
+    /* Mantenemos el rojo pero sutil o lo quitamos si se prefiere totalmente plano. 
+       Lo mantendré rojo para identificarlo, pero el fondo es lo critico. */
+    border-left: 3px solid #d32f2f;
+    
+    box-shadow: none; 
+}
+
+/* Iconos en estado activo */
+.nav-pills .nav-link.active .nav-icon {
+    animation: pulse 1s infinite; /* Animación sutil opcional si te gusta */
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
 </style>

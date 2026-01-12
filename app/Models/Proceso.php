@@ -98,6 +98,11 @@ class Proceso extends Model
         return $this->belongsToMany(Documento::class, 'documento_proceso', 'proceso_id', 'documento_id');
     }
 
+    public function expectativas()
+    {
+        return $this->belongsToMany(Expectativa::class, 'proceso_expectativa', 'proceso_id', 'expectativa_id');
+    }
+
     // Removed facilitadores() and users() relationships as per new architecture
 
     public function ouo_responsable()

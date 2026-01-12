@@ -14,14 +14,15 @@ class DashboardController extends Controller
 {
     public function getResumenEspecialistas(Request $request)
     {
-        $anioSeleccionado = $request->query('anio', now()->year);
+        $anioRaw = $request->input('anio', now()->year);
+        $anios = is_array($anioRaw) ? $anioRaw : [$anioRaw];
 
         $especialistas = Especialista::with('user')->where('estado', 1)->get();
 
         $requerimientos = Requerimiento::with('avance')
             ->whereNotNull('especialista_id')
             ->whereNot('estado', 'desestimado')
-            ->whereYear('fecha_asignacion', $anioSeleccionado)
+            ->whereIn(DB::raw('YEAR(fecha_asignacion)'), $anios)
             ->get();
 
         $especialistasData = $especialistas->map(function ($especialista) use ($requerimientos) {
@@ -80,9 +81,12 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getResumenGeneral()
+    public function getResumenGeneral(Request $request)
     {
-        $requerimientos = Requerimiento::all();
+        $yearRaw = $request->input('year', now()->year);
+        $years = is_array($yearRaw) ? $yearRaw : [$yearRaw];
+
+        $requerimientos = Requerimiento::whereIn(DB::raw('YEAR(created_at)'), $years)->get();
 
         $creados = $requerimientos->where('estado', 'creado')->count();
         $finalizados = $requerimientos->where('estado', 'atendido')->count();
@@ -132,36 +136,37 @@ class DashboardController extends Controller
     }
     public function getResumenGrafico(Request $request)
     {
-        $year = $request->query('year', now()->year);
+        $yearRaw = $request->input('year', now()->year);
+        $years = is_array($yearRaw) ? $yearRaw : [$yearRaw];
 
         // --- 2. QUERIES OPTIMIZADAS ---
-        // Ahora, cada consulta solo busca en el año especificado,
-        // y agrupa por el NÚMERO de mes (1-12), lo cual es más rápido.
+        // Ahora, cada consulta busca en los años especificados,
+        // y agrupa por el NÚMERO de mes (1-12).
 
         $asignados = Requerimiento::select(
             DB::raw('MONTH(fecha_asignacion) as mes'),
             DB::raw('COUNT(*) as total')
         )
-            ->whereYear('fecha_asignacion', $year) // <-- ¡LA MEJORA!
+            ->whereIn(DB::raw('YEAR(fecha_asignacion)'), $years)
             ->groupBy('mes')
-            ->pluck('total', 'mes'); // <-- Crea un array [mes => total]
+            ->pluck('total', 'mes');
 
         $programados = Requerimiento::select(
             DB::raw('MONTH(fecha_limite) as mes'),
             DB::raw('COUNT(*) as total')
         )
-            ->whereYear('fecha_limite', $year) // <-- ¡LA MEJORA!
+            ->whereIn(DB::raw('YEAR(fecha_limite)'), $years)
             ->groupBy('mes')
-            ->pluck('total', 'mes'); // <-- Crea un array [mes => total]
+            ->pluck('total', 'mes');
 
         $finalizados = Requerimiento::whereNotNull('fecha_fin')
             ->select(
                 DB::raw('MONTH(fecha_fin) as mes'),
                 DB::raw('COUNT(*) as total')
             )
-            ->whereYear('fecha_fin', $year) // <-- ¡LA MEJORA!
+            ->whereIn(DB::raw('YEAR(fecha_fin)'), $years)
             ->groupBy('mes')
-            ->pluck('total', 'mes'); // <-- Crea un array [mes => total]
+            ->pluck('total', 'mes');
 
 
         // --- 3. FORMATEO DE MESES (Tu petición) ---
@@ -225,7 +230,8 @@ class DashboardController extends Controller
     public function getDetalleEspecialista(Request $request)
     {
         $especialistaId = $request->query('especialista');
-        $anio = $request->query('anio');
+        $anioRaw = $request->input('anio', now()->year);
+        $anios = is_array($anioRaw) ? $anioRaw : [$anioRaw];
 
         $especialista = Especialista::with('user')->find($especialistaId);
 
@@ -235,7 +241,7 @@ class DashboardController extends Controller
 
         $requerimientos = Requerimiento::with('avance')
             ->where('especialista_id', $especialista->user_id)
-            ->whereYear('fecha_asignacion', $anio)
+            ->whereIn(DB::raw('YEAR(fecha_asignacion)'), $anios)
             ->get();
 
         return response()->json([

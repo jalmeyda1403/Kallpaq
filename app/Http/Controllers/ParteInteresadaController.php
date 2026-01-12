@@ -1,79 +1,73 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
+
 use App\Models\ParteInteresada;
+use App\Models\Expectativa;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ParteInteresadaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $partes = ParteInteresada::orderBy('pi_nombre')->get();
-        return view('partes_interesadas.listar', compact('partes'));
+        $query = ParteInteresada::query()->with(['expectativas.compromisos', 'expectativas.procesos']);
+
+        // Filtro por tipo
+        if ($request->has('pi_tipo') && $request->pi_tipo) {
+            $query->where('pi_tipo', $request->pi_tipo);
+        }
+
+        // Filtro por cuadrante (calculado en BD o filtrado post-fetch? Mejor post-fetch si es complejo, pero intetemos BD si podemos)
+        // El cuadrante es calculado, así que mejor filtramos en colección o añadimos columna generada. 
+        // Por ahora devolvemos todo y el frontend filtra.
+        
+        $partes = $query->orderBy('pi_nombre')->get();
+        
+        // Append computed attributes
+        $partes->each(function ($parte) {
+            $parte->append(['cuadrante', 'valoracion', 'mensaje']);
+        });
+
+        return response()->json($partes);
     }
 
     public function store(Request $request)
     {
-
-        $request->validate([
+        $validated = $request->validate([
             'pi_nombre' => 'required|string|max:255',
             'pi_tipo' => 'required|in:interna,externa,cliente,proveedor,regulador',
-            'pi_nivel_influencia' => 'nullable|in:bajo,medio,alto',
-            'pi_nivel_interes' => 'nullable|in:bajo,medio,alto',
+            'pi_nivel_influencia' => 'required|in:bajo,medio,alto',
+            'pi_nivel_interes' => 'required|in:bajo,medio,alto',
             'pi_descripcion' => 'nullable|string',
         ]);
 
-        ParteInteresada::create([
-            'pi_nombre' => $request->input('pi_nombre'),
-            'pi_tipo' => $request->input('pi_tipo'),
-            'pi_nivel_influencia' => $request->input('pi_nivel_influencia'),
-            'pi_nivel_interes' => $request->input('pi_nivel_interes'),
-            'pi_descripcion' => $request->input('pi_descripcion'),
-        ]);
+        $parte = ParteInteresada::create($validated);
 
-        return redirect()->route('partes.index')->with('success', 'Parte interesada registrada.');
+        return response()->json(['message' => 'Parte interesada creada', 'parte' => $parte], 201);
     }
 
     public function update(Request $request, $id)
     {
         $parte = ParteInteresada::findOrFail($id);
 
-        $request->validate([
+        $validated = $request->validate([
             'pi_nombre' => 'required|string|max:255',
-            'pi_descripcion' => 'required|string',
-            'pi_nivel_influencia' => 'required|in:alto,medio,bajo',
-            'pi_nivel_interes' => 'nullable|in:bajo,medio,alto',
             'pi_tipo' => 'required|in:interna,externa,cliente,proveedor,regulador',
+            'pi_nivel_influencia' => 'required|in:bajo,medio,alto',
+            'pi_nivel_interes' => 'required|in:bajo,medio,alto',
+            'pi_descripcion' => 'nullable|string',
         ]);
 
-        $parte->update([
-            'pi_nombre' => $request->input('pi_nombre'),
-            'pi_descripcion' => $request->input('pi_descripcion'),
-            'pi_nivel_influencia' => $request->input('pi_nivel_influencia'),
-            'pi_nivel_interes' => $request->input('pi_nivel_interes'),
-            'pi_tipo' => $request->input('pi_tipo'),
-        ]);
+        $parte->update($validated);
 
-
-        return redirect()->route('partes.index')->with('success', 'Parte interesada actualizada.');
+        return response()->json(['message' => 'Parte interesada actualizada', 'parte' => $parte]);
     }
 
     public function destroy($id)
     {
-        try {
-            $parteInteresada = ParteInteresada::findOrFail($id);
-
-            DB::transaction(function () use ($parteInteresada) {
-                $parteInteresada->delete(); // Ya se actualiza pi_activo en el evento
-            });
-
-            return redirect()->route('partes.index')
-                ->with('message', 'Parte Interesada eliminada exitosamente.');
-        } catch (\Exception $e) {
-            return redirect()->route('partes.index')
-                ->with('error', 'Error al eliminar la Parte Interesada: ' . $e->getMessage());
-        }
+        $parte = ParteInteresada::findOrFail($id);
+        $parte->delete();
+        return response()->json(['message' => 'Parte interesada eliminada']);
     }
-
 }

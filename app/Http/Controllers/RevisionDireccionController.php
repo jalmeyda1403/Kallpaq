@@ -33,6 +33,24 @@ class RevisionDireccionController extends Controller
                 $q->where('codigo', 'like', "%{$request->buscar}%")
                     ->orWhere('titulo', 'like', "%{$request->buscar}%");
             });
+            $query->where(function ($q) use ($request) {
+                $q->where('codigo', 'like', "%{$request->buscar}%")
+                    ->orWhere('titulo', 'like', "%{$request->buscar}%");
+            });
+        }
+
+        // Filtro por Sistema de Gestión (JSON)
+        if ($request->filled('sistema_gestion')) {
+            $sistemas = $request->sistema_gestion;
+            if (is_array($sistemas)) {
+                $query->where(function ($q) use ($sistemas) {
+                    foreach ($sistemas as $sistema) {
+                        $q->orWhereJsonContains('sistemas_gestion', $sistema);
+                    }
+                });
+            } else {
+                $query->whereJsonContains('sistemas_gestion', $sistemas);
+            }
         }
 
         $revisiones = $query->get()->map(function ($revision) {
@@ -55,7 +73,9 @@ class RevisionDireccionController extends Controller
             'anio' => 'required|integer|min:2020|max:2100',
             'participantes' => 'nullable|string',
             'agenda' => 'nullable|string',
+            'agenda' => 'nullable|string',
             'responsable_id' => 'required|exists:users,id',
+            'sistemas_gestion' => 'nullable|array',
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -102,7 +122,9 @@ class RevisionDireccionController extends Controller
             'agenda' => 'nullable|string',
             'observaciones' => 'nullable|string',
             'estado' => 'sometimes|in:programada,en_preparacion,realizada,cancelada',
+            'estado' => 'sometimes|in:programada,en_preparacion,realizada,cancelada',
             'responsable_id' => 'sometimes|exists:users,id',
+            'sistemas_gestion' => 'nullable|array',
         ]);
 
         $revision->update($validated);
@@ -295,6 +317,7 @@ class RevisionDireccionController extends Controller
             'fecha_limite' => 'required|date|after:today',
             'recursos_necesarios' => 'nullable|string|max:1000',
             'observaciones' => 'nullable|string|max:500',
+            'sistemas_gestion' => 'nullable|array',
         ]);
 
         $compromiso = $revision->compromisos()->create($validated);
@@ -320,6 +343,7 @@ class RevisionDireccionController extends Controller
             'avance' => 'sometimes|integer|min:0|max:100',
             'recursos_necesarios' => 'nullable|string|max:1000',
             'observaciones' => 'nullable|string|max:500',
+            'sistemas_gestion' => 'nullable|array',
         ]);
 
         // Si hay cambio de estado o avance, registrar seguimiento

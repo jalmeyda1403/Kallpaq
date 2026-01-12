@@ -26,11 +26,13 @@ class RevisionDireccion extends Model
         'acta_path',
         'responsable_id',
         'created_by',
+        'sistemas_gestion',
     ];
 
     protected $casts = [
         'fecha_programada' => 'date',
         'fecha_reunion' => 'date',
+        'sistemas_gestion' => 'array',
     ];
 
     protected $appends = [

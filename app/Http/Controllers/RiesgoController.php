@@ -383,4 +383,20 @@ class RiesgoController extends Controller
             return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
         }
     }
+    public function buscar(Request $request)
+    {
+        $q = $request->query('q', '');
+        $riesgos = Riesgo::where('riesgo_nombre', 'LIKE', "%{$q}%")
+                         ->orWhere('riesgo_cod', 'LIKE', "%{$q}%")
+                         ->limit(20)
+                         ->get();
+
+        $riesgos = $riesgos->map(function ($r) {
+            return [
+                'id' => $r->id,
+                'descripcion' => "{$r->riesgo_cod} - {$r->riesgo_nombre}",
+            ];
+        });
+        return response()->json($riesgos);
+    }
 }

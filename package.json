@@ -37,6 +37,7 @@
         "pinia": "^3.0.3",
         "primeicons": "^7.0.0",
         "primevue": "^3.49.0",
+        "quill": "^2.0.3",
         "sweetalert2": "^11.26.3",
         "vue": "^3.5.18",
         "vue-router": "^4.5.1",

@@ -305,4 +305,22 @@ class ObligacionController extends Controller
         return response()->json($riesgos);
     }
 
+    public function buscar(Request $request)
+    {
+        $q = $request->query('q', '');
+        $obligaciones = Obligacion::where('obligacion_principal', 'LIKE', "%{$q}%")
+                                  ->orWhere('documento_tecnico_normativo', 'LIKE', "%{$q}%")
+                                  ->limit(20)
+                                  ->get();
+
+        $obligaciones = $obligaciones->map(function ($o) {
+            $desc = $o->documento_tecnico_normativo ? "{$o->documento_tecnico_normativo} - " : "";
+            $desc .= \Illuminate\Support\Str::limit($o->obligacion_principal, 50);
+            return [
+                'id' => $o->id,
+                'descripcion' => $desc,
+            ];
+        });
+        return response()->json($obligaciones);
+    }
 }

@@ -392,19 +392,22 @@ export const useHallazgoStore = defineStore('hallazgo', {
         },
 
         async deleteAccion(accionId) {
-            if (!confirm("¿Está seguro de que desea eliminar esta acción?")) return;
+            // Confirmación debe ser manejada por la vista (componente)
             try {
                 await axios.delete(route('acciones.destroy', { accion: accionId }));
-                // Refrescamos la lista después de eliminar
-                const response = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
-                this.accionesDelPlan = response.data;
+
+                // Refrescamos la lista SOLO si estamos en el contexto de gestionar un proceso específico
+                if (this.procesoParaGestionar) {
+                    const response = await axios.get(route('hallazgos.acciones.listar', { hallazgo: this.hallazgoForm.id, proceso: this.procesoParaGestionar.id }));
+                    this.accionesDelPlan = response.data;
+                }
             } catch (error) {
                 console.error("Error al eliminar la acción:", error);
                 if (error.response) {
                     console.error("Error response data:", error.response.data);
                     console.error("Error response status:", error.response.status);
                 }
-                alert("Ocurrió un error al eliminar la acción.");
+                throw error; // Re-lanzar para que el componente maneje la UI de error
             } finally {
             }
         },

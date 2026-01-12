@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class EncuestaSatisfaccionController extends Controller
 {
@@ -15,6 +16,13 @@ class EncuestaSatisfaccionController extends Controller
     {
 
         $query = EncuestaSatisfaccion::with(['proceso', 'detalles']);
+
+        // Filtro para Facilitador: solo procesos vinculados a su OUO
+        if (Auth::user() && Auth::user()->hasRole('facilitador')) {
+            $userOuoIds = Auth::user()->ouos()->pluck('ouos.id');
+            $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $userOuoIds)->pluck('id_proceso');
+            $query->whereIn('proceso_id', $procesoIds);
+        }
 
         // Filter by es_periodo if provided and not empty
         if ($request->filled('es_periodo')) {
@@ -78,7 +86,7 @@ class EncuestaSatisfaccionController extends Controller
 
             if ($request->hasFile('informe')) {
                 $file = $request->file('informe');
-                $path = $file->store('satisfaccion/' . $request->proceso_id, 'public');
+                $path = $file->store('satisfaccion/encuestas/' . $request->proceso_id, 'public');
                 $fileData = [
                     'path' => $path,
                     'name' => $file->getClientOriginalName()
@@ -150,7 +158,7 @@ class EncuestaSatisfaccionController extends Controller
 
             if ($request->hasFile('informe')) {
                 $file = $request->file('informe');
-                $path = $file->store('satisfaccion/' . $request->proceso_id . '/encuestas', 'public');
+                $path = $file->store('satisfaccion/encuestas/' . $request->proceso_id, 'public');
                 $fileData = [
                     'path' => $path,
                     'name' => $file->getClientOriginalName()

@@ -14,10 +14,10 @@
                         <h3 class="card-title mb-0">Encuestas de Satisfacción</h3>
                     </div>
                     <div class="col-md-6 text-md-right">
-                        <button class="btn btn-primary btn-sm ml-1" @click="openModal()">
+                        <button class="btn btn-primary btn-sm ml-1" @click="openModal()" v-if="!authStore.hasRole('facilitador')">
                             <i class="fas fa-plus-circle"></i> Nuevo Resultado
                         </button>
-                        <button class="btn btn-danger btn-sm ml-1" :disabled="!selectedEncuesta" @click="confirmDelete">
+                        <button class="btn btn-danger btn-sm ml-1" :disabled="!selectedEncuesta" @click="confirmDelete" v-if="!authStore.hasRole('facilitador')">
                             <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
                     </div>
@@ -112,7 +112,7 @@
                             <a v-else class="mr-2 disabled" title="No hay informe">
                                 <i class="fas fa-file-pdf text-muted fa-lg"></i>
                             </a>
-                            <a href="#" class="mr-2" @click.prevent="editEncuesta(data)" title="Editar">
+                            <a href="#" class="mr-2" @click.prevent="editEncuesta(data)" title="Editar" v-if="!authStore.hasRole('facilitador')">
                                 <i class="fas fa-pencil-alt text-warning fa-lg"></i>
                             </a>
                         </template>
@@ -136,6 +136,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import { useEncuestasStore } from '@/stores/encuestasStore';
+import { useAuthStore } from '@/stores/authStore';
 import { storeToRefs } from 'pinia';
 import EncuestaModal from './EncuestaModal.vue';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
@@ -146,6 +147,7 @@ import { FilterMatchMode } from 'primevue/api';
 import Swal from 'sweetalert2';
 
 const encuestasStore = useEncuestasStore();
+const authStore = useAuthStore();
 const { encuestas, loading } = storeToRefs(encuestasStore);
 
 const showModal = ref(false);

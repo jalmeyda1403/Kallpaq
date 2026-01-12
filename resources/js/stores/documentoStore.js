@@ -36,6 +36,7 @@ export const useDocumentoStore = defineStore('documento', {
         // Estado para la interfaz y el control del modal
         modalTitle: '',
         isModalOpen: false,
+        isLMDE: false,
         loading: false,
         loadingMetadatos: false,
         loadingVersiones: false,
@@ -91,6 +92,9 @@ export const useDocumentoStore = defineStore('documento', {
     },
 
     actions: {
+        setLMDE(value) {
+            this.isLMDE = value;
+        },
         // Cambia la pestaña del formulario
         setCurrentTab(tabName) {
             this.currentTab = tabName;
@@ -154,8 +158,6 @@ export const useDocumentoStore = defineStore('documento', {
 
             if (documentoId) {
                 await this.fetchDocumento(documentoId); // Carga los datos específicos del documento
-            } else {
-                this.isEditing = false;
             }
         },
 
@@ -433,6 +435,15 @@ export const useDocumentoStore = defineStore('documento', {
                 alert('¡Documento guardado correctamente!');
             }
         },
+        async improveDocumentSummary(summary) {
+            try {
+                const response = await axios.post(route('api.documentos.improve-summary'), { resumen: summary });
+                return response.data.improved_summary;
+            } catch (error) {
+                console.error('Error improving summary:', error);
+                throw error;
+            }
+        },
         // Resetea el formulario a sus valores iniciales
         resetForm() {
             this.documentoForm = {
@@ -441,13 +452,14 @@ export const useDocumentoStore = defineStore('documento', {
                 tipo_documento_id: '',
                 nombre_documento: '',
                 resumen_documento: '',
-                fuente_documento: '',
-                estado_documento: '',
+                resumen_documento: '',
+                fuente_documento: this.isLMDE ? 'externo' : 'interno',
+                estado_documento: 'vigente',
                 observaciones_documento: '',
                 archivo_path_documento: '',
-                usa_versiones_documento: '1',
-                fecha_aprobacion_documento: '',
-                frecuencia_revision_documento: '',
+                usa_versiones_documento: this.isLMDE ? '0' : '1',
+                fecha_aprobacion_documento: new Date().toISOString().split('T')[0],
+                frecuencia_revision_documento: 'Trimestral',
                 instrumento_aprueba_documento: '',
                 origen_documento: 'file',
                 enlace_valido: '0',
@@ -534,15 +546,18 @@ export const useDocumentoStore = defineStore('documento', {
         formatDateForInput(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            return `${date.getFullYear()} -${String(date.getMonth() + 1).padStart(2, '0')} -${String(date.getDate()).padStart(2, '0')} `;
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         },
         async validateUrl() {
             this.errors.archivo_path_documento = [];
             this.documentoForm.enlace_valido = false;
 
             try {
-                const url = route('documento.validarUrl');
+                const url = route('api.documentos.validarUrl');
+                // console.log('Validating URL:', this.documentoForm.archivo_path_documento, 'at endpoint:', url);
+
                 const response = await axios.get(url, { params: { url: this.documentoForm.archivo_path_documento } });
+                // console.log('Validation response:', response.data);
 
                 this.documentoForm.enlace_valido = response.data.isValid;
 
@@ -552,7 +567,7 @@ export const useDocumentoStore = defineStore('documento', {
                 return response.data.isValid;
 
             } catch (error) {
-
+                console.error('Validation error:', error);
                 this.documentoForm.enlace_valido = false;
                 this.errors.archivo_path_documento = ["Ocurrió un error al validar la URL."];
             }
