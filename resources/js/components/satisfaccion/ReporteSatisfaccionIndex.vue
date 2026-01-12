@@ -10,45 +10,49 @@
         <div class="card">
             <div class="card-header">
                 <div class="row align-items-center">
-                    <div class="col-md-6">
+                    <div class="col-md-6 text-md-left">
                         <h3 class="card-title mb-0">Reportes Trimestrales de Satisfacción</h3>
                     </div>
-                    <div class="col-md-6 text-right">
-                        <router-link :to="{ name: 'reportes-satisfaccion.wizard' }" class="btn btn-primary btn-sm">
+                    <div class="col-md-6 text-md-right">
+                        <router-link :to="{ name: 'reportes-satisfaccion.wizard' }" class="btn btn-primary btn-sm ml-1">
                             <i class="fas fa-plus-circle"></i> Nuevo Reporte
                         </router-link>
                     </div>
                 </div>
-                <br />
-                <div id="filter-form">
-                    <form @submit.prevent="fetchReportes">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-md">
-                                <input type="number" v-model="filters.anio" class="form-control" placeholder="Año (ej: 2025)">
+                <hr>
+                <div class="row">
+                    <div class="col-md-12">
+                        <form @submit.prevent="fetchReportes">
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="number" v-model="filters.anio" class="form-control"
+                                        placeholder="Año (ej: 2025)">
+                                </div>
+                                <div class="col">
+                                    <select v-model="filters.trimestre" class="form-control">
+                                        <option :value="null">Todos los trimestres</option>
+                                        <option :value="1">I Trimestre</option>
+                                        <option :value="2">II Trimestre</option>
+                                        <option :value="3">III Trimestre</option>
+                                        <option :value="4">IV Trimestre</option>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select v-model="filters.estado" class="form-control">
+                                        <option :value="null">Todos los estados</option>
+                                        <option value="borrador">Borrador</option>
+                                        <option value="generado">Generado</option>
+                                        <option value="firmado">Firmado</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn bg-dark">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md">
-                                <select v-model="filters.trimestre" class="form-control">
-                                    <option :value="null">Todos los trimestres</option>
-                                    <option :value="1">I Trimestre</option>
-                                    <option :value="2">II Trimestre</option>
-                                    <option :value="3">III Trimestre</option>
-                                    <option :value="4">IV Trimestre</option>
-                                </select>
-                            </div>
-                            <div class="col-md">
-                                <select v-model="filters.estado" class="form-control">
-                                    <option :value="null">Todos los estados</option>
-                                    <option value="borrador">Borrador</option>
-                                    <option value="generado">Generado</option>
-                                </select>
-                            </div>
-                            <div class="col-md-auto">
-                                <button type="submit" class="btn bg-dark btn-sm">
-                                    <i class="fas fa-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -81,59 +85,37 @@
                         <template #body="slotProps">
                             <div class="d-flex justify-content-center gap-2">
                                 <!-- Ver/Editar consolidado -->
-                                <Button 
-                                    v-if="slotProps.data.estado === 'firmado'"
-                                    icon="pi pi-eye"
+                                <Button v-if="slotProps.data.estado === 'firmado'" icon="pi pi-eye"
                                     class="p-button-rounded p-button-info p-button-text p-button-sm"
-                                    @click="viewReporte(slotProps.data)" 
-                                    v-tooltip.top="'Ver (Solo lectura)'" 
-                                />
-                                <Button 
-                                    v-else
-                                    icon="pi pi-pencil"
+                                    @click="viewReporte(slotProps.data)" v-tooltip.top="'Ver (Solo lectura)'" />
+                                <Button v-else icon="pi pi-pencil"
                                     class="p-button-rounded p-button-warning p-button-text p-button-sm"
-                                    @click="editReporte(slotProps.data)" 
-                                    v-tooltip.top="'Editar'" 
-                                />
-                                
+                                    @click="editReporte(slotProps.data)" v-tooltip.top="'Editar'" />
+
                                 <!-- Enviar Firmado (solo si está generado) -->
-                                <Button 
-                                    v-if="slotProps.data.estado === 'generado'"
-                                    icon="pi pi-upload"
+                                <Button v-if="slotProps.data.estado === 'generado'" icon="pi pi-upload"
                                     class="p-button-rounded p-button-success p-button-text p-button-sm"
-                                    @click="openEnviarModal(slotProps.data)" 
-                                    v-tooltip.top="'Enviar Firmado'" 
-                                />
-                                
+                                    @click="openEnviarModal(slotProps.data)" v-tooltip.top="'Enviar Firmado'" />
+
                                 <!-- Ver PDF Firmado (solo si está firmado) -->
-                                <Button 
-                                    v-if="slotProps.data.estado === 'firmado' && slotProps.data.archivo_path"
+                                <Button v-if="slotProps.data.estado === 'firmado' && slotProps.data.archivo_path"
                                     icon="pi pi-file-pdf"
                                     class="p-button-rounded p-button-danger p-button-text p-button-sm"
-                                    @click="viewPDF(slotProps.data)" 
-                                    v-tooltip.top="'Ver PDF Firmado'" 
-                                />
-                                
+                                    @click="viewPDF(slotProps.data)" v-tooltip.top="'Ver PDF Firmado'" />
+
                                 <!-- Eliminar -->
-                                <Button 
-                                    icon="pi pi-trash"
+                                <Button icon="pi pi-trash"
                                     class="p-button-rounded p-button-danger p-button-text p-button-sm"
-                                    @click="deleteReporte(slotProps.data)" 
-                                    v-tooltip.top="'Eliminar'" 
-                                />
+                                    @click="deleteReporte(slotProps.data)" v-tooltip.top="'Eliminar'" />
                             </div>
                         </template>
                     </Column>
                 </DataTable>
             </div>
         </div>
-        
+
         <!-- Modal de Enviar Firmado -->
-        <ReporteSatisfaccionEnviar 
-            ref="enviarModal" 
-            :reporte-id="selectedReporte?.id"
-            @success="handleEnviarSuccess"
-        />
+        <ReporteSatisfaccionEnviar ref="enviarModal" :reporte-id="selectedReporte?.id" @success="handleEnviarSuccess" />
     </div>
 </template>
 

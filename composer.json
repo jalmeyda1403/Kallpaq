@@ -11,7 +11,7 @@
         "php": "^8.2",
         "almasaeed2010/adminlte": "v3.2.0",
         "barryvdh/laravel-dompdf": "^2.2",
-        "doctrine/dbal": "^3.9",
+        "doctrine/dbal": "^3.10",
         "guzzlehttp/guzzle": "^7.7",
         "jeroennoten/laravel-adminlte": "^3.15",
         "laravel/framework": "^11.0",

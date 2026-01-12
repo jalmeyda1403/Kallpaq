@@ -80,6 +80,19 @@ const routes = [
                 component: () => import('@/components/auditoria/ProgramaAuditoriaIndex.vue')
             },
             {
+                path: 'auditoria/programa/:id/gantt',
+                name: 'auditoria.gantt',
+                component: () => import('@/components/auditoria/ProgramaAuditoriaGantt.vue'),
+                props: true
+            },
+            // Placeholder for Specific Plan Manager (Agenda)
+            {
+                path: 'auditoria/especifica/:id/plan',
+                name: 'auditoria.especifica.plan',
+                component: () => import('@/components/auditoria/PlanAuditoriaManager.vue'), // Will create this next
+                props: true
+            },
+            {
                 path: 'documentos/listado',
                 name: 'documentos.listado',
                 component: () => import('@/components/documentos/DocumentoPublicoIndex.vue')

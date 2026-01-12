@@ -34,7 +34,8 @@ use App\Http\Controllers\EspecialistaController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\CompromisoController;
-
+use App\Http\Controllers\AuditoriaEspecificaController;
+use App\Http\Controllers\AuditoriaEvaluacionController;
 
 // ... existing routes ...
 
@@ -139,6 +140,7 @@ Route::resource('procesos', ProcesoController::class);
 Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::get('/api/programa', [ProgramaAuditoriaController::class, 'apiIndex'])->name('api.programa.index');
+Route::get('/api/programa/{id}', [ProgramaAuditoriaController::class, 'apiShow'])->name('api.programa.show');
 Route::resource('smp', HallazgoController::class);
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
 Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
@@ -559,7 +561,7 @@ Route::get('/requerimientos/seguimiento', function () {
 })->name('requerimientos.seguimiento');
 
 Route::get('/mis-requerimientos', [RequerimientoController::class, 'index'])->name('requerimientos.mine');
-Route::get('/requerimientos/crear', function() {
+Route::get('/requerimientos/crear', function () {
     return view('app');
 })->name('requerimientos.crear');
 Route::post('/requerimientos', [RequerimientoController::class, 'store'])->name('requerimientos.store');
@@ -798,19 +800,48 @@ Route::prefix('api/continuidad')->middleware('auth')->name('continuidad.')->grou
     Route::get('/dashboard', [\App\Http\Controllers\ContinuidadController::class, 'dashboard'])->name('dashboard');
 });
 
+// ========================================
+// GESTIÓN DE AUDITORÍAS (ISO 19011)
+// ========================================
+Route::prefix('api/auditoria')->middleware('auth')->name('api.auditoria.')->group(function () {
+    // Programa Anual (complementing existing resource)
+    Route::get('/programas', [ProgramaAuditoriaController::class, 'apiIndex'])->name('programas.index');
+    Route::post('/programas', [ProgramaAuditoriaController::class, 'store'])->name('programas.store');
+    Route::put('/programas/{programa}', [ProgramaAuditoriaController::class, 'update'])->name('programas.update');
+
+    // Auditoría Específica
+    Route::get('/programas/{pa_id}/auditorias', [AuditoriaEspecificaController::class, 'index'])->name('especifica.index');
+    Route::get('/especifica/{id}', [AuditoriaEspecificaController::class, 'show'])->name('especifica.show');
+    Route::post('/especifica', [AuditoriaEspecificaController::class, 'store'])->name('especifica.store');
+    Route::put('/especifica/{id}', [AuditoriaEspecificaController::class, 'update'])->name('especifica.update');
+    Route::delete('/especifica/{id}', [AuditoriaEspecificaController::class, 'destroy'])->name('especifica.destroy');
+
+    // Agenda y Equipo
+    Route::post('/especifica/{ae_id}/agenda', [AuditoriaEspecificaController::class, 'updateAgenda'])->name('especifica.agenda.update');
+    Route::post('/especifica/{ae_id}/equipo', [AuditoriaEspecificaController::class, 'updateEquipo'])->name('especifica.equipo.update');
+
+    // Evaluación 360
+    Route::get('/especifica/{ae_id}/evaluaciones', [AuditoriaEvaluacionController::class, 'index'])->name('evaluacion.index');
+    Route::post('/evaluacion', [AuditoriaEvaluacionController::class, 'store'])->name('evaluacion.store');
+
+    // Constancias
+    Route::get('/especifica/{ae_id}/auditor/{auditor_id}/constancia', [AuditoriaEvaluacionController::class, 'generarConstancia'])->name('evaluacion.constancia');
+});
+
+
 
 // Reportes de Satisfacción
-    Route::prefix('api/reportes-satisfaccion')->middleware('auth')->name('api.reportes-satisfaccion.')->group(function () {
-        Route::get('/', [App\Http\Controllers\ReporteSatisfaccionController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\ReporteSatisfaccionController::class, 'store'])->name('store');
-        Route::get('/quarter-data', [App\Http\Controllers\ReporteSatisfaccionController::class, 'getData'])->name('quarter-data');
-        Route::post('/generate-draft', [App\Http\Controllers\ReporteSatisfaccionController::class, 'generateDraft'])->name('generate-draft');
-        Route::get('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'show'])->name('show');
-        Route::put('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'update'])->name('update');
-        Route::delete('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/upload-firma', [App\Http\Controllers\ReporteSatisfaccionController::class, 'uploadFirma'])->name('upload-firma');
-        Route::get('/{id}/download', [App\Http\Controllers\ReporteSatisfaccionController::class, 'downloadWord'])->name('download');
-        Route::post('/{id}/upload-signed', [App\Http\Controllers\ReporteSatisfaccionController::class, 'uploadSigned'])->name('uploadSigned');
-    });
+Route::prefix('api/reportes-satisfaccion')->middleware('auth')->name('api.reportes-satisfaccion.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ReporteSatisfaccionController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\ReporteSatisfaccionController::class, 'store'])->name('store');
+    Route::get('/quarter-data', [App\Http\Controllers\ReporteSatisfaccionController::class, 'getData'])->name('quarter-data');
+    Route::post('/generate-draft', [App\Http\Controllers\ReporteSatisfaccionController::class, 'generateDraft'])->name('generate-draft');
+    Route::get('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\ReporteSatisfaccionController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/upload-firma', [App\Http\Controllers\ReporteSatisfaccionController::class, 'uploadFirma'])->name('upload-firma');
+    Route::get('/{id}/download', [App\Http\Controllers\ReporteSatisfaccionController::class, 'downloadWord'])->name('download');
+    Route::post('/{id}/upload-signed', [App\Http\Controllers\ReporteSatisfaccionController::class, 'uploadSigned'])->name('uploadSigned');
+});
 
 // Catch-all route for Vue SPA

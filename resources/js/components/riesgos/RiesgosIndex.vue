@@ -81,92 +81,149 @@
                 <div class="tab-content" id="riesgosTabsContent">
                     <!-- Tab Listado -->
                     <div class="tab-pane fade show active" id="listado" role="tabpanel" aria-labelledby="listado-tab">
-                        <!-- Loading State - Spinner circular rojo -->
-                        <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10" :loading="loading"
-                            :rowsPerPageOptions="[5, 10, 20, 50]"
-                            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
-                            responsiveLayout="scroll">
 
-                            <template #header>
-                                <div class="d-flex align-items-center">
-                                    <Button type="button" icon="pi pi-download" label="Descargar CSV"
-                                        severity="secondary" @click="exportCSV($event)"
-                                        class="btn btn-secondary ml-auto">
-                                    </Button>
-                                </div>
-                            </template>
+                        <!-- Skeleton Loading State -->
+                        <div v-if="loading && (!riesgos || riesgos.length === 0)" class="p-3">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div class="bg-light rounded" style="width: 150px; height: 35px;"></div>
+                            </div>
+                            <div class="table-responsive bg-white rounded shadow-sm">
+                                <table class="table table-borderless mb-0">
+                                    <thead class="border-bottom">
+                                        <tr>
+                                            <th v-for="i in 7" :key="i" class="py-3">
+                                                <div class="bg-light rounded" style="width: 80%; height: 20px;"></div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in 5" :key="row">
+                                            <td v-for="col in 7" :key="col" class="py-3">
+                                                <div class="bg-light rounded" style="width: 100%; height: 24px;"></div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                            <Column field="id" header="ID" sortable style="width:5%"></Column>
-                            <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%"></Column>
-                            <Column field="riesgo_nombre" header="Descripción del Riesgo" sortable style="width:30%">
-                            </Column>
-                            <Column field="factor.nombre" header="Factor" sortable style="width:15%"></Column>
-                            <Column field="riesgo_nivel" header="Nivel" sortable style="width:15%">
-                                <template #body="{ data }">
-                                    <span :class="['badge', 'badge-lg', getBadgeClass(data.riesgo_nivel)]">{{
-                                        data.riesgo_nivel }}</span>
-                                </template>
-                            </Column>
-                            <Column field="especialista.name" header="Especialista" sortable style="width:15%">
-                                <template #body="{ data }">
+                        <!-- Real Data Table -->
+                        <div v-else class="animate-fade-in">
+                            <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10" :loading="false"
+                                :rowsPerPageOptions="[5, 10, 20, 50]"
+                                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
+                                responsiveLayout="scroll" class="table-hover">
+
+                                <template #header>
                                     <div class="d-flex align-items-center">
-                                        <div v-if="data.especialista" class="d-flex align-items-center">
-                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mr-2" 
-                                                 style="width: 24px; height: 24px; font-size: 10px; font-weight: bold; color: #555;">
-                                                {{ data.especialista.name.charAt(0) }}
-                                            </div>
-                                            <span class="text-truncate" style="max-width: 150px;" :title="data.especialista.name">
-                                                {{ data.especialista.name }}
-                                            </span>
-                                        </div>
-                                        <span v-else class="text-muted small font-italic">Sin asignar</span>
+                                        <Button type="button" icon="pi pi-download" label="Descargar CSV"
+                                            severity="secondary" @click="exportCSV($event)"
+                                            class="btn btn-secondary ml-auto shadow-sm">
+                                        </Button>
                                     </div>
                                 </template>
-                            </Column>
-                            <Column field="riesgo_estado" header="Estado" sortable style="width:10%"></Column>
 
-                            <Column header="Avance Acciones" style="width:10%" class="text-center">
-                                <template #body="{ data }">
-                                    <a href="#" @click.prevent="store.openAccionesModal(data)"
-                                        class="font-weight-bold text-dark" title="Gestionar Avance">
-                                        {{ data.acciones_completadas_count }} / {{ data.acciones_total_count }}
-                                    </a>
-                                    <i v-if="data.reprogramaciones_pendientes_count > 0"
-                                        class="fas fa-exclamation-triangle text-warning ml-1"
-                                        title="Tiene reprogramaciones pendientes de aprobación"></i>
-                                </template>
-                            </Column>
-                            <Column header="% Avance" style="width:15%">
-                                <template #body="{ data }">
-                                    <div class="small text-center">
-                                        {{ calculateProgress(data) }}%
-                                        <div class="progress progress-xs">
-                                            <div class="progress-bar bg-info"
-                                                :style="{ width: calculateProgress(data) + '%' }">
+                                <Column field="id" header="ID" sortable style="width:5%"></Column>
+                                <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
+                                    <template #body="{ data }">
+                                        <span class="font-weight-bold text-dark">{{ data.proceso?.proceso_nombre ||
+                                            'N/A' }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="riesgo_nombre" header="Descripción del Riesgo" sortable
+                                    style="width:30%">
+                                    <template #body="{ data }">
+                                        <span class="text-muted small">{{ data.riesgo_nombre }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="factor.nombre" header="Factor" sortable style="width:15%">
+                                    <template #body="{ data }">
+                                        <span class="badge badge-light border">{{ data.factor?.nombre || 'General'
+                                            }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="riesgo_nivel" header="Nivel" sortable style="width:15%">
+                                    <template #body="{ data }">
+                                        <span
+                                            :class="['badge', 'badge-lg', 'shadow-xs', getBadgeClass(data.riesgo_nivel)]">
+                                            {{ data.riesgo_nivel }}
+                                        </span>
+                                    </template>
+                                </Column>
+                                <Column field="especialista.name" header="Especialista" sortable style="width:15%">
+                                    <template #body="{ data }">
+                                        <div class="d-flex align-items-center">
+                                            <div v-if="data.especialista" class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center mr-2 shadow-sm"
+                                                    style="width: 28px; height: 28px; font-size: 11px; font-weight: bold;">
+                                                    {{ data.especialista.name.charAt(0) }}
+                                                </div>
+                                                <span class="text-truncate small font-weight-bold text-dark"
+                                                    style="max-width: 150px;" :title="data.especialista.name">
+                                                    {{ data.especialista.name }}
+                                                </span>
+                                            </div>
+                                            <span v-else class="text-muted small font-italic">Sin asignar</span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column field="riesgo_estado" header="Estado" sortable style="width:10%">
+                                    <template #body="{ data }">
+                                        <span class="badge badge-pill badge-light border">{{ data.riesgo_estado
+                                            }}</span>
+                                    </template>
+                                </Column>
+
+                                <Column header="Avance Acciones" style="width:10%" class="text-center">
+                                    <template #body="{ data }">
+                                        <a href="#" @click.prevent="store.openAccionesModal(data)"
+                                            class="font-weight-bold text-primary" title="Gestionar Avance">
+                                            {{ data.acciones_completadas_count }} / {{ data.acciones_total_count }}
+                                        </a>
+                                        <i v-if="data.reprogramaciones_pendientes_count > 0"
+                                            class="fas fa-exclamation-triangle text-warning ml-1"
+                                            title="Tiene reprogramaciones pendientes de aprobación"></i>
+                                    </template>
+                                </Column>
+                                <Column header="% Avance" style="width:15%">
+                                    <template #body="{ data }">
+                                        <div class="d-flex align-items-center flex-column">
+                                            <span class="small font-weight-bold mb-1">{{ calculateProgress(data)
+                                                }}%</span>
+                                            <div class="progress progress-xs w-100 rounded-pill" style="height: 6px;">
+                                                <div class="progress-bar rounded-pill"
+                                                    :class="calculateProgress(data) >= 100 ? 'bg-success' : 'bg-info'"
+                                                    :style="{ width: calculateProgress(data) + '%' }">
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </template>
-                            </Column>
+                                    </template>
+                                </Column>
 
-                            <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
-                                bodyStyle="width: 12%">
-                                <template #body="{ data }">
-                                    <a href="#" class="mr-3 d-inline-block" @click.prevent="store.openModal(data)"
-                                        title="Editar Riesgo">
-                                        <i class="fas fa-pencil-alt text-warning fa-lg"></i>
-                                    </a>
-                                    <a href="#" class="mr-3 d-inline-block" @click.prevent="openAccionesModal(data)"
-                                        title="Plan de Acción">
-                                        <i class="fas fa-list text-info fa-lg"></i>
-                                    </a>
-                                    <a href="#" class="mr-3 d-inline-block" @click.prevent="confirmDelete(data)"
-                                        title="Eliminar">
-                                        <i class="fas fa-trash-alt text-danger fa-lg"></i>
-                                    </a>
-                                </template>
-                            </Column>
-                        </DataTable>
+                                <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
+                                    bodyStyle="width: 12%">
+                                    <template #body="{ data }">
+                                        <div class="d-flex justify-content-around">
+                                            <button
+                                                class="btn btn-icon-only btn-light text-warning shadow-xs rounded-circle"
+                                                @click.prevent="store.openModal(data)" title="Editar Riesgo">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <button
+                                                class="btn btn-icon-only btn-light text-info shadow-xs rounded-circle"
+                                                @click.prevent="openAccionesModal(data)" title="Plan de Acción">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                            <button
+                                                class="btn btn-icon-only btn-light text-danger shadow-xs rounded-circle"
+                                                @click.prevent="confirmDelete(data)" title="Eliminar">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </div>
                     </div>
 
                     <!-- Tab Mapa de Calor -->

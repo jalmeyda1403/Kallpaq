@@ -9,13 +9,28 @@ class ProgramaAuditoria extends Model
 {
     use HasFactory;
 
+    protected $table = 'programa_auditoria';
+
     protected $fillable = [
-        'version',
-        'avance',
-        'periodo',
-        'presupuesto',
-        'fecha_aprobacion',
-        'observaciones',
+        'pa_version',
+        'pa_anio',
+        'pa_recursos',
+        'pa_fecha_aprobacion', // Maybe rename to pa_fecha_aprobacion in migration? Yes I did.
+        'pa_estado',
+        'pa_objetivo_general',
+        'pa_alcance',
+        'pa_metodos',
+        'pa_criterios',
+        'pa_riesgos',
+        'pa_descripcion', // Renamed from observations
         'archivo_pdf',
+        'fecha_publicacion',
+        'avance'
     ];
+
+    public function auditoriasEspecificas()
+    {
+        return $this->hasMany(AuditoriaEspecifica::class, 'pa_id');
+    }
+
 }

@@ -41,7 +41,9 @@
 
                     <!-- Documentación por Procesos -->
                     <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }">
-                        <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/inventario-publico') || isModuleActive('/procesos/mapa') }" @click.prevent="toggleMenu('documentacion')">
+                        <a href="#" class="nav-link"
+                            :class="{ 'active': isModuleActive('/inventario-publico') || isModuleActive('/procesos/mapa') }"
+                            @click.prevent="toggleMenu('documentacion')">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
                                 Documentación por Procesos
@@ -74,7 +76,9 @@
                         <!-- Gestión de Requerimientos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('requerimientos') }"
                             v-if="canAccessModule('requerimientos')">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('requerimientos') || isModuleActive('mis-requerimientos') }" @click.prevent="toggleMenu('requerimientos')">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('requerimientos') || isModuleActive('mis-requerimientos') }"
+                                @click.prevent="toggleMenu('requerimientos')">
                                 <i class="nav-icon fas fa-tasks"></i>
                                 <p>
                                     Gestión de Requerimientos
@@ -83,8 +87,7 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('requerimientos')">
                                 <!-- Bandeja de Requerimientos -->
-                                <li class="nav-item"
-                                    v-if="hasRole('admin')">
+                                <li class="nav-item" v-if="hasRole('admin')">
                                     <router-link to="/requerimientos/index" class="nav-link" active-class="active">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
@@ -107,7 +110,8 @@
                                 </li>
                                 <!-- Mis Req. Asignados (Especialista) -->
                                 <li class="nav-item" v-if="hasAnyRole(['especialista', 'admin'])">
-                                    <router-link to="/requerimientos/especialista" class="nav-link" active-class="active">
+                                    <router-link to="/requerimientos/especialista" class="nav-link"
+                                        active-class="active">
                                         <i class="fas fa-user-cog nav-icon"></i>
                                         <p>Mis Req. Asignados</p>
                                     </router-link>
@@ -125,7 +129,9 @@
 
                         <!-- Gestión por Procesos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('procesos') }">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/inventario-gestion') || isModuleActive('/procesos/index') || isModuleActive('/documentos') || isModuleActive('/indicadores-gestion') }" @click.prevent="toggleMenu('procesos')">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('/inventario-gestion') || isModuleActive('/procesos/index') || isModuleActive('/documentos') || isModuleActive('/indicadores-gestion') }"
+                                @click.prevent="toggleMenu('procesos')">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     Gestión por Procesos
@@ -181,7 +187,9 @@
 
                         <!-- Gestión de la Mejora -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('mejora') }">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/mejora') || isModuleActive('/mis-hallazgos') || isModuleActive('/bandeja-eficacia') }" @click.prevent="toggleMenu('mejora')">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('/mejora') || isModuleActive('/mis-hallazgos') || isModuleActive('/bandeja-eficacia') }"
+                                @click.prevent="toggleMenu('mejora')">
                                 <i class="nav-icon fas fa-sync-alt"></i>
                                 <p>
                                     Gestión de la Mejora
@@ -195,7 +203,8 @@
                                         <p>Bandeja de SMP</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['admin', 'especialista', 'facilitador', 'propietario'])">
+                                <li class="nav-item"
+                                    v-if="hasAnyRole(['admin', 'especialista', 'facilitador', 'propietario'])">
                                     <router-link to="/mis-hallazgos" class="nav-link" active-class="active">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Solicitudes de Mejora</p>
@@ -218,7 +227,9 @@
 
                         <!-- Gestión de Obligaciones -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('obligaciones') }">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/obligaciones') || isModuleActive('/mis-obligaciones') || isModuleActive('/radar-obligaciones') }" @click.prevent="toggleMenu('obligaciones')">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('/obligaciones') || isModuleActive('/mis-obligaciones') || isModuleActive('/radar-obligaciones') }"
+                                @click.prevent="toggleMenu('obligaciones')">
                                 <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>
                                     Gestión de Obligaciones
@@ -255,7 +266,8 @@
 
                         <!-- Gestión de Riesgos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('riesgos') }">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/riesgos') }" @click.prevent="toggleMenu('riesgos')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/riesgos') }"
+                                @click.prevent="toggleMenu('riesgos')">
                                 <i class="nav-icon fas fa-exclamation-triangle"></i>
                                 <p>
                                     Gestión de Riesgos
@@ -292,8 +304,10 @@
                         </li>
 
                         <!-- Gestión de Auditorías -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }" v-if="!hasRole('facilitador')">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/programa') }" @click.prevent="toggleMenu('auditoria')">
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('/programa') || isModuleActive('/gantt') || isModuleActive('/especifica') }"
+                                @click.prevent="toggleMenu('auditoria')">
                                 <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>
                                     Gestión de Auditorías
@@ -304,15 +318,17 @@
                                 <li class="nav-item">
                                     <router-link to="/programa" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-calendar-alt"></i>
-                                        <p>Programa de Auditoría</p>
+                                        <p>Programa Anual</p>
                                     </router-link>
                                 </li>
                             </ul>
                         </li>
 
                         <!-- Gestión de Continuidad -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('continuidad') }" v-if="!hasRole('facilitador')">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/continuidad') }" @click.prevent="toggleMenu('continuidad')">
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('continuidad') }"
+                            v-if="!hasRole('facilitador')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/continuidad') }"
+                                @click.prevent="toggleMenu('continuidad')">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
                                     Gestión de Continuidad
@@ -355,7 +371,9 @@
 
                         <!-- Satisfacción del Cliente -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('satisfaccion') }">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/salidas-nc') || isModuleActive('/sugerencias') || isModuleActive('/encuestas-satisfaccion') }" @click.prevent="toggleMenu('satisfaccion')">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('/salidas-nc') || isModuleActive('/sugerencias') || isModuleActive('/encuestas-satisfaccion') }"
+                                @click.prevent="toggleMenu('satisfaccion')">
                                 <i class="nav-icon fas fa-smile"></i>
                                 <p>
                                     Satisfacción del Cliente
@@ -393,7 +411,8 @@
                         <!-- Alta Dirección -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('direccion') }"
                             v-if="hasAnyRole(['admin', 'especialista', 'propietario', 'subgerente'])">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/revision-direccion') }" @click.prevent="toggleMenu('direccion')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/revision-direccion') }"
+                                @click.prevent="toggleMenu('direccion')">
                                 <i class="nav-icon fas fa-user-tie"></i>
                                 <p>
                                     Alta Dirección
@@ -411,8 +430,10 @@
                         </li>
 
                         <!-- Administración -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('administracion') }" v-if="!hasRole('facilitador')">
-                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/administracion') }" @click.prevent="toggleMenu('administracion')">
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('administracion') }"
+                            v-if="!hasRole('facilitador')">
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/administracion') }"
+                                @click.prevent="toggleMenu('administracion')">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     Administración
@@ -427,13 +448,15 @@
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/administracion/asignacion-ouos" class="nav-link" active-class="active">
+                                    <router-link to="/administracion/asignacion-ouos" class="nav-link"
+                                        active-class="active">
                                         <i class="nav-icon fas fa-sitemap"></i>
                                         <p>Asignación OUO-Procesos</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item">
-                                    <router-link to="/administracion/configuracion" class="nav-link" active-class="active">
+                                    <router-link to="/administracion/configuracion" class="nav-link"
+                                        active-class="active">
                                         <i class="nav-icon fas fa-file-alt"></i>
                                         <p>Configuración General</p>
                                     </router-link>
@@ -500,7 +523,8 @@ const updateOpenMenus = (path) => {
     if (path.includes('mejora') || path.includes('mis-hallazgos') || path.includes('bandeja-eficacia')) openMenus.value['mejora'] = true;
     if (path.includes('obligaciones')) openMenus.value['obligaciones'] = true;
     if (path.includes('riesgos')) openMenus.value['riesgos'] = true;
-    if (path.includes('programa')) openMenus.value['auditoria'] = true;
+    if (path.includes('riesgos')) openMenus.value['riesgos'] = true;
+    if (path.includes('programa') || path.includes('gantt') || path.includes('especifica')) openMenus.value['auditoria'] = true;
     if (path.includes('continuidad')) openMenus.value['continuidad'] = true;
     if (path.includes('salidas-nc') || path.includes('sugerencias') || path.includes('encuestas-satisfaccion')) openMenus.value['satisfaccion'] = true;
     if (path.includes('revision-direccion')) openMenus.value['direccion'] = true;
@@ -519,22 +543,24 @@ watch(() => router.currentRoute.value.path, (newPath) => {
 <style scoped>
 /* Transiciones suaves para todos los elementos del menú */
 .nav-pills .nav-link {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Movimiento fluido */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Movimiento fluido */
     border-radius: 6px;
     margin-bottom: 4px;
-    border: 1px solid transparent; /* Evita saltos al agregar bordes */
+    border: 1px solid transparent;
+    /* Evita saltos al agregar bordes */
 }
 
 /* --- Menú Padre Activo --- */
 .nav-pills .nav-link.active,
-.nav-pills .show > .nav-link {
+.nav-pills .show>.nav-link {
     /* Gradiente moderno en rojo "Premium" */
     background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%) !important;
     color: #fff !important;
-    
+
     /* Efecto 3D sutil para elevación */
     box-shadow: 0 4px 15px rgba(211, 47, 47, 0.35);
-    
+
     /* Pequeño desplazamiento para feedback táctil visual */
     transform: translateX(2px);
 }
@@ -547,47 +573,60 @@ watch(() => router.currentRoute.value.path, (newPath) => {
 
 /* --- Submenú (Hijo) --- */
 .nav-treeview {
-    background-color: rgba(0, 0, 0, 0.15); /* Fondo ligeramente más oscuro para el contenedor hijo */
+    background-color: rgba(0, 0, 0, 0.15);
+    /* Fondo ligeramente más oscuro para el contenedor hijo */
     border-radius: 8px;
     margin-top: 5px;
     padding: 5px 0;
 }
 
-.nav-treeview > .nav-item > .nav-link {
-    padding-left: 2.8rem; /* Mayor indentación para jerarquía */
+.nav-treeview>.nav-item>.nav-link {
+    padding-left: 2.8rem;
+    /* Mayor indentación para jerarquía */
     font-size: 0.95em;
-    opacity: 0.85; /* Texto un poco apagado por defecto */
+    opacity: 0.85;
+    /* Texto un poco apagado por defecto */
 }
 
 /* --- Submenú Activo --- */
 /* --- Submenú Activo --- */
-.nav-treeview > .nav-item > .nav-link.active,
-.nav-treeview > .nav-item > .nav-link.active:hover {
+.nav-treeview>.nav-item>.nav-link.active,
+.nav-treeview>.nav-item>.nav-link.active:hover {
     /* Estilo "Mouseover" / Sutil solicitado */
-    background-color: rgba(255, 255, 255, 0.15) !important; /* Un poco más visible que el hover normal */
-    
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    /* Un poco más visible que el hover normal */
+
     /* Texto Blanco para mantener consistencia con el tema oscuro */
     color: #fff !important;
-    
+
     font-weight: 600;
     opacity: 1;
-    
+
     /* Borde de acento a la izquierda (Opcional, pero ayuda a identificar activo) */
     /* Mantenemos el rojo pero sutil o lo quitamos si se prefiere totalmente plano. 
        Lo mantendré rojo para identificarlo, pero el fondo es lo critico. */
     border-left: 3px solid #d32f2f;
-    
-    box-shadow: none; 
+
+    box-shadow: none;
 }
 
 /* Iconos en estado activo */
 .nav-pills .nav-link.active .nav-icon {
-    animation: pulse 1s infinite; /* Animación sutil opcional si te gusta */
+    animation: pulse 1s infinite;
+    /* Animación sutil opcional si te gusta */
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 </style>

@@ -319,6 +319,27 @@
                         </ul>
                     </li>
 
+                    <!-- Auditoría (ISO 19011) -->
+                    <li
+                        class="nav-item has-treeview {{ request()->is('vue/programa*') || request()->is('vue/auditoria*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-search"></i>
+                            <p>
+                                Gestión de Auditorías
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/vue/programa"
+                                    class="nav-link {{ request()->is('vue/programa*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-calendar-alt"></i>
+                                    <p>Programa Anual</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Configuracion Obligaciones -->
                     <li
                         class="nav-item has-treeview {{ request()->is('vue/obligaciones*') || request()->is('vue/mis-obligaciones*') || request()->is('vue/radar-obligaciones*') ? 'menu-open active' : '' }}">

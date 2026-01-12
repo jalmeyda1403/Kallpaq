@@ -13,10 +13,27 @@ class ProgramaAuditoriaController extends Controller
         return view('programa.index', compact('programas'));
     }
 
-    public function apiIndex()
+    public function apiIndex(Request $request)
     {
-        $programas = ProgramaAuditoria::all();
+        $query = ProgramaAuditoria::with('auditoriasEspecificas');
+
+        if ($request->has('year') && $request->year != '') {
+            $query->where('pa_anio', $request->year);
+        }
+
+        $programas = $query->orderBy('pa_anio', 'desc')->get();
         return response()->json($programas);
+    }
+
+    public function apiShow($id)
+    {
+        $programa = ProgramaAuditoria::with(['auditoriasEspecificas'])->find($id);
+
+        if (!$programa) {
+            return response()->json(['message' => 'Programa no encontrado'], 404);
+        }
+
+        return response()->json($programa);
     }
 
     public function create()
@@ -28,14 +45,17 @@ class ProgramaAuditoriaController extends Controller
     {
         // Validar los datos del formulario
         $request->validate([
-            'version' => 'required',
-            'periodo' => 'required',
-            'presupuesto' => 'required',
-            'fecha_aprobacion' => 'required',
+            'pa_version' => 'required',
+            'pa_anio' => 'required',
+            'pa_fecha_aprobacion' => 'required',
         ]);
 
         // Crear un nuevo programa de auditoría
-        ProgramaAuditoria::create($request->all());
+        $programa = ProgramaAuditoria::create($request->all());
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Programa creado', 'data' => $programa]);
+        }
 
         // Redirigir a la lista de programas de auditoría con un mensaje de éxito
         return redirect()->route('programa.index')
@@ -51,14 +71,17 @@ class ProgramaAuditoriaController extends Controller
     {
         // Validar los datos del formulario
         $request->validate([
-            'version' => 'required',
-            'periodo' => 'required',
-            'presupuesto' => 'required',
-            'fecha_aprobacion' => 'required',
+            'pa_version' => 'required',
+            'pa_anio' => 'required',
+            'pa_fecha_aprobacion' => 'required',
         ]);
 
         // Actualizar el programa de auditoría
         $programa->update($request->all());
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Programa actualizado', 'data' => $programa]);
+        }
 
         // Redirigir a la lista de programas de auditoría con un mensaje de éxito
         return redirect()->route('programa.index')
@@ -77,14 +100,14 @@ class ProgramaAuditoriaController extends Controller
 
     public function reprogramar(ProgramaAuditoria $programa)
     {
-         return redirect()->route('programa.index')
+        return redirect()->route('programa.index')
             ->with('success', 'Programa de auditoría reprogramado exitosamente.');
     }
-    
+
     public function showHistory(ProgramaAuditoria $programa)
     {
         // Obtener el historial de cambios de estados para el programa de auditoría
-      //  $cambios_estado = $programa->cambiosEstado;
+        //  $cambios_estado = $programa->cambiosEstado;
 
         //return view('programa_auditoria.history', compact('programa', 'cambios_estado'));
     }

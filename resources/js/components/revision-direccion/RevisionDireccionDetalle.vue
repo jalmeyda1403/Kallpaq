@@ -11,9 +11,39 @@
             </ol>
         </nav>
 
-        <!-- Loading / Error States -->
-        <LoadingState v-if="isLoading" text="Cargando información detallada..." />
-        <ErrorState v-else-if="error" :message="error" @retry="cargarRevision" />
+        <ErrorState v-if="error" :message="error" @retry="cargarRevision" />
+
+        <!-- Skeleton Loading Structure (Mejora la percepción de velocidad) -->
+        <div v-if="isLoading && !revision" class="animate-pulse">
+            <!-- Skeleton Banner -->
+            <div class="card border-0 shadow-sm rounded-xl mb-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="row no-gutters">
+                        <div class="col-lg-8 p-4">
+                            <div class="bg-light rounded mb-3" style="height: 32px; width: 60%;"></div>
+                            <div class="d-flex mb-4">
+                                <div class="bg-light rounded mr-2" style="height: 24px; width: 100px;"></div>
+                                <div class="bg-light rounded" style="height: 24px; width: 80px;"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="bg-light rounded" style="height: 50px;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="bg-light rounded" style="height: 50px;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="bg-light rounded" style="height: 50px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 bg-light p-4"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Skeleton Tabs -->
+            <div class="bg-white rounded shadow-sm mb-4" style="height: 60px;"></div>
+        </div>
 
         <!-- Contenido Principal -->
         <template v-else-if="revision">
@@ -93,7 +123,7 @@
                                 </svg>
                                 <div class="progress-ring__text h3 font-weight-bold mb-0">{{ revision.avance_general ||
                                     0
-                                    }}%</div>
+                                }}%</div>
                             </div>
                             <div class="d-flex mt-2">
                                 <button v-if="revision.estado === 'realizada'" @click="subirActa"
@@ -212,7 +242,7 @@
                                                 tiposEntrada[entrada.tipo_entrada] || entrada.tipo_entrada }}</small>
 
                                             <p class="text-muted small mb-3 description-truncate">{{ entrada.descripcion
-                                            }}</p>
+                                                }}</p>
 
                                             <div v-if="entrada.conclusion"
                                                 class="bg-light p-2 rounded small mb-3 info-border-left">
@@ -346,7 +376,7 @@
                                                         <p class="mb-0 extra-small font-weight-bold text-muted">
                                                             Registrado</p>
                                                         <small class="text-muted">{{ formatDate(salida.created_at)
-                                                            }}</small>
+                                                        }}</small>
                                                     </template>
                                                 </div>
                                             </div>
@@ -449,7 +479,8 @@
                                             </td>
                                             <td class="px-4 py-3 small">
                                                 <div v-if="comp.sistemas_gestion && comp.sistemas_gestion.length">
-                                                    <span v-for="sys in comp.sistemas_gestion" :key="sys" class="badge badge-light border mr-1">
+                                                    <span v-for="sys in comp.sistemas_gestion" :key="sys"
+                                                        class="badge badge-light border mr-1">
                                                         {{ sys }}
                                                     </span>
                                                 </div>
