@@ -16,6 +16,7 @@ use App\Http\Controllers\RequerimientoNecesidadController;
 use App\Http\Controllers\ProgramaAuditoriaController;
 use App\Http\Controllers\HallazgoController;
 use App\Http\Controllers\AccionController;
+use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\CausaController;
 use App\Http\Controllers\ContextoDeterminacionController;
 use App\Http\Controllers\ObligacionController;
@@ -60,6 +61,14 @@ Route::get('users/list', [UserController::class, 'listUsers'])->name('api.users.
 Route::get('/', function () {
     return view('app');
 });
+
+Route::get('/debug/recursos', function () {
+    return \Illuminate\Support\Facades\DB::table('programa_auditoria')->pluck('pa_recursos');
+});
+
+
+
+
 
 
 Auth::routes();
@@ -141,6 +150,21 @@ Route::resource('indicadores', IndicadorController::class);
 Route::resource('programa', ProgramaAuditoriaController::class);
 Route::get('/api/programa', [ProgramaAuditoriaController::class, 'apiIndex'])->name('api.programa.index');
 Route::get('/api/programa/{id}', [ProgramaAuditoriaController::class, 'apiShow'])->name('api.programa.show');
+Route::put('/api/programa/{id}/status', [ProgramaAuditoriaController::class, 'changeStatus'])->name('api.programa.status');
+
+// Auditorias Especificas API
+Route::group(['prefix' => 'api'], function () {
+    Route::get('/programa/{id}/auditorias', [AuditoriaEspecificaController::class, 'index'])->name('api.auditorias.index');
+    Route::get('/auditorias/next-sequence', [AuditoriaEspecificaController::class, 'getNextSequence'])->name('api.auditorias.next-sequence');
+    Route::resource('auditorias', AuditoriaEspecificaController::class)->names('api.auditorias');
+    Route::put('/auditorias/{id}/agenda', [AuditoriaEspecificaController::class, 'updateAgenda'])->name('api.auditorias.agenda');
+    Route::put('/auditorias/{id}/equipo', [AuditoriaEspecificaController::class, 'updateEquipo'])->name('api.auditorias.equipo');
+    Route::post('/auditorias/{id}/evaluacion', [AuditoriaEspecificaController::class, 'storeEvaluacion'])->name('api.auditorias.evaluacion');
+
+    // Auditores
+    Route::apiResource('auditores', AuditorController::class)->names('api.auditores');
+    Route::get('/auditores-disponibles', [AuditorController::class, 'getAvailableUsers'])->name('api.auditores.available-users');
+});
 Route::resource('smp', HallazgoController::class);
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
 Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
@@ -823,6 +847,10 @@ Route::prefix('api/auditoria')->middleware('auth')->name('api.auditoria.')->grou
     // Evaluación 360
     Route::get('/especifica/{ae_id}/evaluaciones', [AuditoriaEvaluacionController::class, 'index'])->name('evaluacion.index');
     Route::post('/evaluacion', [AuditoriaEvaluacionController::class, 'store'])->name('evaluacion.store');
+
+    // Normas Auditables
+    Route::apiResource('/normas', \App\Http\Controllers\NormaAuditableController::class)->names('normas');
+    Route::post('/normas/generate', [\App\Http\Controllers\NormaAuditableController::class, 'generateRequirements'])->name('normas.generate');
 
     // Constancias
     Route::get('/especifica/{ae_id}/auditor/{auditor_id}/constancia', [AuditoriaEvaluacionController::class, 'generarConstancia'])->name('evaluacion.constancia');

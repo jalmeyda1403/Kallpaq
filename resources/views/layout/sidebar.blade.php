@@ -337,6 +337,13 @@
                                     <p>Programa Anual</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="/vue/auditor/listado"
+                                    class="nav-link {{ request()->is('vue/auditor/listado*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-user-tie"></i>
+                                    <p>Listado de Auditores</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 

@@ -318,4 +318,20 @@ class AIService
 
         return json_decode($this->callOpenAI($prompt, true), true) ?? ['oportunidades' => 'No se pudo generar análisis.', 'conclusiones' => 'No se pudo generar conclusiones.'];
     }
+    public function generateNormaRequirements(string $normName): array
+    {
+        $prompt = "Actúa como un experto en normas ISO (ISO 9001, 37001, 37301, 45001, etc.).
+        Tu tarea es generar la lista completa de requisitos auditables para la norma \"$normName\".
+
+        Instrucciones:
+        1. Devuelve una lista de objetos JSON.
+        2. Cada objeto debe tener: 'numeral' (ej. 4.1), 'denominacion' (ej. Comprensión de la organización), 'detalle' (breve descripción del debe).
+        3. Cubre desde el capítulo 4 en adelante.
+        4. Omitir introducción y definiciones.
+        5. Devuelve SOLO UN ARRAY JSON puro: [{\"numeral\": \"...\", \"denominacion\": \"...\", \"detalle\": \"...\"}, ...]
+        Si la norma no es conocida, intenta inferir una estructura de alto nivel (HLS) o indica error.";
+
+        $response = $this->callOpenAI($prompt, true);
+        return json_decode($response, true)['requisitos'] ?? json_decode($response, true) ?? [];
+    }
 }

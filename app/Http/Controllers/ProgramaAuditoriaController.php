@@ -27,13 +27,62 @@ class ProgramaAuditoriaController extends Controller
 
     public function apiShow($id)
     {
-        $programa = ProgramaAuditoria::with(['auditoriasEspecificas'])->find($id);
+        $programa = ProgramaAuditoria::with(['auditoriasEspecificas.proceso', 'auditoriasEspecificas.equipo'])->find($id);
 
         if (!$programa) {
             return response()->json(['message' => 'Programa no encontrado'], 404);
         }
 
+        // Calculate Compliance
+        $total = $programa->auditoriasEspecificas->count();
+        $cancelled = $programa->auditoriasEspecificas->where('ae_estado', 'Cancelada')->count();
+        $executed = $programa->auditoriasEspecificas->whereIn('ae_estado', ['Ejecutada', 'Cerrada'])->count();
+
+        $denominator = $total - $cancelled;
+        $compliance = $denominator > 0 ? round(($executed / $denominator) * 100, 2) : 0;
+
+        $programa->compliance = $compliance;
+
         return response()->json($programa);
+    }
+
+    public function changeStatus(Request $request, $id)
+    {
+        $programa = ProgramaAuditoria::with('auditoriasEspecificas')->findOrFail($id);
+        $status = $request->input('status'); // Aprobada, Cerrada, Borrador?
+
+        if ($status === 'Cerrada') {
+            // Validate all audits are closed/executed/cancelled
+            $pending = $programa->auditoriasEspecificas->filter(function ($audit) {
+                return !in_array($audit->ae_estado, ['Ejecutada', 'Cerrada', 'Cancelada']);
+            });
+
+            if ($pending->count() > 0) {
+                return response()->json([
+                    'message' => 'No se puede cerrar el programa. Hay auditorías pendientes.',
+                    'pending_audits' => $pending->pluck('ae_codigo')
+                ], 422);
+            }
+        }
+
+        $programa->pa_estado = $status;
+        $programa->save();
+
+        return response()->json(['message' => "Estado actualizado a $status", 'programa' => $programa]);
+    }
+
+    // ... (keep legacy methods if needed or refactor them)
+    // Legacy MVC Actions
+    public function aprobar(ProgramaAuditoria $programa)
+    {
+        $programa->update(['pa_estado' => 'Aprobada']);
+        return redirect()->route('programa.index')->with('success', 'Programa aprobado.');
+    }
+
+    public function reprogramar(ProgramaAuditoria $programa)
+    {
+        $programa->update(['pa_estado' => 'Borrador']); // Reset to draft?
+        return redirect()->route('programa.index')->with('success', 'Programa reprogramado.');
     }
 
     public function create()
@@ -88,21 +137,7 @@ class ProgramaAuditoriaController extends Controller
             ->with('success', 'Programa de auditoría actualizado exitosamente.');
     }
 
-    public function aprobar(ProgramaAuditoria $programa)
-    {
-        // Lógica para aprobar el programa de auditoría
-        // Aquí podrías bloquear el programa y realizar otras acciones necesarias
 
-        // Redirigir a la lista de programas de auditoría con un mensaje de éxito
-        return redirect()->route('programa.index')
-            ->with('success', 'Programa de auditoría aprobado exitosamente.');
-    }
-
-    public function reprogramar(ProgramaAuditoria $programa)
-    {
-        return redirect()->route('programa.index')
-            ->with('success', 'Programa de auditoría reprogramado exitosamente.');
-    }
 
     public function showHistory(ProgramaAuditoria $programa)
     {

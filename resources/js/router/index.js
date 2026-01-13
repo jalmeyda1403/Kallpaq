@@ -73,6 +73,16 @@ const routes = [
                 path: 'procesos/index',
                 redirect: { name: 'procesos.index' }
             },
+            {
+                path: 'auditor/listado',
+                name: 'auditores.index',
+                component: () => import('@/components/auditoria/AuditoresIndex.vue')
+            },
+            {
+                path: 'auditoria/normas',
+                name: 'normas.index',
+                component: () => import('@/components/normas/NormasISOIndex.vue')
+            },
             // Auditoría
             {
                 path: 'programa',
@@ -86,12 +96,12 @@ const routes = [
                 props: true
             },
             // Placeholder for Specific Plan Manager (Agenda)
-            {
+            /* {
                 path: 'auditoria/especifica/:id/plan',
                 name: 'auditoria.especifica.plan',
-                component: () => import('@/components/auditoria/PlanAuditoriaManager.vue'), // Will create this next
+                component: () => import('@/components/auditoria/PlanAuditoriaManager.vue'),
                 props: true
-            },
+            }, */
             {
                 path: 'documentos/listado',
                 name: 'documentos.listado',

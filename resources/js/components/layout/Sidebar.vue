@@ -321,6 +321,18 @@
                                         <p>Programa Anual</p>
                                     </router-link>
                                 </li>
+                                <li class="nav-item">
+                                    <router-link to="/auditor/listado" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-user-tie"></i>
+                                        <p>Listado de Auditores</p>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item">
+                                    <router-link to="/auditoria/normas" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-book"></i>
+                                        <p>Normas Auditables</p>
+                                    </router-link>
+                                </li>
                             </ul>
                         </li>
 

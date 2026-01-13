@@ -121,10 +121,11 @@
                             </template>
                         </Column>
 
-                        <Column field="ae_sistema_kallpaq" header="Sistema de Gestión">
+                        <Column field="ae_sistema" header="Sistema de Gestión">
                             <template #body="{ data }">
-                                <span class="badge badge-light border text-wrap" v-if="data.ae_sistema_kallpaq">
-                                    {{ data.ae_sistema_kallpaq }}
+                                <span class="badge badge-light border text-wrap"
+                                    v-if="data.ae_sistema && data.ae_sistema.length > 0">
+                                    {{ getSistemasNombres(data.ae_sistema) }}
                                 </span>
                                 <span v-else class="text-muted small">-</span>
                             </template>
@@ -171,90 +172,9 @@
             </div>
         </Transition>
 
-        <!-- Modal for Specific Audit -->
-        <Dialog v-model:visible="auditModalVisible" :style="{ width: '50vw' }" :modal="true"
-            :header="isEdit ? 'Editar Auditoría' : 'Agendar Nueva Auditoría'" :draggable="false">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Tipo de Auditoría</label>
-                        <select v-model="form.ae_tipo" class="form-control">
-                            <option value="Interna">Interna</option>
-                            <option value="Externa">Externa</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Sistema de Gestión</label>
-                        <input type="text" v-model="form.ae_sistema_kallpaq" class="form-control"
-                            placeholder="Ej: ISO 9001, ISO 37001">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="font-weight-bold small">Proceso</label>
-                <select v-model="form.proceso_id" class="form-control">
-                    <option value="" disabled>Seleccione un proceso...</option>
-                    <option v-for="proc in procesos" :key="proc.id" :value="proc.id">
-                        {{ proc.proceso_nombre || proc.nombre }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Equipo Auditor</label>
-                        <input type="text" v-model="form.ae_equipo_auditor" class="form-control"
-                            placeholder="Nombre del auditor o equipo">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Auditado</label>
-                        <input type="text" v-model="form.ae_auditado" class="form-control"
-                            placeholder="Rol o nombre del auditado">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Fecha Inicio</label>
-                        <input type="date" v-model="form.ae_fecha_inicio" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Fecha Fin</label>
-                        <input type="date" v-model="form.ae_fecha_fin" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="font-weight-bold small">Estado</label>
-                        <select v-model="form.ae_estado" class="form-control">
-                            <option value="Programada">Programada</option>
-                            <option value="Realizada">Realizada</option>
-                            <option value="Cancelada">Cancelada</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="font-weight-bold small">Objetivo / Alcance</label>
-                <textarea v-model="form.ae_alcance" class="form-control" rows="3"
-                    placeholder="Detalles adicionales..."></textarea>
-            </div>
-
-            <template #footer>
-                <button class="btn btn-secondary" @click="auditModalVisible = false">Cancelar</button>
-                <button class="btn btn-primary ml-2" @click="saveAudit">Guardar</button>
-            </template>
-        </Dialog>
+        <!-- Modal for Specific Audit (New Component) -->
+        <PlanAuditoriaModal v-if="auditModalVisible" v-model:visible="auditModalVisible" :audit-id="selectedAuditId"
+            :programa-id="programa.id" :audit-status="selectedAuditStatus" @refresh="loadData" />
     </div>
 </template>
 
@@ -265,10 +185,10 @@ import { useRoute, useRouter } from 'vue-router';
 import { useProgramaAuditoriaStore } from '@/stores/programaAuditoriaStore';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dialog from 'primevue/dialog';
-import Knob from 'primevue/knob'; // Imported Knob
+import Knob from 'primevue/knob';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
+import PlanAuditoriaModal from './PlanAuditoriaModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -280,27 +200,12 @@ const programa = ref({});
 const auditorias = ref([]);
 const procesos = ref([]);
 const auditModalVisible = ref(false);
-const isEdit = ref(false);
-
-const form = ref({
-    id: null,
-    pa_id: null,
-    ae_tipo: 'Interna',
-    proceso_id: '',
-    ae_sistema_kallpaq: '',
-    ae_equipo_auditor: '',
-    ae_auditado: '',
-    ae_estado: 'Programada',
-    ae_fecha_inicio: '',
-    ae_fecha_fin: '',
-    ae_alcance: ''
-});
+const selectedAuditId = ref(null);
+const selectedAuditStatus = ref(null);
 
 // Computed for Compliance
 const compliancePercentage = computed(() => {
-    if (!auditorias.value.length) return 0;
-    const completed = auditorias.value.filter(a => a.ae_estado === 'Realizada').length;
-    return Math.round((completed / auditorias.value.length) * 100);
+    return programa.value.compliance || 0;
 });
 
 onMounted(async () => {
@@ -312,27 +217,17 @@ const loadData = async () => {
     try {
         const paId = route.params.id;
 
-        // Check if we have the program in store
-        if (store.currentPrograma && store.currentPrograma.id == paId) {
-            programa.value = store.currentPrograma;
-            auditorias.value = store.currentPrograma.auditoriasEspecificas || store.currentPrograma.auditorias_especificas || [];
-            // If data is from store, processes might need fetching if not global, but for now we fetch processes always to be safe or parallel
-            // Optimization: Fetch only processes
-            const resProc = await axios.get('/api/procesos');
-            procesos.value = Array.isArray(resProc.data) ? resProc.data : (resProc.data.data || []);
-        } else {
-            // Fallback: Fetch everything if direct access
-            const [resProg, resProc] = await Promise.all([
-                store.fetchProgramaById(paId), // Use store action
-                axios.get('/api/procesos')
-            ]);
+        // Force fetch to get fresh calculation and data
+        const [resProg, resProc] = await Promise.all([
+            axios.get(`/api/programa/${paId}`),
+            axios.get('/api/procesos')
+        ]);
 
-            if (resProg) {
-                programa.value = resProg;
-                auditorias.value = resProg.auditoriasEspecificas || resProg.auditorias_especificas || [];
-            }
-            procesos.value = Array.isArray(resProc.data) ? resProc.data : (resProc.data.data || []);
+        if (resProg.data) {
+            programa.value = resProg.data;
+            auditorias.value = resProg.data.auditorias_especificas || [];
         }
+        procesos.value = Array.isArray(resProc.data) ? resProc.data : (resProc.data.data || []);
 
     } catch (e) {
         console.error('Error loading data:', e);
@@ -350,7 +245,9 @@ const getNombreProceso = (id) => {
 
 const getEstadoBadge = (estado) => {
     switch (estado) {
-        case 'Realizada': return 'badge-success';
+        case 'Ejecutada':
+        case 'Realizada':
+        case 'Cerrada': return 'badge-success';
         case 'Programada': return 'badge-warning';
         case 'Cancelada': return 'badge-danger';
         default: return 'badge-secondary';
@@ -359,60 +256,38 @@ const getEstadoBadge = (estado) => {
 
 const formatDate = (d) => {
     if (!d) return '';
-    // Adjust for timezone if needed, usually just slicing for YYYY-MM-DD
     return new Date(d).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
+const getSistemasNombres = (sistemas) => {
+    if (!sistemas || !Array.isArray(sistemas)) return '-';
+    const map = {
+        'sgc': 'ISO 9001',
+        'sgas': 'ISO 37001',
+        'sgco': 'ISO 21001',
+        'sgsi': 'ISO 27001',
+        'sgcm': 'ISO 37301'
+    };
+    return sistemas.map(s => map[s] || s.toUpperCase()).join(', ');
+};
+
 const openAuditModal = () => {
-    isEdit.value = false;
-    resetForm();
-    form.value.pa_id = programa.value.id;
+    selectedAuditId.value = null;
+    selectedAuditStatus.value = null;
     auditModalVisible.value = true;
 };
 
 const editAudit = (data) => {
-    isEdit.value = true;
-    form.value = { ...data };
+    selectedAuditId.value = data.id;
+    selectedAuditStatus.value = data.ae_estado;
     auditModalVisible.value = true;
-};
-
-const resetForm = () => {
-    form.value = {
-        id: null,
-        pa_id: programa.value.id,
-        ae_tipo: 'Interna',
-        proceso_id: '',
-        ae_sistema_kallpaq: '',
-        ae_equipo_auditor: '',
-        ae_auditado: '',
-        ae_estado: 'Programada',
-        ae_fecha_inicio: '',
-        ae_fecha_fin: '',
-        ae_alcance: ''
-    };
-};
-
-const saveAudit = async () => {
-    try {
-        const url = isEdit.value ? `/api/auditoria/especifica/${form.value.id}` : '/api/auditoria/especifica';
-        const method = isEdit.value ? 'put' : 'post';
-
-        await axios[method](url, form.value);
-
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Auditoría guardada', life: 3000 });
-        auditModalVisible.value = false;
-        await loadData();
-
-    } catch (e) {
-        console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
-    }
 };
 
 const goBack = () => {
     router.push({ name: 'programa.index' });
 };
 </script>
+
 
 <style scoped>
 .rounded-lg {

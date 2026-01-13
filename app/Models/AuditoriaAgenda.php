@@ -20,7 +20,8 @@ class AuditoriaAgenda extends Model
         'aea_auditado',
         'aea_auditor',
         'aea_requisito',
-        'aea_lugar'
+        'aea_lugar',
+        'aea_tipo'
     ];
 
     public function auditoria()
