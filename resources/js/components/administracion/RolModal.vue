@@ -2,11 +2,18 @@
     <div class="modal fade" tabindex="-1" ref="modalEl" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title font-weight-bold">
-                        <i class="fas fa-user-tag mr-2"></i>Asignar Rol
-                    </h5>
-                    <button type="button" class="close text-white" aria-label="Close" @click="close">
+                <div class="modal-header bg-danger text-white py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box mr-3 bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-user-tag text-danger"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0 font-weight-bold">Asignar Rol</h5>
+                            <small class="text-white-50">Defina el nivel de acceso del usuario</small>
+                        </div>
+                    </div>
+                    <button type="button" class="close text-white outline-none" aria-label="Close" @click="close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
