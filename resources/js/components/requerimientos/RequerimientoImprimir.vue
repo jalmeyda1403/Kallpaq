@@ -26,7 +26,8 @@
         <tbody>
           <tr>
             <th>Proceso</th>
-            <td>{{ requerimiento.proceso.proceso_nombre ?? 'N/A' }} ({{ requerimiento.proceso.cod_proceso ?? 'N/A' }})</td>
+            <td>{{ requerimiento.proceso.proceso_nombre ?? 'N/A' }} ({{ requerimiento.proceso.cod_proceso ?? 'N/A' }})
+            </td>
           </tr>
           <tr>
             <th>Asunto del Requerimiento</th>
@@ -122,7 +123,8 @@
 
     <!-- Espacio para firma -->
     <div class="footer mt-5 pt-4">
-      <div class="signature-line text-center" style="width: 300px; margin: 40px auto 10px auto; border-top: 1px solid #000;">
+      <div class="signature-line text-center"
+        style="width: 300px; margin: 40px auto 10px auto; border-top: 1px solid #000;">
         <p class="mb-0"><strong>Firma del Propietario del Proceso</strong></p>
       </div>
     </div>
@@ -294,9 +296,11 @@ onMounted(async () => {
   line-height: 1.6;
   padding: 20px;
   background-color: #fff;
-  max-width: 210mm; /* Ancho A4 */
+  max-width: 210mm;
+  /* Ancho A4 */
   margin: 0 auto;
-  min-height: 297mm; /* Alto A4 */
+  min-height: 297mm;
+  /* Alto A4 */
 }
 
 .logo {
@@ -337,7 +341,8 @@ onMounted(async () => {
   font-size: 11px;
 }
 
-.content-table th, .content-table td {
+.content-table th,
+.content-table td {
   border: 1px solid #dee2e6;
   padding: 10px;
   vertical-align: top;
@@ -406,4 +411,3 @@ onMounted(async () => {
   }
 }
 </style>
-</template>

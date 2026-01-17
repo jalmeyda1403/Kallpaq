@@ -123,11 +123,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps, computed } from 'vue';
+import { ref, onMounted, defineProps, computed, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 
-const props = defineProps(['auditId']);
+const props = defineProps(['auditId', 'auditData', 'auditStatus']);
 const toast = useToast();
 const evaluations = ref([]);
 const teamMembers = ref([]);
@@ -145,19 +145,38 @@ const currentUserId = ref(window.Laravel?.user?.id || 1);
 
 const loadTeamforDropdown = async () => {
     if (!props.auditId) return;
+
+    if (props.auditData) {
+        assignAuditData(props.auditData);
+        // Si ya tenemos los datos, evitamos el fetch. 
+        // Nota: Si las evaluaciones cambian frecuentemente, podríamos querer el fetch, 
+        // pero por desempeño usamos props.
+        return;
+    }
+
     try {
         const response = await axios.get(`/api/auditorias/${props.auditId}`);
-        if (response.data.equipo) {
-            teamMembers.value = response.data.equipo.map(m => ({
-                id: m.auditor_id,
-                label: m.usuario?.name || 'Unknown'
-            }));
-        }
-        if (response.data.evaluaciones) {
-            evaluations.value = response.data.evaluaciones;
-        }
+        assignAuditData(response.data);
     } catch (e) { }
 };
+
+const assignAuditData = (data) => {
+    if (data.equipo) {
+        teamMembers.value = data.equipo.map(m => ({
+            id: m.auditor_id,
+            label: m.usuario?.name || 'Unknown'
+        }));
+    }
+    if (data.evaluaciones) {
+        evaluations.value = data.evaluaciones;
+    }
+};
+
+watch(() => props.auditData, (newVal) => {
+    if (newVal) {
+        assignAuditData(newVal);
+    }
+}, { immediate: true });
 
 const openNewEvaluation = () => {
     form.value = {

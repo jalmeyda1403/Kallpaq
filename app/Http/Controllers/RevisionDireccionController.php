@@ -33,10 +33,6 @@ class RevisionDireccionController extends Controller
                 $q->where('codigo', 'like', "%{$request->buscar}%")
                     ->orWhere('titulo', 'like', "%{$request->buscar}%");
             });
-            $query->where(function ($q) use ($request) {
-                $q->where('codigo', 'like', "%{$request->buscar}%")
-                    ->orWhere('titulo', 'like', "%{$request->buscar}%");
-            });
         }
 
         // Filtro por Sistema de Gestión (JSON)
@@ -72,7 +68,6 @@ class RevisionDireccionController extends Controller
             'periodo' => 'required|string|max:20',
             'anio' => 'required|integer|min:2020|max:2100',
             'participantes' => 'nullable|string',
-            'agenda' => 'nullable|string',
             'agenda' => 'nullable|string',
             'responsable_id' => 'required|exists:users,id',
             'sistemas_gestion' => 'nullable|array',
@@ -121,7 +116,6 @@ class RevisionDireccionController extends Controller
             'participantes' => 'nullable|string',
             'agenda' => 'nullable|string',
             'observaciones' => 'nullable|string',
-            'estado' => 'sometimes|in:programada,en_preparacion,realizada,cancelada',
             'estado' => 'sometimes|in:programada,en_preparacion,realizada,cancelada',
             'responsable_id' => 'sometimes|exists:users,id',
             'sistemas_gestion' => 'nullable|array',

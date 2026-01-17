@@ -57,8 +57,8 @@ class DashboardController extends Controller
                 [
                     'id' => $especialista->id, // ID del especialista (de la tabla especialistas)
                     'nombre' => $especialista->nombres, // Usar el accessor del modelo Especialista
-                    'sigla' => $especialista->user->sigla ?? '', // Asumiendo que sigla está en el modelo User
-                    'foto_url' => $especialista->user->foto_url ?? asset('images/user-default.png'),
+                    'sigla' => $especialista->user->user_iniciales ?? '', // Asumiendo que user_iniciales está en el modelo User
+                    'foto_url' => $especialista->user->user_foto_url ? asset($especialista->user->user_foto_url) : asset('images/user-default.png'),
                     'total_asignados' => $totalAsignados,
                     'total_vencidos' => $totalVencidos,
                     'total_finalizados' => $totalFinalizados,
@@ -86,7 +86,7 @@ class DashboardController extends Controller
         $yearRaw = $request->input('year', now()->year);
         $years = is_array($yearRaw) ? $yearRaw : [$yearRaw];
 
-        $requerimientos = Requerimiento::whereIn(DB::raw('YEAR(created_at)'), $years)->get();
+        $requerimientos = Requerimiento::whereIn(DB::raw('YEAR(created_at)'), $years, 'and', false)->get();
 
         $creados = $requerimientos->where('estado', 'creado')->count();
         $finalizados = $requerimientos->where('estado', 'atendido')->count();
@@ -147,7 +147,7 @@ class DashboardController extends Controller
             DB::raw('MONTH(fecha_asignacion) as mes'),
             DB::raw('COUNT(*) as total')
         )
-            ->whereIn(DB::raw('YEAR(fecha_asignacion)'), $years)
+            ->whereIn(DB::raw('YEAR(fecha_asignacion)'), $years, 'and', false)
             ->groupBy('mes')
             ->pluck('total', 'mes');
 
@@ -155,16 +155,16 @@ class DashboardController extends Controller
             DB::raw('MONTH(fecha_limite) as mes'),
             DB::raw('COUNT(*) as total')
         )
-            ->whereIn(DB::raw('YEAR(fecha_limite)'), $years)
+            ->whereIn(DB::raw('YEAR(fecha_limite)'), $years, 'and', false)
             ->groupBy('mes')
             ->pluck('total', 'mes');
 
-        $finalizados = Requerimiento::whereNotNull('fecha_fin')
+        $finalizados = Requerimiento::whereNotNull('fecha_fin', 'and')
             ->select(
                 DB::raw('MONTH(fecha_fin) as mes'),
                 DB::raw('COUNT(*) as total')
             )
-            ->whereIn(DB::raw('YEAR(fecha_fin)'), $years)
+            ->whereIn(DB::raw('YEAR(fecha_fin)'), $years, 'and', false)
             ->groupBy('mes')
             ->pluck('total', 'mes');
 
@@ -224,7 +224,7 @@ class DashboardController extends Controller
                 ->paginate(4);
         }
 
-                return response()->json($data);
+        return response()->json($data);
     }
 
     public function getDetalleEspecialista(Request $request)
@@ -247,7 +247,7 @@ class DashboardController extends Controller
         return response()->json([
             'especialista' => [
                 'nombre' => $especialista->nombres,
-                'sigla' => $especialista->user->sigla ?? '',
+                'sigla' => $especialista->user->user_iniciales ?? '',
             ],
             'requerimientos' => $requerimientos,
         ]);

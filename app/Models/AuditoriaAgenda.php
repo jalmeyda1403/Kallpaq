@@ -13,19 +13,46 @@ class AuditoriaAgenda extends Model
 
     protected $fillable = [
         'ae_id',
+        'proceso_id',
         'aea_fecha',
         'aea_hora_inicio',
         'aea_hora_fin',
         'aea_actividad',
-        'aea_auditado',
-        'aea_auditor',
+        'auditor_id',
         'aea_requisito',
         'aea_lugar',
-        'aea_tipo'
+        'aea_tipo',
+        'estado',
+        'aea_archivo'
+    ];
+
+    protected $casts = [
+        'aea_requisito' => 'array',
     ];
 
     public function auditoria()
     {
         return $this->belongsTo(AuditoriaEspecifica::class, 'ae_id');
     }
+
+    public function auditor()
+    {
+        return $this->belongsTo(Auditor::class, 'auditor_id');
+    }
+
+    public function proceso()
+    {
+        return $this->belongsTo(Proceso::class, 'proceso_id');
+    }
+
+    public function checklists()
+    {
+        return $this->hasMany(AuditoriaChecklist::class, 'agenda_id');
+    }
+
+    public function auditados()
+    {
+        return $this->hasMany(AuditoriaAuditado::class, 'agenda_id');
+    }
 }
+

@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Mail;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Imports\UsersImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
 
 
 class UserController extends Controller
@@ -71,7 +74,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $user->delete();
+        User::where('id', '=', $user->id, 'and')->delete();
         return redirect()->route('user.index')->with('success', 'Usuario eliminado exitosamente.');
     }
 
@@ -91,7 +94,7 @@ class UserController extends Controller
         // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
         $procesosAsignados = $user->procesos;
 
-        $procesosDisponibles = Proceso::whereNotIn('id', $procesosAsignados->pluck('id'))
+        $procesosDisponibles = Proceso::whereNotIn('id', $procesosAsignados->pluck('id'), 'and', false)
             ->paginate(15);
 
         return view('user.asignarprocesos', compact('user', 'procesosAsignados', 'procesosDisponibles'));
@@ -201,10 +204,10 @@ class UserController extends Controller
             if ($request->role === 'propietario') {
                 // Filtrar usuarios que tienen el rol de 'owner' O 'propietario' en alguna OUO usando JOIN explícito
                 $query->join('ouo_user', 'users.id', '=', 'ouo_user.user_id')
-                      ->where(function($q) {
-                          $q->where('ouo_user.role_in_ouo', 'owner')
+                    ->where(function ($q) {
+                        $q->where('ouo_user.role_in_ouo', 'owner')
                             ->orWhere('ouo_user.role_in_ouo', 'propietario');
-                      });
+                    });
             } else {
                 $query->role($request->role);
             }
@@ -212,10 +215,10 @@ class UserController extends Controller
 
         // Seleccionar id y name como descripcion para compatibilidad con ModalHijo
         $users = $query->select('users.id', 'users.name as descripcion')
-                       ->distinct()
-                       ->orderBy('users.name')
-                       ->get();
-                       
+            ->distinct()
+            ->orderBy('users.name')
+            ->get();
+
         return response()->json($users);
     }
 
@@ -238,6 +241,18 @@ class UserController extends Controller
             });
         }
 
+        // Sorting
+        $sortField = $request->input('sort_field', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        // Validate sort field to prevent SQL injection
+        $allowedSorts = ['id', 'name', 'email', 'user_cod_personal', 'user_iniciales'];
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortOrder);
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
         // Eager load roles and permissions
         $query->with('roles', 'permissions');
 
@@ -253,6 +268,9 @@ class UserController extends Controller
                     'email' => $user->email,
                     'roles' => $user->roles->pluck('name'),
                     'permissions' => $user->permissions->pluck('name'),
+                    'user_cod_personal' => $user->user_cod_personal,
+                    'user_iniciales' => $user->user_iniciales,
+                    'user_foto_url' => $user->user_foto_url ? asset($user->user_foto_url) : null,
                 ];
             })->values(),
             'current_page' => $users->currentPage(),
@@ -319,6 +337,188 @@ class UserController extends Controller
         $ouo->users()->detach($user->id);
 
         return response()->json(['message' => 'Usuario desasociado de la OUO con éxito.'], 200);
+    }
+
+    public function storeApi(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+            'user_cod_personal' => 'nullable|string|unique:users',
+            'user_iniciales' => 'nullable|string|max:10|unique:users',
+            'user_foto_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // 'roles' => 'array' // If we want to assign roles on creation
+        ]);
+
+        $user = new User([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+            'user_cod_personal' => !empty($validatedData['user_cod_personal']) ? $validatedData['user_cod_personal'] : null,
+            'user_iniciales' => !empty($validatedData['user_iniciales']) ? $validatedData['user_iniciales'] : null,
+        ]);
+
+        if ($request->hasFile('user_foto_url')) {
+            $file = $request->file('user_foto_url');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('photo'), $filename);
+            $user->user_foto_url = 'photo/' . $filename;
+        }
+
+        $user->save();
+
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
+        }
+
+        return response()->json(['message' => 'Usuario creado correctamente', 'user' => $user], 201);
+    }
+
+    public function updateApi(Request $request, User $user)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:6',
+            'user_cod_personal' => ['nullable', 'string', Rule::unique('users')->ignore($user->id)],
+            'user_iniciales' => ['nullable', 'string', 'max:10', Rule::unique('users')->ignore($user->id)],
+            'user_foto_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user->name = $validatedData['name'];
+        $user->email = $validatedData['email'];
+        $user->user_cod_personal = $validatedData['user_cod_personal'];
+        $user->user_iniciales = $validatedData['user_iniciales'];
+
+        if ($request->hasFile('user_foto_url')) {
+            // Delete old photo if exists
+            if ($user->user_foto_url && file_exists(public_path($user->user_foto_url))) {
+                unlink(public_path($user->user_foto_url));
+            }
+
+            $file = $request->file('user_foto_url');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('photo'), $filename);
+            $user->user_foto_url = 'photo/' . $filename;
+        }
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($validatedData['password']);
+        }
+
+        $user->save();
+
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
+        }
+
+        return response()->json(['message' => 'Usuario actualizado correctamente', 'user' => $user]);
+    }
+
+    public function destroyApi(User $user)
+    {
+        User::where('id', '=', $user->id, 'and')->delete();
+        return response()->json(['message' => 'Usuario eliminado correctamente']);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            Excel::import(new UsersImport, $request->file('file'));
+            return response()->json(['message' => 'Usuarios importados correctamente']);
+        } catch (\Exception $e) {
+            // Log error
+            return response()->json(['message' => 'Error al importar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=usuarios_template.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $columns = ['nombre', 'email', 'password', 'codigo_personal', 'iniciales'];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // We can use the Password broker to send the link
+        $status = \Illuminate\Support\Facades\Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT) {
+            return response()->json(['message' => __($status)]);
+        }
+
+        return response()->json(['message' => __($status)], 422);
+    }
+
+    public function generateUniqueInitials(Request $request)
+    {
+        $request->validate(['name' => 'required|string']);
+        $name = $request->input('name');
+
+        // Generate base initials
+        $words = explode(' ', $name);
+        $initials = '';
+        foreach ($words as $word) {
+            if (!empty($word)) {
+                $initials .= strtoupper(substr($word, 0, 1));
+            }
+        }
+        // Limit to reasonable length (e.g. 3 chars) if too long? 
+        // User request didn't specify, but usually initials are short. 
+        // Let's keep all first letters for now, or maybe max 4.
+        $initials = substr($initials, 0, 4);
+
+        $baseInitials = $initials;
+        $counter = 1;
+
+        // Check uniqueness and append number if needed
+        while (User::where('user_iniciales', '=', $initials, 'and')->exists()) {
+            $initials = $baseInitials . $counter;
+            $counter++;
+        }
+
+        return response()->json(['initials' => $initials]);
+    }
+
+    public function getRolesApi()
+    {
+        $roles = Role::all()->pluck('name'); // Return names or objects? Names are enough for syncRoles
+        return response()->json($roles);
+    }
+
+    public function assignRolesApi(Request $request, User $user)
+    {
+        $request->validate([
+            'roles' => 'array'
+        ]);
+
+        $user->syncRoles($request->input('roles', []));
+
+        return response()->json(['message' => 'Roles asignados correctamente']);
     }
 }
 

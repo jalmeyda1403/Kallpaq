@@ -15,7 +15,20 @@ class ProgramaAuditoriaController extends Controller
 
     public function apiIndex(Request $request)
     {
-        $query = ProgramaAuditoria::with('auditoriasEspecificas');
+        $query = ProgramaAuditoria::select([
+            'id',
+            'pa_anio',
+            'pa_version',
+            'pa_estado',
+            'pa_fecha_aprobacion',
+            'pa_recursos',
+            'archivo_pdf',
+            'pa_objetivo_general',
+            'pa_alcance',
+            'pa_metodos',
+            'pa_criterios'
+        ]);
+
 
         if ($request->has('year') && $request->year != '') {
             $query->where('pa_anio', $request->year);
@@ -27,23 +40,68 @@ class ProgramaAuditoriaController extends Controller
 
     public function apiShow($id)
     {
-        $programa = ProgramaAuditoria::with(['auditoriasEspecificas.proceso', 'auditoriasEspecificas.equipo'])->find($id);
+        $programa = ProgramaAuditoria::select([
+            'id',
+            'pa_anio',
+            'pa_version',
+            'pa_estado',
+            'pa_fecha_aprobacion',
+            'pa_recursos',
+            'pa_objetivo_general',
+            'pa_alcance',
+            'pa_metodos',
+            'pa_criterios'
+        ])->with([
+
+                    'auditoriasEspecificas' => function ($query) {
+                        $query->select([
+                            'id',
+                            'pa_id',
+                            'ae_codigo',
+                            'ae_tipo',
+                            'ae_alcance',
+                            'ae_sistema',
+                            'ae_ciclo',
+                            'ae_horas_hombre',
+                            'ae_fecha_inicio',
+                            'ae_fecha_fin',
+                            'ae_estado'
+                        ])->withCount([
+
+                                    'agenda as total_actividades',
+                                    'agenda as actividades_concluidas' => function ($q) {
+                                        $q->where('estado', 'Concluida');
+                                    }
+                                ]);
+                    },
+                    'auditoriasEspecificas.procesos:id,proceso_nombre'
+                ])->find($id);
+
 
         if (!$programa) {
             return response()->json(['message' => 'Programa no encontrado'], 404);
         }
 
-        // Calculate Compliance
-        $total = $programa->auditoriasEspecificas->count();
-        $cancelled = $programa->auditoriasEspecificas->where('ae_estado', 'Cancelada')->count();
-        $executed = $programa->auditoriasEspecificas->whereIn('ae_estado', ['Ejecutada', 'Cerrada'])->count();
+        // Calculate Compliance using the already loaded relationship
+        $audits = $programa->auditoriasEspecificas->map(function ($audit) {
+            $totalAct = $audit->total_actividades ?? 0;
+            $doneAct = $audit->actividades_concluidas ?? 0;
+            $audit->progreso_ejecucion = $totalAct > 0 ? round(($doneAct / $totalAct) * 100) : 0;
+            return $audit;
+        });
+
+        $total = $audits->count();
+        $cancelled = $audits->where('ae_estado', 'Cancelada')->count();
+        $executed = $audits->whereIn('ae_estado', ['Ejecutada', 'Cerrada'])->count();
 
         $denominator = $total - $cancelled;
         $compliance = $denominator > 0 ? round(($executed / $denominator) * 100, 2) : 0;
 
         $programa->compliance = $compliance;
+        $programa->auditorias_especificas = $audits; // Asegurar que se devuelven los datos con el progreso
 
         return response()->json($programa);
+
     }
 
     public function changeStatus(Request $request, $id)

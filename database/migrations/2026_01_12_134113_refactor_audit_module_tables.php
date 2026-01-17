@@ -12,6 +12,26 @@ return new class extends Migration {
     public function up(): void
     {
         // 1. Refactor 'programa_auditoria'
+        if (!Schema::hasTable('programa_auditoria')) {
+            Schema::create('programa_auditoria', function (Blueprint $table) {
+                $table->id();
+                $table->string('pa_version');
+                $table->string('pa_anio');
+                $table->text('pa_recursos')->nullable();
+                $table->date('pa_fecha_aprobacion');
+                $table->string('pa_estado')->default('Borrador');
+                $table->text('pa_objetivo_general')->nullable();
+                $table->text('pa_alcance')->nullable();
+                $table->text('pa_metodos')->nullable();
+                $table->text('pa_criterios')->nullable();
+                $table->decimal('avance')->nullable()->default(0);
+                $table->text('pa_descripcion')->nullable();
+                $table->string('archivo_pdf')->nullable();
+                $table->date('fecha_publicacion')->nullable();
+                $table->timestamps();
+            });
+        }
+
         Schema::table('programa_auditoria', function (Blueprint $table) {
             if (!Schema::hasColumn('programa_auditoria', 'pa_estado'))
                 $table->string('pa_estado')->default('Borrador');
@@ -35,6 +55,31 @@ return new class extends Migration {
         });
 
         // 2. Refactor 'auditoria_especifica'
+        if (!Schema::hasTable('auditoria_especifica')) {
+            Schema::create('auditoria_especifica', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('pa_id');
+                $table->string('ae_codigo')->nullable();
+                $table->text('ae_objetivo')->nullable();
+                $table->text('ae_criterios')->nullable();
+                $table->text('ae_alcance')->nullable();
+                $table->string('ae_tipo')->nullable();
+                $table->string('ae_sistema_kallpaq')->nullable();
+                $table->text('ae_lugar')->nullable();
+                $table->text('ae_direccion')->nullable();
+                $table->string('ae_estado')->default('Programada');
+                $table->date('ae_fecha_inicio')->nullable();
+                $table->date('ae_fecha_fin')->nullable();
+                $table->dateTime('ae_reunion_apertura')->nullable();
+                $table->dateTime('ae_reunion_cierre')->nullable();
+                $table->unsignedBigInteger('proceso_id')->nullable();
+                $table->text('ae_equipo_auditor')->nullable();
+                $table->text('ae_auditado')->nullable();
+                $table->timestamps();
+                $table->foreign('pa_id')->references('id')->on('programa_auditoria')->onDelete('cascade');
+            });
+        }
+
         Schema::table('auditoria_especifica', function (Blueprint $table) {
             if (!Schema::hasColumn('auditoria_especifica', 'ae_estado'))
                 $table->string('ae_estado')->default('Programada');

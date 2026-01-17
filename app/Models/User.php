@@ -22,8 +22,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'sigla',
-        'foto_url',
+        'user_iniciales',
+        'user_cod_personal',
+        'user_foto_url',
         'email',
         'password',
     ];
@@ -89,8 +90,11 @@ class User extends Authenticatable
     public function toArrayWithRoles(): array
     {
         return array_merge(
-            $this->only(['id', 'name', 'sigla', 'foto_url', 'email']),
-            ['roles' => $this->getRoleNames()]
+            $this->only(['id', 'name', 'user_iniciales', 'user_cod_personal', 'user_foto_url', 'email']),
+            [
+                'roles' => $this->getRoleNames(),
+                'permissions' => $this->getAllPermissions()->pluck('name')
+            ]
         );
     }
 }

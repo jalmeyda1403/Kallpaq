@@ -19,6 +19,6 @@ class NormaAuditable extends Model
 
     public function requisitos()
     {
-        return $this->hasMany(RequisitoNorma::class, 'norma_id');
+        return $this->hasMany(NormaRequisito::class, 'nr_norma_id');
     }
 }

@@ -41,6 +41,7 @@
         "sweetalert2": "^11.26.3",
         "vue": "^3.5.18",
         "vue-router": "^4.5.1",
+        "xlsx": "^0.18.5",
         "ziggy-js": "^2.5.3"
     },
     "name": "kallpaq",

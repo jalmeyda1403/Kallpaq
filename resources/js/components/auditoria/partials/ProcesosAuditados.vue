@@ -96,13 +96,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps, defineEmits } from 'vue';
+import { ref, onMounted, defineProps, defineEmits, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { route } from 'ziggy-js';
 import ModalHijo from '../../generales/ModalHijo.vue';
 
-const props = defineProps(['auditId']);
+const props = defineProps(['auditId', 'auditData', 'auditStatus', 'loading']);
 const emit = defineEmits(['saved', 'close']);
 const toast = useToast();
 
@@ -150,6 +150,12 @@ const disociarProceso = (id) => {
 
 const loadAudit = async () => {
     if (!props.auditId) return;
+
+    if (props.auditData && props.auditData.procesos) {
+        associatedProcesos.value = props.auditData.procesos;
+        return;
+    }
+
     loadingData.value = true;
     try {
         const response = await axios.get(`/api/auditorias/${props.auditId}`);
@@ -162,6 +168,22 @@ const loadAudit = async () => {
         loadingData.value = false;
     }
 };
+
+watch(() => props.auditData, (newVal) => {
+    if (newVal && newVal.procesos) {
+        associatedProcesos.value = newVal.procesos;
+        loadingData.value = false; // Data is here, stop loading
+    }
+}, { immediate: true });
+
+watch(() => props.loading, (newVal) => {
+    // Only show loader if we don't have data yet
+    if (newVal && associatedProcesos.value.length === 0) {
+        loadingData.value = true;
+    } else if (!newVal) {
+        loadingData.value = false;
+    }
+}, { immediate: true });
 
 const save = async () => {
     if (!props.auditId) return;

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\NormaAuditable;
-use App\Models\RequisitoNorma;
+use App\Models\NormaRequisito;
 use App\Services\AIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\NormaRequisitoImport;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class NormaAuditableController extends Controller
 {
@@ -46,9 +50,9 @@ class NormaAuditableController extends Controller
             if ($request->has('requisitos')) {
                 foreach ($request->requisitos as $req) {
                     $norma->requisitos()->create([
-                        'numeral' => $req['numeral'],
-                        'denominacion' => $req['denominacion'],
-                        'detalle' => $req['detalle'] ?? null
+                        'nr_numeral' => $req['numeral'] ?? $req['nr_numeral'] ?? '',
+                        'nr_denominacion' => $req['denominacion'] ?? $req['nr_denominacion'] ?? '',
+                        'nr_detalle' => $req['detalle'] ?? $req['nr_detalle'] ?? null
                     ]);
                 }
             }
@@ -80,9 +84,9 @@ class NormaAuditableController extends Controller
 
                 foreach ($request->requisitos as $req) {
                     $norma->requisitos()->create([
-                        'numeral' => $req['numeral'],
-                        'denominacion' => $req['denominacion'],
-                        'detalle' => $req['detalle'] ?? null
+                        'nr_numeral' => $req['numeral'] ?? $req['nr_numeral'] ?? '',
+                        'nr_denominacion' => $req['denominacion'] ?? $req['nr_denominacion'] ?? '',
+                        'nr_detalle' => $req['detalle'] ?? $req['nr_detalle'] ?? null
                     ]);
                 }
             }
@@ -107,6 +111,72 @@ class NormaAuditableController extends Controller
             return response()->json($requirements);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error generating requirements: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadTemplate(Request $request)
+    {
+        $data = [];
+
+        if ($request->has('norma_id')) {
+            $norma = NormaAuditable::with('requisitos')->find($request->norma_id);
+            if ($norma && $norma->requisitos->count() > 0) {
+                foreach ($norma->requisitos as $req) {
+                    $data[] = [
+                        'numeral' => $req->nr_numeral,
+                        'denominacion' => $req->nr_denominacion,
+                        'detalle' => $req->nr_detalle,
+                    ];
+                }
+            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                ['numeral' => '4.1', 'denominacion' => 'Comprensión de la organización', 'detalle' => 'Párrafo de ejemplo...'],
+                ['numeral' => '4.2', 'denominacion' => 'Necesidades de partes interesadas', 'detalle' => 'Párrafo de ejemplo...'],
+            ];
+        }
+
+        return Excel::download(new class ($data) implements FromArray, WithHeadings {
+            protected $data;
+            public function __construct(array $data)
+            {
+                $this->data = $data;
+            }
+            public function array(): array
+            {
+                return $this->data;
+            }
+            public function headings(): array
+            {
+                return ['numeral', 'denominacion', 'detalle'];
+            }
+        }, 'plantilla_requisitos_norma.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            $import = new NormaRequisitoImport();
+            $data = Excel::toCollection($import, $request->file('file'))->first();
+
+            // Format data to ensure it has the expected keys and handle potential heading issues
+            $formatted = $data->map(function ($row) {
+                return [
+                    'nr_numeral' => $row['numeral'] ?? $row['nr_numeral'] ?? '',
+                    'nr_denominacion' => $row['denominacion'] ?? $row['nr_denominacion'] ?? '',
+                    'nr_detalle' => $row['detalle'] ?? $row['nr_detalle'] ?? ''
+                ];
+            });
+
+            return response()->json($formatted);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al importar: ' . $e->getMessage()], 500);
         }
     }
 }

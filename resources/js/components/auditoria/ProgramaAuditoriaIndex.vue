@@ -61,31 +61,42 @@
                             {{ formatDate(slotProps.data.pa_fecha_aprobacion) }}
                         </template>
                     </Column>
-                    <Column field="pa_estado" header="Estado" sortable style="width:15%; text-align: center;">
+                    <Column field="pa_estado" header="Estado" sortable style="width:12%; text-align: center;">
                         <template #body="slotProps">
-                            <span :class="['badge', getEstadoBadge(slotProps.data.pa_estado)]">{{
-                                slotProps.data.pa_estado }}</span>
+                            <div :class="['status-badge', getEstadoClass(slotProps.data.pa_estado)]">
+                                <i :class="['fas mr-1', getEstadoIcon(slotProps.data.pa_estado)]"></i>
+                                {{ slotProps.data.pa_estado }}
+                            </div>
                         </template>
                     </Column>
-                    <Column header="Acciones" class="text-center" style="width:25%">
+                    <Column header="PDF" class="text-center" style="width:8%">
                         <template #body="slotProps">
-                            <div class="d-flex justify-content-center">
-                                <a href="#" class="mr-3 d-inline-block" @click.prevent="verGantt(slotProps.data)"
-                                    title="Ver Cronograma">
-                                    <i class="fas fa-calendar-alt text-primary fa-lg"></i>
-                                </a>
-                                <a href="#" class="mr-3 d-inline-block" @click.prevent="editarPrograma(slotProps.data)"
-                                    title="Editar">
-                                    <i class="fas fa-pencil-alt text-warning fa-lg"></i>
-                                </a>
-                                <a href="#" class="mr-3 d-inline-block" @click.prevent="verHistorial(slotProps.data)"
+                            <button v-if="slotProps.data.archivo_pdf" class="btn btn-link text-danger p-0"
+                                @click="descargarPDF(slotProps.data)" title="Descargar PDF">
+                                <i class="fas fa-file-pdf fa-lg"></i>
+                            </button>
+                            <span v-else class="text-muted small">No cargado</span>
+                        </template>
+                    </Column>
+                    <Column header="Acciones" class="text-center" style="width:20%">
+                        <template #body="slotProps">
+                            <div class="d-flex justify-content-center action-buttons">
+                                <button class="btn btn-outline-warning btn-xs mr-1"
+                                    @click="editarPrograma(slotProps.data)" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-xs mr-1"
+                                    @click="subirDocumento(slotProps.data)" title="Cargar">
+                                    <i class="fas fa-upload"></i>
+                                </button>
+                                <button class="btn btn-outline-primary btn-xs mr-1" @click="verGantt(slotProps.data)"
+                                    title="Ver">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </button>
+                                <button class="btn btn-outline-info btn-xs" @click="verHistorial(slotProps.data)"
                                     title="Historial">
-                                    <i class="fas fa-list text-info fa-lg"></i>
-                                </a>
-                                <a href="#" class="mr-3 d-inline-block" @click.prevent="descargarPDF(slotProps.data)"
-                                    title="Descargar PDF">
-                                    <i class="fas fa-file-pdf text-danger fa-lg"></i>
-                                </a>
+                                    <i class="fas fa-history"></i>
+                                </button>
                             </div>
                         </template>
                     </Column>
@@ -141,14 +152,30 @@ const formatDate = (date) => {
     return new Date(date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
-const getEstadoBadge = (estado) => {
+const getEstadoClass = (estado) => {
     switch (estado) {
-        case 'Aprobada': return 'badge-success';
-        case 'Borrador': return 'badge-warning';
-        case 'Cerrado': return 'badge-secondary';
-        case 'Programada': return 'badge-info';
-        default: return 'badge-primary';
+        case 'Aprobada': return 'status-success';
+        case 'Borrador': return 'status-warning';
+        case 'Cerrado': return 'status-secondary';
+        case 'Programada': return 'status-info';
+        case 'Ejecutada': return 'status-success-dark';
+        default: return 'status-primary';
     }
+};
+
+const getEstadoIcon = (estado) => {
+    switch (estado) {
+        case 'Aprobada': return 'fa-check-circle';
+        case 'Borrador': return 'fa-file-alt';
+        case 'Cerrado': return 'fa-lock';
+        case 'Programada': return 'fa-clock';
+        case 'Ejecutada': return 'fa-tasks';
+        default: return 'fa-info-circle';
+    }
+};
+
+const subirDocumento = (programa) => {
+    toast.add({ severity: 'info', summary: 'Info', detail: 'Módulo de carga en desarrollo', life: 3000 });
 };
 
 const verGantt = (programa) => {
@@ -162,11 +189,11 @@ const nuevoPrograma = () => {
 };
 
 const verHistorial = (programa) => {
-    toast.add({ severity: 'info', summary: 'Info', detail: 'Funcionalidad en desarrollo', life: 3000 });
+    toast.add({ severity: 'info', summary: 'Info', detail: 'Historial en desarrollo', life: 3000 });
 };
 
 const descargarPDF = (programa) => {
-    toast.add({ severity: 'info', summary: 'Info', detail: 'Funcionalidad en desarrollo', life: 3000 });
+    toast.add({ severity: 'info', summary: 'Info', detail: 'Descarga en desarrollo', life: 3000 });
 };
 
 const editarPrograma = (programa) => {
@@ -184,18 +211,74 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.badge {
-    font-size: 0.85rem;
-    padding: 0.35em 0.65em;
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.status-success {
+    background-color: #e6fcf5;
+    color: #0ca678;
+    border: 1px solid #c3fae8;
+}
+
+.status-warning {
+    background-color: #fff9db;
+    color: #f08c00;
+    border: 1px solid #fff3bf;
+}
+
+.status-secondary {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.status-info {
+    background-color: #e7f5ff;
+    color: #1c7ed6;
+    border: 1px solid #d0ebff;
+}
+
+.status-success-dark {
+    background-color: #2b8a3e;
+    color: #ffffff;
+    border: 1px solid #2f9e44;
+}
+
+.status-primary {
+    background-color: #f3f0ff;
+    color: #7048e8;
+    border: 1px solid #e5dbff;
+}
+
+.action-buttons .btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn-xs:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Custom loader styles - remove opacity and change color to red */
 .p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
+    background: rgba(255, 255, 255, 0.7) !important;
 }
 
 .p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
+    color: #dc3545 !important;
+    font-size: 2.5rem !important;
 }
 </style>

@@ -6,79 +6,120 @@
                 <li class="breadcrumb-item active" aria-current="page">Gestión de Usuarios</li>
             </ol>
         </nav>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-md-6 text-md-left">
-                                <h3 class="card-title mb-0">Gestión de Usuarios</h3>
-                            </div>
-                            <div class="col-md-6 text-md-right">
-                                <button class="btn btn-success" @click="openCreateUserModal">
-                                    <i class="fas fa-plus"></i> Nuevo Usuario
-                                </button>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <form @submit.prevent="applyFilters">
-                                    <div class="form-row">
-                                        <div class="col">
-                                            <input type="text" name="search" id="search" class="form-control"
-                                                placeholder="Buscar por Nombre o Email" v-model="store.filters.search">
-                                        </div>
-                                        <div class="col-auto">
-                                            <button type="submit" class="btn bg-dark">
-                                                <i class="fas fa-search"></i> Buscar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-md-left">
+                        <h3 class="card-title mb-0">Gestión de Usuarios</h3>
                     </div>
-                    <div class="card-body">
-                        <DataTable ref="dt" :value="store.users" :lazy="true" :paginator="true" :rows="20"
-                            :totalRecords="store.pagination.total"
-                            :first="(store.pagination.currentPage - 1) * store.pagination.perPage" @page="onPage"
-                            :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id"
-                            :globalFilterFields="['id', 'name', 'email']"
-                            :loading="store.loading">
-                            <Column field="id" header="ID" style="width:5%"></Column>
-                            <Column field="name" header="Nombre" sortable style="width:30%"></Column>
-                            <Column field="email" header="Email" sortable style="width:30%"></Column>
-                            <Column header="Acciones" :exportable="false" style="width:10%">
-                                <template #body="{ data }">
-                                    <a href="#" title="Asignar Roles"
-                                        class="mr-1 d-inline-block btn-modal-trigger p-2"
-                                        @click.prevent="assignRoles(data)">
-                                        <i class="fas fa-user-tag fa-lg text-info"></i>
-                                    </a>
-                                    <a href="#" title="Asignar Permisos"
-                                        class="mr-1 d-inline-block btn-modal-trigger p-2"
-                                        @click.prevent="assignPermissions(data)">
-                                        <i class="fas fa-shield-alt fa-lg text-warning"></i>
-                                    </a>
-                                    <a href="#" title="Editar Usuario"
-                                        class="mr-1 d-inline-block btn-modal-trigger p-2"
-                                        @click.prevent="editUser(data)">
-                                        <i class="fas fa-edit fa-lg text-primary"></i>
-                                    </a>
-                                    <a href="#" title="Eliminar Usuario"
-                                        class="mr-1 d-inline-block btn-modal-trigger p-2"
-                                        @click.prevent="deleteUser(data)">
-                                        <i class="fas fa-trash fa-lg text-danger"></i>
-                                    </a>
-                                </template>
-                            </Column>
-                            <template #empty>
-                                No se encontraron usuarios.
-                            </template>
-                        </DataTable>
+                    <div class="col-md-6 text-md-right">
+                        <button class="btn btn-secondary btn-sm ml-1" @click="downloadTemplate">
+                            <i class="fas fa-file-download"></i> Plantilla
+                        </button>
+                        <button class="btn btn-info btn-sm ml-1" @click="triggerFileUpload">
+                            <i class="fas fa-file-upload"></i> Importar Excel
+                        </button>
+                        <input type="file" ref="fileInput" class="d-none" accept=".xlsx, .xls, .csv"
+                            @change="handleFileUpload">
+                        <button class="btn btn-primary btn-sm ml-1" @click="openCreateUserModal">
+                            <i class="fas fa-plus-circle"></i> Nuevo Usuario
+                        </button>
                     </div>
                 </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-12">
+                        <form @submit.prevent="applyFilters">
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="text" name="search" id="search" class="form-control"
+                                        placeholder="Buscar por Nombre o Email" v-model="store.filters.search">
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn bg-dark">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <DataTable ref="dt" :value="store.users" :lazy="true" :paginator="true" :rows="20"
+                    :totalRecords="store.pagination.total"
+                    :first="(store.pagination.currentPage - 1) * store.pagination.perPage" @page="onPage" @sort="onSort"
+                    :sortField="store.sorting.field" :sortOrder="store.sorting.order"
+                    :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" :globalFilterFields="['id', 'name', 'email']"
+                    :loading="store.loading" class="p-datatable-striped p-datatable-hoverable-rows">
+
+                    <Column field="id" header="ID" sortable style="width:5%"></Column>
+                    <Column field="name" header="Usuario" sortable style="width:30%">
+                        <template #body="{ data }">
+                            <div class="d-flex align-items-center">
+                                <div v-if="data.user_foto_url"
+                                    class="mr-3 shadow-sm border rounded-circle overflow-hidden"
+                                    style="width: 35px; height: 35px;">
+                                    <img :src="data.user_foto_url" alt="User Photo"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div v-else class="avatar-circle mr-3 shadow-sm text-white"
+                                    :class="getAvatarColorClass(data.roles)">
+                                    <i :class="getAvatarIcon(data.roles)"></i>
+                                </div>
+                                <div>
+                                    <span class="font-weight-bold d-block text-dark">{{ data.name }}</span>
+                                    <small class="text-muted">{{ data.email }}</small>
+                                </div>
+                            </div>
+                        </template>
+                    </Column>
+                    <Column field="user_cod_personal" header="Código" sortable style="width:10%">
+                        <template #body="{ data }">
+                            <span class="text-muted font-weight-bold">{{ data.user_cod_personal || 'N/A' }}</span>
+                        </template>
+                    </Column>
+                    <Column field="user_iniciales" header="Iniciales" sortable style="width:10%" class="d-none">
+                    </Column>
+                    <Column header="Rol" style="width:20%">
+                        <template #body="{ data }">
+                            <div v-if="data.roles && data.roles.length > 0">
+                                <span v-for="role in data.roles" :key="role"
+                                    class="badge p-2 mb-1 mr-1 shadow-sm role-badge" :class="getRoleBadgeClass(role)">
+                                    <i :class="getRoleIcon(role)" class="mr-1"></i> {{ role }}
+                                </span>
+                            </div>
+                            <span v-else class="text-muted small font-italic">Sin roles</span>
+                        </template>
+                    </Column>
+                    <Column header="Acciones" :exportable="false" style="width:15%">
+                        <template #body="{ data }">
+                            <a href="#" title="Asignar Roles" class="mr-2 d-inline-block"
+                                @click.prevent="assignRoles(data)">
+                                <i class="fas fa-user-tag text-info fa-lg"></i>
+                            </a>
+                            <a href="#" title="Asignar Permisos" class="mr-2 d-inline-block"
+                                @click.prevent="assignPermissions(data)">
+                                <i class="fas fa-shield-alt text-warning fa-lg"></i>
+                            </a>
+                            <a href="#" title="Editar Usuario" class="mr-2 d-inline-block"
+                                @click.prevent="editUser(data)">
+                                <i class="fas fa-pencil-alt text-primary fa-lg"></i>
+                            </a>
+                            <a href="#" title="Restablecer Contraseña" class="mr-2 d-inline-block"
+                                @click.prevent="resetPassword(data)">
+                                <i class="fas fa-key text-dark fa-lg"></i>
+                            </a>
+                            <a href="#" title="Eliminar Usuario" class="mr-2 d-inline-block"
+                                @click.prevent="deleteUser(data)">
+                                <i class="fas fa-trash-alt text-danger fa-lg"></i>
+                            </a>
+                        </template>
+                    </Column>
+                    <template #empty>
+                        No se encontraron usuarios.
+                    </template>
+                </DataTable>
             </div>
         </div>
     </div>
@@ -86,72 +127,121 @@
     <!-- Modals for Roles, Permissions, Create/Edit User -->
     <teleport to="body">
         <!-- RolModal -->
-        <RolModal ref="rolModal" :user="currentUser" @roles-updated="closeRolModal" @close="closeRolModal" />
+        <RolModal ref="rolModal" :user="currentUser" @roles-updated="onRolesUpdated" @close="onModalClosed" />
 
         <!-- PermisosModal -->
-        <PermisosModal ref="permisosModal" :user="currentUser" @permissions-updated="closePermisosModal" @close="closePermisosModal" />
+        <PermisosModal ref="permisosModal" :user="currentUser" @permissions-updated="onRolesUpdated"
+            @close="onModalClosed" />
 
         <!-- Create/Edit User Modal -->
-        <div v-if="showCreateEditUserModal" class="modal fade show d-block" tabindex="-1" role="dialog"
-            aria-labelledby="createEditUserModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-md" role="document">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="createEditUserModalLabel">{{ isEditingUser ? 'Editar' : 'Crear' }} Usuario</h5>
-                        <button type="button" class="close" @click="closeCreateEditUserModal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- CreateEditUserModal Component will go here -->
-                        <p>Contenido del modal de creación/edición de usuario</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" @click="closeCreateEditUserModal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div v-if="showCreateEditUserModal" class="modal-backdrop fade show"></div>
+        <UsuariosForm ref="usuariosForm" :user="currentUser" @saved="onUserSaved" @close="closeUserModal" />
     </teleport>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/userStore'; // Placeholder for new user store
+import { useUserStore } from '@/stores/userStore';
+import { useToast } from 'primevue/usetoast';
+import Swal from 'sweetalert2';
 
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 
-// Custom Components (will be created later)
+// Custom Components
 import RolModal from './RolModal.vue';
 import PermisosModal from './PermisosModal.vue';
-// import CreateEditUserModal from './CreateEditUserModal.vue';
+import UsuariosForm from './UsuariosForm.vue';
 
 const router = useRouter();
-const store = useUserStore(); // Placeholder for new user store
+const store = useUserStore();
+const toast = useToast();
 
-const dt = ref(null); // Reference to the DataTable component
+const dt = ref(null);
 
-const rolModal = ref(null); // Ref for RolModal
-const permisosModal = ref(null); // Ref for PermisosModal
-const showCreateEditUserModal = ref(false);
-const isEditingUser = ref(false);
-const currentUser = ref(null); // To store the user being edited/assigned roles/permissions
+const rolModal = ref(null);
+const permisosModal = ref(null);
+const currentUser = ref(null);
 
-onMounted(() => {
-    store.fetchUsers();
+const usuariosForm = ref(null);
+const fileInput = ref(null);
+
+onMounted(async () => {
+    try {
+        await store.fetchUsers();
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la lista de usuarios', life: 3000 });
+    }
 });
 
+// Helper to determine primary role (first one or null)
+const getPrimaryRole = (roles) => {
+    return (roles && roles.length > 0) ? roles[0] : null;
+};
+
+const getAvatarColorClass = (roles) => {
+    const role = getPrimaryRole(roles);
+    if (!role) return 'bg-secondary';
+
+    // Reuse specific badge colors for avatar background
+    const roleLower = role.toLowerCase();
+    if (roleLower.includes('admin')) return 'bg-danger';
+    if (roleLower.includes('auditor')) return 'bg-success';
+    if (roleLower.includes('especialista')) return 'bg-info';
+    if (roleLower.includes('propietario')) return 'bg-primary';
+    if (roleLower.includes('facilitador')) return 'bg-warning text-dark';
+    return 'bg-secondary';
+};
+
+const getAvatarIcon = (roles) => {
+    const role = getPrimaryRole(roles);
+    return getRoleIcon(role || '');
+};
+
+
+
+const getUserColorClass = (id) => {
+    // Deprecated in favor of role colors, but kept if needed for fallback
+    const colors = ['bg-primary', 'bg-secondary', 'bg-success', 'bg-danger', 'bg-warning', 'bg-info', 'bg-dark'];
+    return colors[id % colors.length] + ' text-white';
+};
+
+const getRoleBadgeClass = (role) => {
+    const roleLower = role.toLowerCase();
+    if (roleLower.includes('admin')) return 'badge-danger';
+    if (roleLower.includes('auditor')) return 'badge-success';
+    if (roleLower.includes('especialista')) return 'badge-info';
+    if (roleLower.includes('propietario')) return 'badge-primary';
+    if (roleLower.includes('facilitador')) return 'badge-warning text-dark';
+    return 'badge-secondary';
+};
+
+const getRoleIcon = (role) => {
+    if (!role) return 'fas fa-user'; // Default user icon
+    const roleLower = role.toLowerCase();
+    if (roleLower.includes('admin')) return 'fas fa-user-shield';
+    if (roleLower.includes('auditor')) return 'fas fa-clipboard-check';
+    if (roleLower.includes('especialista')) return 'fas fa-user-cog';
+    if (roleLower.includes('propietario')) return 'fas fa-user-tie';
+    if (roleLower.includes('facilitador')) return 'fas fa-chalkboard-teacher';
+    return 'fas fa-user-tag';
+};
+
 const onPage = (event) => {
-    store.setPage(event.page + 1);
-    store.setPerPage(event.rows);
+    if (event.rows !== store.pagination.perPage) {
+        store.setPerPage(event.rows);
+    } else {
+        store.setPage(event.page + 1);
+    }
+};
+
+const onSort = (event) => {
+    store.setSort(event.sortField, event.sortOrder);
 };
 
 const applyFilters = () => {
-    store.pagination.currentPage = 1; // Reset to first page on filter application
+    store.pagination.currentPage = 1;
     store.fetchUsers();
 };
 
@@ -161,68 +251,165 @@ const resetFilters = () => {
 };
 
 const openCreateUserModal = () => {
-    isEditingUser.value = false;
     currentUser.value = null;
-    showCreateEditUserModal.value = true;
+    usuariosForm.value.open();
 };
 
-const closeCreateEditUserModal = () => {
-    showCreateEditUserModal.value = false;
+const closeUserModal = () => {
     currentUser.value = null;
-    store.fetchUsers(); // Refresh list after create/edit
+};
+
+const onUserSaved = () => {
+    store.fetchUsers();
+    Swal.fire('Guardado', 'La operación se realizó con éxito.', 'success');
 };
 
 const editUser = (user) => {
-    isEditingUser.value = true;
     currentUser.value = user;
-    showCreateEditUserModal.value = true;
+    usuariosForm.value.open();
 };
 
 const deleteUser = (user) => {
-    if (confirm(`¿Está seguro de que desea eliminar al usuario ${user.name}?`)) {
-        console.log('Deleting user:', user.id);
-        // Implement actual delete logic here
-        // store.deleteUser(user.id);
-        store.fetchUsers(); // Refresh list after delete
-    }
+    Swal.fire({
+        title: '¿Eliminar Usuario?',
+        text: `Se eliminará a ${user.name} del sistema.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await store.deleteUser(user.id);
+                Swal.fire('Eliminado', 'El usuario ha sido eliminado correctamente.', 'success');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'No se pudo eliminar el usuario.', 'error');
+            }
+        }
+    });
+};
+
+const resetPassword = (user) => {
+    Swal.fire({
+        title: '¿Restablecer Contraseña?',
+        text: `Se enviará un correo a ${user.name} (${user.email}) con un enlace para restablecer su contraseña.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, enviar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await store.resetPassword(user.email);
+                Swal.fire('Enviado', 'Correo de restablecimiento enviado exitosamente.', 'success');
+            } catch (error) {
+                console.error('Error sending reset link:', error);
+                Swal.fire('Error', 'Error al enviar el correo de restablecimiento.', 'error');
+            }
+        }
+    });
+};
+
+const triggerFileUpload = () => {
+    fileInput.value.click();
+};
+
+const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // SweetAlert2 doesn't support async pre-confirm nicely with file inputs inside standard flow easily in one go
+    // But we can just use normal confirmation dialog logic
+
+    Swal.fire({
+        title: '¿Importar Usuarios?',
+        text: 'Se importarán los usuarios desde el archivo seleccionado.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, importar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                await store.importUsers(formData);
+                Swal.fire('Importado', 'Usuarios importados correctamente.', 'success');
+            } catch (error) {
+                console.error('Error importing:', error);
+                Swal.fire('Error', 'Error al importar usuarios.', 'error');
+            } finally {
+                event.target.value = null;
+            }
+        } else {
+            event.target.value = null;
+        }
+    });
+};
+
+const downloadTemplate = () => {
+    store.downloadTemplate();
 };
 
 const assignRoles = (user) => {
     currentUser.value = user;
-    rolModal.value.open(); // Open RolModal
+    rolModal.value.open();
 };
 
-const closeRolModal = () => {
+// Handlers for Modal Events
+const onRolesUpdated = () => {
+    store.fetchUsers();
+};
+
+const onModalClosed = () => {
     currentUser.value = null;
-    rolModal.value.close(); // Close RolModal
-    store.fetchUsers(); // Refresh list after role assignment
+    // Do NOT call modal.close() here as it causes infinite recursion if triggered by the modal's close event
 };
 
 const assignPermissions = (user) => {
     currentUser.value = user;
-    permisosModal.value.open(); // Open PermisosModal
-};
-
-const closePermisosModal = () => {
-    currentUser.value = null;
-    permisosModal.value.close(); // Close PermisosModal
-    store.fetchUsers(); // Refresh list after permission assignment
+    permisosModal.value.open();
 };
 </script>
 
 <style scoped>
-/* Estilos específicos del componente aquí */
-
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
+.avatar-circle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
 }
 
-/* Change the loader icon to red */
+.role-badge {
+    font-size: 0.8rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Custom loader styles - remove opacity and change color to red */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0) !important;
+}
+
 .p-datatable-loading-icon {
     color: red !important;
     font-size: 2rem !important;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td),
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+    padding: 0.8rem !important;
+    vertical-align: middle !important;
 }
 </style>

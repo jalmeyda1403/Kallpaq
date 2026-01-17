@@ -1,0 +1,78 @@
+Array
+(
+    [0] => Array
+        (
+            [id] => 6
+            [ae_id] => 1
+            [proceso_id] => 
+            [aea_fecha] => 2026-01-16
+            [aea_hora_inicio] => 08:00
+            [aea_hora_fin] => 09:00
+            [aea_actividad] => Reunión de Apertura
+            [aea_auditado] => 
+            [auditor_id] => 
+            [aea_requisito] => 
+            [aea_tipo] => apertura
+        )
+
+    [1] => Array
+        (
+            [id] => 7
+            [ae_id] => 1
+            [proceso_id] => 5
+            [aea_fecha] => 2026-01-16
+            [aea_hora_inicio] => 09:30
+            [aea_hora_fin] => 17:30
+            [aea_actividad] => GESTIÓN ESTRATÉGICA
+            [aea_auditado] => 
+            [auditor_id] => 1
+            [aea_requisito] => 
+            [aea_tipo] => ejecucion
+        )
+
+    [2] => Array
+        (
+            [id] => 8
+            [ae_id] => 1
+            [proceso_id] => 8
+            [aea_fecha] => 2026-01-19
+            [aea_hora_inicio] => 08:30
+            [aea_hora_fin] => 17:30
+            [aea_actividad] => GESTIÓN DE LA COMUNICACIÓN
+            [aea_auditado] => 
+            [auditor_id] => 2
+            [aea_requisito] => 
+            [aea_tipo] => ejecucion
+        )
+
+    [3] => Array
+        (
+            [id] => 9
+            [ae_id] => 1
+            [proceso_id] => 7
+            [aea_fecha] => 2026-01-20
+            [aea_hora_inicio] => 08:30
+            [aea_hora_fin] => 16:30
+            [aea_actividad] => GESTIÓN DE LA INVERSIÓN
+            [aea_auditado] => 
+            [auditor_id] => 7
+            [aea_requisito] => 
+            [aea_tipo] => ejecucion
+        )
+
+    [4] => Array
+        (
+            [id] => 10
+            [ae_id] => 1
+            [proceso_id] => 
+            [aea_fecha] => 2026-01-20
+            [aea_hora_inicio] => 17:00
+            [aea_hora_fin] => 18:00
+            [aea_actividad] => Reunión de Cierre
+            [aea_auditado] => 
+            [auditor_id] => 
+            [aea_requisito] => 
+            [aea_tipo] => cierre
+        )
+
+)

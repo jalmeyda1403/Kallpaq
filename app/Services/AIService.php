@@ -150,6 +150,70 @@ class AIService
         return $this->callOpenAI($prompt);
     }
 
+    /**
+     * Mejora la redacción de un hallazgo de auditoría.
+     */
+    public function improveHallazgo(string $text): string
+    {
+        $prompt = "Actúa como un Auditor Líder experto en normas ISO.
+        Tu tarea es mejorar la redacción del siguiente Hallazgo de Auditoría para que sea claro, objetivo y basado en evidencia.
+        
+        Hallazgo original: \"$text\"
+        
+        Instrucciones:
+        1. Mejora la redacción técnica y profesional.
+        2. Asegúrate de que el hallazgo identifique claramente la desviación o incumplimiento.
+        3. Mantén un tono formal y neutro.
+        4. Longitud máxima: 500 caracteres.
+        
+        Devuelve SOLO el texto mejorado.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    /**
+     * Mejora la redacción de una oportunidad de mejora.
+     */
+    public function improveMejora(string $text): string
+    {
+        $prompt = "Actúa como un consultor experto en mejora continua e ISO 9001.
+        Tu tarea es mejorar la redacción de la siguiente Oportunidad de Mejora (OM).
+        
+        Texto original: \"$text\"
+        
+        Instrucciones:
+        1. Mejora la redacción para que sea propositiva y constructiva.
+        2. Enfócate en cómo la organización puede elevar su nivel de desempeño o eficiencia.
+        3. Mantén un tono profesional y motivador.
+        4. Longitud máxima: 500 caracteres.
+        
+        Devuelve SOLO el texto mejorado.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    /**
+     * Genera un resumen corto (máx 150 caracteres) para un hallazgo.
+     */
+    public function generateHallazgoSummary(string $description): string
+    {
+        $prompt = "Actúa como un Auditor experto.
+        Tu tarea es generar un resumen muy breve y ejecutivo del siguiente hallazgo de auditoría.
+        
+        Descripción del hallazgo: \"$description\"
+        
+        Instrucciones:
+        1. El resumen debe capturar la esencia del problema o la mejora.
+        2. Longitud MÁXIMA estricta: 150 caracteres.
+        3. No uses introducciones como 'El hallazgo trata sobre...'. Sé directo.
+        
+        Devuelve SOLO el resumen.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+
+
     protected function generateResponse(string $message, string $context): string
     {
         $prompt = "You are Jaris, an AI assistant for the Kallpaq system (ISO 9001/37001).
@@ -333,5 +397,93 @@ class AIService
 
         $response = $this->callOpenAI($prompt, true);
         return json_decode($response, true)['requisitos'] ?? json_decode($response, true) ?? [];
+    }
+
+    /**
+     * Genera un checklist de auditoría basado en el proceso, normas y requisitos.
+     */
+    public function generateChecklist($procesoNombre, $normas, $responsable, $requisitosEspecificos = [])
+    {
+        $reqListText = "";
+        if (!empty($requisitosEspecificos)) {
+            $reqsArr = is_string($requisitosEspecificos) ? explode(',', $requisitosEspecificos) : $requisitosEspecificos;
+            foreach ($reqsArr as $r) {
+                $codigo = is_array($r) ? ($r['codigo'] ?? $r['label'] ?? json_encode($r)) : $r;
+                $reqListText .= "- Requisito: $codigo\n";
+            }
+        }
+
+        $prompt = "Actúa como un Auditor Líder ISO 9001/37001. 
+        Genera un checklist de auditoría para el proceso: \"$procesoNombre\". 
+        Normas de referencia: $normas. 
+        Responsable del proceso: $responsable.
+        Requisitos específicos a cubrir:\n$reqListText
+        
+        INSTRUCCIONES:
+        1. Genera preguntas de auditoría claras y directas.
+        2. Para cada requisito listado, genera al menos una pregunta.
+        3. Define la evidencia objetiva esperada para cada pregunta.
+        4. Responde EXCLUSIVAMENTE en formato JSON.
+        
+        Estructura del JSON esperada:
+        {
+          \"checklist\": [
+            {
+              \"norma_referencia\": \"...\",
+              \"requisito_referencia\": \"...\",
+              \"pregunta\": \"...\",
+              \"evidencia_esperada\": \"...\",
+              \"criterio_auditoria\": \"...\"
+            }
+          ]
+        }";
+
+        try {
+            $res = $this->callOpenAI($prompt, true);
+            $data = json_decode($res, true);
+
+            if ($data && (isset($data['checklist']) || isset($data['items']))) {
+                return $data['checklist'] ?? $data['items'];
+            }
+        } catch (\Exception $e) {
+            Log::error("Error generating checklist with AI: " . $e->getMessage());
+        }
+
+        // Fallback local
+        return $this->getDummyChecklist($procesoNombre, $requisitosEspecificos, $normas);
+    }
+
+    /**
+     * Fallback manual en caso de que la IA falle.
+     */
+    private function getDummyChecklist($proceso, $requisitos = [], $normas = 'ISO 9001')
+    {
+        $items = [];
+        $reqsArr = is_string($requisitos) ? explode(',', $requisitos) : $requisitos;
+        $reqsToUse = !empty($reqsArr) ? $reqsArr : ['4.4', '7.5'];
+
+        foreach ($reqsToUse as $req) {
+            $codigo = is_array($req) ? ($req['codigo'] ?? $req['label'] ?? 'N/A') : $req;
+            $items[] = [
+                'norma_referencia' => $normas,
+                'requisito_referencia' => $codigo,
+                'pregunta' => "¿Se evidencia el cumplimiento del requisito $codigo en las actividades del proceso $proceso?",
+                'evidencia_esperada' => 'Registros, documentos y entrevistas que demuestren la conformidad.',
+                'criterio_auditoria' => "Cumplimiento normativo de $normas"
+            ];
+        }
+        return $items;
+    }
+
+    /**
+     * Método público para generar texto con IA desde controladores externos.
+     * 
+     * @param string $prompt El prompt a enviar a la IA
+     * @param bool $jsonMode Si se espera respuesta en formato JSON
+     * @return string La respuesta generada por la IA
+     */
+    public function generateText(string $prompt, bool $jsonMode = false): string
+    {
+        return $this->callOpenAI($prompt, $jsonMode);
     }
 }

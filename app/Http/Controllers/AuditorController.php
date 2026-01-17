@@ -10,7 +10,11 @@ class AuditorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Auditor::with('user');
+        $query = Auditor::with([
+            'user' => function ($q) {
+                $q->select('id', 'name', 'email');
+            }
+        ]);
 
         if ($request->has('buscar')) {
             $buscar = $request->buscar;

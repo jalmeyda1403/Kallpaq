@@ -1,7 +1,8 @@
 <template>
-    <div ref="modalRef" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Removed tabindex="-1" to avoid Bootstrap focus trap interfering with PrimeVue inputs if needed, though overflow visible is the main fix for appendTo="self" -->
+    <div ref="modalRef" class="modal fade" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <div class="modal-content border-0 shadow-lg">
+            <div class="modal-content border-0 shadow-lg" style="overflow: visible !important;">
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title font-weight-bold">
                         {{ isEdit ? 'Editar Auditor' : 'Nuevo Auditor' }}
@@ -11,32 +12,65 @@
                     </button>
                 </div>
                 <form @submit.prevent="saveAuditor">
-                    <div class="modal-body p-4">
-                        <div class="form-group mb-3">
-                            <label class="font-weight-bold text-muted small">Seleccionar Usuario</label>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                </div>
-                                <select v-model="form.user_id" class="form-control" required>
-                                    <option value="">Seleccione un usuario...</option>
-                                    <option v-for="user in availableUsers" :key="user.id" :value="user.id">
-                                        {{ user.name }} ({{ user.email }})
-                                    </option>
-                                </select>
+                    <div class="modal-body p-4" style="overflow: visible !important;">
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-dark mb-2">
+                                <i class="fas fa-user-circle mr-1 text-danger"></i> Seleccionar Usuario
+                            </label>
+                            
+                            <Dropdown
+                                v-model="form.user_id"
+                                :options="availableUsers"
+                                optionLabel="name"
+                                optionValue="id"
+                                filter
+                                :filterBy="['name', 'email']"
+                                placeholder="Busque y seleccione un usuario..."
+                                class="w-100 custom-dropdown"
+                                :class="{'p-invalid': !form.user_id && submitted}"
+                                emptyFilterMessage="No se encontraron usuarios"
+                                emptyMessage="No hay usuarios disponibles"
+                                panelClass="custom-dropdown-panel"
+                            >
+                                <template #value="slotProps">
+                                    <div v-if="slotProps.value">
+                                        {{ availableUsers.find(u => u.id === slotProps.value)?.name }} 
+                                        <span class="text-muted small ml-1" v-if="availableUsers.find(u => u.id === slotProps.value)?.email">
+                                            ({{ availableUsers.find(u => u.id === slotProps.value)?.email }})
+                                        </span>
+                                    </div>
+                                    <span v-else>
+                                        {{ slotProps.placeholder }}
+                                    </span>
+                                </template>
+                                <template #option="slotProps">
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-2 text-dark" style="font-size: 0.95rem;">{{ slotProps.option.name }}</span>
+                                        <small class="text-muted">({{ slotProps.option.email }})</small>
+                                    </div>
+                                </template>
+                            </Dropdown>
+                            
+                            <div v-if="!form.user_id && submitted" class="text-danger small mt-1">
+                                <i class="fas fa-exclamation-circle mr-1"></i> Debe seleccionar un usuario.
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Solo usuarios que no están registrados como auditores aparecen en la lista.
-                            </small>
+
+                            <div class="alert alert-light border mt-3 mb-0 d-flex align-items-start">
+                                <i class="fas fa-info-circle text-info mt-1 mr-2"></i>
+                                <small class="text-muted">
+                                    La lista solo muestra usuarios que aún no están registrados como auditores.
+                                </small>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light border-0">
-                        <button type="button" class="btn btn-outline-secondary" @click="close">Cancelar</button>
-                        <button type="submit" class="btn btn-danger px-4 shadow-sm" :disabled="loading">
+                    <div class="modal-footer bg-light border-0 px-4 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4 transition-button" @click="close">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger px-4 shadow-sm transition-button" :disabled="loading">
                             <i class="fas fa-save mr-1" v-if="!loading"></i>
                             <span v-else class="spinner-border spinner-border-sm mr-1"></span>
-                            {{ isEdit ? 'Actualizar' : 'Guardar' }}
+                            {{ isEdit ? 'Guardar Cambios' : 'Registrar Auditor' }}
                         </button>
                     </div>
                 </form>
@@ -49,6 +83,7 @@
 import { ref, onMounted, reactive } from 'vue';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
+import Dropdown from 'primevue/dropdown';
 
 const toast = useToast();
 const modalRef = ref(null);
@@ -56,6 +91,7 @@ const bootstrapModal = ref(null);
 const isEdit = ref(false);
 const loading = ref(false);
 const availableUsers = ref([]);
+const submitted = ref(false);
 
 const form = reactive({
     id: null,
@@ -66,6 +102,7 @@ const emit = defineEmits(['saved']);
 
 const open = async (auditor = null) => {
     isEdit.value = !!auditor;
+    submitted.value = false;
     if (auditor) {
         form.id = auditor.id;
         form.user_id = auditor.user_id;
@@ -102,6 +139,12 @@ const fetchAvailableUsers = async () => {
 };
 
 const saveAuditor = async () => {
+    submitted.value = true;
+    if (!form.user_id) {
+         toast.add({ severity: 'warn', summary: 'Atención', detail: 'Debe seleccionar un usuario', life: 3000 });
+         return;
+    }
+
     loading.value = true;
     try {
         if (isEdit.value) {
@@ -124,7 +167,7 @@ const saveAuditor = async () => {
 defineExpose({ open });
 
 onMounted(() => {
-    // Initial fetch not strictly needed here as we fetch on open
+    //
 });
 </script>
 
@@ -133,17 +176,42 @@ onMounted(() => {
     background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%) !important;
 }
 
-.input-group-text {
-    background-color: #f8f9fa;
-    border-right: none;
+/* Custom styling for PrimeVue Dropdown */
+:deep(.custom-dropdown) {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    transition: all 0.2s;
 }
 
-.form-control {
-    border-left: none;
+:deep(.custom-dropdown:hover) {
+    border-color: #b71c1c;
 }
 
-.form-control:focus {
-    box-shadow: none;
-    border-color: #ced4da;
+:deep(.custom-dropdown.p-focus) {
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.25);
+}
+
+:deep(.p-dropdown-label) {
+    padding: 0.6rem 0.75rem; 
+}
+
+/* Panel Styling */
+:deep(.custom-dropdown-panel .p-dropdown-items .p-dropdown-item) {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+}
+
+:deep(.custom-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight) {
+    background-color: #ffebee;
+    color: #b71c1c;
+}
+
+.transition-button {
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.transition-button:active {
+    transform: translateY(1px);
 }
 </style>

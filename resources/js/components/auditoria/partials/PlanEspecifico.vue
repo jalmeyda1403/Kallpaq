@@ -20,21 +20,21 @@
             <form @submit.prevent="save">
                 <!-- 1. Código de Auditoría y Estado -->
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group small">
-                            <label class="form-label text-danger font-weight-bold p-0 m-0">Tipo de Auditoría</label>
+                            <label class="form-label text-danger font-weight-bold p-0 m-0">Tipo</label>
                             <select v-model="form.ae_tipo" class="form-control" @change="generateCode" required>
-                                <option value="Interna">Interna (IN)</option>
-                                <option value="Externa">Externa (EX)</option>
+                                <option value="Interna">Interna</option>
+                                <option value="Externa">Externa</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group small">
                             <label class="form-label text-danger font-weight-bold p-0 m-0">Código Auditoría</label>
                             <div class="input-group">
-                                <input type="text" v-model="form.ae_codigo" class="form-control"
-                                    placeholder="Autogenerado: AÑO - ### - IN/EX" readonly />
+                                <input type="text" v-model="form.ae_codigo" class="form-control" placeholder="###"
+                                    readonly />
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary btn-xs" type="button"
                                         @click="generateCode">
@@ -54,9 +54,15 @@
                     </div>
                     <div class="col-md-2">
                         <div class="form-group small">
+                            <label class="form-label text-danger font-weight-bold p-0 m-0">Ciclo</label>
+                            <input type="number" v-model="form.ae_ciclo" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group small">
                             <label class="form-label text-danger font-weight-bold p-0 m-0">HH Est.</label>
-                            <input type="number" step="0.1" v-model="form.ae_horas_hombre" class="form-control" readonly
-                                title="Se actualiza desde la Planificación Detallada" />
+                            <input type="number" step="0.1" v-model="form.ae_horas_hombre" class="form-control"
+                                readonly />
                         </div>
                     </div>
                 </div>
@@ -168,7 +174,7 @@ import { ref, onMounted, defineProps, defineEmits, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 
-const props = defineProps(['auditId', 'programaId']);
+const props = defineProps(['auditId', 'programaId', 'auditData', 'loading']);
 const emit = defineEmits(['saved', 'close']);
 const toast = useToast();
 const loading = ref(false);
@@ -221,23 +227,48 @@ const loadData = async () => {
         generateCode();
         return;
     }
+    // Si ya tenemos los datos básicos pero no el objeto completo de auditoría, cargamos una vez.
+    // O si el componente es montado y ya se tiene la data de la auditoría se asigna.
+    if (props.auditData && Object.keys(props.auditData).length > 0) {
+        assignFormData(props.auditData);
+        return;
+    }
+
     loading.value = true;
     try {
         const response = await axios.get(`/api/auditorias/${props.auditId}`);
-        const data = response.data;
-
-        form.value = {
-            ...data,
-            ae_fecha_inicio: data.ae_fecha_inicio ? data.ae_fecha_inicio.substring(0, 10) : '',
-            ae_fecha_fin: data.ae_fecha_fin ? data.ae_fecha_fin.substring(0, 10) : '',
-            ae_sistema: Array.isArray(data.ae_sistema) ? data.ae_sistema : []
-        };
+        assignFormData(response.data);
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Fallo cargando datos' });
     } finally {
         loading.value = false;
     }
 };
+
+const assignFormData = (data) => {
+    form.value = {
+        ...data,
+        ae_fecha_inicio: data.ae_fecha_inicio ? (typeof data.ae_fecha_inicio === 'string' ? data.ae_fecha_inicio.substring(0, 10) : data.ae_fecha_inicio) : '',
+        ae_fecha_fin: data.ae_fecha_fin ? (typeof data.ae_fecha_fin === 'string' ? data.ae_fecha_fin.substring(0, 10) : data.ae_fecha_fin) : '',
+        ae_sistema: Array.isArray(data.ae_sistema) ? data.ae_sistema : []
+    };
+};
+
+watch(() => props.auditData, (newVal) => {
+    if (newVal && Object.keys(newVal).length > 0) {
+        assignFormData(newVal);
+        loading.value = false;
+    }
+}, { immediate: true });
+
+watch(() => props.loading, (newVal) => {
+    // Only show loader if we don't have the audit code yet
+    if (newVal && !form.value.ae_codigo) {
+        loading.value = true;
+    } else if (!newVal) {
+        loading.value = false;
+    }
+}, { immediate: true });
 
 const save = async () => {
     saving.value = true;

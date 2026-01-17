@@ -161,6 +161,7 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = computed(() => !!user.value);
 
     const roles = computed(() => user.value?.roles || []);
+    const permissions = computed(() => user.value?.permissions || []);
 
     /**
      * Obtiene el rol principal del usuario (el de mayor prioridad)
@@ -255,6 +256,14 @@ export const useAuthStore = defineStore('auth', () => {
         return permissions.includes(permission);
     };
 
+    /**
+     * Verifica si el usuario tiene un permiso específico (basado en Spatie permissions)
+     */
+    const can = (permissionName) => {
+        if (!isAuthenticated.value) return false;
+        return permissions.value.includes(permissionName);
+    };
+
     const login = async (credentials) => {
         await axios.get('/sanctum/csrf-cookie');
         const response = await axios.post('/login', credentials);
@@ -279,6 +288,7 @@ export const useAuthStore = defineStore('auth', () => {
         getMenusForRole,
         getPermissionsForModule,
         hasPermission,
+        can,
         login,
         logout
     };

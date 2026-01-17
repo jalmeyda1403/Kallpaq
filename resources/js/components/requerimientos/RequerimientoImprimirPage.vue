@@ -11,4 +11,3 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 const requerimientoId = route.params.id || route.params.requerimiento;
 </script>
-</template>

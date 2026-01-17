@@ -24,8 +24,14 @@ class AuditoriaEquipo extends Model
         return $this->belongsTo(AuditoriaEspecifica::class, 'ae_id');
     }
 
+    public function auditor()
+    {
+        return $this->belongsTo(Auditor::class, 'auditor_id');
+    }
+
+    // Helper to get user directly if needed
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'auditor_id');
+        return $this->hasOneThrough(User::class, Auditor::class, 'id', 'id', 'auditor_id', 'user_id');
     }
 }

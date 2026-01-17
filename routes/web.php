@@ -28,6 +28,7 @@ use App\Http\Controllers\DiagramaContextoController;
 use App\Http\Controllers\SipocController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\DocumentoVersionController;
+use App\Http\Controllers\AuditoriaEjecucionController;
 use App\Http\Controllers\ParteInteresadaController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\DashboardController;
@@ -37,6 +38,8 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\CompromisoController;
 use App\Http\Controllers\AuditoriaEspecificaController;
 use App\Http\Controllers\AuditoriaEvaluacionController;
+use App\Http\Controllers\AuditoriaInformeController;
+use App\Http\Controllers\AuditoriaHallazgoController;
 
 // ... existing routes ...
 
@@ -528,6 +531,25 @@ Route::get('admin/usuarios/create', [UserController::class, 'create'])->name('us
 Route::post('admin/usuarios', [UserController::class, 'store'])->name('usuarios.store');
 Route::get('admin/usuarios/', [UserController::class, 'index'])->name('usuarios.index');
 Route::get('api/admin/usuarios', [UserController::class, 'apiIndex'])->name('api.admin.usuarios.index');
+Route::post('api/admin/usuarios', [UserController::class, 'storeApi'])->name('api.admin.usuarios.store');
+Route::put('api/admin/usuarios/{user}', [UserController::class, 'updateApi'])->name('api.admin.usuarios.update');
+Route::delete('api/admin/usuarios/{user}', [UserController::class, 'destroyApi'])->name('api.admin.usuarios.destroy');
+Route::post('api/admin/usuarios/import', [UserController::class, 'import'])->name('api.admin.usuarios.import');
+Route::post('api/admin/usuarios/reset-password', [UserController::class, 'sendResetLinkEmail'])->name('api.admin.usuarios.reset-password');
+Route::post('api/admin/usuarios/generate-initials', [UserController::class, 'generateUniqueInitials'])->name('api.admin.usuarios.generate-initials');
+Route::get('api/admin/roles', [UserController::class, 'getRolesApi'])->name('api.admin.roles.index');
+Route::post('api/admin/usuarios/{user}/roles', [UserController::class, 'assignRolesApi'])->name('api.admin.usuarios.assign-roles');
+Route::get('api/admin/usuarios/template', [UserController::class, 'downloadTemplate'])->name('api.admin.usuarios.template');
+
+// Role Management Routes
+Route::get('admin/roles', [App\Http\Controllers\RoleController::class, 'index'])->name('admin.roles.index');
+Route::get('api/roles', [App\Http\Controllers\RoleController::class, 'apiIndex'])->name('api.roles.index');
+Route::post('api/roles', [App\Http\Controllers\RoleController::class, 'store'])->name('api.roles.store');
+Route::put('api/roles/{role}', [App\Http\Controllers\RoleController::class, 'update'])->name('api.roles.update');
+Route::delete('api/roles/{role}', [App\Http\Controllers\RoleController::class, 'destroy'])->name('api.roles.destroy');
+Route::get('api/roles/permissions/all', [App\Http\Controllers\RoleController::class, 'permissions'])->name('api.roles.permissions.all');
+Route::get('api/roles/{id}/permissions', [App\Http\Controllers\RoleController::class, 'rolePermissions'])->name('api.roles.permissions');
+Route::post('api/roles/{id}/permissions', [App\Http\Controllers\RoleController::class, 'syncPermissions'])->name('api.roles.sync-permissions');
 
 Route::get('usuarios/asignar-permisos/{id}', [UserController::class, 'asignarPermisos'])->name('usuarios.asignar-permisos');
 Route::post('usuarios/asignar-permisos/{id}', [UserController::class, 'guardarPermisos'])->name('usuarios.guardar-permisos');
@@ -839,6 +861,8 @@ Route::prefix('api/auditoria')->middleware('auth')->name('api.auditoria.')->grou
     Route::post('/especifica', [AuditoriaEspecificaController::class, 'store'])->name('especifica.store');
     Route::put('/especifica/{id}', [AuditoriaEspecificaController::class, 'update'])->name('especifica.update');
     Route::delete('/especifica/{id}', [AuditoriaEspecificaController::class, 'destroy'])->name('especifica.destroy');
+    Route::get('/especifica/{id}/requisitos-disponibles', [AuditoriaEspecificaController::class, 'getRequisitosDisponibles'])->name('especifica.requisitos');
+    Route::get('/especifica/{id}/plan-pdf', [AuditoriaEspecificaController::class, 'downloadPlanPdf'])->name('especifica.plan.pdf');
 
     // Agenda y Equipo
     Route::post('/especifica/{ae_id}/agenda', [AuditoriaEspecificaController::class, 'updateAgenda'])->name('especifica.agenda.update');
@@ -849,11 +873,43 @@ Route::prefix('api/auditoria')->middleware('auth')->name('api.auditoria.')->grou
     Route::post('/evaluacion', [AuditoriaEvaluacionController::class, 'store'])->name('evaluacion.store');
 
     // Normas Auditables
+    Route::get('/normas/template', [\App\Http\Controllers\NormaAuditableController::class, 'downloadTemplate'])->name('normas.template');
+    Route::post('/normas/import', [\App\Http\Controllers\NormaAuditableController::class, 'import'])->name('normas.import');
     Route::apiResource('/normas', \App\Http\Controllers\NormaAuditableController::class)->names('normas');
     Route::post('/normas/generate', [\App\Http\Controllers\NormaAuditableController::class, 'generateRequirements'])->name('normas.generate');
 
     // Constancias
     Route::get('/especifica/{ae_id}/auditor/{auditor_id}/constancia', [AuditoriaEvaluacionController::class, 'generarConstancia'])->name('evaluacion.constancia');
+
+    // Ejecución de Auditoría
+    Route::post('/ejecucion/init', [AuditoriaEjecucionController::class, 'initExecution'])->name('ejecucion.init');
+    Route::get('/ejecucion/por-auditoria/{ae_id}', [AuditoriaEjecucionController::class, 'index'])->name('ejecucion.index');
+    Route::get('/ejecucion/detalle/{id}', [AuditoriaEjecucionController::class, 'show'])->name('ejecucion.show');
+    Route::put('/ejecucion/item/{id}', [AuditoriaEjecucionController::class, 'updateChecklistItem'])->name('ejecucion.item.update');
+    Route::post('/ejecucion/generate-checklist/{id}', [AuditoriaEjecucionController::class, 'generateChecklist'])->name('ejecucion.generate');
+    Route::post('/ejecucion/improve-hallazgo', [AuditoriaEjecucionController::class, 'improveHallazgo'])->name('ejecucion.improve-hallazgo');
+    Route::post('/ejecucion/improve-mejora', [AuditoriaEjecucionController::class, 'improveMejora'])->name('ejecucion.improve-mejora');
+    Route::post('/ejecucion/generate-summary', [AuditoriaEjecucionController::class, 'generateSummary'])->name('ejecucion.generate-summary');
+    Route::post('/ejecucion/upload-file/{id}', [AuditoriaEjecucionController::class, 'uploadFile'])->name('ejecucion.upload-file');
+    Route::get('/ejecucion/auditados/{id}', [AuditoriaEjecucionController::class, 'getAuditados'])->name('ejecucion.auditados');
+    Route::post('/ejecucion/auditados/{id}/sync', [AuditoriaEjecucionController::class, 'syncAuditados'])->name('ejecucion.auditados.sync');
+
+
+    // Elaboración de Informes
+    Route::get('/informes/auditoria/{ae_id}', [AuditoriaInformeController::class, 'index'])->name('informes.index');
+    Route::post('/informes', [AuditoriaInformeController::class, 'store'])->name('informes.store');
+    Route::get('/informes/{id}', [AuditoriaInformeController::class, 'show'])->name('informes.show');
+    Route::put('/informes/{id}', [AuditoriaInformeController::class, 'update'])->name('informes.update');
+    Route::delete('/informes/{id}', [AuditoriaInformeController::class, 'destroy'])->name('informes.destroy');
+    Route::get('/informes/datos/{ae_id}', [AuditoriaInformeController::class, 'getDatosInforme'])->name('informes.datos');
+    Route::post('/informes/generar-seccion', [AuditoriaInformeController::class, 'generarSeccionIA'])->name('informes.generar-seccion');
+    Route::post('/informes/{id}/crear-smps', [AuditoriaInformeController::class, 'crearSMPsDesdeHallazgos'])->name('informes.crear-smps');
+    Route::get('/informes/{id}/pdf', [AuditoriaInformeController::class, 'exportPdf'])->name('informes.pdf');
+    Route::get('/informes/{id}/word', [AuditoriaInformeController::class, 'exportWord'])->name('informes.word');
+
+    // Revisión de Gabinete (Hallazgos)
+    Route::get('/hallazgos/revision/{ae_id}', [AuditoriaHallazgoController::class, 'getHallazgosRevision'])->name('hallazgos.revision');
+    Route::put('/hallazgos/{id}/redaccion', [AuditoriaHallazgoController::class, 'updateHallazgoRedaccion'])->name('hallazgos.redaccion');
 });
 
 

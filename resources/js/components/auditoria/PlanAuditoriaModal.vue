@@ -12,6 +12,7 @@
                                 style="font-size: 1.2rem;"></i>
                         </button>
                         <h5 class="modal-title font-weight-bold">{{ modalTitle }}</h5>
+                        <i v-if="loadingAudit" class="fas fa-spinner fa-spin ml-3 text-white-50"></i>
                     </div>
                     <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -19,9 +20,10 @@
                 </div>
 
                 <!-- BODY -->
-                <div class="modal-body p-0 d-flex overflow-hidden" style="height: 85vh;">
+                <div class="modal-body p-0 d-flex overflow-hidden" style="height: 100vh;">
                     <!-- SIDEBAR -->
-                    <div v-if="sidebarVisible" class="col-md-3 border-right p-0 bg-white" style="z-index: 2;">
+                    <div v-if="sidebarVisible" class="col-md-3 border-right p-0 bg-white overflow-auto"
+                        style="z-index: 2;">
                         <div class="nav flex-column nav-pills py-3" id="v-pills-tab" role="tablist"
                             aria-orientation="vertical">
                             <h6 class="text-uppercase text-secondary mx-4 mt-2 mb-3 font-weight-bold small">
@@ -38,7 +40,7 @@
                             <hr class="my-3 mx-4">
 
                             <h6 class="text-uppercase text-secondary mx-4 mt-3 mb-3 font-weight-bold small">
-                                DETALLES
+                                PLANIFICACIÓN ESPECÍFICA
                             </h6>
                             <div :class="{ 'disabled-links': !auditId }">
                                 <a class="nav-link mx-2" :class="{ 'active': activeTab === 'procesos' }"
@@ -59,9 +61,34 @@
                                     @click="changeTab('planificacion')" href="javascript:void(0)">
                                     <div class="d-flex align-items-center">
                                         <i class="fas fa-calendar-check mr-3"></i>
-                                        <span>Planificación Detallada</span>
+                                        <span>Cronograma de Actividades</span>
                                     </div>
                                 </a>
+
+                                <hr class="my-3 mx-4">
+                                <h6 class="text-uppercase text-secondary mx-4 mt-3 mb-3 font-weight-bold small">
+                                    EJECUCIÓN
+                                </h6>
+                                <a class="nav-link mx-2" :class="{ 'active': activeTab === 'ejecucion' }"
+                                    @click="changeTab('ejecucion')" href="javascript:void(0)">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-tasks mr-3"></i>
+                                        <span>Ejecución de Auditoría</span>
+                                    </div>
+                                </a>
+
+                                <a class="nav-link mx-2" :class="{ active: activeTab === 'ejecucion_gabinete' }"
+                                    @click="changeTab('ejecucion_gabinete')" href="javascript:void(0)">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-search-plus mr-3"></i>
+                                        <span>Revisión de Gabinete</span>
+                                    </div>
+                                </a>
+
+                                <hr class="my-3 mx-4">
+                                <h6 class="text-uppercase text-secondary mx-4 mt-3 mb-3 font-weight-bold small">
+                                    INFORMES
+                                </h6>
                                 <a class="nav-link mx-2" :class="{ 'active': activeTab === 'informes' }"
                                     @click="changeTab('informes')" href="javascript:void(0)">
                                     <div class="d-flex align-items-center">
@@ -69,7 +96,6 @@
                                         <span>Informes Emitidos</span>
                                     </div>
                                 </a>
-
                                 <hr class="my-3 mx-4">
                                 <h6 class="text-uppercase text-secondary mx-4 mt-3 mb-3 font-weight-bold small">
                                     EVALUACIÓN
@@ -92,8 +118,8 @@
                         class="px-0 bg-light border-left modal-body-scrollable transition-all">
                         <div class="p-4">
                             <KeepAlive>
-                                <component :is="currentComponent" :audit-id="auditId" :programa-id="programaId"
-                                    @saved="onAuditSaved" @close="closeModal" />
+                                <component :is="currentComponent" v-bind="commonProps" @saved="onAuditSaved"
+                                    @close="closeModal" />
                             </KeepAlive>
                         </div>
                     </div>
@@ -105,14 +131,18 @@
 
 <script setup>
 import { ref, computed, defineProps, defineEmits, watch, onMounted } from 'vue';
+import axios from 'axios';
 import { Modal } from 'bootstrap';
 
 import PlanEspecifico from './partials/PlanEspecifico.vue';
 import ProcesosAuditados from './partials/ProcesosAuditados.vue';
-import PlanificacionDetallada from './partials/PlanificacionDetallada.vue';
+import PlanCronograma from './partials/PlanCronograma.vue';
 import EquipoAuditor from './partials/EquipoAuditor.vue';
 import InformesEmitidos from './partials/InformesEmitidos.vue';
 import EvaluacionAuditores from './partials/EvaluacionAuditores.vue';
+import EjecucionAuditoria from './partials/EjecucionAuditoria.vue';
+import InformeAuditoria from './partials/InformeAuditoria.vue';
+import RevisionGabinete from './partials/RevisionGabinete.vue';
 
 const props = defineProps({
     visible: Boolean,
@@ -128,8 +158,37 @@ let modalInstance = null;
 const activeTab = ref('general');
 const auditId = ref(props.auditId);
 const sidebarVisible = ref(true);
+const fullAuditData = ref(null);
+const loadingAudit = ref(false);
+
+const loadFullAuditData = async (id) => {
+    if (!id) {
+        fullAuditData.value = null;
+        return;
+    }
+    loadingAudit.value = true;
+    try {
+        const response = await axios.get(`/api/auditorias/${id}`);
+        fullAuditData.value = response.data;
+    } catch (e) {
+        console.error("Error fetching full audit data", e);
+    } finally {
+        loadingAudit.value = false;
+    }
+};
+
+const commonProps = computed(() => ({
+    auditId: auditId.value,
+    programaId: props.programaId,
+    auditData: fullAuditData.value,
+    auditStatus: props.auditStatus,
+    loading: loadingAudit.value
+}));
 
 onMounted(() => {
+    // Pre-fetch auditors list early to avoid delays in the Team tab
+    axios.get('/api/auditores').catch(e => console.error("Error pre-fetching auditors", e));
+
     modalInstance = new Modal(modalRef.value, {
         backdrop: 'static',
         keyboard: false
@@ -149,12 +208,14 @@ onMounted(() => {
 
     if (props.visible) {
         modalInstance?.show();
+        if (props.auditId) loadFullAuditData(props.auditId);
     }
 });
 
 watch(() => props.visible, (newVal) => {
     if (newVal) {
         modalInstance?.show();
+        if (props.auditId) loadFullAuditData(props.auditId);
     } else {
         modalInstance?.hide();
     }
@@ -163,6 +224,7 @@ watch(() => props.visible, (newVal) => {
 watch(() => props.auditId, (newVal) => {
     auditId.value = newVal;
     activeTab.value = 'general';
+    if (newVal) loadFullAuditData(newVal);
 });
 
 const modalTitle = computed(() => {
@@ -173,8 +235,10 @@ const currentComponent = computed(() => {
     switch (activeTab.value) {
         case 'general': return PlanEspecifico;
         case 'procesos': return ProcesosAuditados;
-        case 'planificacion': return PlanificacionDetallada;
+        case 'planificacion': return PlanCronograma;
         case 'equipo': return EquipoAuditor;
+        case 'ejecucion': return EjecucionAuditoria;
+        case 'ejecucion_gabinete': return RevisionGabinete;
         case 'informes': return InformesEmitidos;
         case 'evaluacion': return EvaluacionAuditores;
         default: return PlanEspecifico;
@@ -192,8 +256,12 @@ const changeTab = (tab) => {
 };
 
 const onAuditSaved = (newAudit) => {
-    if (!auditId.value) {
+    if (!auditId.value && newAudit && newAudit.id) {
         auditId.value = newAudit.id;
+    }
+    // Refresh local data so other tabs (Cronograma, etc.) see the changes immediately
+    if (auditId.value) {
+        loadFullAuditData(auditId.value);
     }
     emit('refresh');
 };
@@ -204,10 +272,8 @@ const closeModal = () => {
 </script>
 
 <style scoped>
-.modal-dialog-custom {
-    max-width: 90vw;
-    width: 90vw;
-    margin: 1.75rem auto;
+.modal-xl {
+    max-width: 95% !important;
 }
 
 .modal-content {

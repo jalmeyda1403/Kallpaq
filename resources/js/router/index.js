@@ -361,6 +361,11 @@ const routes = [
                 component: UsuariosIndex,
             },
             {
+                path: 'administracion/roles',
+                name: 'administracion.roles.index',
+                component: () => import('@/components/administracion/RolesIndex.vue'),
+            },
+            {
                 path: 'administracion/asignacion-ouos',
                 name: 'administracion.asignacion-ouos.index',
                 component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'),

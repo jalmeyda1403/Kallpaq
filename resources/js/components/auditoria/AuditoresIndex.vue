@@ -2,81 +2,78 @@
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-light py-2 px-3 rounded shadow-sm">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item text-muted">Gestión de Auditorías</li>
+                <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Listado de Auditores</li>
             </ol>
         </nav>
 
-        <div class="card shadow border-0">
-            <div class="card-header bg-white py-4">
+        <div class="card">
+            <div class="card-header">
                 <div class="row align-items-center">
-                    <div class="col-md-6 text-center text-md-left">
-                        <h3 class="card-title mb-0 font-weight-bold display-5">
-                            <i class="fas fa-user-shield text-danger mr-2"></i> Gestión de Auditores
-                        </h3>
+                    <div class="col-md-4 text-md-left">
+                        <h3 class="card-title mb-0">Gestión de Auditores</h3>
                     </div>
-                    <div class="col-md-6 text-center text-md-right mt-3 mt-md-0">
-                        <button class="btn btn-primary btn-lg shadow-sm px-4" @click="abrirNuevoAuditor">
-                            <i class="fas fa-user-plus mr-1"></i> Registrar Auditor
-                        </button>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <div class="input-group" style="max-width: 450px;">
-                        <input type="text" v-model="buscar" class="form-control form-control-lg border-right-0"
-                            placeholder="Buscar por nombre o correo..." @keyup.enter="fetchAuditores">
-                        <div class="input-group-append">
-                            <button class="btn btn-dark btn-lg shadow-sm border-left-0" style="z-index: 1;"
-                                type="button" @click="fetchAuditores">
-                                <i class="fas fa-search px-2"></i>
+                    <div class="col-md-8 text-md-right">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <div class="input-group input-group-sm mr-2" style="max-width: 250px;">
+                                <input type="text" v-model="buscar" class="form-control" placeholder="Buscar..."
+                                    @keyup.enter="fetchAuditores">
+                                <div class="input-group-append">
+                                    <button class="btn btn-default" type="button" @click="fetchAuditores">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" @click="abrirNuevoAuditor">
+                                <i class="fas fa-plus-circle"></i> Nuevo Auditor
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card-body p-0">
-                <DataTable :value="auditores" :paginator="true" :rows="10" stripedRows :loading="loading"
-                    responsiveLayout="stack" breakpoint="960px" class="p-datatable-modern overflow-hidden"
+            <div class="card-body">
+                <DataTable :value="auditores" :paginator="true" :rows="10" :loading="loading"
+                    tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    :rowsPerPageOptions="[10, 20, 50]"
-                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} auditores">
+                    :rowsPerPageOptions="[10, 25, 50]"
+                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} auditores"
+                    class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
 
-                    <Column field="user.name" header="Auditores del Sistema" sortable>
+                    <Column field="user.name" header="Auditor" sortable style="width:35%">
                         <template #body="slotProps">
-                            <div class="d-flex align-items-center py-2">
-                                <div class="avatar-circle">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle-sm mr-2">
                                     {{ slotProps.data.user.name.charAt(0) }}
                                 </div>
-                                <div class="ml-3">
-                                    <div class="font-weight-bold h6 mb-0">{{ slotProps.data.user.name }}</div>
-                                    <small class="text-muted d-block mt-1">{{ slotProps.data.user.email }}</small>
+                                <div>
+                                    <span class="font-weight-bold text-dark d-block">{{ slotProps.data.user.name
+                                        }}</span>
+                                    <small class="text-muted">{{ slotProps.data.user.email }}</small>
                                 </div>
                             </div>
                         </template>
                     </Column>
-                    <Column field="created_at" header="Fecha Registro" sortable headerClass="text-center"
-                        class="text-center">
+                    <Column field="created_at" header="Fecha Registro" sortable style="width:20%; text-align: center;">
                         <template #body="slotProps">
-                            <span class="text-muted small font-weight-bold">
+                            <span class="text-muted small">
                                 {{ formatDate(slotProps.data.created_at) }}
                             </span>
                         </template>
                     </Column>
-                    <Column header="Acciones" headerClass="text-center" class="text-center" style="width: 180px;">
+                    <Column header="Acciones" class="text-center" style="width:15%">
                         <template #body="slotProps">
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-info btn-sm shadow-sm"
-                                    @click="verDetalle(slotProps.data)" title="Ver Historial">
+                            <div class="d-flex justify-content-center action-buttons">
+                                <button class="btn btn-outline-info btn-xs mr-1" @click="verDetalle(slotProps.data)"
+                                    title="Historial">
                                     <i class="fas fa-history"></i>
                                 </button>
-                                <button class="btn btn-outline-warning btn-sm shadow-sm"
-                                    @click="editarAuditor(slotProps.data)" title="Editar Auditor">
+                                <button class="btn btn-outline-warning btn-xs mr-1"
+                                    @click="editarAuditor(slotProps.data)" title="Editar">
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
-                                <button class="btn btn-outline-danger btn-sm shadow-sm ml-1"
-                                    @click="confirmDelete(slotProps.data)" title="Eliminar Auditor">
+                                <button class="btn btn-outline-danger btn-xs" @click="confirmDelete(slotProps.data)"
+                                    title="Eliminar">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -84,9 +81,8 @@
                     </Column>
 
                     <template #empty>
-                        <div class="text-center p-5">
-                            <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
-                            <h5 class="text-muted">No se encontraron auditores registrados.</h5>
+                        <div class="text-center p-4 text-muted italic">
+                            No se encontraron auditores registrados.
                         </div>
                     </template>
                 </DataTable>
@@ -174,9 +170,22 @@ onMounted(fetchAuditores);
 </script>
 
 <style scoped>
-.avatar-circle {
-    width: 45px;
-    height: 45px;
+.action-buttons .btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn-xs:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-circle-sm {
+    width: 32px;
+    height: 32px;
     background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
     color: white;
     border-radius: 50%;
@@ -184,24 +193,20 @@ onMounted(fetchAuditores);
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
 }
 
-.card {
-    border-radius: 12px;
+.italic {
+    font-style: italic;
 }
 
-.breadcrumb {
-    background: transparent !important;
-    padding-left: 0 !important;
+/* Custom loader styles */
+.p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.7) !important;
 }
 
-.gap-2 {
-    gap: 0.5rem;
-}
-
-.display-5 {
-    font-size: 1.75rem;
+.p-datatable-loading-icon {
+    color: #dc3545 !important;
+    font-size: 2.5rem !important;
 }
 </style>

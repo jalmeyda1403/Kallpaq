@@ -1,25 +1,26 @@
 <template>
     <div>
-        <div class="header-container mb-4 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">
+        <div class="header-container mb-4">
+            <h6 class="mb-0 d-flex align-items-center">
                 <span class="text-dark">Equipo Auditor y Recursos</span>
             </h6>
-            <button class="btn btn-sm btn-outline-secondary" @click="loadData" title="Recargar Datos">
-                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Refrescar
-            </button>
         </div>
 
         <div class="card border-0 shadow-none">
             <div class="card-body p-0">
+                <p class="text-muted small mb-4 italic">
+                    Seleccione un auditor de la lista, asigne un rol y agréguelo al equipo.
+                </p>
+
                 <div class="d-flex align-items-center mb-4">
-                    <div class="input-group">
+                    <div class="input-group input-group-sm">
                         <div class="input-group-prepend">
                             <span class="input-group-text bg-light border-right-0"><i
                                     class="fas fa-user-plus"></i></span>
                         </div>
                         <select v-model="newMember.auditor_id" class="form-control border-left-0">
                             <option :value="null">Seleccione un Auditor...</option>
-                            <option v-for="aud in auditorsList" :key="aud.id" :value="aud.user_id">
+                            <option v-for="aud in availableAuditors" :key="aud.id" :value="aud.id">
                                 {{ aud.user?.name || 'Desconocido' }}
                             </option>
                         </select>
@@ -28,7 +29,7 @@
                         </select>
                         <div class="input-group-append">
                             <button @click="addMember" class="btn btn-danger" :disabled="!newMember.auditor_id">
-                                <i class="fas fa-plus"></i> Agregar
+                                <i class="fas fa-plus mr-1"></i> Agregar
                             </button>
                         </div>
                     </div>
@@ -42,45 +43,55 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
+                        <table class="table table-sm table-bordered table-hover">
                             <thead class="bg-light text-secondary small font-weight-bold">
                                 <tr>
-                                    <th>Nombre del Auditor</th>
-                                    <th>Rol</th>
-                                    <th class="text-center" style="width: 120px;">Horas Plan.</th>
-                                    <th class="text-center" style="width: 120px;">Horas Ejec.</th>
-                                    <th class="text-center" style="width: 80px;">Acciones</th>
+                                    <th class="pl-3">Nombre del Auditor</th>
+                                    <th>Rol en el Equipo</th>
+                                    <th class="text-center">H. Planificadas</th>
+                                    <th class="text-center">H. Ejecutadas</th>
+                                    <th class="text-center" style="width: 80px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr v-for="(member, index) in team" :key="index">
-                                    <td>
-                                        <div class="font-weight-bold">{{ getAuditorName(member.auditor_id) }}</div>
+                                <tr v-for="(member, index) in team" :key="member.auditor_id">
+                                    <td class="pl-3 align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="avatar-circle-sm mr-2 text-white bg-secondary font-weight-bold d-flex align-items-center justify-content-center">
+                                                {{ getAuditorName(member.auditor_id).charAt(0) }}
+                                            </div>
+                                            <span class="font-weight-bold text-dark">{{
+                                                getAuditorName(member.auditor_id) }}</span>
+                                        </div>
                                     </td>
-                                    <td>
+                                    <td class="align-middle">
                                         <select v-model="member.aeq_rol"
-                                            class="form-control form-control-sm border-0 bg-light">
+                                            class="form-control form-control-sm border-0 bg-transparent"
+                                            style="min-width: 140px;">
                                             <option v-for="rol in roles" :key="rol" :value="rol">{{ rol }}</option>
                                         </select>
                                     </td>
-                                    <td>
+                                    <td class="text-center align-middle">
                                         <input type="number" step="0.5" v-model="member.aeq_horas_planificadas"
-                                            class="form-control form-control-sm text-center border-0 bg-light" />
+                                            class="form-control form-control-sm text-center border-0 bg-transparent p-0"
+                                            style="max-width: 60px; margin: 0 auto;" />
                                     </td>
-                                    <td>
-                                        <input type="number" step="0.5" v-model="member.aeq_horas_ejecutadas"
-                                            class="form-control form-control-sm text-center border-0 bg-white font-weight-bold show-readonly"
-                                            readonly title="Calculado automáticamente desde la Agenda" />
+                                    <td class="text-center align-middle">
+                                        <span class="font-weight-bold text-secondary">{{ member.aeq_horas_ejecutadas ||
+                                            0 }}</span>
                                     </td>
-                                    <td class="text-center">
-                                        <button class="btn btn-link text-danger p-0" @click="removeMember(index)">
+                                    <td class="text-center align-middle">
+                                        <button class="btn btn-link text-danger p-0" @click="removeMember(index)"
+                                            title="Eliminar Miembro">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>
                                 </tr>
                                 <tr v-if="team.length === 0">
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        No hay miembros asignados al equipo auditor.
+                                    <td colspan="5" class="text-center py-5 bg-light">
+                                        <i class="fas fa-users-slash fa-2x text-secondary opacity-50 mb-2"></i>
+                                        <p class="text-muted small mb-0">No hay miembros asignados.</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -105,42 +116,107 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps, defineEmits } from 'vue';
+import { ref, onMounted, defineProps, defineEmits, watch, computed } from 'vue';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 
-const props = defineProps(['auditId']);
+const props = defineProps(['auditId', 'auditData', 'auditStatus', 'loading']);
 const emit = defineEmits(['saved']);
 const toast = useToast();
 const loading = ref(false);
 const saving = ref(false);
 
-const team = ref([]);
 const auditorsList = ref([]);
-const roles = ['Auditor Líder', 'Auditor', 'Especialista', 'Observador'];
+const team = ref([]);
+const roles = ['Auditor Líder', 'Auditor Interno', 'Auditor', 'Especialista', 'Observador'];
 const newMember = ref({ auditor_id: null, aeq_rol: 'Auditor', aeq_horas_planificadas: 0, aeq_horas_ejecutadas: 0 });
 
+// Compute filtered auditors for the dropdown (exclude already in team)
+const availableAuditors = computed(() => {
+    const inTeamIds = new Set(team.value.map(m => m.auditor_id));
+    return auditorsList.value.filter(aud => !inTeamIds.has(aud.id));
+});
+
+// Shared cache for auditors list to avoid refetching between components/instances
+let cachedAuditors = null;
+
 const loadData = async () => {
-    loading.value = true;
+    // 1. Prioritize data from props
+    if (props.auditData?.equipo && props.auditData.equipo.length > 0) {
+        team.value = props.auditData.equipo;
+    }
+
+    // 2. Check cache for auditors list (Master List)
+    if (cachedAuditors) {
+        auditorsList.value = cachedAuditors;
+    }
+
+    // 3. Only show loader if we are missing critical data
+    const needsAuditors = !cachedAuditors;
+    const needsTeam = (!team.value || team.value.length === 0) && (!props.auditData || !props.auditData.equipo);
+
+    if (needsAuditors || needsTeam) {
+        loading.value = true;
+    }
+
     try {
-        const [resAuditors, resAudit] = await Promise.all([
-            axios.get('/api/auditores'),
-            axios.get(`/api/auditorias/${props.auditId}`)
-        ]);
-        auditorsList.value = resAuditors.data;
-        if (resAudit.data.equipo) {
-            team.value = resAudit.data.equipo;
+        const fetches = [];
+
+        if (needsAuditors) {
+            // Load only if not cached globally (implement simple cache or dependency injection later if needed)
+            // Or better, check if store has it? For now, component local "cachedAuditors" variable (which is module scope) works.
+            fetches.push(axios.get('/api/auditores').then(r => {
+                cachedAuditors = r.data;
+                auditorsList.value = r.data;
+            }));
+        } else {
+            auditorsList.value = cachedAuditors;
+        }
+
+        if (needsTeam) {
+            fetches.push(axios.get(`/api/auditorias/${props.auditId}`).then(r => {
+                const fetchedTeam = r.data?.equipo || [];
+                team.value = fetchedTeam;
+            }));
+        }
+
+        if (fetches.length > 0) {
+            await Promise.all(fetches);
         }
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Fallo cargando equipo' });
+        console.error("Error loading team data", e);
     } finally {
         loading.value = false;
     }
 };
 
+watch(() => props.auditData, (newVal) => {
+    if (newVal && newVal.equipo) {
+        team.value = newVal.equipo;
+        loading.value = false; // Data is here, stop loading
+    }
+}, { immediate: true });
+
+watch(() => props.loading, (newVal) => {
+    // Only show loader if we don't have team data yet
+    if (newVal && team.value.length === 0) {
+        loading.value = true;
+    } else if (!newVal) {
+        loading.value = false;
+    }
+}, { immediate: true });
+
+// O(1) lookup map for auditor names
+const auditorsMap = computed(() => {
+    const map = new Map();
+    auditorsList.value.forEach(aud => {
+        if (aud.id) map.set(aud.id, aud.user?.name || 'Desconocido');
+    });
+    return map;
+});
+
 const getAuditorName = (userId) => {
-    const aud = auditorsList.value.find(a => a.user_id === userId);
-    return aud?.user?.name || 'Desconocido';
+    return auditorsMap.value.get(userId) || 'Buscando...';
 };
 
 const addMember = () => {
@@ -179,9 +255,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.italic {
+    font-style: italic;
+}
+
+.avatar-circle-sm {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
 .form-overlay-container {
     position: relative;
-    min-height: 150px;
+    min-height: 200px;
 }
 
 .loading-overlay {
@@ -190,11 +277,12 @@ onMounted(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 5;
+    backdrop-filter: blur(2px);
 }
 
 .header-container {

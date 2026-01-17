@@ -22,9 +22,6 @@ class AuditoriaEspecifica extends Model
         'ae_estado',
         'ae_lugar',
         'ae_direccion',
-        'ae_reunion_apertura',
-        'ae_reunion_cierre',
-        'proceso_id',
         'ae_cantidad_auditores',
         'ae_horas_hombre',
         'ae_ciclo',
@@ -35,8 +32,6 @@ class AuditoriaEspecifica extends Model
     protected $casts = [
         'ae_fecha_inicio' => 'date',
         'ae_fecha_fin' => 'date',
-        'ae_reunion_apertura' => 'datetime',
-        'ae_reunion_cierre' => 'datetime',
         'ae_sistema' => 'array',
     ];
 
@@ -45,10 +40,6 @@ class AuditoriaEspecifica extends Model
         return $this->belongsTo(ProgramaAuditoria::class, 'pa_id');
     }
 
-    public function proceso()
-    {
-        return $this->belongsTo(Proceso::class, 'proceso_id');
-    }
 
     public function procesos()
     {
@@ -70,5 +61,10 @@ class AuditoriaEspecifica extends Model
     public function evaluaciones()
     {
         return $this->hasMany(AuditoriaEvaluacion::class, 'ae_id');
+    }
+
+    public function ejecuciones()
+    {
+        return $this->hasMany(AuditoriaEjecucion::class, 'ae_id');
     }
 }

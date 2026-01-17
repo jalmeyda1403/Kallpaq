@@ -1,8 +1,50 @@
 <template>
     <div class="container-fluid">
         <!-- Skeleton Loading State -->
+        <div v-if="loading" class="skeleton-container">
+            <div class="skeleton-header mb-4 p-4 bg-white rounded-lg shadow-sm">
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="skeleton-text skeleton-h3 mb-3" style="width: 60%"></div>
+                        <div class="skeleton-text skeleton-small mb-4" style="width: 20%"></div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="skeleton-info-item"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="skeleton-info-item"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="skeleton-info-item"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="col-md-3 bg-light rounded-right p-4 d-flex flex-column align-items-center justify-content-center">
+                        <div class="skeleton-circle mb-3"></div>
+                        <div class="skeleton-button"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="skeleton-body card shadow-sm border-0 rounded-lg">
+                <div class="card-header bg-white p-3 d-flex justify-content-between">
+                    <div class="skeleton-text" style="width: 30%"></div>
+                    <div class="skeleton-button"></div>
+                </div>
+                <div class="card-body p-0">
+                    <div v-for="i in 5" :key="i" class="skeleton-row p-3 border-bottom d-flex align-items-center">
+                        <div class="skeleton-text mr-3" style="width: 5%"></div>
+                        <div class="skeleton-text mr-3" style="width: 15%"></div>
+                        <div class="skeleton-text mr-3" style="width: 40%"></div>
+                        <div class="skeleton-text mr-3" style="width: 10%"></div>
+                        <div class="skeleton-text" style="width: 15%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Custom Header Design as per User Request -->
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden mb-4">
+        <div v-else class="bg-white shadow-sm rounded-lg overflow-hidden mb-4">
             <div class="row no-gutters">
                 <!-- Left Side: Information -->
                 <div class="col-md-9 p-4">
@@ -16,7 +58,7 @@
 
                     <div class="d-flex align-items-center mb-4">
                         <span class="text-muted small mr-2"><i class="fas fa-fingerprint"></i> v{{ programa.pa_version
-                        }}</span>
+                            }}</span>
                         <span class="badge badge-info rounded-pill px-3">{{ programa.pa_estado }}</span>
                     </div>
 
@@ -96,11 +138,12 @@
                     <DataTable :value="auditorias" :loading="loading" responsiveLayout="scroll"
                         class="p-datatable-sm p-datatable-striped" :rowHover="true">
 
-                        <Column header="N°" headerStyle="width: 50px;" class="text-center">
-                            <template #body="slotProps">
-                                {{ slotProps.index + 1 }}
+                        <Column header="Código" headerStyle="width: 140px;" class="font-weight-bold">
+                            <template #body="{ data }">
+                                <span class="text-danger font-weight-bold">{{ data.ae_codigo || 'SIN CÓDIGO' }}</span>
                             </template>
                         </Column>
+
 
                         <Column field="ae_tipo" header="Tipo de Auditoría">
                             <template #body="{ data }">
@@ -113,7 +156,17 @@
 
                         <Column header="Procesos">
                             <template #body="{ data }">
-                                <div class="font-weight-bold text-dark">{{ getNombreProceso(data.proceso_id) }}</div>
+                                <div v-if="data.proceso" class="font-weight-bold text-dark">
+                                    {{ data.proceso.proceso_nombre || data.proceso.nombre }}
+                                </div>
+                                <div v-else-if="data.procesos && data.procesos.length > 0"
+                                    class="font-weight-bold text-dark">
+                                    <div v-for="p in data.procesos" :key="p.id" class="small">
+                                        • {{ p.proceso_nombre || p.nombre }}
+                                    </div>
+                                </div>
+                                <div v-else class="text-muted small">General / SGC</div>
+
                                 <small class="text-muted d-block text-truncate" style="max-width: 200px;"
                                     v-if="data.ae_alcance" :title="data.ae_alcance">
                                     {{ data.ae_alcance }}
@@ -131,23 +184,23 @@
                             </template>
                         </Column>
 
-                        <Column field="ae_equipo_auditor" header="Auditor">
+                        <Column field="ae_ciclo" header="Ciclo" class="text-center">
                             <template #body="{ data }">
-                                <div v-if="data.ae_equipo_auditor">
-                                    <i class="fas fa-user-tie text-muted mr-1"></i> {{ data.ae_equipo_auditor }}
-                                </div>
-                                <span v-else class="text-muted small">Por definir</span>
+                                <span class="badge badge-secondary">{{ data.ae_ciclo || 1 }}</span>
                             </template>
                         </Column>
 
-                        <Column field="ae_auditado" header="Auditado">
+                        <Column field="ae_horas_hombre" header="HH" class="text-center">
                             <template #body="{ data }">
-                                {{ data.ae_auditado || '-' }}
+                                <span class="font-weight-bold">{{ data.ae_horas_hombre || 0 }}h</span>
                             </template>
                         </Column>
-                        <Column field="ae_fecha_inicio" header="Fecha Prog.">
+
+                        <Column header="Fecha Programada">
                             <template #body="{ data }">
-                                {{ formatDate(data.ae_fecha_inicio) }}
+                                <span class="small font-weight-bold">
+                                    {{ formatDate(data.ae_fecha_inicio) }} - {{ formatDate(data.ae_fecha_fin) }}
+                                </span>
                             </template>
                         </Column>
 
@@ -158,6 +211,21 @@
                                 </span>
                             </template>
                         </Column>
+
+                        <Column header="Avance" headerStyle="width: 120px;">
+                            <template #body="{ data }">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 mr-2" style="height: 6px; border-radius: 10px;">
+                                        <div class="progress-bar"
+                                            :class="data.progreso_ejecucion === 100 ? 'bg-success' : 'bg-primary'"
+                                            :style="{ width: (data.progreso_ejecucion || 0) + '%' }"></div>
+                                    </div>
+                                    <span class="small font-weight-bold text-muted">{{ data.progreso_ejecucion || 0
+                                        }}%</span>
+                                </div>
+                            </template>
+                        </Column>
+
 
                         <Column header="Acciones" headerStyle="width: 100px" bodyStyle="text-align: center">
                             <template #body="{ data }">
@@ -195,10 +263,9 @@ const router = useRouter();
 const toast = useToast();
 const store = useProgramaAuditoriaStore();
 
-const loading = ref(true);
+const loading = computed(() => store.loading);
 const programa = ref({});
 const auditorias = ref([]);
-const procesos = ref([]);
 const auditModalVisible = ref(false);
 const selectedAuditId = ref(null);
 const selectedAuditStatus = ref(null);
@@ -213,34 +280,19 @@ onMounted(async () => {
 });
 
 const loadData = async () => {
-    loading.value = true;
     try {
         const paId = route.params.id;
+        // Use the store action which handles loading state and currentPrograma
+        await store.fetchProgramaById(paId);
 
-        // Force fetch to get fresh calculation and data
-        const [resProg, resProc] = await Promise.all([
-            axios.get(`/api/programa/${paId}`),
-            axios.get('/api/procesos')
-        ]);
-
-        if (resProg.data) {
-            programa.value = resProg.data;
-            auditorias.value = resProg.data.auditorias_especificas || [];
+        if (store.currentPrograma) {
+            programa.value = store.currentPrograma;
+            auditorias.value = store.currentPrograma.auditorias_especificas || [];
         }
-        procesos.value = Array.isArray(resProc.data) ? resProc.data : (resProc.data.data || []);
-
     } catch (e) {
         console.error('Error loading data:', e);
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar los datos', life: 3000 });
-    } finally {
-        loading.value = false;
     }
-};
-
-const getNombreProceso = (id) => {
-    if (!id) return 'General / SGC';
-    const p = procesos.value.find(proc => proc.id === id);
-    return p ? (p.proceso_nombre || p.nombre) : 'Desconocido';
 };
 
 const getEstadoBadge = (estado) => {
@@ -320,5 +372,72 @@ const goBack = () => {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+/* Skeleton Loading CSS */
+.skeleton-text {
+    height: 1rem;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-h3 {
+    height: 2rem;
+    border-radius: 8px;
+}
+
+.skeleton-small {
+    height: 0.75rem;
+}
+
+.skeleton-info-item {
+    height: 3rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-button {
+    height: 2.5rem;
+    width: 120px;
+    border-radius: 50px;
+    background: #e0e0e0;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-row {
+    height: 50px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.btn-light-primary {
+    background-color: #e7f5ff;
+    color: #1c7ed6;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-light-primary:hover {
+    background-color: #d0ebff;
+    transform: translateY(-1px);
 }
 </style>
