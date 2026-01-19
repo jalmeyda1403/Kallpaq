@@ -113,6 +113,17 @@ const routes = [
                 path: 'requerimientos/index',
                 name: 'requerimientos.index',
                 component: RequerimientosIndex,
+                beforeEnter: (to, from, next) => {
+                    // Lazy load the store to avoid pinia not installed error
+                    import('@/stores/authStore').then(({ useAuthStore }) => {
+                        const authStore = useAuthStore();
+                        if (authStore.hasRole('admin') || authStore.hasRole('especialista')) {
+                            next();
+                        } else {
+                            next({ name: 'requerimientos.mine' });
+                        }
+                    });
+                }
             },
             {
                 path: 'requerimientos/crear',
@@ -201,11 +212,17 @@ const routes = [
             {
                 path: 'bandeja-eficacia',
                 name: 'hallazgos.eficacia',
-                component: () => import('@/components/hallazgos/BandejaEficacia.vue'),
+                component: () => import('@/components/hallazgos/MisHallazgosAsignados.vue'),
             },
             {
                 path: 'hallazgos/:hallazgoId/acciones',
                 name: 'acciones.index',
+                component: () => import('@/components/acciones/PlanesAccion.vue'),
+                props: true
+            },
+            {
+                path: 'hallazgos/:hallazgoId/ejecucion',
+                name: 'acciones.ejecucion',
                 component: () => import('@/components/acciones/AccionesIndex.vue'),
                 props: true
             },
@@ -368,7 +385,7 @@ const routes = [
             {
                 path: 'administracion/asignacion-ouos',
                 name: 'administracion.asignacion-ouos.index',
-                component: () => import('@/components/administracion/AsignacionUsuariosIndex.vue'),
+                component: () => import('@/components/administracion/OUOIndex.vue'),
             },
             {
                 path: 'administracion/configuracion',

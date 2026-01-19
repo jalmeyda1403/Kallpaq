@@ -25,8 +25,8 @@
                             <h6 class="text-secondary mx-3 mt-3">ASOCIACIONES</h6>
                             <div :class="{ 'disabled-links': !hallazgoStore.isEditing }">
                                 <a class="nav-link"
-                                    :class="{ 'text-danger active': hallazgoStore.currentTab === 'ProcesosList' }"
-                                    @click="hallazgoStore.setCurrentTab('ProcesosList')" role="tab">
+                                    :class="{ 'text-danger active': hallazgoStore.currentTab === 'AsignarProcesos' }"
+                                    @click="hallazgoStore.setCurrentTab('AsignarProcesos')" role="tab">
                                     <i class="fas fa-project-diagram"></i> Asociar a Procesos
                                 </a>
                                 <a class="nav-link"
@@ -40,11 +40,7 @@
                                     @click="hallazgoStore.setCurrentTab('GestionarPlan')" role="tab">
                                     <i class="fas fa-tasks"></i> Planes de Acción
                                 </a>
-                                <a class="nav-link"
-                                    :class="{ 'text-danger active': hallazgoStore.currentTab === 'VerificacionEficacia' }"
-                                    @click="hallazgoStore.setCurrentTab('VerificacionEficacia')" role="tab">
-                                    <i class="fas fa-check-circle"></i> Verificación de Eficacia
-                                </a>
+
                             </div>
                         </div>
                     </div>
@@ -67,7 +63,7 @@ import { Modal } from 'bootstrap';
 
 // Importa todos tus componentes de las pestañas
 import HallazgoForm from './HallazgoForm.vue';
-import ProcesosList from './ProcesosList.vue';
+import AsignarProcesos from './AsignarProcesos.vue';
 import AsignarEspecialistas from './AsignarEspecialistas.vue';
 import GestionarPlan from './GestionarPlan.vue';
 
@@ -80,7 +76,7 @@ const hallazgoFormRef = ref(null); // <-- NUEVO ref para el componente HallazgoF
 
 const tabs = shallowRef({
     HallazgoForm,
-    ProcesosList,
+    AsignarProcesos,
     AsignarEspecialistas,
     GestionarPlan,
     // ... (otros componentes)

@@ -35,14 +35,14 @@
         </div>
 
         <!-- El modal de gestión se renderiza aquí cuando es llamado por el store -->
-        <PlanesAccion v-if="hallazgoStore.isGestionPlanModalOpen" />
+        <PlanesAccion v-if="hallazgoStore.isGestionPlanModalOpen" :hallazgoId="hallazgoStore.hallazgoForm.id" :embedded="true" />
     </div>
 </template>
 
 <script setup>
 
 import { useHallazgoStore } from '@/stores/hallazgoStore';
-import PlanesAccion from './PlanesAccion.vue';
+import PlanesAccion from '../acciones/PlanesAccion.vue';
 
 const hallazgoStore = useHallazgoStore();
 

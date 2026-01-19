@@ -11,8 +11,8 @@ class PlanificacionPEIController extends Controller
         $query = $request->input('query');
 
         $objetivos = PlanificacionPEI::where(function ($q) use ($query) {
-            $q->where('planificacion_pei_nombre', 'LIKE', "%{$query}%")
-                ->orWhere('planificacion_pei_cod', 'LIKE', "%{$query}%");
+            $q->where('pp_nombre', 'LIKE', "%{$query}%")
+                ->orWhere('pp_cod', 'LIKE', "%{$query}%");
         })->get();
 
         $objetivos->map(function ($objetivo) {

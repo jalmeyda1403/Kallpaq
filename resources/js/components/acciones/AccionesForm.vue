@@ -32,8 +32,8 @@
                                                     class="text-danger">*</span></label>
                                             <select v-model="form.accion_tipo" class="form-control" required>
                                                 <option value="" disabled>Seleccione un tipo...</option>
-                                                <option value="inmediata">Inmediata</option>
-                                                <option value="correctiva">Correctiva</option>
+                                                <option value="corrección">Corrección (Inmediata)</option>
+                                                <option value="acción correctiva">Acción Correctiva</option>
                                             </select>
                                         </div>
                                     </div>
@@ -157,7 +157,7 @@ const saving = ref(false);
 const form = reactive({
     id: null,
     proceso_id: '',
-    accion_tipo: '',
+    accion_tipo: 'corrección',
     accion_descripcion: '',
     accion_responsable: '',
     accion_responsable_correo: '',

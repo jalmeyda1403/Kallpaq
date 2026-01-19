@@ -40,7 +40,8 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
 
                     <!-- Documentación por Procesos -->
-                    <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }">
+                    <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }" 
+                        v-if="canViewModule('documentacion')">
                         <a href="#" class="nav-link"
                             :class="{ 'active': isModuleActive('/inventario-publico') || isModuleActive('/procesos/mapa') }"
                             @click.prevent="toggleMenu('documentacion')">
@@ -52,19 +53,19 @@
                         </a>
                         <ul class="nav nav-treeview" v-show="isMenuOpen('documentacion')">
                             <li class="nav-item">
-                                <router-link to="/inventario-publico/0" class="nav-link" active-class="active">
+                                <router-link to="/inventario-publico/0" class="nav-link" active-class="active" v-if="authStore.can('menu.documentacion.inventario')">
                                     <i class="nav-icon fas fa-book"></i>
                                     <p>Inventario de Procesos</p>
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link to="/procesos/mapa" class="nav-link" active-class="active">
+                                <router-link to="/procesos/mapa" class="nav-link" active-class="active" v-if="authStore.can('menu.documentacion.mapa')">
                                     <i class="nav-icon fas fa-sitemap"></i>
                                     <p>Mapa de Procesos</p>
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link to="/documentos/listado" class="nav-link" active-class="active">
+                                <router-link to="/documentos/listado" class="nav-link" active-class="active" v-if="authStore.can('menu.documentacion.documentos')">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de documentos</p>
                                 </router-link>
@@ -75,7 +76,7 @@
                     <template v-if="authStore.isAuthenticated">
                         <!-- Gestión de Requerimientos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('requerimientos') }"
-                            v-if="authStore.can('Gestión de Requerimientos')">
+                            v-if="canViewModule('requerimientos')">
                             <a href="#" class="nav-link"
                                 :class="{ 'active': isModuleActive('requerimientos') || isModuleActive('mis-requerimientos') }"
                                 @click.prevent="toggleMenu('requerimientos')">
@@ -87,29 +88,28 @@
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('requerimientos')">
                                 <!-- Bandeja de Requerimientos -->
-                                <li class="nav-item" v-if="hasRole('admin')">
+                                <li class="nav-item" v-if="authStore.can('menu.requerimientos.bandeja')">
                                     <router-link to="/requerimientos/index" class="nav-link" active-class="active">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de Requerimientos</p>
                                     </router-link>
                                 </li>
-                                <!-- Crear Requerimiento -->
-                                <li class="nav-item">
-                                    <router-link to="/requerimientos/crear" class="nav-link" active-class="active">
-                                        <i class="far fa-edit nav-icon"></i>
-                                        <p>Crear Requerimiento</p>
-                                    </router-link>
-                                </li>
                                 <!-- Mis Requerimientos -->
-                                <li class="nav-item"
-                                    v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'supervisor', 'admin'])">
+                                <li class="nav-item" v-if="authStore.can('menu.requerimientos.mis_requerimientos')">
                                     <router-link to="/mis-requerimientos" class="nav-link" active-class="active">
                                         <i class="fas fa-user-check nav-icon"></i>
                                         <p>Mis Requerimientos</p>
                                     </router-link>
                                 </li>
+                                <!-- Crear Requerimiento -->
+                                <li class="nav-item" v-if="authStore.can('menu.requerimientos.crear')">
+                                    <router-link to="/requerimientos/crear" class="nav-link" active-class="active">
+                                        <i class="far fa-edit nav-icon"></i>
+                                        <p>Crear Requerimiento</p>
+                                    </router-link>
+                                </li>
                                 <!-- Mis Req. Asignados (Especialista) -->
-                                <li class="nav-item" v-if="hasAnyRole(['especialista', 'admin'])">
+                                <li class="nav-item" v-if="authStore.can('menu.requerimientos.mis_asignados')">
                                     <router-link to="/requerimientos/especialista" class="nav-link"
                                         active-class="active">
                                         <i class="fas fa-user-cog nav-icon"></i>
@@ -117,7 +117,7 @@
                                     </router-link>
                                 </li>
                                 <!-- Dashboard Requerimientos -->
-                                <li class="nav-item" v-if="hasRole('admin')">
+                                <li class="nav-item" v-if="authStore.can('menu.requerimientos.dashboard')">
                                     <router-link :to="{ name: 'requerimientos.seguimiento', params: { rol: userRole } }"
                                         class="nav-link" active-class="active">
                                         <i class="fas fa-tachometer-alt fa-xs nav-icon"></i>
@@ -129,7 +129,7 @@
 
                         <!-- Gestión por Procesos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('procesos') }"
-                            v-if="authStore.can('Gestión por Procesos')">
+                            v-if="canViewModule('procesos')">
                             <a href="#" class="nav-link"
                                 :class="{ 'active': isModuleActive('/inventario-gestion') || isModuleActive('/procesos/index') || isModuleActive('/documentos') || isModuleActive('/indicadores-gestion') }"
                                 @click.prevent="toggleMenu('procesos')">
@@ -140,44 +140,44 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('procesos')">
-                                <li class="nav-item" v-if="authStore.can('Gestión por Procesos')">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.inventario')">
                                     <router-link to="/inventario-gestion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-cubes"></i>
                                         <p>Gestión del Inventario</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="authStore.can('Gestión por Procesos')">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.listado')">
                                     <router-link to="/procesos/index" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Listado de Procesos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="authStore.can('Gestión por Procesos')">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.documentos')">
                                     <router-link to="/documentos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Listado de Documentos</p>
                                     </router-link>
                                 </li>
                                 <!-- Listado de Documentos Externos (LMDE) -->
-                                <li class="nav-item" v-if="hasAnyRole(['facilitador', 'admin'])">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.lmde')">
                                     <router-link to="/lmde" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-book-open"></i>
                                         <p>Listado de Doc Externos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.indicadores')">
                                     <router-link to="/indicadores-gestion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-chart-bar"></i>
                                         <p>Listado de Indicadores</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.partes')">
                                     <router-link to="/partes" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-users"></i>
                                         <p>Partes Interesadas</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['admin', 'especialista'])">
+                                <li class="nav-item" v-if="authStore.can('menu.procesos.dashboard')">
                                     <router-link to="/dashboard/procesos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Procesos</p>
@@ -188,7 +188,7 @@
 
                         <!-- Gestión de la Mejora -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('mejora') }"
-                            v-if="authStore.can('Gestión de la Mejora')">
+                            v-if="canViewModule('mejora')">
                             <a href="#" class="nav-link"
                                 :class="{ 'active': isModuleActive('/mejora') || isModuleActive('/mis-hallazgos') || isModuleActive('/bandeja-eficacia') }"
                                 @click.prevent="toggleMenu('mejora')">
@@ -199,26 +199,25 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('mejora')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.mejora.bandeja')">
                                     <router-link to="/mejora" class="nav-link" active-class="active">
                                         <i class="fas fa-folder-open nav-icon fa-xs"></i>
                                         <p>Bandeja de SMP</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item"
-                                    v-if="hasAnyRole(['admin', 'especialista', 'facilitador', 'propietario'])">
+                                <li class="nav-item" v-if="authStore.can('menu.mejora.mis_solicitudes')">
                                     <router-link to="/mis-hallazgos" class="nav-link" active-class="active">
                                         <i class="fas fa-user-check nav-icon fa-xs"></i>
                                         <p>Mis Solicitudes de Mejora</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="hasAnyRole(['admin', 'especialista'])">
+                                <li class="nav-item" v-if="authStore.can('menu.mejora.mis_asignados')">
                                     <router-link to="/bandeja-eficacia" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tasks"></i>
-                                        <p>Verificar Eficacia Mejora</p>
+                                        <p>Mis SMP Asignadas</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.mejora.dashboard')">
                                     <router-link to="/dashboard/mejora" class="nav-link" active-class="active">
                                         <i class="fas fa-tachometer-alt fa-xs nav-icon"></i>
                                         <p>Dashboard de Mejora</p>
@@ -229,7 +228,7 @@
 
                         <!-- Gestión de Obligaciones -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('obligaciones') }"
-                            v-if="authStore.can('Gestión de Obligaciones')">
+                            v-if="canViewModule('obligaciones')">
                             <a href="#" class="nav-link"
                                 :class="{ 'active': isModuleActive('/obligaciones') || isModuleActive('/mis-obligaciones') || isModuleActive('/radar-obligaciones') }"
                                 @click.prevent="toggleMenu('obligaciones')">
@@ -240,25 +239,25 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('obligaciones')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.obligaciones.bandeja')">
                                     <router-link to="/obligaciones" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Obligaciones</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.obligaciones.mis_obligaciones')">
                                     <router-link to="/mis-obligaciones" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Obligaciones</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.obligaciones.seguimiento')">
                                     <router-link to="/obligaciones/seguimiento" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tasks"></i>
                                         <p>Seguimiento de Acciones</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.obligaciones.dashboard')">
                                     <router-link to="/dashboard/obligaciones" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Obligaciones</p>
@@ -269,7 +268,7 @@
 
                         <!-- Gestión de Riesgos -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('riesgos') }"
-                            v-if="authStore.can('Gestión de Riesgos')">
+                            v-if="canViewModule('riesgos')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/riesgos') }"
                                 @click.prevent="toggleMenu('riesgos')">
                                 <i class="nav-icon fas fa-exclamation-triangle"></i>
@@ -279,26 +278,25 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('riesgos')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.riesgos.bandeja')">
                                     <router-link to="/riesgos/index" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Bandeja de Riesgos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.riesgos.mis_asignados')">
                                     <router-link to="/riesgos/mis-riesgos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-user-check"></i>
                                         <p>Mis Riesgos Asignados</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item"
-                                    v-if="hasAnyRole(['facilitador', 'subgerente', 'especialista', 'gestor', 'admin'])">
+                                <li class="nav-item" v-if="authStore.can('menu.riesgos.eficacia')">
                                     <router-link to="/riesgos/verificacion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tasks"></i>
                                         <p>Verificar Eficacia Riesgos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.riesgos.dashboard')">
                                     <router-link to="/dashboard/riesgos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Riesgos</p>
@@ -307,43 +305,9 @@
                             </ul>
                         </li>
 
-                        <!-- Gestión de Auditorías -->
-                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }"
-                            v-if="authStore.can('Gestión de Auditorías')">
-                            <a href="#" class="nav-link"
-                                :class="{ 'active': isModuleActive('/programa') || isModuleActive('/gantt') || isModuleActive('/especifica') }"
-                                @click.prevent="toggleMenu('auditoria')">
-                                <i class="nav-icon fas fa-clipboard-check"></i>
-                                <p>
-                                    Gestión de Auditorías
-                                    <i class="right fas fa-angle-left"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview" v-show="isMenuOpen('auditoria')">
-                                <li class="nav-item">
-                                    <router-link to="/programa" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-calendar-alt"></i>
-                                        <p>Programa Anual</p>
-                                    </router-link>
-                                </li>
-                                <li class="nav-item">
-                                    <router-link to="/auditor/listado" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-user-tie"></i>
-                                        <p>Listado de Auditores</p>
-                                    </router-link>
-                                </li>
-                                <li class="nav-item">
-                                    <router-link to="/auditoria/normas" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-book"></i>
-                                        <p>Normas Auditables</p>
-                                    </router-link>
-                                </li>
-                            </ul>
-                        </li>
-
                         <!-- Gestión de Continuidad -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('continuidad') }"
-                            v-if="authStore.can('Gestión de la Continuidad')">
+                            v-if="canViewModule('continuidad')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/continuidad') }"
                                 @click.prevent="toggleMenu('continuidad')">
                                 <i class="nav-icon fas fa-shield-alt"></i>
@@ -353,31 +317,31 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('continuidad')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.continuidad.planes')">
                                     <router-link to="/continuidad/planes" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Planes de Continuidad</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.continuidad.escenarios')">
                                     <router-link to="/continuidad/escenarios" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-exclamation-circle"></i>
                                         <p>Escenarios de Riesgo</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.continuidad.activos')">
                                     <router-link to="/continuidad/activos" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-layer-group"></i>
                                         <p>Activos Críticos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.continuidad.pruebas')">
                                     <router-link to="/continuidad/pruebas" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-vial"></i>
                                         <p>Pruebas y Ejercicios</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.continuidad.dashboard')">
                                     <router-link to="/dashboard/continuidad" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Continuidad</p>
@@ -388,9 +352,9 @@
 
                         <!-- Satisfacción del Cliente -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('satisfaccion') }"
-                            v-if="authStore.can('Satisfacción del Cliente')">
+                            v-if="canViewModule('satisfaccion')">
                             <a href="#" class="nav-link"
-                                :class="{ 'active': isModuleActive('/salidas-nc') || isModuleActive('/sugerencias') || isModuleActive('/encuestas-satisfaccion') }"
+                                :class="{ 'active': isModuleActive('/satisfaccion') }"
                                 @click.prevent="toggleMenu('satisfaccion')">
                                 <i class="nav-icon fas fa-smile"></i>
                                 <p>
@@ -399,25 +363,25 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('satisfaccion')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.satisfaccion.encuestas')">
                                     <router-link to="/encuestas-satisfaccion" class="nav-link" active-class="active">
                                         <i class="fas fa-poll fa-xs nav-icon"></i>
                                         <p>Encuestas de Satisfacción</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.satisfaccion.sugerencias')">
                                     <router-link to="/sugerencias" class="nav-link" active-class="active">
                                         <i class="fas fa-lightbulb fa-xs nav-icon"></i>
                                         <p>Consolidado Sugerencias</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.satisfaccion.salidas_nc')">
                                     <router-link to="/salidas-nc" class="nav-link" active-class="active">
                                         <i class="fas fa-exclamation-triangle fa-xs nav-icon"></i>
                                         <p>Salidas No Conformes</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.satisfaccion.reporte')">
                                     <router-link to="/reportes-satisfaccion" class="nav-link" active-class="active">
                                         <i class="fas fa-file-alt fa-xs nav-icon"></i>
                                         <p>Reporte Trimestral</p>
@@ -426,9 +390,43 @@
                             </ul>
                         </li>
 
+                        <!-- Gestión de Auditorías -->
+                        <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }"
+                            v-if="canViewModule('auditoria')">
+                            <a href="#" class="nav-link"
+                                :class="{ 'active': isModuleActive('/auditoria') }"
+                                @click.prevent="toggleMenu('auditoria')">
+                                <i class="nav-icon fas fa-clipboard-check"></i>
+                                <p>
+                                    Gestión de Auditorías
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview" v-show="isMenuOpen('auditoria')">
+                                <li class="nav-item" v-if="authStore.can('menu.auditoria.programa')">
+                                    <router-link to="/programa" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-calendar-alt"></i>
+                                        <p>Programa Anual</p>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item" v-if="authStore.can('menu.auditoria.auditores')">
+                                    <router-link to="/auditor/listado" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-user-tie"></i>
+                                        <p>Listado de Auditores</p>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item" v-if="authStore.can('menu.auditoria.normas')">
+                                    <router-link to="/auditoria/normas" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-book"></i>
+                                        <p>Normas Auditables</p>
+                                    </router-link>
+                                </li>
+                            </ul>
+                        </li>
+
                         <!-- Alta Dirección -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('direccion') }"
-                            v-if="authStore.can('Alta Dirección')">
+                            v-if="canViewModule('direccion')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/revision-direccion') }"
                                 @click.prevent="toggleMenu('direccion')">
                                 <i class="nav-icon fas fa-user-tie"></i>
@@ -438,7 +436,7 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('direccion')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.direccion.revision')">
                                     <router-link to="/revision-direccion" class="nav-link" active-class="active">
                                         <i class="fas fa-calendar-check nav-icon"></i>
                                         <p>Revisión por la Dirección</p>
@@ -449,7 +447,7 @@
 
                         <!-- Administración -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('administracion') }"
-                            v-if="authStore.can('Administración')">
+                            v-if="canViewModule('administracion')">
                             <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/administracion') }"
                                 @click.prevent="toggleMenu('administracion')">
                                 <i class="nav-icon fas fa-cogs"></i>
@@ -459,33 +457,33 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" v-show="isMenuOpen('administracion')">
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.administracion.usuarios')">
                                     <router-link to="/administracion/usuarios" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-users"></i>
                                         <p>Gestionar Usuarios</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.administracion.roles')">
                                     <router-link to="/administracion/roles" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-user-tag"></i>
                                         <p>Gestionar Roles</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.administracion.asignacion')">
                                     <router-link to="/administracion/asignacion-ouos" class="nav-link"
                                         active-class="active">
                                         <i class="nav-icon fas fa-sitemap"></i>
-                                        <p>Asignación OUO-Procesos</p>
+                                        <p>Gestionar OUO</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.administracion.configuracion')">
                                     <router-link to="/administracion/configuracion" class="nav-link"
                                         active-class="active">
                                         <i class="nav-icon fas fa-file-alt"></i>
                                         <p>Configuración General</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" v-if="authStore.can('menu.administracion.dashboard')">
                                     <router-link to="/dashboard/administracion" class="nav-link" active-class="active">
                                         <i class="nav-icon fas fa-tachometer-alt"></i>
                                         <p>Dashboard Administración</p>
@@ -530,6 +528,29 @@ const isMenuOpen = (menuKey) => {
 
 const isModuleActive = (pathPrefix) => {
     return router.currentRoute.value.path.includes(pathPrefix);
+};
+
+const canViewModule = (module) => {
+    // Si tiene el permiso padre explícito
+    if (authStore.can(`menu.${module}`)) return true;
+
+    // O si tiene AL MENOS UN permiso hijo visible en el sidebar
+    const childPermissions = {
+        documentacion: ['menu.documentacion.inventario', 'menu.documentacion.mapa', 'menu.documentacion.documentos'],
+        requerimientos: ['menu.requerimientos.bandeja', 'menu.requerimientos.crear', 'menu.requerimientos.mis_requerimientos', 'menu.requerimientos.mis_asignados', 'menu.requerimientos.dashboard'],
+        procesos: ['menu.procesos.inventario', 'menu.procesos.listado', 'menu.procesos.documentos', 'menu.procesos.indicadores', 'menu.procesos.caracterizacion'],
+        mejora: ['menu.mejora.bandeja', 'menu.mejora.mis_solicitudes', 'menu.mejora.mis_asignados'],
+        obligaciones: ['menu.obligaciones.bandeja', 'menu.obligaciones.mis_obligaciones', 'menu.obligaciones.radar'],
+        riesgos: ['menu.riesgos.bandeja', 'menu.riesgos.mis_asignados'],
+        continuidad: ['menu.continuidad.planes', 'menu.continuidad.escenarios', 'menu.continuidad.activos', 'menu.continuidad.pruebas'],
+        satisfaccion: ['menu.satisfaccion.encuestas', 'menu.satisfaccion.sugerencias', 'menu.satisfaccion.salidas_nc'],
+        auditoria: ['menu.auditoria.programa', 'menu.auditoria.gantt', 'menu.auditoria.plan', 'menu.auditoria.auditores', 'menu.auditoria.normas'],
+        direccion: ['menu.direccion.revisiones'],
+        administracion: ['menu.administracion.usuarios', 'menu.administracion.roles', 'menu.administracion.asignacion', 'menu.administracion.configuracion', 'menu.administracion.dashboard']
+    };
+
+    const specificChildren = childPermissions[module] || [];
+    return specificChildren.some(permission => authStore.can(permission));
 };
 
 const logout = async () => {

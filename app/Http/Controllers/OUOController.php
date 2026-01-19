@@ -9,10 +9,80 @@ use App\Models\OuoUser;
 use App\Models\OuoUserMovimiento; // Importar el modelo OuoUserMovimiento
 use App\Models\User;
 use App\Models\Proceso;
+use App\Imports\OUOsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class OUOController extends Controller
 {
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'ouo_nombre' => 'required|string|max:255',
+            'ouo_codigo' => 'required|string|max:255|unique:ouos,ouo_codigo',
+            'ouo_padre' => 'nullable|exists:ouos,id',
+
+            'nivel_jerarquico' => 'required|integer',
+            'doc_vigencia_alta' => 'nullable|string|max:255',
+            'fecha_vigencia_inicio' => 'required|date',
+            'doc_vigencia_baja' => 'nullable|string|max:255',
+            'fecha_vigencia_fin' => 'nullable|date',
+            'estado' => 'nullable|integer',
+        ]);
+
+        if (isset($validated['estado']) && $validated['estado'] == 0) {
+            $validated['inactive_at'] = now();
+        }
+
+        $ouo = OUO::create($validated);
+
+        return response()->json($ouo, 201);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, OUO $ouo)
+    {
+        $validated = $request->validate([
+            'ouo_nombre' => 'sometimes|required|string|max:255',
+            'ouo_codigo' => 'sometimes|required|string|max:255|unique:ouos,ouo_codigo,' . $ouo->id,
+            'ouo_padre' => 'nullable|exists:ouos,id',
+            'subgerente_condicion' => 'nullable|in:encargatura,designacion,suplencia',
+            'nivel_jerarquico' => 'sometimes|required|integer',
+            'doc_vigencia_alta' => 'nullable|string|max:255',
+            'fecha_vigencia_inicio' => 'sometimes|required|date',
+            'doc_vigencia_baja' => 'nullable|string|max:255',
+            'fecha_vigencia_fin' => 'nullable|date',
+            'estado' => 'nullable|integer',
+        ]);
+
+        if (isset($validated['estado'])) {
+            $validated['inactive_at'] = $validated['estado'] == 0 ? now() : null;
+        }
+
+        $ouo->update($validated);
+
+        return response()->json($ouo);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(OUO $ouo)
+    {
+        // Check for dependencies before deleting
+        if ($ouo->users()->exists() || $ouo->procesos()->exists()) {
+             return response()->json(['message' => 'No se puede eliminar la OUO porque tiene usuarios o procesos asignados.'], 409);
+        }
+
+        $ouo->delete();
+        return response()->json(['message' => 'OUO eliminada con éxito.'], 200);
+    }
+
     public function buscar()
     {
         $ouos = OUO::select('id', 'ouo_nombre AS descripcion')->get();
@@ -53,7 +123,7 @@ class OUOController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'role_in_ouo' => 'required|in:titular,suplente,facilitador,miembro',
+            'role_in_ouo' => 'required|in:titular,encargado,facilitador,colaborador',
         ]);
 
         $userId = $request->input('user_id');
@@ -127,7 +197,7 @@ class OUOController extends Controller
     public function updateOuoUserRole(Request $request, OUO $ouo, User $user)
     {
         $request->validate([
-            'role_in_ouo' => 'required|in:titular,suplente,facilitador,miembro',
+            'role_in_ouo' => 'required|in:titular,encargado,facilitador,colaborador',
         ]);
 
         $newRole = $request->input('role_in_ouo');
@@ -171,11 +241,18 @@ class OUOController extends Controller
         // Filtering
         if ($request->has('search') && $request->input('search') != '') {
             $searchTerm = $request->input('search');
-            $query->where('ouo_nombre', 'like', '%' . $searchTerm . '%');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('ouo_nombre', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('ouo_codigo', 'like', '%' . $searchTerm . '%');
+            });
         }
 
         if ($request->has('ouo_padre_id') && $request->input('ouo_padre_id') != '') {
             $query->where('ouo_padre', $request->input('ouo_padre_id'));
+        }
+
+        if ($request->has('estado') && $request->input('estado') !== null && $request->input('estado') !== '') {
+            $query->where('estado', $request->input('estado'));
         }
 
         // Pagination
@@ -186,10 +263,18 @@ class OUOController extends Controller
             'data' => $ouos->map(function ($ouo) {
                 return [
                     'id' => $ouo->id,
+                    'ouo_codigo' => $ouo->ouo_codigo,
                     'ouo_nombre' => $ouo->ouo_nombre,
+                    'ouo_padre' => $ouo->ouo_padre, // Raw ID for form
+                    'nivel_jerarquico' => $ouo->nivel_jerarquico,
+                    'estado' => $ouo->estado,
+                    'doc_vigencia_alta' => $ouo->doc_vigencia_alta,
+                    'fecha_vigencia_inicio' => $ouo->fecha_vigencia_inicio ? $ouo->fecha_vigencia_inicio->format('Y-m-d') : null,
+                    'doc_vigencia_baja' => $ouo->doc_vigencia_baja,
+                    'fecha_vigencia_fin' => $ouo->fecha_vigencia_fin ? $ouo->fecha_vigencia_fin->format('Y-m-d') : null,
                     'ouo_padre_nombre' => $ouo->ouoPadre ? $ouo->ouoPadre->ouo_nombre : 'N/A',
                     'procesos_count' => $ouo->procesos_count,
-                    'users_count' => $ouo->users_count, // Add this line
+                    'users_count' => $ouo->users_count, 
                 ];
             })->values(),
             'current_page' => $ouos->currentPage(),
@@ -217,8 +302,7 @@ class OUOController extends Controller
      */
     public function getGestorUsersForDropdown()
     {
-        $users = User::role(['gestor', 'admin'])
-            ->select('id', 'name', 'email')
+        $users = User::select('id', 'name', 'email')
             ->orderBy('name', 'asc')
             ->get();
 
@@ -271,7 +355,7 @@ class OUOController extends Controller
     public function updateUserPivot(Request $request, OUO $ouo, User $user)
     {
         $request->validate([
-            'role_in_ouo' => 'required|in:titular,suplente,facilitador,miembro',
+            'role_in_ouo' => 'required|in:titular,encargado,facilitador,colaborador',
             'activo' => 'nullable|boolean',
         ]);
 
@@ -303,7 +387,7 @@ class OUOController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'role_in_ouo' => 'required|in:titular,suplente,facilitador,miembro',
+            'role_in_ouo' => 'required|in:titular,encargado,facilitador,colaborador',
             'activo' => 'nullable|boolean',
         ]);
 
@@ -428,5 +512,21 @@ class OUOController extends Controller
 
         $ouo->procesos()->sync($procesosToSync);
         return response()->json(['message' => 'Procesos de OUO sincronizados con éxito.']);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        Excel::import(new OUOsImport, $request->file('file'));
+
+        return response()->json(['message' => 'OUOs importadas correctamente']);
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new \App\Exports\OUOTemplateExport, 'ouos_template.xlsx');
     }
 }

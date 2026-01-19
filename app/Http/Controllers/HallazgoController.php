@@ -107,36 +107,20 @@ class HallazgoController extends Controller
         try {
             $user = Auth::user();
 
-            // 1. Verificar si el usuario tiene OUOs asignadas
-            if ($user->ouos()->count() === 0) {
-                // Buscar la OUO "Subgerencia de Modernización"
-                $ouoModernizacion = \App\Models\OUO::where('ouo_nombre', 'like', '%Subgerencia de Modernización%')->first();
+            // Obtener hallazgos de TODOS los procesos asociados a las OUOs del usuario
+            $procesoIds = $user->getAllProcesosAsociadosIds();
 
-                if ($ouoModernizacion) {
-                    // Asignar el usuario a esta OUO
-                    $user->ouos()->syncWithoutDetaching([$ouoModernizacion->id => ['activo' => 1, 'role_in_ouo' => 'miembro']]);
-                }
-            }
-
-            // Recargar las OUOs del usuario
-            $user->load('ouos');
-            $userOuos = $user->ouos;
-            $ouoIds = $userOuos->pluck('id');
-
-            // Obtener los procesos asociados a esas OUOs
-            $procesoIds = DB::table('procesos_ouo')->whereIn('id_ouo', $ouoIds)->pluck('id_proceso')->unique();
-
-            /* Lógica de dummy hallazgos eliminada por incompatibilidad con esquema (falta proceso_id) */
-
-            // Filtrar hallazgos relacionados con esos procesos
+            // Iniciar query
             $query = Hallazgo::with('procesos', 'acciones');
 
-            if ($procesoIds->isNotEmpty()) {
+            // Filtrar por los procesos permitidos (Facilitador Scope)
+            if (!empty($procesoIds)) {
                 $query->whereHas('procesos', function ($q) use ($procesoIds) {
                     $q->whereIn('procesos.id', $procesoIds);
                 });
             } else {
-                // Si no hay procesos asociados, retornar colección vacía
+                // Si no hay procesos asociados, retornar vacío (o verificar si es Admin?)
+                // Por ahora asumimos estricto control.
                 $query->whereRaw('1 = 0');
             }
 
@@ -513,13 +497,12 @@ class HallazgoController extends Controller
         $user = Auth::user();
 
         // Iniciar consulta con relaciones necesarias
-        $query = Hallazgo::with(['procesos', 'acciones', 'especialista', 'evaluaciones'])
-            ->where('hallazgo_estado', 'concluido');
+        // Iniciar consulta con relaciones necesarias
+        $query = Hallazgo::with(['procesos', 'acciones', 'especialista', 'evaluaciones']);
+           // ->where('hallazgo_estado', 'concluido'); // Comentado para mostrar todos los asignados
 
-        // Si no es admin, filtrar solo los asignados al especialista
-        if (!$user->hasRole('admin')) {
-            $query->where('especialista_id', $user->id);
-        }
+        // Filtrar SIEMPRE por el especialista actual (Mis SMP Asignadas)
+        $query->where('especialista_id', $user->id);
 
         // Aplicar filtros adicionales si existen
         if ($request->filled('descripcion')) {
@@ -681,9 +664,8 @@ class HallazgoController extends Controller
             return response()->json(['error' => 'Debe adjuntar el plan de acción firmado antes de enviar.'], 422);
         }
 
-        // Cambiar estado para indicar que el plan ha sido enviado
-        // Ajustar según flujo real: 'plan_enviado', 'respondido', 'en_validacion'
-        $hallazgo->hallazgo_estado = 'plan_enviado'; 
+        // Cambiar estado a 'aprobado' según indicación del usuario
+        $hallazgo->hallazgo_estado = 'aprobado'; 
         $hallazgo->save();
 
         return response()->json(['message' => 'Plan de acción enviado correctamente.', 'estado' => $hallazgo->hallazgo_estado]);

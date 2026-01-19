@@ -1,21 +1,25 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }">Inicio</router-link>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Bandeja de Requerimientos</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }" class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Bandeja de Requerimientos</li>
             </ol>
         </nav>
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white">
                         <div class="row align-items-center">
                             <div class="col-md-6 text-md-left">
                                 <h3 class="card-title mb-0">Lista de Requerimientos</h3>
                             </div>
-                            <div class="col-md-6 text-md-right">
+                            <div class="col-md-6 text-md-right d-flex justify-content-end align-items-center">
+                                <div class="custom-control custom-switch mr-3">
+                                    <input type="checkbox" class="custom-control-input" id="includeAllSwitch"
+                                        v-model="serverFilters.include_all" @change="fetchRequerimientos">
+                                    <label class="custom-control-label" for="includeAllSwitch">Ver Todos</label>
+                                </div>
                                 <a href="#" class="btn btn-primary btn-sm ml-1"
                                     @click.prevent="goToCreateRequerimiento">
                                     <i class="fas fa-plus-circle"></i> Nuevo Requerimiento
@@ -58,7 +62,7 @@
                                             </select>
                                         </div>
                                         <div class="col-auto">
-                                            <button type="submit" class="btn bg-dark">
+                                            <button type="submit" class="btn bg-dark text-white">
                                                 <i class="fas fa-search"></i> Buscar
                                             </button>
                                         </div>
@@ -77,7 +81,7 @@
                                 <div class="d-flex align-items-center">
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
                                         severity="secondary" @click="exportCSV($event)"
-                                        class="btn btn-secondary ml-auto">
+                                        class="btn btn-secondary ml-auto shadow-sm btn-sm">
                                     </Button>
                                 </div>
                             </template>
@@ -94,6 +98,11 @@
                             <Column field="complejidad" header="Complejidad" style="width:8%">
                             </Column>
                             <Column field="estado" header="Estado" style="width:8%">
+                                <template #body="{ data }">
+                                    <span class="badge badge-pill text-uppercase px-2" :class="getStatusBadgeClass(data.estado)">
+                                        {{ data.estado }}
+                                    </span>
+                                </template>
                             </Column>
                             <Column field="especialista.name" header="Especialista" sortable style="width:10%">
                                 <template #filter="{ filterModel, filterCallback }">
@@ -145,31 +154,23 @@
                                 <template #body="{ data }">
                                     <template v-if="!isMyRequerimientosView">
                                         <a href="#" title="Evaluar Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
+                                            class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                             @click.prevent="openModal('mostrarEvaluacion', data)">
-                                            <i class="fas fa-clipboard-check fa-lg text-primary"></i>
+                                            <i class="fas fa-clipboard-check text-primary"></i>
                                         </a>
-                                        <!-- Asignar especialista: solo activo cuando está evaluado o asignado -->
                                         <a href="#" title="Asignar Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
+                                            class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                             :class="{ 'disabled-action': !['evaluado', 'asignado'].includes(data.estado) }"
                                             @click.prevent="['evaluado', 'asignado'].includes(data.estado) && openModal('mostrarAsignacion', data)">
-                                            <i class="fas fa-user-check fa-lg" 
+                                            <i class="fas fa-user-check" 
                                                :class="['evaluado', 'asignado'].includes(data.estado) ? 'text-dark' : 'text-secondary'"></i>
                                         </a>
                                     </template>
                                     <a href="#" title="Ver Avance Requerimiento"
-                                        class="mr-1 d-inline-block btn-modal-trigger"
+                                        class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                         @click.prevent="openModal('mostrarSeguimiento', data)">
-                                        <i class="fas fa-stream text-success fa-lg"></i>
+                                        <i class="fas fa-stream text-success"></i>
                                     </a>
-                                    <template v-if="isMyRequerimientosView && data.estado === 'creado'">
-                                        <a href="#" title="Eliminar Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
-                                            @click.prevent="confirmDelete(data.id)">
-                                            <i class="fas fa-trash-alt text-danger"></i>
-                                        </a>
-                                    </template>
                                 </template>
                             </Column>
                         </DataTable>
@@ -177,7 +178,7 @@
                 </div>
             </div>
         </div>
-        <!-- Existing Vue Modals (ensure they are imported and registered) -->
+        <!-- Existing Vue Modals -->
         <requerimiento-asignacion-modal :especialistas="especialistas"
             @asignacion-guardada="fetchRequerimientos"></requerimiento-asignacion-modal>
         <requerimiento-evaluacion-modal @evaluacion-guardada="fetchRequerimientos"></requerimiento-evaluacion-modal>
@@ -198,44 +199,35 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import Dropdown from 'primevue/dropdown'; // Added Dropdown import
 import { FilterMatchMode } from 'primevue/api';
 
 // Components
-import LoadingState from '@/components/generales/LoadingState.vue';
+import Swal from 'sweetalert2';
 
 const router = useRouter();
 
 const requerimientos = ref([]);
 const especialistas = ref([]);
 const statuses = ref([]);
-const complejidadOptions = ref(['Baja', 'Media', 'Alta', 'Muy Alta']); // Capitalized for display
-const dt = ref(null); // Reference to the DataTable component
-const selectedRequerimientoId = ref(null); // Declare selectedRequerimientoId
+const dt = ref(null);
+const selectedRequerimientoId = ref(null);
 const loading = ref(false);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    id: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'proceso.proceso_nombre': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    asunto: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    complejidad: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'especialista.name': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
 });
 
 const serverFilters = ref({
     buscar_requerimiento: '',
     especialista_id: '',
     estado: '',
+    include_all: false,
 });
 
 const isMyRequerimientosView = computed(() => router.currentRoute.value.name === 'requerimientos.mine');
 
 const fetchRequerimientos = async () => {
     loading.value = true;
-    console.log('fetchRequerimientos called'); // Log to confirm function call
-    console.log('serverFilters.value:', serverFilters.value); // Log filter values
     try {
         const response = await axios.get(route('web.requerimientos.data'), {
             params: serverFilters.value
@@ -243,7 +235,6 @@ const fetchRequerimientos = async () => {
         requerimientos.value = response.data.requerimientos;
         especialistas.value = response.data.especialistas;
         statuses.value = response.data.statuses;
-        console.log('Fetched requerimientos:', requerimientos.value);
     } catch (error) {
         console.error('Error fetching requerimientos:', error);
     } finally {
@@ -251,7 +242,17 @@ const fetchRequerimientos = async () => {
     }
 };
 
-
+const getStatusBadgeClass = (estado) => {
+    switch (estado) {
+        case 'finalizado': return 'badge-success';
+        case 'vencido': return 'badge-danger';
+        case 'en_proceso': return 'badge-info';
+        case 'creado': return 'badge-secondary';
+        case 'asignado': return 'badge-primary';
+        case 'evaluado': return 'badge-warning';
+        default: return 'badge-light';
+    }
+};
 
 const openModal = (eventName, requerimiento) => {
     document.dispatchEvent(new CustomEvent(eventName, {
@@ -263,13 +264,27 @@ const goToCreateRequerimiento = () => {
     router.push({ name: 'requerimientos.create' });
 };
 
-
-
 const confirmDelete = (id) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este requerimiento?')) {
-        // Implement delete logic here, e.g., axios.delete(`/api/requerimientos/${id}`)
-        console.log('Deleting requerimiento:', id);
-    }
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await axios.delete(route('web.requerimientos.destroy', id)); 
+                fetchRequerimientos();
+                Swal.fire('¡Eliminado!', 'El requerimiento ha sido eliminado.', 'success');
+            } catch (error) {
+                Swal.fire('Error', 'Hubo un problema al eliminar.', 'error');
+            }
+        }
+    });
 };
 
 const formatDate = (dateString) => {
@@ -278,30 +293,19 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
-const exportCSV = () => {
-    dt.value.exportCSV();
-};
+const exportCSV = () => { dt.value.exportCSV(); };
 
 onMounted(() => {
-    // Check if 'mine=true' query parameter is present for 'My Requerimientos' view
-    const route = useRouter().currentRoute.value;
-    if (route.query.mine === 'true' && window.App && window.App.user && window.App.user.id) {
-        filters.value.user_id = window.App.user.id;
-    }
     fetchRequerimientos();
 });
-// Script logic will go here
 </script>
 
 <style>
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
+/* Custom loader styles */
 .p-datatable-loading-overlay {
     background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
 }
 
-/* Change the loader icon to red */
 .p-datatable-loading-icon {
     color: red !important;
     font-size: 2rem !important;
@@ -311,4 +315,15 @@ onMounted(() => {
     cursor: not-allowed;
     opacity: 0.6;
 }
+
+.breadcrumb {
+    font-size: 0.85rem;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "\f105";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #adb5bd;
+}
+.rounded-lg { border-radius: 0.75rem !important; }
 </style>

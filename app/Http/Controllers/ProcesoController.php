@@ -211,14 +211,30 @@ class ProcesoController extends Controller
     }
     public function buscar(Request $request)
     {
-        $query = $request->query('q', '');
+        $queryValue = $request->query('q', '');
+        $user = auth()->user();
+
+        $procesosQuery = Proceso::where('proceso_nombre', 'LIKE', "%{$queryValue}%");
+
+        // Si NO es admin ni especialista, filtrar por OUO
+        if (!$user->hasRole(['admin', 'especialista'])) {
+            // Obtener las OUOs del usuario
+            $userOuoIds = $user->ouos()->pluck('ouos.id');
+            
+            // Obtener IDs de procesos donde estas OUOs tienen participación
+            $allowedProcesoIds = \DB::table('procesos_ouo')
+                ->whereIn('id_ouo', $userOuoIds)
+                ->pluck('id_proceso');
+                
+            $procesosQuery->whereIn('id', $allowedProcesoIds);
+        }
+
+        // Si se pasa facilitador_id explicitamente (logica legacy o especifica), mantener exclusión si aplica
+        // Pero la logica principal de seguridad es la de arriba.
         $facilitadorId = $request->query('facilitador_id');
-
-        $procesosQuery = Proceso::where('proceso_nombre', 'LIKE', "%{$query}%");
-
         if ($facilitadorId) {
-            // Obtener los IDs de los procesos ya asociados a este facilitador
-            $associatedProcesoIds = \DB::table('proceso_facilitador')
+             // Obtener los IDs de los procesos ya asociados a este facilitador
+             $associatedProcesoIds = \DB::table('proceso_facilitador')
                 ->where('facilitador_id', $facilitadorId)
                 ->pluck('proceso_id');
 

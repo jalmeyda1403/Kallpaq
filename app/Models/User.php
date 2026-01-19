@@ -13,7 +13,11 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable;
+    use HasRoles {
+        hasPermissionTo as hasPermissionToOriginal;
+        getAllPermissions as getAllPermissionsOriginal;
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -83,6 +87,49 @@ class User extends Authenticatable
 
 
     /**
+     * Relación con permisos denegados (Blacklist).
+     */
+    public function deniedPermissions(): BelongsToMany
+    {
+        return $this->belongsToMany(\Spatie\Permission\Models\Permission::class, 'denied_permissions', 'user_id', 'permission_id');
+    }
+
+    /**
+     * Override: Verifica si el usuario tiene un permiso, considerando la blacklist.
+     */
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        // 1. Check Blacklist FIRST
+        if (is_string($permission)) {
+            $permission = \Spatie\Permission\Models\Permission::findByName($permission, $guardName ?? $this->getDefaultGuardName());
+        }
+
+        if (is_int($permission)) {
+            $permission = \Spatie\Permission\Models\Permission::findById($permission, $guardName ?? $this->getDefaultGuardName());
+        }
+
+        if ($this->deniedPermissions()->where('id', $permission->id)->exists()) {
+            return false;
+        }
+
+        // 2. Fallback to default Spatie logic (Roles + Direct Permissions)
+        return $this->hasPermissionToOriginal($permission, $guardName);
+    }
+
+    /**
+     * Override: Obtiene todos los permisos, excluyendo los denegados.
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        $permissions = $this->getAllPermissionsOriginal();
+        $denied = $this->deniedPermissions()->pluck('id')->toArray();
+
+        return $permissions->reject(function ($permission) use ($denied) {
+            return in_array($permission->id, $denied);
+        });
+    }
+
+    /**
      * Convierte el usuario a un array incluyendo sus roles.
      *
      * @return array
@@ -96,5 +143,49 @@ class User extends Authenticatable
                 'permissions' => $this->getAllPermissions()->pluck('name')
             ]
         );
+    }
+    /**
+     * Obtiene los IDs de los procesos asociados a las OUOs del usuario donde la OUO es Propietaria o Delegada.
+     * Útil para la lógica de "Facilitador".
+     */
+    public function getProcesosAsociadosIds(): array
+    {
+        // 1. Obtener las OUOs activas del usuario
+        $userOuus = $this->ouos()->wherePivot('activo', 1)->get();
+
+        $processIds = [];
+
+        foreach ($userOuus as $ouo) {
+            // 2. Para cada OUO, obtener los procesos donde es Propietario o Delegado
+            $procesos = $ouo->procesos()
+                ->wherePivot('propietario', 1)
+                ->orWherePivot('delegado', 1)
+                ->pluck('procesos.id')
+                ->toArray();
+            
+            $processIds = array_merge($processIds, $procesos);
+        }
+
+        return array_unique($processIds);
+    }
+
+    /**
+     * Obtiene los IDs de TODOS los procesos asociados a las OUOs del usuario.
+     * Sin filtrar por rol (propietario/delegado).
+     */
+    public function getAllProcesosAsociadosIds(): array
+    {
+        $userOuus = $this->ouos()->wherePivot('activo', 1)->get();
+        $processIds = [];
+
+        foreach ($userOuus as $ouo) {
+            $procesos = $ouo->procesos()
+                ->pluck('procesos.id')
+                ->toArray();
+            
+            $processIds = array_merge($processIds, $procesos);
+        }
+
+        return array_unique($processIds);
     }
 }

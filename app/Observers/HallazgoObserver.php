@@ -19,8 +19,8 @@ class HallazgoObserver
      */
     public function updated(Hallazgo $hallazgo)
     {
-        if ($hallazgo->isDirty('estado') && $hallazgo->estado == 'Aprobado') {
-            Accion::where('hallazgo_id', $hallazgo->id)->update(['estado' => 'Programada']);
+        if ($hallazgo->isDirty('hallazgo_estado') && $hallazgo->hallazgo_estado == 'aprobado') {
+            Accion::where('hallazgo_id', $hallazgo->id)->update(['accion_estado' => 'programada']);
         }
     }
 
@@ -44,8 +44,8 @@ class HallazgoObserver
             }
 
             $hallazgo->movimientos()->create([
-                'estado' => $hallazgo->hallazgo_estado,
-                'comentario' => $comentario,
+                'hm_estado' => $hallazgo->hallazgo_estado,
+                'hm_comentario' => $comentario,
                 'user_id' => \Auth::id() ?? 1, // Fallback a 1 si no hay usuario autenticado
             ]);
         }

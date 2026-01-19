@@ -45,7 +45,7 @@
               <label for="especialista_id_select" class="font-weight-bold">Especialista:</label>
               <select id="especialista_id_select" v-model="especialista_id" class="form-control">
                 <option value="">Seleccione un especialista...</option>
-                <option v-for="especialista in especialistas" :key="especialista.id" :value="especialista.id">
+                <option v-for="especialista in especialistas" :key="especialista.id" :value="especialista.user_id">
                   {{ especialista.nombres }}
                 </option>
               </select>
@@ -133,7 +133,8 @@ export default {
         .then(response => {
           this.isAsignacionExitosa = true;
           // Actualizar el especialista seleccionado para mostrarlo en el mensaje de éxito
-          this.especialistaSeleccionado = this.especialistas.find(e => e.id == this.especialista_id);
+          // Nota: this.especialista_id ahora contiene un user_id
+          this.especialistaSeleccionado = this.especialistas.find(e => e.user_id == this.especialista_id);
           this.$emit('asignacion-guardada');
         })
         .catch(error => {

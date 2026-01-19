@@ -46,19 +46,8 @@ class ObligacionController extends Controller
     {
         $user = auth()->user();
 
-        // Obtener las OUOs del usuario
-        $ouoIds = $user->ouos->pluck('id');
-
-        // Obtener los procesos asociados a esas OUOs
-        // Asumiendo que existe una relación 'procesos' en el modelo OUO
-        // Si la relación es muchos a muchos, se accede a través de la tabla pivote
-        $procesoIds = \App\Models\OUO::whereIn('id', $ouoIds)
-            ->with('procesos')
-            ->get()
-            ->pluck('procesos')
-            ->flatten()
-            ->pluck('id')
-            ->unique();
+        // Obtener IDs de procesos donde el usuario es Propietario o Delegado (Lógica Facilitador)
+        $procesoIds = $user->getProcesosAsociadosIds();
 
         $query = Obligacion::with('proceso', 'area_compliance', 'documento', 'radar')
             ->whereIn('proceso_id', $procesoIds);

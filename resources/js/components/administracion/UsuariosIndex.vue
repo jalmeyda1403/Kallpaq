@@ -16,8 +16,11 @@
                         <button class="btn btn-secondary btn-sm ml-1" @click="downloadTemplate">
                             <i class="fas fa-file-download"></i> Plantilla
                         </button>
-                        <button class="btn btn-info btn-sm ml-1" @click="triggerFileUpload">
-                            <i class="fas fa-file-upload"></i> Importar Excel
+                        <button class="btn btn-success btn-sm ml-1" @click="triggerFileUpload">
+                            <i class="fas fa-file-excel"></i> Importar Excel
+                        </button>
+                        <button class="btn btn-info btn-sm ml-1" @click="syncSpecialists">
+                            <i class="fas fa-sync"></i> Sincronizar Especialistas
                         </button>
                         <input type="file" ref="fileInput" class="d-none" accept=".xlsx, .xls, .csv"
                             @change="handleFileUpload">
@@ -34,6 +37,14 @@
                                 <div class="col">
                                     <input type="text" name="search" id="search" class="form-control"
                                         placeholder="Buscar por Nombre o Email" v-model="store.filters.search">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control" v-model="store.filters.role" @change="applyFilters">
+                                        <option value="">Todos los Roles</option>
+                                        <option v-for="role in store.roles" :key="role.id" :value="role.name">
+                                            {{ role.name }}
+                                        </option>
+                                    </select>
                                 </div>
                                 <div class="col-auto">
                                     <button type="submit" class="btn bg-dark">
@@ -94,22 +105,27 @@
                     </Column>
                     <Column header="Acciones" :exportable="false" style="width:15%">
                         <template #body="{ data }">
-                            <a href="#" title="Asignar Roles" class="mr-2 d-inline-block"
-                                @click.prevent="assignRoles(data)">
-                                <i class="fas fa-user-tag text-info fa-lg"></i>
-                            </a>
-                            <a href="#" title="Asignar Permisos" class="mr-2 d-inline-block"
-                                @click.prevent="assignPermissions(data)">
-                                <i class="fas fa-shield-alt text-warning fa-lg"></i>
-                            </a>
+                            <!-- 1. Editar -->
                             <a href="#" title="Editar Usuario" class="mr-2 d-inline-block"
                                 @click.prevent="editUser(data)">
                                 <i class="fas fa-pencil-alt text-primary fa-lg"></i>
                             </a>
+                            <!-- 2. Asignar Rol -->
+                            <a href="#" title="Asignar Roles" class="mr-2 d-inline-block"
+                                @click.prevent="assignRoles(data)">
+                                <i class="fas fa-user-tag text-info fa-lg"></i>
+                            </a>
+                            <!-- 3. Asignar Permisos -->
+                            <a href="#" title="Gestionar Permisos" class="mr-2 d-inline-block"
+                                @click.prevent="openPermissionsModal(data)">
+                                <i class="fas fa-shield-alt text-warning fa-lg"></i>
+                            </a>
+                            <!-- 4. Contraseña -->
                             <a href="#" title="Restablecer Contraseña" class="mr-2 d-inline-block"
                                 @click.prevent="resetPassword(data)">
                                 <i class="fas fa-key text-dark fa-lg"></i>
                             </a>
+                            <!-- 5. Eliminar -->
                             <a href="#" title="Eliminar Usuario" class="mr-2 d-inline-block"
                                 @click.prevent="deleteUser(data)">
                                 <i class="fas fa-trash-alt text-danger fa-lg"></i>
@@ -129,9 +145,9 @@
         <!-- RolModal -->
         <RolModal ref="rolModal" :user="currentUser" @roles-updated="onRolesUpdated" @close="onModalClosed" />
 
-        <!-- PermisosModal -->
-        <PermisosModal ref="permisosModal" :user="currentUser" @permissions-updated="onRolesUpdated"
-            @close="onModalClosed" />
+        <!-- PermisosUsuarioModal -->
+        <PermisosUsuarioModal v-if="showPermissionsModal" :user="selectedUser" @saved="onPermissionsSaved"
+            @close="showPermissionsModal = false" />
 
         <!-- Create/Edit User Modal -->
         <UsuariosForm ref="usuariosForm" :user="currentUser" @saved="onUserSaved" @close="closeUserModal" />
@@ -144,6 +160,8 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
 import { useToast } from 'primevue/usetoast';
 import Swal from 'sweetalert2';
+import axios from 'axios';
+import { route } from 'ziggy-js';
 
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
@@ -151,7 +169,7 @@ import Column from 'primevue/column';
 
 // Custom Components
 import RolModal from './RolModal.vue';
-import PermisosModal from './PermisosModal.vue';
+import PermisosUsuarioModal from './PermisosUsuarioModal.vue';
 import UsuariosForm from './UsuariosForm.vue';
 
 const router = useRouter();
@@ -161,15 +179,20 @@ const toast = useToast();
 const dt = ref(null);
 
 const rolModal = ref(null);
-const permisosModal = ref(null);
 const currentUser = ref(null);
 
 const usuariosForm = ref(null);
 const fileInput = ref(null);
 
+const selectedUser = ref(null); // Used for modals that use v-if
+const showPermissionsModal = ref(false); // State for PermisosUsuarioModal
+
 onMounted(async () => {
     try {
-        await store.fetchUsers();
+        await Promise.all([
+            store.fetchUsers(),
+            store.fetchRoles()
+        ]);
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la lista de usuarios', life: 3000 });
     }
@@ -357,6 +380,29 @@ const downloadTemplate = () => {
     store.downloadTemplate();
 };
 
+const syncSpecialists = () => {
+    Swal.fire({
+        title: '¿Sincronizar Especialistas?',
+        text: 'Se actualizará la lista de especialistas basada en los roles de usuario.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, sincronizar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                // Assuming we can use axios directly or add a method to the store. 
+                // Direct axios call for simplicity based on current context imports.
+                const response = await axios.post(route('api.admin.usuarios.sync-specialists'));
+                Swal.fire('Sincronizado', response.data.message, 'success');
+            } catch (error) {
+                console.error('Error syncing specialists:', error);
+                Swal.fire('Error', 'No se pudo sincronizar la lista de especialistas.', 'error');
+            }
+        }
+    });
+};
+
 const assignRoles = (user) => {
     currentUser.value = user;
     rolModal.value.open();
@@ -372,9 +418,13 @@ const onModalClosed = () => {
     // Do NOT call modal.close() here as it causes infinite recursion if triggered by the modal's close event
 };
 
-const assignPermissions = (user) => {
-    currentUser.value = user;
-    permisosModal.value.open();
+const openPermissionsModal = (user) => {
+    selectedUser.value = user;
+    showPermissionsModal.value = true;
+};
+
+const onPermissionsSaved = () => {
+    store.fetchUsers();
 };
 </script>
 

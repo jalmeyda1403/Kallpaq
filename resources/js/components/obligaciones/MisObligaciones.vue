@@ -7,87 +7,114 @@
             </ol>
         </nav>
 
-        <div class="card">
-            <div class="card-header">
+        <div class="card border-top-danger shadow-sm">
+            <div class="card-header bg-white border-bottom">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
-                        <h3 class="card-title mb-0">Mis Obligaciones Asignadas</h3>
+                        <h5 class="card-title text-danger mb-0 font-weight-bold">
+                            <i class="fas fa-clipboard-check mr-2"></i>Mis Obligaciones Asignadas
+                        </h5>
                     </div>
                 </div>
-                <hr>
-                <form @submit.prevent="obligacionStore.fetchMisObligaciones">
-                    <div class="form-row">
-                        <div class="col">
-                            <input type="text" v-model="obligacionStore.filters.documento" class="form-control"
-                                placeholder="Buscar por nombre documento">
+                <!-- Buscador -->
+                <div class="mt-3 p-3 bg-light rounded border">
+                    <form @submit.prevent="obligacionStore.fetchMisObligaciones">
+                        <div class="form-row">
+                            <div class="col-md-3 mb-2">
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text border-0 bg-white"><i class="fas fa-file-alt text-muted"></i></span>
+                                    </div>
+                                    <input type="text" v-model="obligacionStore.filters.documento" class="form-control border-0"
+                                        placeholder="Buscar por documento...">
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text border-0 bg-white"><i class="fas fa-project-diagram text-muted"></i></span>
+                                    </div>
+                                    <input type="text" v-model="obligacionStore.filters.proceso" class="form-control border-0"
+                                        placeholder="Buscar por proceso...">
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text border-0 bg-white"><i class="fas fa-globe text-muted"></i></span>
+                                    </div>
+                                    <select v-model="obligacionStore.filters.fuente" class="form-control border-0">
+                                        <option value="">Todas las fuentes</option>
+                                        <option value="interno">Fuente Interna</option>
+                                        <option value="externo">Fuente Externa</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-2 text-right">
+                                <button type="submit" class="btn btn-dark btn-sm btn-block">
+                                    <i class="fas fa-search mr-1"></i> Buscar
+                                </button>
+                            </div>
                         </div>
-                        <div class="col">
-                            <input type="text" v-model="obligacionStore.filters.proceso" class="form-control"
-                                placeholder="Buscar por Proceso">
-                        </div>
-                        <div class="col">
-                            <select v-model="obligacionStore.filters.fuente" class="form-control">
-                                <option value="">Buscar por fuente</option>
-                                <option value="interno">Fuente Interna</option>
-                                <option value="externo">Fuente Externa</option>
-                            </select>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn bg-dark">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
 
-            <div class="card-body">
-                <DataTable ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
+            <div class="card-body p-0">
+                <LoadingState :loading="obligacionStore.loading" />
+                
+                <DataTable v-if="!obligacionStore.loading" ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['proceso.proceso_nombre', 'documento_tecnico_normativo', 'obligacion_principal', 'consecuencia_incumplimiento', 'estado_obligacion']"
-                    :loading="obligacionStore.loading">
+                    class="p-datatable-sm table-hover" stripedRows responsiveLayout="scroll">
                     <template #header>
-                        <div class="d-flex align-items-center">
-                            <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
-                                @click="exportCSV($event)" class="btn btn-secondary ml-auto">
-                            </Button>
+                        <div class="d-flex align-items-center justify-content-end pb-2">
+                            <Button type="button" icon="pi pi-download" label="Exportar" severity="secondary"
+                                @click="exportCSV($event)" class="p-button-outlined p-button-secondary p-button-sm" />
                         </div>
                     </template>
-                    <Column field="id" header="Item" style="width:5%">
-                        <template #body="{ data, index }">
-                            {{ index + 1 }}
+                    <Column field="id" header="#" style="width:3%">
+                        <template #body="{ index }">
+                            <span class="text-muted small">{{ index + 1 }}</span>
                         </template>
                     </Column>
-                    <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:25%">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                                class="p-column-filter" placeholder="Buscar por Proceso" />
-                        </template>
-                    </Column>
-                    <Column field="documento.nombre_documento" header="Documento" style="width:20%">
+                    <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
                         <template #body="{ data }">
-                            <span v-if="data.documento">{{ data.documento.nombre_documento }}</span>
-                            <span v-else>{{ data.documento_tecnico_normativo }}</span>
+                            <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A' }}</span>
+                        </template>
+                    </Column>
+                    <Column field="documento.nombre_documento" header="Documento" style="width:25%">
+                        <template #body="{ data }">
+                            <div class="d-flex align-items-center">
+                                <i class="far fa-file-pdf text-danger mr-2 fa-lg" v-if="data.documento"></i>
+                                <span v-if="data.documento" class="text-break small">{{ data.documento.nombre_documento }}</span>
+                                <span v-else class="text-break small text-muted">{{ data.documento_tecnico_normativo || 'Sin documento' }}</span>
+                            </div>
                         </template>
                     </Column>
                     <Column field="obligacion_principal" header="Obligación Principal" style="width:25%">
-                    </Column>
-                    <Column field="consecuencia_incumplimiento" header="Consecuencia del Incumplimiento"
-                        style="width:20%">
-                    </Column>
-                    <Column field="estado_obligacion" header="Estado" style="width:10%">
                         <template #body="{ data }">
-                            <span :class="['badge', getEstadoClass(data.estado_obligacion)]">
+                            <span class="small d-block text-justify text-secondary">{{ data.obligacion_principal }}</span>
+                        </template>
+                    </Column>
+                    <Column field="consecuencia_incumplimiento" header="Consecuencia" style="width:15%">
+                         <template #body="{ data }">
+                            <span class="small text-muted">{{ data.consecuencia_incumplimiento }}</span>
+                        </template>
+                    </Column>
+                    <Column field="estado_obligacion" header="Estado" style="width:10%" sortable>
+                        <template #body="{ data }">
+                            <span :class="['badge p-2', getEstadoClass(data.estado_obligacion)]">
                                 {{ ucfirst(data.estado_obligacion) }}
                             </span>
                         </template>
                     </Column>
-                    <Column header="Acciones" :exportable="false" style="width:10%">
+                    <Column header="Acciones" :exportable="false" style="width:10%" class="text-center">
                         <template #body="{ data }">
-                            <a href="#" title="Ver Riesgos" class="btn btn-danger btn-sm mr-1"
+                           <button type="button" class="btn btn-light text-danger btn-sm" title="Ver Riesgos"
                                 @click.prevent="obligacionStore.openRiesgosModal(data.id)">
                                 <i class="fas fa-exclamation-triangle"></i>
-                            </a>
+                            </button>
                         </template>
                     </Column>
                 </DataTable>
@@ -131,6 +158,7 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
+import LoadingState from '@/components/generales/LoadingState.vue';
 
 const router = useRouter();
 const obligacionStore = useObligacionStore();
@@ -149,7 +177,7 @@ const getEstadoClass = (estado) => {
     switch (estado) {
         case 'pendiente': return 'bg-secondary';
         case 'mitigada': return 'bg-warning';
-        case 'controlada': return 'bg-primary';
+        case 'controlada': return 'bg-success';
         case 'inactiva':
         case 'suspendida': return 'bg-dark';
         case 'vencida': return 'bg-danger';
@@ -173,16 +201,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.selected {
-    background-color: #ECECEC;
+.border-top-danger {
+    border-top: 3px solid #dc3545 !important;
 }
 
-.table-obligaciones {
-    font-size: 12px;
-}
-
-.table-riesgos {
-    font-size: 12px;
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
 }
 
 .valoracion-circle {
@@ -193,44 +217,11 @@ onMounted(() => {
     margin-right: 5px;
 }
 
-.badge-success {
-    background-color: #28a745;
-}
-
-.badge-warning {
-    background-color: #ffc107;
-}
-
-.badge-danger {
-    background-color: #dc3545;
-}
-
-.badge-info {
-    background-color: #17a2b8;
-}
-
-.badge-primary {
-    background-color: #007bff;
-}
-
-.badge-secondary {
-    background-color: #6c757d;
-}
-
-.badge-dark {
-    background-color: #343a40;
-}
-
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
-}
-
-/* Change the loader icon to red */
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
-}
+.badge-success { background-color: #28a745; }
+.badge-warning { background-color: #ffc107; color: #212529; }
+.badge-danger { background-color: #dc3545; }
+.badge-info { background-color: #17a2b8; }
+.badge-primary { background-color: #007bff; }
+.badge-secondary { background-color: #6c757d; }
+.badge-dark { background-color: #343a40; }
 </style>

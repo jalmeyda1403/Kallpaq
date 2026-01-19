@@ -14,8 +14,11 @@ return new class extends Migration
         if (!Schema::hasTable('planificacion_pei')) {
             Schema::create('planificacion_pei', function (Blueprint $table) {
                 $table->id();
-                $table->string('planificacion_pei_cod');
-                $table->string('planificacion_pei_nombre');
+                $table->string('pp_cod');
+                $table->string('pp_nombre');
+                $table->string('pp_alcance');
+                $table->string('pp_documento_aprueba');
+                $table->dateTime('pp_fecha_aprueba')->nullable();
                 $table->timestamps();
             });
         }

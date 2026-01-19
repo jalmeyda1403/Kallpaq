@@ -33,7 +33,19 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="font-weight-bold custom-label">Evidencia (Opcional)</label>
+                                    <label class="font-weight-bold custom-label">
+                                        Evidencia 
+                                        <span v-if="['implementada', 'finalizada'].includes(form.accion_estado)" class="text-danger">*</span>
+                                        <span v-else class="text-muted font-weight-normal">(Opcional)</span>
+                                    </label>
+                                    
+                                     <div v-if="existingEvidence" class="alert alert-secondary d-flex justify-content-between align-items-center p-2 mb-2">
+                                        <small class="text-truncate" style="max-width: 80%;">
+                                            <i class="fas fa-file-alt mr-1"></i> Evidencia cargada
+                                        </small>
+                                        <span class="badge badge-success">Existente</span>
+                                    </div>
+
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input" id="evidenciaFile"
                                             @change="handleFileUpload" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
@@ -75,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, watch, onMounted, onUnmounted, computed } from 'vue';
 import { useHallazgoStore } from '@/stores/hallazgoStore';
 import Swal from 'sweetalert2';
 import { Modal } from 'bootstrap';
@@ -93,6 +105,7 @@ const modalInstance = ref(null);
 const saving = ref(false);
 const fileName = ref('');
 const file = ref(null);
+const existingEvidence = ref(null); // To store existing evidence path/name
 
 const form = reactive({
     id: null,
@@ -110,6 +123,14 @@ watch(() => props.show, (newVal) => {
             form.accion_fecha_fin_real = props.actionData.accion_fecha_fin_real
                 ? props.actionData.accion_fecha_fin_real.split('T')[0]
                 : new Date().toISOString().split('T')[0];
+            
+            // Check for existing evidence
+            // Assuming actionData has a field for evidence path, e.g., 'accion_ruta_evidencia'
+            if (props.actionData.accion_ruta_evidencia) {
+                 existingEvidence.value = props.actionData.accion_ruta_evidencia;
+            } else {
+                existingEvidence.value = null;
+            }
         }
         fileName.value = '';
         file.value = null;
@@ -160,6 +181,14 @@ const closeModal = () => {
 };
 
 const submitForm = async () => {
+    // Validation: Require evidence for 'implementada' or 'finalizada'
+    if (['implementada', 'finalizada'].includes(form.accion_estado)) {
+        if (!file.value && !existingEvidence.value) {
+             Swal.fire('Atención', 'Debe adjuntar una evidencia para concluir la acción.', 'warning');
+             return;
+        }
+    }
+
     saving.value = true;
     try {
         const formData = new FormData();
@@ -171,7 +200,7 @@ const submitForm = async () => {
         }
 
         if (file.value) {
-            formData.append('file', file.value); // Changed to 'file' to match backend uploadEvidencia
+            formData.append('file', file.value);
         }
 
         await store.saveAccionAvance(form.id, formData);

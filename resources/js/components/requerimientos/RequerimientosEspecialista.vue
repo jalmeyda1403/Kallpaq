@@ -1,15 +1,15 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Mis Requerimientos (Especialista)</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }" class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Mis Requerimientos Asignados</li>
             </ol>
         </nav>
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white">
                         <div class="row align-items-center">
                             <div class="col-md-6 text-md-left">
                                 <h3 class="card-title mb-0">
@@ -18,7 +18,9 @@
                                 </h3>
                             </div>
                             <div class="col-md-6 text-md-right">
-                                <span class="badge badge-info">{{ requerimientos.length }} requerimientos</span>
+                                <span class="badge badge-info shadow-sm px-3 py-2 rounded-pill">
+                                    <i class="fas fa-tasks mr-1"></i> {{ requerimientos.length }} Requerimientos
+                                </span>
                             </div>
                         </div>
                         <hr>
@@ -41,7 +43,7 @@
                                             </select>
                                         </div>
                                         <div class="col-auto">
-                                            <button type="submit" class="btn bg-dark">
+                                            <button type="submit" class="btn bg-dark text-white shadow-sm">
                                                 <i class="fas fa-search"></i> Buscar
                                             </button>
                                         </div>
@@ -59,7 +61,7 @@
                                 <div class="d-flex align-items-center">
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
                                         severity="secondary" @click="exportCSV($event)"
-                                        class="btn btn-secondary ml-auto">
+                                        class="btn btn-secondary ml-auto shadow-sm btn-sm">
                                     </Button>
                                 </div>
                             </template>
@@ -77,7 +79,7 @@
                             </Column>
                             <Column field="estado" header="Estado" style="width:8%">
                                 <template #body="{ data }">
-                                    <span class="badge" :class="getEstadoBadgeClass(data.estado)">
+                                    <span class="badge badge-pill text-uppercase px-2" :class="getEstadoBadgeClass(data.estado)">
                                         {{ data.estado }}
                                     </span>
                                 </template>
@@ -126,23 +128,23 @@
                                 <template #body="{ data }">
                                     <!-- Registrar Avance - activo solo si está asignado -->
                                     <a href="#" title="Registrar Avance"
-                                        class="mr-2 d-inline-block"
+                                        class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                         @click.prevent="data.estado === 'asignado' && openModal('abrirAvanceRequerimientoModal', data)"
                                         :class="{ 'disabled-action': data.estado !== 'asignado' }">
-                                        <i class="fas fa-edit fa-lg" :class="data.estado === 'asignado' ? 'text-primary' : 'text-secondary'"></i>
+                                        <i class="fas fa-edit" :class="data.estado === 'asignado' ? 'text-primary' : 'text-secondary'"></i>
                                     </a>
                                     <!-- Ver Seguimiento - siempre activo -->
                                     <a href="#" title="Ver Seguimiento"
-                                        class="mr-2 d-inline-block"
+                                        class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                         @click.prevent="openModal('mostrarSeguimiento', data)">
-                                        <i class="fas fa-stream fa-lg text-success"></i>
+                                        <i class="fas fa-stream text-success"></i>
                                     </a>
                                     <!-- Finalizar - activo solo si asignado y avance >= 100 -->
                                     <a href="#" title="Finalizar Requerimiento"
-                                        class="d-inline-block"
+                                        class="d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                         @click.prevent="canFinalize(data) && finalizarRequerimiento(data)"
                                         :class="{ 'disabled-action': !canFinalize(data) }">
-                                        <i class="fas fa-check-circle fa-lg" :class="canFinalize(data) ? 'text-success' : 'text-secondary'"></i>
+                                        <i class="fas fa-check-circle" :class="canFinalize(data) ? 'text-success' : 'text-secondary'"></i>
                                     </a>
                                 </template>
                             </Column>
@@ -163,6 +165,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import { Ziggy } from '../../ziggy';
+import Swal from 'sweetalert2';
 
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
@@ -178,11 +181,6 @@ const loading = ref(false);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    id: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'proceso.proceso_nombre': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    asunto: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    complejidad: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
 });
 
 const serverFilters = ref({
@@ -214,16 +212,27 @@ const openModal = (eventName, requerimiento) => {
 };
 
 const finalizarRequerimiento = async (requerimiento) => {
-    if (!confirm('¿Estás seguro de que deseas finalizar este requerimiento?')) return;
-    
-    try {
-        await axios.post(route('requerimientos.finalizar', { id: requerimiento.id }, false, Ziggy));
-        alert('Requerimiento finalizado correctamente');
-        fetchRequerimientos();
-    } catch (error) {
-        console.error('Error al finalizar requerimiento:', error);
-        alert('Error al finalizar el requerimiento');
-    }
+    Swal.fire({
+        title: '¿Finalizar Requerimiento?',
+        text: "¿Estás seguro de que deseas finalizar este requerimiento?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, finalizar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await axios.post(route('requerimientos.finalizar', { id: requerimiento.id }, false, Ziggy));
+                Swal.fire('¡Finalizado!', 'Requerimiento finalizado correctamente.', 'success');
+                fetchRequerimientos();
+            } catch (error) {
+                console.error('Error al finalizar requerimiento:', error);
+                Swal.fire('Error', 'Error al finalizar el requerimiento.', 'error');
+            }
+        }
+    });
 };
 
 const formatDate = (dateString) => {
@@ -238,13 +247,14 @@ const isOverdue = (data) => {
 };
 
 const getEstadoBadgeClass = (estado) => {
-    const classes = {
-        'creado': 'badge-secondary',
-        'asignado': 'badge-primary',
-        'finalizado': 'badge-success',
-        'desestimado': 'badge-danger',
-    };
-    return classes[estado] || 'badge-secondary';
+    switch (estado) {
+        case 'finalizado': return 'badge-success';
+        case 'vencido': return 'badge-danger';
+        case 'en_proceso': return 'badge-info';
+        case 'creado': return 'badge-secondary';
+        case 'asignado': return 'badge-primary';
+        default: return 'badge-light';
+    }
 };
 
 const getProgressBarClass = (value) => {
@@ -278,4 +288,15 @@ onMounted(() => {
     cursor: not-allowed;
     opacity: 0.6;
 }
+
+.breadcrumb {
+    font-size: 0.85rem;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "\f105";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #adb5bd;
+}
+.rounded-lg { border-radius: 0.75rem !important; }
 </style>

@@ -43,8 +43,8 @@ class AccionObserver
 
                 // Registrar el movimiento
                 $hallazgo->movimientos()->create([
-                    'estado' => 'concluido',
-                    'comentario' => 'Hallazgo concluido automáticamente al completarse todas las acciones.',
+                    'hm_estado' => 'concluido',
+                    'hm_comentario' => 'Hallazgo concluido automáticamente al completarse todas las acciones.',
                     'user_id' => auth()->id() ?? 1, // Usar el usuario actual o un ID por defecto si es una tarea programada
                 ]);
             }

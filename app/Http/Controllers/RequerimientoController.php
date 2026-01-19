@@ -31,16 +31,28 @@ class RequerimientoController extends Controller
             ->where('estado', 1)
             ->get();
 
-        $allPossibleStatuses = ['creado', 'aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'];
-        $statuses = ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido']; // Default for admin view
+        $allPossibleStatuses = ['creado', 'aprobado', 'evaluado', 'desestimado', 'asignado', 'en_proceso', 'atendido', 'finalizado', 'anulado'];
+        
+        $queryStatuses = Requerimiento::select('estado')->distinct();
+        
+        // Filter statuses based on 'include_all' or 'mine'
+        if (!($request->filled('include_all') && $request->include_all === 'true') && 
+            !($request->filled('mine') && $request->mine === 'true')) {
+            $queryStatuses->whereNotIn('estado', ['creado', 'anulado']);
+        }
+        
+        $statuses = $queryStatuses->pluck('estado');
 
-        if ($request->filled('mine') && $request->mine === 'true') {
-            $statuses = $allPossibleStatuses; // Include 'creado' for 'mine' view
+
+        $query = Requerimiento::with('proceso', 'especialista', 'avance', 'movimientos');
+
+        // Apply 'creado'/'anulado' exclusion ONLY if NOT 'include_all' AND NOT 'mine'
+        if (!($request->filled('include_all') && $request->include_all === 'true') && 
+            !($request->filled('mine') && $request->mine === 'true')) {
+            $query->whereNotIn('estado', ['creado', 'anulado']);
         }
 
-        $requerimientos = Requerimiento::with('proceso', 'especialista', 'avance', 'movimientos')
-            ->whereIn('estado', $statuses)
-            ->orderByRaw("FIELD(estado, 'creado', 'aprobado', 'desestimado', 'asignado', 'atendido')")
+        $requerimientos = $query->orderByRaw("FIELD(estado, 'creado', 'aprobado', 'evaluado', 'asignado', 'en_proceso', 'atendido', 'finalizado', 'desestimado', 'anulado')")
             ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
                 return $query->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%');
             })
@@ -51,7 +63,16 @@ class RequerimientoController extends Controller
                 return $query->where('estado', $request->estado);
             })
             ->when($request->filled('mine') && $request->mine === 'true', function ($query) {
-                return $query->where('facilitador_id', Auth::id());
+                // Obtener las OUOs a las que pertenece el usuario
+                $userOuoIds = Auth::user()->ouos()->pluck('ouos.id');
+                
+                // Obtener los IDs de los procesos asociados a esas OUOs
+                $procesoIds = DB::table('procesos_ouo')
+                    ->whereIn('id_ouo', $userOuoIds)
+                    ->pluck('id_proceso');
+
+                // Filtrar requerimientos que pertenezcan a esos procesos
+                return $query->whereIn('proceso_id', $procesoIds);
             })
             ->get();
 

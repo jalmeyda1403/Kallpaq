@@ -92,6 +92,7 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import { route } from 'ziggy-js';
 import ModalHijo from '../generales/ModalHijo.vue';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -160,7 +161,7 @@ export default {
                 });
             } catch (error) {
                 console.error('Error fetching assigned processes:', error);
-                alert('Error al cargar los procesos asignados.');
+                Swal.fire('Error', 'Error al cargar los procesos asignados.', 'error');
             } finally {
                 loading.value = false; // Set loading to false after fetching (whether success or error)
             }
@@ -218,7 +219,7 @@ export default {
                     // Immediately save this single new process to the backend
                     try {
                         if (!props.ouo || !props.ouo.id) {
-                            alert('No hay OUO seleccionada para añadir el proceso.');
+                            Swal.fire('Atención', 'No hay OUO seleccionada para añadir el proceso.', 'warning');
                             return;
                         }
 
@@ -237,62 +238,73 @@ export default {
                             }))
                         });
 
-                        alert('Proceso añadido y guardado con éxito.');
+                        Swal.fire('Guardado', 'Proceso añadido y guardado con éxito.', 'success');
                         await fetchAssignedProcesses(); // Refresh the list from DB
+                        emit('processes-updated'); // Notify parent to update counts
                     } catch (error) {
                         console.error('Error adding and saving process:', error);
-                        alert('Error al añadir y guardar el proceso.');
+                        Swal.fire('Error', 'Error al añadir y guardar el proceso.', 'error');
                         // Revert local addition if save fails
                         assignedProcesses.splice(assignedProcesses.indexOf(newProcess), 1);
                     }
                 } else {
-                    alert('Este proceso ya ha sido añadido.');
+                    Swal.fire('Atención', 'Este proceso ya ha sido añadido.', 'warning');
                 }
             }
         };
 
         const removeProcess = async (index) => {
-            if (!confirm('¿Está seguro de que desea eliminar este proceso de la asignación?')) {
-                return;
-            }
+            Swal.fire({
+                title: '¿Desvincular Proceso?',
+                text: `Se desvinculará este proceso de la OUO.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, desvincular',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const removedProcess = assignedProcesses[index];
+                    assignedProcesses.splice(index, 1); // Remove from local array
 
-            const removedProcess = assignedProcesses[index];
-            assignedProcesses.splice(index, 1); // Remove from local array
+                    try {
+                        if (!props.ouo || !props.ouo.id) {
+                            Swal.fire('Error', 'No hay OUO seleccionada para eliminar el proceso.', 'error');
+                            return;
+                        }
 
-            try {
-                if (!props.ouo || !props.ouo.id) {
-                    alert('No hay OUO seleccionada para eliminar el proceso.');
-                    return;
+                        // Send the updated list of assigned processes to the sync endpoint
+                        await axios.post(route('ouos.procesos.sync', props.ouo.id), {
+                            procesos: assignedProcesses.map(p => ({
+                                id: p.id,
+                                propietario: p.propietario,
+                                delegado: p.delegado,
+                                ejecutor: p.ejecutor,
+                                sgc: p.sgc,
+                                sgas: p.sgas,
+                                sgcm: p.sgcm,
+                                sgsi: p.sgsi,
+                                sgco: p.sgco,
+                            }))
+                        });
+
+                        Swal.fire('Desvinculado', 'Proceso eliminado de la asignación con éxito.', 'success');
+                        await fetchAssignedProcesses(); // Refresh the list from DB
+                        emit('processes-updated'); // Notify parent to update counts
+                    } catch (error) {
+                        console.error('Error removing process:', error);
+                        Swal.fire('Error', 'Error al eliminar el proceso de la asignación.', 'error');
+                        // Revert local removal if save fails
+                        assignedProcesses.splice(index, 0, removedProcess);
+                    }
                 }
-
-                // Send the updated list of assigned processes to the sync endpoint
-                await axios.post(route('ouos.procesos.sync', props.ouo.id), {
-                    procesos: assignedProcesses.map(p => ({
-                        id: p.id,
-                        propietario: p.propietario,
-                        delegado: p.delegado,
-                        ejecutor: p.ejecutor,
-                        sgc: p.sgc,
-                        sgas: p.sgas,
-                        sgcm: p.sgcm,
-                        sgsi: p.sgsi,
-                        sgco: p.sgco,
-                    }))
-                });
-
-                alert('Proceso eliminado de la asignación con éxito.');
-                await fetchAssignedProcesses(); // Refresh the list from DB
-            } catch (error) {
-                console.error('Error removing process:', error);
-                alert('Error al eliminar el proceso de la asignación.');
-                // Revert local removal if save fails
-                assignedProcesses.splice(index, 0, removedProcess);
-            }
+            });
         };
 
         const updateProcessRow = async (processToUpdate) => {
             if (!props.ouo || !props.ouo.id || !processToUpdate || !processToUpdate.id) {
-                alert('No hay OUO o proceso seleccionado para guardar los cambios.');
+                Swal.fire('Error', 'No hay OUO o proceso seleccionado para guardar los cambios.', 'error');
                 return;
             }
 
@@ -308,11 +320,11 @@ export default {
                     sgco: processToUpdate.sgco,
                 });
 
-                alert('Cambios del proceso guardados con éxito.');
+                Swal.fire('Actualizado', 'Cambios del proceso guardados con éxito.', 'success');
                 // No need to fetchAssignedProcesses as only this row was updated and local state is already correct
             } catch (error) {
                 console.error('Error saving process row:', error);
-                alert('Error al guardar los cambios del proceso.');
+                Swal.fire('Error', 'Error al guardar los cambios del proceso.', 'error');
             }
         };
 
@@ -320,6 +332,7 @@ export default {
             procesoModal,
             selectedProcess,
             assignedProcesses,
+            loading, // Ensure loading is returned
             proceso_route,
             managementSystems,
             openProcesoModal,

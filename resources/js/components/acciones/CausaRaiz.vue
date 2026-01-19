@@ -210,7 +210,13 @@ const getMetodoLabel = (metodo) => {
 
 const saveCausa = async () => {
     if (!canSave.value) {
-        Swal.fire('Atención', 'Debe completar el método y la conclusión del análisis.', 'warning');
+        Swal.fire({
+            title: 'Atención',
+            text: 'Debe completar el método y la conclusión del análisis antes de guardar.',
+            icon: 'warning',
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: 'Entendido'
+        });
         return;
     }
 

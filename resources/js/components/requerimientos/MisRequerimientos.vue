@@ -1,16 +1,15 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }">Inicio</router-link>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Mis Requerimientos</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }" class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Mis Requerimientos</li>
             </ol>
         </nav>
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white">
                         <div class="row align-items-center">
                             <div class="col-md-6 text-md-left">
                                 <h3 class="card-title mb-0">Mis Requerimientos</h3>
@@ -20,7 +19,6 @@
                                     @click.prevent="goToCreateRequerimiento">
                                     <i class="fas fa-plus-circle"></i> Nuevo Requerimiento
                                 </a>
-
                             </div>
                         </div>
                         <hr>
@@ -28,12 +26,12 @@
                             <div class="col-md-12">
                                 <form @submit.prevent="fetchRequerimientos">
                                     <div class="form-row">
-                                        <div class="col">
+                                        <div class="col-md-3">
                                             <input type="text" name="buscar_requerimiento" id="buscar_requerimiento"
                                                 class="form-control" placeholder="Buscar por Requerimiento"
                                                 v-model="serverFilters.buscar_requerimiento">
                                         </div>
-                                        <div class="col">
+                                        <div class="col-md-3">
                                             <select name="estado" id="estado" class="form-control"
                                                 v-model="serverFilters.estado">
                                                 <option value="">Todos los estados</option>
@@ -43,8 +41,8 @@
                                             </select>
                                         </div>
                                         <div class="col-auto">
-                                            <button type="submit" class="btn bg-dark">
-                                                <i class="fas fa-search"></i> Filtrar
+                                            <button type="submit" class="btn bg-dark text-white">
+                                                <i class="fas fa-search"></i> Buscar
                                             </button>
                                         </div>
                                     </div>
@@ -52,16 +50,17 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card-body">
+                        <!-- Loading State - Spinner circular rojo -->
                         <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
-                            :loading="loading" :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']">
+                            :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
+                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']"
+                            :loading="loading">
                             <template #header>
                                 <div class="d-flex align-items-center">
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
                                         severity="secondary" @click="exportCSV($event)"
-                                        class="btn btn-secondary ml-auto">
+                                        class="btn btn-secondary ml-auto shadow-sm btn-sm">
                                     </Button>
                                 </div>
                             </template>
@@ -73,98 +72,40 @@
                                         class="p-column-filter" placeholder="Buscar por Proceso" />
                                 </template>
                             </Column>
-                            <Column field="asunto" header="Asunto" style="width:15%">
+                            <Column field="asunto" header="Asunto" style="width:20%">
                             </Column>
-                            <Column field="complejidad" header="Complejidad" style="width:8%">
+                            <Column field="complejidad" header="Complejidad" style="width:10%">
                             </Column>
-                            <Column field="estado" header="Estado" style="width:8%">
-                            </Column>
-                            <Column field="especialista.name" header="Especialista" sortable style="width:10%">
-                                <template #filter="{ filterModel, filterCallback }">
-                                    <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                                        class="p-column-filter" placeholder="Buscar por Especialista" />
+                            <Column field="estado" header="Estado" style="width:10%">
+                                <template #body="{ data }">
+                                    <span class="badge badge-pill text-uppercase px-2" :class="getStatusBadgeClass(data.estado)">
+                                        {{ data.estado }}
+                                    </span>
                                 </template>
                             </Column>
-                            <Column field="fecha_asignacion" header="Fecha Asignación" sortable style="width:10%">
+                            <Column field="especialista.name" header="Especialista" sortable style="width:15%">
                                 <template #body="{ data }">
-                                    {{ formatDate(data.fecha_asignacion) }}
+                                    {{ data.especialista ? data.especialista.name : 'No asignado' }}
                                 </template>
                             </Column>
-                            <Column header="Fin Prog./Real" sortable style="width:12%">
+                            <Column header="Acciones" :exportable="false" style="width:15%">
                                 <template #body="{ data }">
-                                    <div class="small">
-                                        <div class="d-flex align-items-center mb-1">
-                                            <i class="fas fa-calendar-alt text-primary mr-1" title="Fecha Programada"></i>
-                                            <span class="text-primary font-weight-bold">{{ formatDate(data.fecha_limite) || '-' }}</span>
-                                        </div>
-                                        <div class="d-flex align-items-center" v-if="data.fecha_fin">
-                                            <i class="fas fa-calendar-check text-success mr-1" title="Fecha Real"></i>
-                                            <span class="text-success">{{ formatDate(data.fecha_fin) }}</span>
-                                        </div>
-                                        <span v-else class="text-muted small"><i class="fas fa-clock mr-1"></i>Pendiente</span>
-                                    </div>
-                                </template>
-                            </Column>
-                            <Column header="Avance" style="width:10%">
-                                <template #body="{ data }">
-                                    <template v-if="['creado', 'desestimado'].includes(data.estado)">
-                                        <span class="small text-muted">Sin avance</span>
-                                    </template>
-                                    <template v-else-if="data.avance">
-                                        <div class="small text-center">
-                                            {{ parseInt(data.avance.avance_registrado) }}%
-                                            <div class="progress progress-xs">
-                                                <div class="progress-bar bg-info"
-                                                    :style="{ width: parseInt(data.avance.avance_registrado) + '%' }">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </template>
-                                    <template v-else>
-                                        <span class="small text-muted">Sin avance</span>
-                                    </template>
-                                </template>
-                            </Column>
-                            <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
-                                bodyStyle="width: 15%">
-                                <template #body="{ data }">
-                                    <template v-if="!isMyRequerimientosView">
-                                        <a href="#" title="Evaluar Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
-                                            @click.prevent="openModal('mostrarEvaluacion', data)">
-                                            <i class="fas fa-clipboard-check text-primary"></i>
-                                        </a>
-                                        <a href="#" title="Asignar Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
-                                            @click.prevent="openModal('mostrarAsignacion', data)">
-                                            <i class="fas fa-user-check text-dark"></i>
-                                        </a>
-                                        <a href="#" title="Registrar Avance Requerimiento"
-                                            class="mr-1 d-inline-block btn-modal-trigger"
-                                            @click.prevent="openModal('abrirAvanceRequerimientoModal', data)">
-
-                                            <i class="fas fa-list-alt text-dark"></i>
-                                        </a>
-                                    </template>
                                     <a href="#" title="Ver Avance Requerimiento"
-                                        class="mr-1 d-inline-block btn-modal-trigger"
+                                        class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                         @click.prevent="openModal('mostrarSeguimiento', data)">
                                         <i class="fas fa-stream text-success"></i>
                                     </a>
-                                    <a href="#" title="Editar Requerimiento"
-                                        class="mr-1 d-inline-block btn-modal-trigger"
-                                        @click.prevent="data.estado === 'creado' && editRequerimiento(data.id)"
-                                        :class="{ 'disabled': data.estado !== 'creado' }">
-                                        <i class="fas fa-pencil-alt"
-                                            :class="{ 'text-warning': data.estado === 'creado', 'text-secondary': data.estado !== 'creado' }"></i>
-                                    </a>
-                                    <a href="#" title="Eliminar Requerimiento"
-                                        class="mr-1 d-inline-block btn-modal-trigger"
-                                        @click.prevent="data.estado === 'creado' && confirmDelete(data.id)"
-                                        :class="{ 'disabled': data.estado !== 'creado' }">
-                                        <i class="fas fa-trash-alt"
-                                            :class="{ 'text-danger': data.estado === 'creado', 'text-secondary': data.estado !== 'creado' }"></i>
-                                    </a>
+                                    <template v-if="data.estado === 'creado'">
+                                        <router-link :to="{ name: 'requerimientos.edit', params: { id: data.id } }" 
+                                            class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light" title="Editar">
+                                            <i class="fas fa-edit text-primary"></i>
+                                        </router-link>
+                                        <a href="#" title="Eliminar Requerimiento"
+                                            class="mr-2 d-inline-block btn-modal-trigger shadow-sm rounded-circle p-2 bg-light"
+                                            @click.prevent="confirmDelete(data.id)">
+                                            <i class="fas fa-trash-alt text-danger"></i>
+                                        </a>
+                                    </template>
                                 </template>
                             </Column>
                         </DataTable>
@@ -172,16 +113,15 @@
                 </div>
             </div>
         </div>
-        <!-- Existing Vue Modals (ensure they are imported and registered) -->
-
+        <!-- Existing Vue Modals -->
         <requerimiento-seguimiento-modal></requerimiento-seguimiento-modal>
-
+        <requerimiento-avance-modal @avance-guardado="fetchRequerimientos"></requerimiento-avance-modal>
         <evidencias-modal></evidencias-modal>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import { useRouter } from 'vue-router';
@@ -191,49 +131,36 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import Dropdown from 'primevue/dropdown';
 import { FilterMatchMode } from 'primevue/api';
+
+// Components
+import Swal from 'sweetalert2';
 
 const router = useRouter();
 
 const requerimientos = ref([]);
-const especialistas = ref([]); // Keep this as it might be used in modals or future filters
 const statuses = ref([]);
-const complejidadOptions = ref(['Baja', 'Media', 'Alta', 'Muy Alta']);
-const dt = ref(null); // Reference to the DataTable component
-const selectedRequerimientoId = ref(null); // Declare selectedRequerimientoId
+const dt = ref(null);
 const loading = ref(false);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    id: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'proceso.proceso_nombre': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    asunto: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    complejidad: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'especialista.name': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
 });
 
 const serverFilters = ref({
     buscar_requerimiento: '',
-    especialista_id: '', // Keep this for consistency, even if not used in form
     estado: '',
+    mine: true
 });
-
-const isMyRequerimientosView = computed(() => true); // Always true for this component
 
 const fetchRequerimientos = async () => {
     loading.value = true;
-    console.log('fetchRequerimientos called');
-    console.log('serverFilters.value:', serverFilters.value);
     try {
         const response = await axios.get(route('web.requerimientos.data'), {
-            params: { ...serverFilters.value, mine: true }
+            params: serverFilters.value
         });
         requerimientos.value = response.data.requerimientos;
-        // especialistas.value = response.data.especialistas; // This component doesn't use specialists in its form
         statuses.value = response.data.statuses;
-        console.log('Fetched requerimientos:', requerimientos.value);
     } catch (error) {
         console.error('Error fetching requerimientos:', error);
     } finally {
@@ -241,7 +168,15 @@ const fetchRequerimientos = async () => {
     }
 };
 
-
+const getStatusBadgeClass = (estado) => {
+    switch (estado) {
+        case 'finalizado': return 'badge-success';
+        case 'vencido': return 'badge-danger';
+        case 'en_proceso': return 'badge-info';
+        case 'creado': return 'badge-secondary';
+        default: return 'badge-light';
+    }
+};
 
 const openModal = (eventName, requerimiento) => {
     document.dispatchEvent(new CustomEvent(eventName, {
@@ -253,40 +188,37 @@ const goToCreateRequerimiento = () => {
     router.push({ name: 'requerimientos.create' });
 };
 
-const editRequerimiento = (id) => {
-    router.push({ name: 'requerimientos.edit', params: { id: id } });
-};
-
-
-
-const confirmDelete = async (id) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este requerimiento?')) {
-        try {
-            await axios.delete(route('web.requerimientos.destroy', id));
-            fetchRequerimientos(); // Refresh the list after deletion
-        } catch (error) {
-            console.error('Error deleting requerimiento:', error);
-            alert('Error al eliminar el requerimiento.');
+const confirmDelete = (id) => {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await axios.delete(route('web.requerimientos.destroy', id)); 
+                fetchRequerimientos();
+                Swal.fire('¡Eliminado!', 'El requerimiento ha sido eliminado.', 'success');
+            } catch (error) {
+                Swal.fire('Error', 'Hubo un problema al eliminar.', 'error');
+            }
         }
-    }
+    });
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-};
-
-const exportCSV = () => {
-    dt.value.exportCSV();
-};
+const exportCSV = () => { dt.value.exportCSV(); };
 
 onMounted(() => {
     fetchRequerimientos();
 });
 </script>
 
-<style scoped>
+<style>
 /* Custom loader styles */
 .p-datatable-loading-overlay {
     background: rgba(255, 255, 255, 0) !important;
@@ -296,4 +228,15 @@ onMounted(() => {
     color: red !important;
     font-size: 2rem !important;
 }
+
+.breadcrumb {
+    font-size: 0.85rem;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "\f105";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #adb5bd;
+}
+.rounded-lg { border-radius: 0.75rem !important; }
 </style>

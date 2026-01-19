@@ -1,653 +1,378 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
+        <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }">Inicio</router-link>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item">
+                    <router-link :to="{ name: 'requerimientos.index' }" class="text-danger font-weight-bold">Inicio</router-link>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Editar' : 'Crear Nuevo' }} Requerimiento</li>
+                <li class="breadcrumb-item">
+                    <router-link :to="{ name: 'requerimientos.mine' }" class="text-danger font-weight-bold">Mis Requerimientos</router-link>
+                </li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">
+                    {{ requerimientoId ? 'Editar' : 'Crear' }} Requerimiento
+                </li>
             </ol>
         </nav>
-        <div class="card shadow-sm">
-            <div class="card-header bg-danger">
-                <h4 class="card-title text-white mb-0">
-                    <i class="fas fa-file-alt mr-2"></i>
-                    {{ isEditMode ? 'Editar' : 'Generar' }} Requerimiento
-                </h4>
-            </div>
-            <div class="card-body">
-                <div v-if="loading" class="text-center p-5">
-                    <div class="spinner-border text-danger" role="status">
-                        <span class="sr-only">Cargando...</span>
+        <!-- Header Style like UsuariosIndex -->
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card-header bg-danger py-2 px-3">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-center">
+                            <!-- Circular Icon Container (Extra Small) -->
+                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="fas fa-file-signature text-danger" style="font-size: 0.9rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="font-weight-bold text-white mb-0">
+                                    {{ requerimientoId ? 'Editar Requerimiento' : 'Nuevo Requerimiento' }}
+                                </h5>
+                                <p class="text-white mb-0" style="opacity: 0.9; font-size: 0.75rem;">
+                                    Complete los pasos para gestionar su solicitud.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <p class="mt-3 text-muted">Cargando requerimiento...</p>
+                    <div class="col-md-5 text-md-right mt-2 mt-md-0">
+                        <button class="btn btn-link text-white text-decoration-none mr-3 px-0 btn-sm" @click="router.push({ name: 'requerimientos.mine' })">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver
+                        </button>
+                        <button v-if="requerimientoId" class="btn btn-light btn-xs px-3 shadow-sm font-weight-bold py-1" @click="printRequerimiento" style="font-size: 0.75rem;">
+                            <i class="fas fa-print mr-1 text-danger"></i> Imprimir
+                        </button>
+                    </div>
                 </div>
-                <div v-else class="row">
-                    <!-- Stepper Navigation (Left Column) -->
-                    <div class="col-md-3 stepper-sidebar">
-                        <div class="stepper-wrapper">
-                            <div class="stepper-item" 
-                                :class="{ completed: currentStep > 1, active: currentStep === 1 }"
-                                @click="goToStep(1)">
-                                <div class="step-counter">
-                                    <i v-if="currentStep > 1" class="fas fa-check"></i>
-                                    <span v-else>1</span>
-                                </div>
-                                <div class="step-info">
-                                    <div class="step-name">Información Básica</div>
-                                    <small class="step-desc">Datos generales del requerimiento</small>
-                                </div>
-                            </div>
-                            <div class="stepper-item" 
-                                :class="{ completed: currentStep > 2, active: currentStep === 2 }"
-                                @click="goToStep(2)">
-                                <div class="step-counter">
-                                    <i v-if="currentStep > 2" class="fas fa-check"></i>
-                                    <span v-else>2</span>
-                                </div>
-                                <div class="step-info">
-                                    <div class="step-name">Evaluación</div>
-                                    <small class="step-desc">Complejidad del requerimiento</small>
-                                </div>
-                            </div>
-                            <div class="stepper-item" 
-                                :class="{ completed: currentStep > 3, active: currentStep === 3 }"
-                                @click="goToStep(3)">
-                                <div class="step-counter">
-                                    <i v-if="currentStep > 3" class="fas fa-check"></i>
-                                    <span v-else>3</span>
-                                </div>
-                                <div class="step-info">
-                                    <div class="step-name">Documentos</div>
-                                    <small class="step-desc">Archivos y firma</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Complexity Summary (visible when step 2 is completed) -->
-                        <div v-if="complejidad.nivel" class="complexity-summary mt-4">
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-body p-3">
-                                    <h6 class="text-muted mb-2">
-                                        <i class="fas fa-chart-bar mr-2"></i>Resumen
-                                    </h6>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge" :class="getComplejidadBadgeClass">
-                                            {{ complejidad.nivel.toUpperCase() }}
-                                        </span>
-                                        <span class="ml-2 text-muted small">({{ complejidad.valor }} pts)</span>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="row no-gutters">
+                    <!-- Sidebar Stepper (Left) -->
+                    <div class="col-md-3 bg-light border-right min-vh-75">
+                        <div class="p-4">
+                            <div class="stepper-wrapper">
+                                <div class="stepper-item" 
+                                    :class="{ 'active': currentStep === 1, 'completed': currentStep > 1 }"
+                                    @click="goToStep(1)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 1" class="fas fa-check"></i>
+                                        <span v-else>1</span>
                                     </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Información Básica</div>
+                                        <small class="step-desc">Detalles del requerimiento</small>
+                                    </div>
+                                </div>
+                                <div class="stepper-item" 
+                                    :class="{ 'active': currentStep === 2, 'completed': currentStep > 2 }"
+                                    @click="goToStep(2)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 2" class="fas fa-check"></i>
+                                        <span v-else>2</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Evaluación</div>
+                                        <small class="step-desc">Impacto y complejidad</small>
+                                    </div>
+                                </div>
+                                <div class="stepper-item" 
+                                    :class="{ 'active': currentStep === 3, 'completed': currentStep > 3 }"
+                                    @click="goToStep(3)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 3" class="fas fa-check"></i>
+                                        <span v-else>3</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Adjuntar y Enviar</div>
+                                        <small class="step-desc">Documentación final</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Complexity Widget -->
+                            <div v-if="complejidad.nivel" class="mt-5 fade-in">
+                                <div class="card border-0 shadow-sm bg-white p-3 rounded-lg">
+                                    <h6 class="text-uppercase text-muted small font-weight-bold mb-3">Nivel de Complejidad</h6>
+                                    <div class="d-flex align-items-end justify-content-between mb-2">
+                                        <span class="h4 mb-0 font-weight-bold text-dark">{{ complejidad.valor }}</span>
+                                        <span class="text-muted small">Puntaje Total</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 6px;">
+                                        <div class="progress-bar" :class="getComplejidadBadgeClass" 
+                                            :style="{ width: (complejidad.valor / 20 * 100) + '%' }"></div>
+                                    </div>
+                                    <span class="badge badge-pill badge-block p-2" :class="getComplejidadBadgeClass">
+                                        {{ complejidad.nivel.toUpperCase() }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Stepper Content (Right Column) -->
-                    <div class="col-md-9">
-                        <div class="bs-stepper-content">
+                    <!-- Content (Right) -->
+                    <div class="col-md-9 bg-white">
+                        <div class="p-4 p-lg-5">
                             <form @submit.prevent="">
-                                <!-- Step 1: Basic Information -->
-                                <div id="step-basic-info" class="step-content" :class="{ active: currentStep === 1 }">
-                                    <div class="step-header mb-4">
-                                        <h5 class="text-dark mb-1">
-                                            <i class="fas fa-info-circle text-danger mr-2"></i>
-                                            Información Básica
-                                        </h5>
-                                        <p class="text-muted small mb-0">Complete los datos generales del requerimiento.</p>
+                                <!-- Step 1: Basic Info -->
+                                <div v-show="currentStep === 1" class="step-pane fade-in">
+                                    <div class="pane-header mb-4">
+                                        <h4 class="text-dark font-weight-bold">Información General</h4>
+                                        <p class="text-muted">Proporcione los detalles fundamentales de su solicitud.</p>
                                     </div>
 
-                                    <div class="form-group">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <label class="font-weight-bold custom-label">Asunto <span class="text-danger">*</span></label>
-                                            <small class="text-muted">{{ form.asunto ? form.asunto.length : 0 }}/100</small>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">Asunto / Título <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-lg border-2 shadow-none" 
+                                            v-model="form.asunto" placeholder="Ej: Implementación de Módulo de Facturación" :disabled="saving">
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="font-weight-bold text-dark mb-0">Descripción Detallada <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{ form.descripcion?.length || 0 }}/800</small>
                                         </div>
-                                        <input type="text" class="form-control" v-model="form.asunto" 
-                                            placeholder="Ingrese el asunto del requerimiento" maxlength="100" required>
+                                        <textarea class="form-control border-2 shadow-none" rows="4" 
+                                            v-model="form.descripcion" maxlength="800"
+                                            placeholder="Explique qué se requiere y cuál es el objetivo..." :disabled="saving"></textarea>
                                     </div>
 
-                                    <div class="form-group">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <label class="font-weight-bold custom-label">Descripción <span class="text-danger">*</span></label>
-                                            <small class="text-muted">{{ form.descripcion ? form.descripcion.length : 0 }}/500</small>
+                                    <div class="form-group mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="font-weight-bold text-dark mb-0">Justificación <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{ form.justificacion?.length || 0 }}/500</small>
                                         </div>
-                                        <textarea class="form-control" v-model="form.descripcion" rows="4"
-                                            placeholder="Describa detalladamente el requerimiento..." maxlength="500" required></textarea>
+                                        <textarea class="form-control border-2 shadow-none" rows="3" 
+                                            v-model="form.justificacion" maxlength="500"
+                                            placeholder="¿Por qué es necesario realizar este cambio?" :disabled="saving"></textarea>
                                     </div>
 
-                                    <div class="form-group">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <label class="font-weight-bold custom-label">Justificación <span class="text-danger">*</span></label>
-                                            <small class="text-muted">{{ form.justificacion ? form.justificacion.length : 0 }}/500</small>
-                                        </div>
-                                        <textarea class="form-control" v-model="form.justificacion" rows="4"
-                                            placeholder="Indique la justificación del requerimiento..." maxlength="500" required></textarea>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Proceso <span class="text-danger">*</span></label>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">Proceso Relacionado <span class="text-danger">*</span></label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" :value="form.proceso_nombre"
-                                                readonly placeholder="Seleccione un proceso...">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-light border-2 border-right-0"><i class="fas fa-project-diagram"></i></span>
+                                            </div>
+                                            <input type="text" class="form-control border-2 border-left-0 shadow-none" 
+                                                v-model="form.proceso_nombre" readonly placeholder="Busque y seleccione el proceso...">
                                             <div class="input-group-append">
-                                                <button class="btn btn-dark" type="button" @click="openProcesoModal">
-                                                    <i class="fas fa-search"></i>
-                                                </button>
-                                                <button class="btn btn-danger" type="button" v-if="form.proceso_id" @click="clearProceso">
+                                                <button v-if="form.proceso_id" class="btn btn-outline-secondary border-2" type="button" @click="clearProceso">
                                                     <i class="fas fa-times"></i>
                                                 </button>
+                                                <button class="btn btn-danger font-weight-bold px-4" type="button" @click="openProcesoModal" :disabled="saving">
+                                                    <i class="fas fa-search mr-1"></i> Buscar
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div class="step-actions mt-4 pt-3 border-top">
-                                        <button class="btn btn-danger" @click="nextStep">
-                                            Siguiente <i class="fas fa-arrow-right ml-2"></i>
-                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- Step 2: Evaluación de Complejidad -->
-                                <div id="step-evaluation" class="step-content" :class="{ active: currentStep === 2 }">
-                                    <div class="step-header mb-4">
-                                        <h5 class="text-dark mb-1">
-                                            <i class="fas fa-tasks text-danger mr-2"></i>
-                                            Evaluación de Complejidad
-                                        </h5>
-                                        <p class="text-muted small mb-0">Seleccione una opción para cada criterio para determinar el nivel de complejidad.</p>
+                                <!-- Step 2: Evaluation -->
+                                <div v-show="currentStep === 2" class="step-pane fade-in">
+                                    <div class="pane-header mb-4">
+                                        <h4 class="text-dark font-weight-bold">Evaluación de Impacto</h4>
+                                        <p class="text-muted">Responda los criterios para determinar la complejidad del requerimiento.</p>
                                     </div>
 
-                                    <!-- Pregunta 1 -->
-                                    <div class="evaluation-card">
-                                        <div class="evaluation-header">
-                                            <span class="evaluation-number">1</span>
-                                            <div class="evaluation-title">
-                                                <label class="font-weight-bold custom-label mb-0">¿Cuántas actividades principales componen el requerimiento?</label>
-                                                <small class="text-muted d-block">Evaluar la cantidad de pasos o tareas clave necesarias.</small>
+                                    <div v-for="(q, key) in options" :key="key" class="evaluation-card mb-4">
+                                        <div class="card border-0 shadow-sm bg-light rounded-lg">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex mb-3">
+                                                    <div class="avatar-sm bg-danger-light text-danger rounded-circle mr-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; min-width: 32px;">
+                                                        <span class="font-weight-bold">?</span>
+                                                    </div>
+                                                    <h6 class="text-dark font-weight-bold mb-0">
+                                                        {{ key === 'actividades' ? '¿Cuántas actividades principales componen el requerimiento?' : 
+                                                           key === 'areas' ? '¿Cuántas unidades orgánicas participan?' :
+                                                           key === 'requisitos' ? '¿Qué nivel de requisitos normativos aplica?' :
+                                                           key === 'documentacion' ? '¿Qué nivel de documentación requiere?' :
+                                                           '¿Qué nivel de impacto tiene en otros procesos?' }}
+                                                    </h6>
+                                                </div>
+                                                <div class="pl-md-5">
+                                                    <div v-for="opt in q" :key="opt.value" class="custom-control custom-radio mb-3">
+                                                        <input type="radio" :id="key + opt.value" :value="opt.value" 
+                                                            v-model="form['eval_' + key]" class="custom-control-input">
+                                                        <label class="custom-control-label text-secondary cursor-pointer" :for="key + opt.value" style="font-size: 0.9rem;">
+                                                            <span>{{ opt.value }} :</span> {{ opt.description }}
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="evaluation-options">
-                                            <div class="custom-control custom-radio" v-for="option in options.actividades" :key="'act_' + option.value">
-                                                <input type="radio" :id="'actividades_' + option.value"
-                                                    :value="option.value" v-model.number="form.eval_actividades"
-                                                    class="custom-control-input">
-                                                <label class="custom-control-label" :for="'actividades_' + option.value">{{ option.description }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Pregunta 2 -->
-                                    <div class="evaluation-card">
-                                        <div class="evaluation-header">
-                                            <span class="evaluation-number">2</span>
-                                            <div class="evaluation-title">
-                                                <label class="font-weight-bold custom-label mb-0">¿Cuántas unidades orgánicas participan?</label>
-                                                <small class="text-muted d-block">Determinar el grado de coordinación institucional necesaria.</small>
-                                            </div>
-                                        </div>
-                                        <div class="evaluation-options">
-                                            <div class="custom-control custom-radio" v-for="option in options.areas" :key="'area_' + option.value">
-                                                <input type="radio" :id="'areas_' + option.value" :value="option.value"
-                                                    v-model.number="form.eval_areas" class="custom-control-input">
-                                                <label class="custom-control-label" :for="'areas_' + option.value">{{ option.description }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Pregunta 3 -->
-                                    <div class="evaluation-card">
-                                        <div class="evaluation-header">
-                                            <span class="evaluation-number">3</span>
-                                            <div class="evaluation-title">
-                                                <label class="font-weight-bold custom-label mb-0">¿Qué nivel de requisitos normativos aplica?</label>
-                                                <small class="text-muted d-block">Medir la complejidad de normas involucradas.</small>
-                                            </div>
-                                        </div>
-                                        <div class="evaluation-options">
-                                            <div class="custom-control custom-radio" v-for="option in options.requisitos" :key="'req_' + option.value">
-                                                <input type="radio" :id="'requisitos_' + option.value"
-                                                    :value="option.value" v-model.number="form.eval_requisitos"
-                                                    class="custom-control-input">
-                                                <label class="custom-control-label" :for="'requisitos_' + option.value">{{ option.description }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Pregunta 4 -->
-                                    <div class="evaluation-card">
-                                        <div class="evaluation-header">
-                                            <span class="evaluation-number">4</span>
-                                            <div class="evaluation-title">
-                                                <label class="font-weight-bold custom-label mb-0">¿Qué nivel de documentación requiere?</label>
-                                                <small class="text-muted d-block">Evaluar la cantidad de documentos a elaborar o modificar.</small>
-                                            </div>
-                                        </div>
-                                        <div class="evaluation-options">
-                                            <div class="custom-control custom-radio" v-for="option in options.documentacion" :key="'doc_' + option.value">
-                                                <input type="radio" :id="'documentacion_' + option.value"
-                                                    :value="option.value" v-model.number="form.eval_documentacion"
-                                                    class="custom-control-input">
-                                                <label class="custom-control-label" :for="'documentacion_' + option.value">{{ option.description }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Pregunta 5 -->
-                                    <div class="evaluation-card">
-                                        <div class="evaluation-header">
-                                            <span class="evaluation-number">5</span>
-                                            <div class="evaluation-title">
-                                                <label class="font-weight-bold custom-label mb-0">¿Qué nivel de impacto tiene en otros procesos?</label>
-                                                <small class="text-muted d-block">Evalúa la influencia respecto a otros procedimientos.</small>
-                                            </div>
-                                        </div>
-                                        <div class="evaluation-options">
-                                            <div class="custom-control custom-radio" v-for="option in options.impacto" :key="'imp_' + option.value">
-                                                <input type="radio" :id="'impacto_' + option.value"
-                                                    :value="option.value" v-model.number="form.eval_impacto"
-                                                    class="custom-control-input">
-                                                <label class="custom-control-label" :for="'impacto_' + option.value">{{ option.description }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="step-actions mt-4 pt-3 border-top d-flex justify-content-between">
-                                        <button class="btn btn-outline-secondary" @click="prevStep">
-                                            <i class="fas fa-arrow-left mr-2"></i> Anterior
-                                        </button>
-                                        <button class="btn btn-danger" @click="nextStep">
-                                            Siguiente <i class="fas fa-arrow-right ml-2"></i>
-                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- Step 3: Documents and Files -->
-                                <div id="step-documents" class="step-content" :class="{ active: currentStep === 3 }">
-                                    <div class="step-header mb-4">
-                                        <h5 class="text-dark mb-1">
-                                            <i class="fas fa-file-pdf text-danger mr-2"></i>
-                                            Documentos y Archivos
-                                        </h5>
-                                        <p class="text-muted small mb-0">Genere el PDF para firma y adjunte el documento firmado.</p>
+                                <!-- Step 3: Deployment -->
+                                <div v-show="currentStep === 3" class="step-pane fade-in">
+                                    <div class="pane-header mb-4">
+                                        <h4 class="text-dark font-weight-bold">Finalizar y Enviar</h4>
+                                        <p class="text-muted">Siga los pasos finales para formalizar su solicitud.</p>
                                     </div>
 
-                                    <!-- Print Section -->
-                                    <div class="document-card mb-4">
-                                        <div class="document-card-header">
-                                            <i class="fas fa-print text-primary"></i>
-                                            <h6 class="mb-0">Imprimir Requerimiento para Firma</h6>
-                                        </div>
-                                        <div class="document-card-body">
-                                            <p class="text-muted small mb-3">
-                                                Genere la versión PDF oficial de su requerimiento. Este documento es necesario para el proceso de firma.
-                                            </p>
-                                            <button class="btn btn-primary" @click.prevent="printRequerimiento"
-                                                :disabled="!requerimientoId">
-                                                <i class="fas fa-file-pdf mr-2"></i> Imprimir PDF
-                                            </button>
-                                            <div v-if="!requerimientoId" class="alert alert-info mt-3 mb-0 p-2 small">
-                                                <i class="fas fa-info-circle mr-2"></i>
-                                                Primero debe guardar el requerimiento para poder imprimir.
+                                    <div class="alert alert-danger-light border-0 shadow-sm mb-4 p-4 rounded-lg">
+                                        <div class="d-flex">
+                                            <i class="fas fa-exclamation-circle fa-2x text-danger mr-4"></i>
+                                            <div>
+                                                <h6 class="font-weight-bold text-danger mb-1">Pasos Críticos</h6>
+                                                <p class="mb-0 text-dark small">1. Guarde su información. 2. Imprima el formato. 3. Fírmelo y escanéelo. 4. Adjúntelo aquí abajo.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Upload Section -->
-                                    <div class="document-card">
-                                        <div class="document-card-header">
-                                            <i class="fas fa-upload text-success"></i>
-                                            <h6 class="mb-0">Adjuntar Requerimiento Firmado</h6>
+                                    <div class="row mb-5">
+                                        <div class="col-md-6 mb-3 mb-md-0">
+                                            <button class="btn btn-outline-dark btn-block py-3 border-dashed" @click="saveAllData" :disabled="saving">
+                                                <i class="fas fa-save mb-2 fa-lg d-block"></i>
+                                                <span class="font-weight-bold">1. Guardar Avance</span>
+                                            </button>
                                         </div>
-                                        <div class="document-card-body">
-                                            <p class="text-muted small mb-3">
-                                                Por favor, adjunte aquí el archivo PDF del requerimiento una vez que haya sido firmado y los documentos complementarios de su requerimiento.
-                                            </p>
+                                        <div class="col-md-6">
+                                            <button class="btn btn-outline-danger btn-block py-3 border-dashed" @click="printRequerimiento" :disabled="!requerimientoId">
+                                                <i class="fas fa-print mb-2 fa-lg d-block"></i>
+                                                <span class="font-weight-bold">2. Imprimir Formato</span>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                            <div class="drop-zone"
-                                                @dragenter.prevent="onDragEnter"
-                                                @dragleave.prevent="onDragLeave"
-                                                @dragover.prevent
-                                                @drop.prevent="onDrop"
-                                                :class="{ 'drag-over': isDragging, 'disabled': !requerimientoId }"
-                                                @click="requerimientoId && openFileDialog()">
-                                                <input type="file" ref="fileInput" class="d-none"
-                                                    @change="handleFileUpload($event, 'signed_requerimiento')"
-                                                    accept=".pdf" multiple />
-                                                <div class="text-center">
-                                                    <i class="fas fa-cloud-upload-alt fa-3x" :class="requerimientoId ? 'text-muted' : 'text-secondary'"></i>
-                                                    <p class="mb-0 mt-2">Arrastra y suelta el archivo aquí, o haz clic para seleccionar.</p>
-                                                    <small class="text-muted">(Máx. 5 MB. Formato permitido: PDF)</small>
+                                    <div class="doc-upload-section mt-5">
+                                        <label class="font-weight-bold text-dark mb-3">3. Adjuntar Formato Firmado</label>
+                                        
+                                        <div v-if="uploadedFiles.length === 0" 
+                                            class="drop-zone-premium shadow-sm border-2 rounded-lg py-5 text-center cursor-pointer"
+                                            :class="{ 'bg-light': !requerimientoId, 'bg-white': requerimientoId, 'dragging': isDragging }"
+                                            @click="requerimientoId ? openFileDialog() : null"
+                                            @dragover.prevent="onDragEnter"
+                                            @dragleave.prevent="onDragLeave"
+                                            @drop.prevent="onDrop">
+                                            
+                                            <div v-if="uploadProgress > 0">
+                                                <div class="progress mb-2 mx-5" style="height: 10px;">
+                                                    <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" :style="{ width: uploadProgress + '%' }"></div>
+                                                </div>
+                                                <p class="text-muted mb-0">Subiendo archivo... {{ uploadProgress }}%</p>
+                                            </div>
+                                            <div v-else>
+                                                <i class="fas fa-file-upload fa-3x text-danger mb-3 opacity-50"></i>
+                                                <h5 class="font-weight-bold text-dark mb-1">Arraste aquí su documento firmado</h5>
+                                                <p class="text-muted small">Haz clic aquí para seleccionar desde tu computadora (PDF máximo 10MB)</p>
+                                            </div>
+                                            <input type="file" ref="fileInput" class="d-none" accept=".pdf" @change="(e) => handleFileUpload(e, 'signed_requerimiento')">
+                                        </div>
+
+                                        <!-- File List -->
+                                        <div v-else class="file-card mt-3 animate-up">
+                                            <div v-for="(file, index) in uploadedFiles" :key="index" class="card border-0 shadow-sm bg-light mb-2">
+                                                <div class="card-body p-3 d-flex align-items-center">
+                                                    <div class="icon-circle bg-white shadow-sm text-danger mr-3" style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <h6 class="mb-0 text-dark font-weight-bold text-truncate">{{ file.name }}</h6>
+                                                        <small class="text-muted">Documento Firmado PDF</small>
+                                                    </div>
+                                                    <div class="actions ml-3">
+                                                        <a :href="file.path" target="_blank" class="btn btn-sm btn-link text-primary"><i class="fas fa-eye fa-lg"></i></a>
+                                                        <button class="btn btn-sm btn-link text-danger" @click="deleteFile(index)"><i class="fas fa-trash-alt fa-lg"></i></button>
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            <div v-if="uploadProgress > 0" class="progress mt-3" style="height: 20px;">
-                                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger"
-                                                    role="progressbar"
-                                                    :style="{ width: uploadProgress + '%' }"
-                                                    :aria-valuenow="uploadProgress"
-                                                    aria-valuemin="0" aria-valuemax="100">
-                                                    {{ uploadProgress }}%
-                                                </div>
-                                            </div>
-
-                                            <div v-if="uploadedFiles.length > 0" class="mt-3">
-                                                <ul class="list-group">
-                                                    <li v-for="(file, index) in uploadedFiles" :key="index" 
-                                                        class="list-group-item d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <i class="fas fa-file-pdf text-danger mr-2"></i>
-                                                            <a :href="file.path" target="_blank">{{ file.name }}</a>
-                                                        </div>
-                                                        <button class="btn btn-sm btn-outline-danger" @click="deleteFile(index)">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </li>
-                                                </ul>
-                                            </div>
-
-                                            <div v-else-if="!uploadProgress && requerimientoId" class="alert alert-warning mt-3 mb-0 p-2 small">
-                                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                                Documento pendiente de adjuntar.
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="step-actions mt-4 pt-3 border-top d-flex justify-content-between">
-                                        <button class="btn btn-outline-secondary" @click="prevStep">
-                                            <i class="fas fa-arrow-left mr-2"></i> Anterior
-                                        </button>
-                                        <div>
-                                            <button class="btn btn-dark mr-2" @click.prevent="saveAllData" :disabled="saving">
-                                                <i class="fas fa-save mr-2"></i>
-                                                {{ saving ? 'Guardando...' : 'Guardar' }}
-                                            </button>
-                                            <button class="btn btn-danger" @click.prevent="submitRequerimiento"
-                                                :disabled="!canSubmit || saving">
-                                                <i class="fas fa-paper-plane mr-2"></i> Enviar
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </form>
+
+                            <!-- Navigation Footer -->
+                            <div class="navigation-footer d-flex justify-content-between pt-5 mt-5 border-top">
+                                <button v-if="currentStep > 1" class="btn btn-light px-4 py-2 font-weight-bold text-muted border" @click="prevStep">
+                                    <i class="fas fa-chevron-left mr-2"></i> Anterior
+                                </button>
+                                <div v-else></div>
+
+                                <div class="ml-auto">
+                                    <button v-if="currentStep < 3" class="btn btn-danger px-5 py-2 font-weight-bold shadow-sm rounded-pill" @click="nextStep">
+                                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                                    </button>
+                                    <button v-if="currentStep === 3" class="btn btn-success px-5 py-2 font-weight-bold shadow-sm rounded-pill" 
+                                        @click="submitRequerimiento" :disabled="saving || uploadedFiles.length === 0">
+                                        <i class="fas fa-paper-plane mr-2"></i> Enviar Requerimiento
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <ModalHijo ref="modalHijoProceso" :fetch-url="procesoFetchUrl" target-id="proceso_id" target-desc="proceso_nombre"
-        @update-target="handleProcesoSelected"></ModalHijo>
-    
-    <!-- Print Modal -->
-    <RequerimientoPrintModal 
-        ref="printModalRef"
-        :requerimiento="printRequerimientoData"
-        :complejidad="complejidad"
-        @close="showPrintModal = false"
-    />
+
+    <!-- Components -->
+    <ModalHijo ref="modalHijoProceso" :fetch-url="procesoFetchUrl" target-id="proceso_id" target-desc="proceso_nombre" @update-target="handleProcesoSelected" />
+    <RequerimientoPrintModal ref="printModalRef" :requerimientoId="requerimientoId" v-if="requerimientoId" />
 </template>
 
 <style scoped>
-/* Stepper Sidebar */
-.stepper-sidebar {
-    background-color: #f8f9fa;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-}
+.min-vh-75 { min-height: 75vh; }
+.cursor-pointer { cursor: pointer; }
+.border-2 { border-width: 2px !important; }
+.bg-danger-light { background-color: rgba(220, 53, 69, 0.08); }
+.alert-danger-light { background-color: #fef2f2; border: 1px solid #fee2e2; }
+.border-dashed { border-style: dashed !important; border-width: 2px !important; }
 
-.stepper-wrapper {
-    position: relative;
-}
-
+/* Stepper Original UX */
 .stepper-item {
-    position: relative;
     display: flex;
-    align-items: flex-start;
     padding: 1rem;
     margin-bottom: 0.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
 }
-
-.stepper-item:hover {
-    background-color: #e9ecef;
+.stepper-item:hover { background-color: rgba(0,0,0,0.02); }
+.stepper-item.active { 
+    background-color: white; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+    border-left-color: #dc3545;
 }
-
-.stepper-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 2rem;
-    top: 3.5rem;
-    width: 2px;
-    height: calc(100% - 1rem);
-    background-color: #dee2e6;
-}
+.stepper-item.completed .step-counter { background-color: #28a745; color: white; border-color: #28a745; }
+.stepper-item.completed .step-name { color: #28a745; }
 
 .step-counter {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    width: 34px; height: 34px; min-width: 34px;
     border-radius: 50%;
-    background-color: #dee2e6;
-    color: #6c757d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.875rem;
-    z-index: 1;
+    border: 2px solid #dee2e6;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.85rem; color: #adb5bd;
+    margin-right: 1rem;
     transition: all 0.3s ease;
 }
+.stepper-item.active .step-counter { border-color: #dc3545; color: #dc3545; background-color: white; transform: scale(1.1); }
+.step-name { font-weight: 700; font-size: 0.95rem; color: #6c757d; }
+.stepper-item.active .step-name { color: #dc3545; }
+.step-desc { color: #adb5bd; line-height: 1.2; display: block; }
 
-.step-info {
-    margin-left: 1rem;
-}
+/* Content animations */
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-.step-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #495057;
-    transition: all 0.3s ease;
-}
+/* Upload Area */
+.drop-zone-premium { border: 2px dashed #e2e8f0; transition: all 0.3s ease; }
+.drop-zone-premium:hover:not(.bg-light) { border-color: #dc3545; background-color: #fff5f5; }
+.drop-zone-premium.dragging { background-color: #fcebeb; border-color: #dc3545; }
 
-.step-desc {
-    font-size: 0.75rem;
-    color: #6c757d;
+/* Form improvements */
+.form-control-lg { border-radius: 0.6rem; }
+.form-control:focus { border-color: #dc3545; box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.1) !important; }
+.breadcrumb {
+    font-size: 0.85rem;
 }
-
-.stepper-item.active .step-counter {
-    background-color: #dc3545;
-    color: white;
-    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.2);
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "\f105";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #adb5bd;
 }
-
-.stepper-item.active .step-name {
-    color: #dc3545;
-}
-
-.stepper-item.completed .step-counter {
-    background-color: #28a745;
-    color: white;
-}
-
-.stepper-item.completed:not(:last-child)::before {
-    background-color: #28a745;
-}
-
-.stepper-item.completed .step-name {
-    color: #28a745;
-}
-
-/* Complexity Summary */
-.complexity-summary .badge {
-    font-size: 0.8rem;
-    padding: 0.5rem 0.75rem;
-}
-
-/* Step Content */
-.step-content {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.step-content.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.step-header {
-    border-bottom: 2px solid #f8f9fa;
-    padding-bottom: 1rem;
-}
-
-/* Custom Label Style */
-.custom-label {
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    color: #495057 !important;
-}
-
-/* Form Controls */
-.form-control:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
-}
-
-/* Evaluation Cards */
-.evaluation-card {
-    border: 1px solid #e9ecef;
-    border-radius: 0.5rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    background-color: #fff;
-    transition: all 0.2s ease;
-}
-
-.evaluation-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.evaluation-header {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.evaluation-number {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    border-radius: 50%;
-    background-color: #dc3545;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.8rem;
-    margin-right: 0.75rem;
-}
-
-.evaluation-title {
-    flex: 1;
-}
-
-.evaluation-options {
-    padding-left: 2.5rem;
-}
-
-.evaluation-options .custom-control {
-    margin-bottom: 0.5rem;
-}
-
-.evaluation-options .custom-control-label {
-    font-size: 0.8rem;
-    color: #495057;
-    line-height: 1.5;
-    cursor: pointer;
-}
-
-.custom-control-input:checked ~ .custom-control-label::before {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-/* Document Cards */
-.document-card {
-    border: 1px solid #e9ecef;
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
-.document-card-header {
-    background-color: #f8f9fa;
-    padding: 1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.document-card-header i {
-    font-size: 1.25rem;
-}
-
-.document-card-body {
-    padding: 1.25rem;
-}
-
-/* Drop Zone */
-.drop-zone {
-    border: 2px dashed #ced4da;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background-color: #f8f9fa;
-}
-
-.drop-zone:hover:not(.disabled) {
-    border-color: #dc3545;
-    background-color: #fff5f5;
-}
-
-.drop-zone.drag-over {
-    background-color: #fff5f5;
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
-}
-
-.drop-zone.disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* Buttons */
-.btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-.btn-danger:hover:not(:disabled) {
-    background-color: #c82333;
-    border-color: #bd2130;
-}
-
-.btn-outline-secondary:hover {
-    background-color: #6c757d;
-    color: white;
-}
-
-/* Step Actions */
-.step-actions {
-    background-color: #f8f9fa;
-    margin: 0 -1rem -1rem -1rem;
-    padding: 1rem !important;
-    border-radius: 0 0 0.5rem 0.5rem;
-}
+.rounded-lg { border-radius: 0.75rem !important; }
 </style>
 
 <script setup>
@@ -657,6 +382,7 @@ import { route } from 'ziggy-js';
 import { useRouter } from 'vue-router';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
 import RequerimientoPrintModal from './RequerimientoPrintModal.vue';
+import Swal from 'sweetalert2';
 
 const router = useRouter();
 
@@ -756,11 +482,11 @@ const complejidad = computed(() => {
 
 const getComplejidadBadgeClass = computed(() => {
     switch (complejidad.value.nivel) {
-        case 'baja': return 'badge-success';
-        case 'media': return 'badge-info';
-        case 'alta': return 'badge-warning';
-        case 'muy alta': return 'badge-danger';
-        default: return 'badge-secondary';
+        case 'baja': return 'bg-success';
+        case 'media': return 'bg-info';
+        case 'alta': return 'bg-warning text-dark';
+        case 'muy alta': return 'bg-danger';
+        default: return 'bg-secondary';
     }
 });
 
@@ -769,21 +495,6 @@ const canSubmit = computed(() => {
 });
 
 const procesoFetchUrl = computed(() => route('procesos.buscar'));
-
-const printRequerimientoData = computed(() => ({
-    id: requerimientoId.value,
-    asunto: form.asunto,
-    descripcion: form.descripcion,
-    justificacion: form.justificacion,
-    proceso_nombre: form.proceso_nombre,
-    eval_actividades: form.eval_actividades,
-    eval_areas: form.eval_areas,
-    eval_requisitos: form.eval_requisitos,
-    eval_documentacion: form.eval_documentacion,
-    eval_impacto: form.eval_impacto,
-    fecha_creacion: new Date().toISOString(),
-    estado: 'Borrador'
-}));
 
 const fetchProcesos = async () => {
     try {
@@ -830,7 +541,6 @@ const onDrop = (event) => {
     }
 };
 
-// Navigation functions - free navigation without saving
 const goToStep = (step) => {
     if (step >= 1 && step <= 3) {
         currentStep.value = step;
@@ -849,10 +559,9 @@ const prevStep = () => {
     }
 };
 
-// Validate all steps
 const validateStep1 = () => {
     if (!form.asunto || !form.descripcion || !form.justificacion || !form.proceso_id) {
-        return { valid: false, message: 'Complete todos los campos de Información Básica.' };
+        return { valid: false, message: 'Complete todos los campos obligatorios (*).' };
     }
     return { valid: true };
 };
@@ -866,25 +575,22 @@ const validateStep2 = () => {
         form.eval_impacto
     ];
     if (evaluationFields.some(field => field === null)) {
-        return { valid: false, message: 'Complete todas las preguntas de evaluación.' };
+        return { valid: false, message: 'Responda todas las preguntas de evaluación.' };
     }
     return { valid: true };
 };
 
-// Save all data at once
 const saveAllData = async () => {
-    // Validate Step 1
     const step1 = validateStep1();
     if (!step1.valid) {
-        alert(step1.message);
+        Swal.fire({ icon: 'warning', title: 'Atención', text: step1.message });
         currentStep.value = 1;
         return false;
     }
 
-    // Validate Step 2
     const step2 = validateStep2();
     if (!step2.valid) {
-        alert(step2.message);
+        Swal.fire({ icon: 'warning', title: 'Atención', text: step2.message });
         currentStep.value = 2;
         return false;
     }
@@ -892,7 +598,6 @@ const saveAllData = async () => {
     saving.value = true;
 
     try {
-        // Save basic info
         const basicPayload = {
             asunto: form.asunto,
             descripcion: form.descripcion,
@@ -908,7 +613,6 @@ const saveAllData = async () => {
         }
         requerimientoId.value = response.data.requerimiento_id;
 
-        // Save evaluation
         const evalPayload = {
             actividades: form.eval_actividades,
             areas: form.eval_areas,
@@ -922,11 +626,11 @@ const saveAllData = async () => {
 
         await axios.post(route('requerimiento.grabarEvaluacion', { id: requerimientoId.value }), evalPayload);
         
-        alert('Requerimiento guardado con éxito.');
+        Swal.fire({ icon: 'success', title: 'Guardado', text: 'Información guardada correctamente.' });
         return true;
     } catch (error) {
         console.error('Error al guardar:', error);
-        alert(error.response?.data?.message || 'Error al guardar el requerimiento.');
+        Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.message || 'Error al procesar la solicitud.' });
         return false;
     } finally {
         saving.value = false;
@@ -934,7 +638,6 @@ const saveAllData = async () => {
 };
 
 const printRequerimiento = async () => {
-    // Abrir el modal de impresión
     if (printModalRef.value) {
         printModalRef.value.open();
     }
@@ -956,11 +659,9 @@ const handleFileUpload = async (event, documentType) => {
 
         try {
             const response = await axios.post(route('requerimientos.uploadDocument', { id: requerimientoId.value }), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-                onUploadProgress: (progressEvent) => {
-                    uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (p) => {
+                    uploadProgress.value = Math.round((p.loaded * 100) / p.total);
                 },
             });
             if (documentType === 'signed_requerimiento') {
@@ -971,12 +672,10 @@ const handleFileUpload = async (event, documentType) => {
                 uploadedFiles.value.push(newFile);
                 form.ruta_archivo_requerimiento = JSON.stringify(uploadedFiles.value);
             }
-            setTimeout(() => {
-                uploadProgress.value = 0;
-            }, 1500);
+            setTimeout(() => { uploadProgress.value = 0; }, 1500);
         } catch (error) {
-            console.error('Error al subir el documento:', error);
-            alert('Error al subir el documento.');
+            console.error('Error al subir:', error);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Error al subir el archivo.' });
             uploadProgress.value = 0;
         }
     }
@@ -993,28 +692,74 @@ const deleteFile = async (index) => {
         uploadedFiles.value.splice(index, 1);
         form.ruta_archivo_requerimiento = uploadedFiles.value.length > 0 ? JSON.stringify(uploadedFiles.value) : '';
     } catch (error) {
-        console.error('Error al eliminar el documento:', error);
-        alert('Error al eliminar el documento.');
+        console.error('Error al eliminar:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Error al eliminar el archivo.' });
     }
 };
 
 const submitRequerimiento = async () => {
     if (!requerimientoId.value) {
-        alert('Primero debe guardar el requerimiento.');
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'Primero guarde el requerimiento.' });
         return;
     }
     if (uploadedFiles.value.length === 0) {
-        alert('Debe adjuntar el requerimiento firmado antes de enviar.');
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'Adjunte el requerimiento firmado.' });
         return;
     }
 
     try {
         const response = await axios.post(route('requerimientos.submitForEvaluation', { id: requerimientoId.value }));
-        alert(response.data.message);
-        router.push({ name: 'requerimientos.index' });
+        Swal.fire({ icon: 'success', title: 'Enviado', text: response.data.message }).then(() => {
+             router.push({ name: 'requerimientos.mine' });
+        });
     } catch (error) {
-        console.error('Error al enviar el requerimiento:', error);
-        alert('Error al enviar el requerimiento.');
+        console.error('Error al enviar:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Error al enviar el requerimiento.' });
+    }
+};
+
+const fetchRequerimientoDetails = async (id) => {
+    try {
+        const response = await axios.get(route('requerimientos.show', { id: id }));
+        const data = response.data;
+        const formData = {
+            asunto: data.asunto,
+            descripcion: data.descripcion,
+            justificacion: data.justificacion,
+            proceso_id: data.proceso_id,
+            ruta_archivo_requerimiento: data.ruta_archivo_requerimiento || '',
+        };
+        if (data.proceso_id) {
+            const proceso = procesos.value.find(p => p.id === data.proceso_id);
+            if (proceso) formData.proceso_nombre = proceso.descripcion;
+        }
+        if (data.ruta_archivo_requerimiento) {
+            try {
+                const files = JSON.parse(data.ruta_archivo_requerimiento);
+                if (Array.isArray(files)) {
+                    uploadedFiles.value = files.map(f => ({
+                        name: f.name,
+                        path: f.path.startsWith('/storage/') ? f.path : '/storage/' + f.path
+                    }));
+                }
+            } catch (e) {
+                if (typeof data.ruta_archivo_requerimiento === 'string') {
+                    const name = data.ruta_archivo_requerimiento.split('/').pop();
+                    uploadedFiles.value = [{ name, path: '/storage/' + data.ruta_archivo_requerimiento }];
+                }
+            }
+        }
+        if (data.evaluacion) {
+            form.eval_actividades = data.evaluacion.num_actividades ? Number(data.evaluacion.num_actividades) : null;
+            form.eval_areas = data.evaluacion.num_areas ? Number(data.evaluacion.num_areas) : null;
+            form.eval_requisitos = data.evaluacion.num_requisitos ? Number(data.evaluacion.num_requisitos) : null;
+            form.eval_documentacion = data.evaluacion.nivel_documentacion ? Number(data.evaluacion.nivel_documentacion) : null;
+            form.eval_impacto = data.evaluacion.impacto_requerimiento ? Number(data.evaluacion.impacto_requerimiento) : null;
+        }
+        Object.assign(form, formData);
+    } catch (error) {
+        console.error('Error details:', error);
+        router.push({ name: 'requerimientos.index' });
     }
 };
 
@@ -1027,58 +772,4 @@ onMounted(async () => {
     }
     loading.value = false;
 });
-
-const fetchRequerimientoDetails = async (id) => {
-    try {
-        const response = await axios.get(route('requerimientos.show', { id: id }));
-        const data = response.data;
-
-        const formData = {
-            asunto: data.asunto,
-            descripcion: data.descripcion,
-            justificacion: data.justificacion,
-            proceso_id: data.proceso_id,
-            ruta_archivo_requerimiento: data.ruta_archivo_requerimiento || '',
-        };
-
-        if (data.proceso_id) {
-            const proceso = procesos.value.find(p => p.id === data.proceso_id);
-            if (proceso) {
-                formData.proceso_nombre = proceso.descripcion;
-            }
-        }
-
-        if (data.ruta_archivo_requerimiento) {
-            try {
-                const files = JSON.parse(data.ruta_archivo_requerimiento);
-                if (Array.isArray(files)) {
-                    uploadedFiles.value = files.map(file => ({
-                        name: file.name,
-                        path: file.path.startsWith('/storage/') ? file.path : '/storage/' + file.path
-                    }));
-                }
-            } catch (error) {
-                if (typeof data.ruta_archivo_requerimiento === 'string') {
-                    const fileName = data.ruta_archivo_requerimiento.split('/').pop();
-                    const filePath = data.ruta_archivo_requerimiento.startsWith('/storage/') ? data.ruta_archivo_requerimiento : '/storage/' + data.ruta_archivo_requerimiento;
-                    uploadedFiles.value = [{ name: fileName, path: filePath }];
-                }
-            }
-        }
-
-        if (data.evaluacion) {
-            formData.eval_actividades = data.evaluacion.num_actividades ? Number(data.evaluacion.num_actividades) : null;
-            formData.eval_areas = data.evaluacion.num_areas ? Number(data.evaluacion.num_areas) : null;
-            formData.eval_requisitos = data.evaluacion.num_requisitos ? Number(data.evaluacion.num_requisitos) : null;
-            formData.eval_documentacion = data.evaluacion.nivel_documentacion ? Number(data.evaluacion.nivel_documentacion) : null;
-            formData.eval_impacto = data.evaluacion.impacto_requerimiento ? Number(data.evaluacion.impacto_requerimiento) : null;
-        }
-
-        Object.assign(form, formData);
-    } catch (error) {
-        console.error('Error fetching requerimiento details:', error);
-        alert('Error al cargar los detalles del requerimiento.');
-        router.push({ name: 'requerimientos.index' });
-    }
-};
 </script>

@@ -23,13 +23,7 @@
             <span class="mb-0 small">Solo se puede evaluar requerimientos con estado "Aprobado" o "Evaluado".</span>
           </div>
           <!-- 2. Mensajes de Estado (Éxito/Error al guardar) -->
-          <div v-if="mensaje">
-            <div class="alert d-flex align-items-center alert-custom"
-              :class="isGuardadoExitoso ? 'alert-custom-success' : 'alert-custom-danger'" role="alert">
-              <i class="fas fa-2x mr-3" :class="isGuardadoExitoso ? 'fa-check-circle' : 'fa-times-circle'"></i>
-              <span>{{ mensaje }}</span>
-            </div>
-          </div>
+          <!-- 2. Mensajes de Estado (Éxito/Error al guardar) - ELIMINADO EN FAVOR DE SWEETALERT -->
           <!-- Formulario de Evaluación -->
           <div>
             <h6><strong>Instrucciones:</strong></h6>
@@ -178,6 +172,7 @@ import axios from 'axios';
 import { Modal } from 'bootstrap';
 import { route } from 'ziggy-js';
 import { Ziggy } from '../../ziggy';
+import Swal from 'sweetalert2';
 export default {
   data() {
     return {
@@ -287,14 +282,21 @@ export default {
         complejidad_nivel: this.nivelComplejidad,
       })
         .then(response => {
-          this.mensaje = response.data.message || 'Evaluación guardada con éxito.';
-          this.isGuardadoExitoso = true;
           this.$emit('evaluacion-guardada');
+          this.closeModal();
+          Swal.fire({
+            icon: 'success',
+            title: 'Guardado',
+            text: response.data.message || 'Evaluación guardada con éxito.',
+          });
         })
         .catch(error => {
-          this.mensaje = error.response?.data?.message || 'Ocurrió un error inesperado.';
-          this.isGuardadoExitoso = false;
           console.error(error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data?.message || 'Ocurrió un error inesperado al guardar la evaluación.',
+          });
         })
         .finally(() => {
           this.isLoading = false;

@@ -3,12 +3,12 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-light py-2 px-3 rounded">
                 <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Bandeja de Eficacia</li>
+                <li class="breadcrumb-item active" aria-current="page">Mis SMP Asignadas</li>
             </ol>
         </nav>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Bandeja de Eficacia de Hallazgos</h3>
+                <h3 class="card-title">Mis SMP Asignadas</h3>
             </div>
             <div class="card-body">
                 <div class="mb-3">
@@ -41,7 +41,40 @@
                             {{ formatDate(slotProps.data.hallazgo_fecha_conclusion) }}
                         </template>
                     </Column>
+                    <Column field="hallazgo_estado" header="Estado" sortable>
+                        <template #body="{ data }">
+                            {{ data.hallazgo_estado }}
+                        </template>
+                    </Column>
                     <Column field="especialista.name" header="Especialista Asignado" sortable></Column>
+                    <Column header="Avance Acciones" style="width:12%; text-align: center;">
+                        <template #body="{ data }">
+                            <span v-if="data.acciones && data.acciones.length > 0">
+                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{ data.acciones.length }}
+                            </span>
+                            <span v-else class="text-muted small">-</span>
+                        </template>
+                    </Column>
+                    <Column field="hallazgo_avance" header="Avance" sortable>
+                         <template #body="{ data }">
+                            <template v-if="['creado', 'asignado', 'desestimado'].includes(data.hallazgo_estado)">
+                                <span class="small text-muted">Sin avance</span>
+                            </template>
+                            <template v-else-if="data.hallazgo_avance">
+                                <div class="small text-center">
+                                    {{ parseInt(data.hallazgo_avance) }}%
+                                    <div class="progress progress-xs">
+                                        <div class="progress-bar bg-info"
+                                            :style="{ width: parseInt(data.hallazgo_avance) + '%' }">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <span class="small text-muted">Sin avance</span>
+                            </template>
+                        </template>
+                    </Column>
                     <Column header="Acciones" style="width: 150px">
                         <template #body="slotProps">
                             <div class="d-flex justify-content-around">
@@ -50,11 +83,7 @@
                                     @click.prevent="verPlanAccion(slotProps.data.id)">
                                     <i class="fas fa-tasks fa-lg"></i>
                                 </a>
-                                <!-- Subir Documentos -->
-                                <a href="#" title="Subir Documentos" class="text-secondary"
-                                    @click.prevent="subirDocumentos(slotProps.data)">
-                                    <i class="fas fa-file-upload fa-lg"></i>
-                                </a>
+
                                 <!-- Verificar Eficacia -->
                                 <a href="#" title="Verificar Eficacia" class="text-success"
                                     @click.prevent="verificarEficacia(slotProps.data)">
@@ -70,11 +99,8 @@
             </div>
         </div>
 
-        <HallazgoEvaluacionModal :visible="modalVisible" :hallazgo="selectedHallazgo" @cerrar="modalVisible = false"
-            @guardado="onEvaluacionGuardada" />
-
-        <EvaluacionArchivosModal :visible="modalArchivosVisible" :hallazgo="selectedHallazgo"
-            @cerrar="modalArchivosVisible = false" @archivos-subidos="onArchivosSubidos" />
+        <VerificarEficaciaModal :visible="modalVisible" :hallazgo="selectedHallazgo" :initialTab="initialTab"
+            @cerrar="modalVisible = false" @guardado="onEvaluacionGuardada" @archivos-subidos="onArchivosSubidos" />
     </div>
 </template>
 
@@ -84,8 +110,7 @@ import axios from 'axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { FilterMatchMode } from 'primevue/api';
-import HallazgoEvaluacionModal from './HallazgoEvaluacionModal.vue';
-import EvaluacionArchivosModal from './EvaluacionArchivosModal.vue';
+import VerificarEficaciaModal from './VerificarEficaciaModal.vue';
 import { route } from 'ziggy-js';
 import { useRouter } from 'vue-router';
 
@@ -94,8 +119,8 @@ const router = useRouter();
 const hallazgos = ref([]);
 const loading = ref(true);
 const modalVisible = ref(false);
-const modalArchivosVisible = ref(false);
 const selectedHallazgo = ref(null);
+const initialTab = ref('evidencias'); // New state for tab control
 
 const filters = reactive({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -115,13 +140,11 @@ const fetchHallazgos = async () => {
 
 const verificarEficacia = (hallazgo) => {
     selectedHallazgo.value = hallazgo;
+    initialTab.value = 'evaluacion';
     modalVisible.value = true;
 };
 
-const subirDocumentos = (hallazgo) => {
-    selectedHallazgo.value = hallazgo;
-    modalArchivosVisible.value = true;
-};
+
 
 const verPlanAccion = (id) => {
     window.location.href = `/vue/hallazgos/${id}/acciones`;
@@ -138,6 +161,11 @@ const onArchivosSubidos = () => {
 const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('es-ES');
+};
+
+const getAccionesPendientes = (acciones) => {
+    if (!acciones) return 0;
+    return acciones.filter(accion => ['programada', 'en ejecucion'].includes(accion.accion_estado.toLowerCase())).length;
 };
 
 onMounted(() => {

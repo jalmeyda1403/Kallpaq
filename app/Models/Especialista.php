@@ -8,11 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class Especialista extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'cargo',
+        'estado',
+        'inactived_at',
     ];
+
     protected $appends = ['nombres'];
+
     public function user()
     {
         return $this->belongsTo(User::class);

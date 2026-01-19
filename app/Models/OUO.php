@@ -16,7 +16,7 @@ class OUO extends Model
         'ouo_nombre',       
         'ouo_padre',
         'subgerente_id',
-        'subgerente_condicion',
+        'subgerente_id',
         'nivel_jerarquico',
         'doc_vigencia_alta',
         'fecha_vigencia_inicio',
@@ -24,6 +24,12 @@ class OUO extends Model
         'fecha_vigencia_fin',
         'estado',
         'inactive_at',
+    ];
+
+    protected $casts = [
+        'fecha_vigencia_inicio' => 'date',
+        'fecha_vigencia_fin' => 'date',
+        'inactive_at' => 'datetime',
     ];
 
     /**

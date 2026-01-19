@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { route } from 'ziggy-js';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 export const useHallazgoStore = defineStore('hallazgo', {
     state: () => ({
@@ -52,7 +53,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
         causaRaiz: {
             hc_metodo: 'cinco_porques',
         },
-        isCausaRaizModalOpen: false, // New state property
+
         accionesDelPlan: [],
         todasLasAcciones: [], // Nueva propiedad para almacenar todas las acciones de un hallazgo
 
@@ -421,10 +422,21 @@ export const useHallazgoStore = defineStore('hallazgo', {
                     this.causaRaiz
                 );
                 this.causaRaiz = response.data;
-                alert("Análisis de causa guardado con éxito.");
+                Swal.fire({
+                    title: 'Guardado',
+                    text: 'El análisis de causa raíz ha sido guardado correctamente.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } catch (error) {
                 console.error("Error al guardar el análisis de causa:", error);
-                alert("Ocurrió un error al guardar el análisis.");
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Ocurrió un error al guardar el análisis. Intente nuevamente.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                });
             } finally {
                 this.loadingPlan = false;
             }
@@ -440,12 +452,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.isGestionPlanModalOpen = false;
             this.procesoParaGestionar = null; // Limpiar el contexto
         },
-        openCausaRaizModal() { // New action
-            this.isCausaRaizModalOpen = true;
-        },
-        closeCausaRaizModal() { // New action
-            this.isCausaRaizModalOpen = false;
-        },
+
 
 
         // Resetea el formulario a sus valores por defecto
@@ -476,7 +483,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.loadingAsignaciones = false;
             this.isGestionPlanModalOpen = false;
             this.procesoParaGestionar = null;
-            this.isCausaRaizModalOpen = false; // Reset new state property
+
             this.causaRaiz = { hc_metodo: 'cinco_porques' };
             this.accionesDelPlan = [];
             this.loadingPlan = false;

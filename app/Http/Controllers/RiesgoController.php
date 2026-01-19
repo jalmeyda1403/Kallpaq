@@ -67,14 +67,8 @@ class RiesgoController extends Controller
             $query = Riesgo::where('especialista_id', $user->id)
                 ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         } else {
-            // Default Scope: OUO - Risks related to user's OUOs
-            // Obtener IDs de procesos donde el usuario tiene acceso a través de sus OUOs
-            // Asumiendo que la relación es User -> OUOs -> Procesos
-            $procesosIds = $user->ouos()->with('procesos')->get()->pluck('procesos')->flatten()->pluck('id')->unique();
-
-            // También incluir procesos donde el usuario esté asignado directamente (si existe esa relación)
-            // $procesosDirectos = $user->procesos->pluck('id');
-            // $procesosIds = $procesosIds->merge($procesosDirectos)->unique();
+            // Default Scope: OUO - Risks related to user's OUOs processes where they are Owner or Delegate
+            $procesosIds = $user->getProcesosAsociadosIds();
 
             $query = Riesgo::whereIn('proceso_id', $procesosIds)
                 ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);

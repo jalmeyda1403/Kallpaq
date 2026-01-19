@@ -241,6 +241,11 @@ class UserController extends Controller
             });
         }
 
+        // Apply role filter
+        if ($request->has('role') && $request->input('role') != '') {
+             $query->role($request->input('role'));
+        }
+
         // Sorting
         $sortField = $request->input('sort_field', 'id');
         $sortOrder = $request->input('sort_order', 'desc');
@@ -439,23 +444,7 @@ class UserController extends Controller
 
     public function downloadTemplate()
     {
-        $headers = [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=usuarios_template.csv",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        ];
-
-        $columns = ['nombre', 'email', 'password', 'codigo_personal', 'iniciales'];
-
-        $callback = function () use ($columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(new \App\Exports\UsersTemplateExport, 'usuarios_template.xlsx');
     }
 
     public function sendResetLinkEmail(Request $request)
@@ -506,7 +495,7 @@ class UserController extends Controller
 
     public function getRolesApi()
     {
-        $roles = Role::all()->pluck('name'); // Return names or objects? Names are enough for syncRoles
+        $roles = Role::select('id', 'name')->get(); 
         return response()->json($roles);
     }
 
@@ -519,6 +508,127 @@ class UserController extends Controller
         $user->syncRoles($request->input('roles', []));
 
         return response()->json(['message' => 'Roles asignados correctamente']);
+    }
+
+    /**
+     * Get user specific permissions analysis.
+     */
+    public function getUserPermissions($id)
+    {
+        $user = User::findOrFail($id);
+        $allPermissions = Permission::all();
+        
+        // Permisos otorgados por roles (sin filtrar blacklist aún)
+        $rolePermissions = $user->getPermissionsViaRoles()->pluck('id')->toArray();
+        
+        // Permisos otorgados directamente
+        $directPermissions = $user->getDirectPermissions()->pluck('id')->toArray();
+        
+        // Permisos denegados explícitamente (blacklist)
+        $deniedPermissions = $user->deniedPermissions()->pluck('id')->toArray();
+
+        return response()->json([
+            'all_permissions' => $allPermissions,
+            'role_permissions' => $rolePermissions,
+            'direct_permissions' => $directPermissions,
+            'denied_permissions' => $deniedPermissions
+        ]);
+    }
+
+    /**
+     * Sync user specific permissions (Direct & Denied).
+     */
+    public function syncUserPermissions(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $desiredPermissions = $request->input('permissions', []); // Array of ID strings
+
+        // Get permissions from current roles
+        $rolePermissions = $user->getPermissionsViaRoles()->pluck('name')->toArray();
+
+        // Lists to sync
+        $directToAdd = [];
+        $deniedToAdd = [];
+        
+        // 1. Analyze what needs to be Direct (User wants it, but Role doesn't have it)
+        $allSystemPermissions = Permission::all();
+
+        foreach ($allSystemPermissions as $p) {
+            $wants = in_array($p->name, $desiredPermissions);
+            $hasByRole = in_array($p->name, $rolePermissions);
+
+            if ($wants && !$hasByRole) {
+                // Needs direct permission
+                $directToAdd[] = $p->id;
+            } elseif (!$wants && $hasByRole) {
+                // User wants to Hide it, but Role gives it -> Blacklist it
+                $deniedToAdd[] = $p->id;
+            }
+        }
+
+        // Sync Direct Permissions
+        // We use syncPermissions but ONLY for the ones identified as Needed Direct.
+        // This clears previous direct permissions that are no longer needed.
+        // However, Spatie syncPermissions replaces ALL direct permissions.
+        // So directToAdd is exactly what we want.
+        $user->syncPermissions($directToAdd);
+
+        // Sync Denied Permissions (Blacklist)
+        $user->deniedPermissions()->sync($deniedToAdd);
+
+        return response()->json([
+            'message' => 'Permisos de usuario actualizados correctamente.',
+            'debug_direct' => $directToAdd,
+            'debug_denied' => $deniedToAdd
+        ]);
+    }
+    /**
+     * Sync 'Especialista' table with users having 'Especialista' role.
+     */
+    public function syncSpecialists(Request $request)
+    {
+        try {
+            // 1. Get all users with 'Especialista' role
+            $especialistaUsers = User::role('especialista')->get();
+            $especialistaUserIds = $especialistaUsers->pluck('id')->toArray();
+
+            // 2. Active/Create specialists
+            foreach ($especialistaUsers as $user) {
+                // Check individually to avoid overwriting existing 'cargo' with a default if it exists
+                $especialista = Especialista::where('user_id', $user->id)->first();
+                
+                if ($especialista) {
+                    $especialista->update([
+                        'estado' => 1,
+                        'inactived_at' => null
+                    ]);
+                } else {
+                    Especialista::create([
+                        'user_id' => $user->id,
+                        'estado' => 1,
+                        'cargo' => 'Especialista', // Default cargo for new specialists
+                        'inactived_at' => null
+                    ]);
+                }
+            }
+
+            // 3. Soft delete (deactivate) specialists who no longer have the role
+            // We find specialists whose user_id is NOT in the list of current specialist users
+            Especialista::whereNotIn('user_id', $especialistaUserIds)
+                ->update([
+                    'estado' => 0,
+                    'inactived_at' => now()
+                ]);
+
+            return response()->json([
+                'message' => 'Sincronización de especialistas completada.',
+                'count_active' => count($especialistaUserIds),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al sincronizar especialistas: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
 

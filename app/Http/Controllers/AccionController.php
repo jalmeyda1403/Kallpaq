@@ -343,6 +343,11 @@ class AccionController extends Controller
         $causa->fill($validatedData);
         $causa->hallazgo_id = $hallazgo->id; // Ensure hallazgo_id is set
         $causa->save();
+        
+        // Auto-transition to 'evaluado' if currently 'creado'
+        if ($hallazgo->hallazgo_estado === 'creado') { 
+            $hallazgo->update(['hallazgo_estado' => 'evaluado']); 
+        }
 
         return response()->json($causa);
     }
@@ -353,7 +358,7 @@ class AccionController extends Controller
         $this->validarEstadoHallazgo($accion->hallazgo);
 
         $validatedData = $request->validate([
-            'accion_tipo' => 'required|in:inmediata,correctiva',
+            'accion_tipo' => 'required|in:inmediata,correctiva,corrección,acción correctiva',
             'accion_descripcion' => 'required|string',
             'accion_responsable' => 'required|string',
             'accion_responsable_correo' => 'nullable|email',
@@ -426,7 +431,7 @@ class AccionController extends Controller
         $this->validarEstadoHallazgo($hallazgo);
 
         $validatedData = $request->validate([
-            'accion_tipo' => 'required|in:inmediata,correctiva',
+            'accion_tipo' => 'required|in:inmediata,correctiva,corrección,acción correctiva',
             'accion_descripcion' => 'required|string',
             'accion_responsable' => 'required|string',
             'accion_responsable_correo' => 'nullable|email',
@@ -456,6 +461,11 @@ class AccionController extends Controller
         $validatedData['accion_ciclo'] = $hallazgo->hallazgo_ciclo ?? 0; // Copy hallazgo_ciclo to accion_ciclo
 
         $accion = Accion::create($validatedData);
+
+        // Auto-transition to 'evaluado' if currently 'creado'
+        if ($hallazgo->hallazgo_estado === 'creado') {
+             $hallazgo->update(['hallazgo_estado' => 'evaluado']);
+        }
 
         return response()->json($accion, 201);
     }

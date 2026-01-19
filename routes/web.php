@@ -424,6 +424,8 @@ Route::prefix('hallazgos/{hallazgo_id}')->group(function () {
 });
 
 //OUO
+Route::get('/api/ouos/template', [OUOController::class, 'downloadTemplate'])->name('api.ouos.template');
+Route::post('/api/ouos/import', [OUOController::class, 'import'])->name('api.ouos.import');
 Route::get('/buscarOUO', [OUOController::class, 'buscar'])->name('ouos.buscar');
 Route::get('/listarOUO', [OUOController::class, 'listar'])->name('ouos.listar');
 
@@ -540,6 +542,7 @@ Route::post('api/admin/usuarios/generate-initials', [UserController::class, 'gen
 Route::get('api/admin/roles', [UserController::class, 'getRolesApi'])->name('api.admin.roles.index');
 Route::post('api/admin/usuarios/{user}/roles', [UserController::class, 'assignRolesApi'])->name('api.admin.usuarios.assign-roles');
 Route::get('api/admin/usuarios/template', [UserController::class, 'downloadTemplate'])->name('api.admin.usuarios.template');
+Route::post('api/admin/usuarios/sync-specialists', [UserController::class, 'syncSpecialists'])->name('api.admin.usuarios.sync-specialists');
 
 // Role Management Routes
 Route::get('admin/roles', [App\Http\Controllers\RoleController::class, 'index'])->name('admin.roles.index');
@@ -553,6 +556,10 @@ Route::post('api/roles/{id}/permissions', [App\Http\Controllers\RoleController::
 
 Route::get('usuarios/asignar-permisos/{id}', [UserController::class, 'asignarPermisos'])->name('usuarios.asignar-permisos');
 Route::post('usuarios/asignar-permisos/{id}', [UserController::class, 'guardarPermisos'])->name('usuarios.guardar-permisos');
+
+// User Specific Permissions (Blacklist & Direct) API
+Route::get('api/users/{id}/permissions', [UserController::class, 'getUserPermissions'])->name('api.users.permissions');
+Route::post('api/users/{id}/permissions', [UserController::class, 'syncUserPermissions'])->name('api.users.permissions.sync');
 
 //Roles asignados al Usuario
 

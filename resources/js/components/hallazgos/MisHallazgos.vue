@@ -14,13 +14,9 @@
             </ol>
         </nav>
 
-        <!-- Modal para enviar plan de acción -->
-        <EnviarPlanAccionModal :visible="modalEnviarPlanVisible" :hallazgoId="hallazgoIdSeleccionado"
-            @cerrar="cerrarModalEnviarPlan" @plan-enviado="onPlanEnviado" />
 
-        <!-- Modal para asignar especialista -->
-        <HallazgoAsignarEspecialistaModal :visible="modalAsignarVisible" :hallazgoId="hallazgoIdAsignar"
-            @cerrar="cerrarModalAsignar" @asignado="onAsignado" />
+
+
 
         <div class="card">
             <div class="card-header">
@@ -123,14 +119,12 @@
                             {{ data.hallazgo_estado }}
                         </template>
                     </Column>
-                    <Column header="Total Acciones" style="width:10%; text-align: center;">
+                    <Column header="Avance Acciones" style="width:12%; text-align: center;">
                         <template #body="{ data }">
-                            {{ data.acciones ? data.acciones.length : 0 }}
-                        </template>
-                    </Column>
-                    <Column header="Acciones Pendientes" style="width:10%; text-align: center;">
-                        <template #body="{ data }">
-                            {{ getAccionesPendientes(data.acciones) }}
+                            <span v-if="data.acciones && data.acciones.length > 0">
+                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{ data.acciones.length }}
+                            </span>
+                            <span v-else class="text-muted small">-</span>
                         </template>
                     </Column>
 
@@ -159,23 +153,18 @@
                         bodyStyle="width: 15%">
                         <template #body="{ data }">
 
-                            <a href="#" title="Planes de Acción" class="mr-2 d-inline-block"
+                            <a href="#" title="Registrar Avance" class="mr-2 d-inline-block"
                                 @click.prevent="verPlanesDeAccion(data.id)">
-                                <i class="fas fa-tasks text-info fa-lg"></i>
+                                <i class="fas fa-edit text-info fa-lg"></i>
                             </a>
-                            <a href="#" title="Enviar Plan de Acción" class="mr-2 d-inline-block"
-                                @click.prevent="abrirModalEnviarPlan(data.id)"
-                                v-if="data.hallazgo_estado === 'en proceso' || data.hallazgo_estado === 'creado'">
-                                <i class="fas fa-paper-plane text-success fa-lg"></i>
+                            
+                            <a href="#" title="Ejecución de Acciones" class="mr-2 d-inline-block"
+                                v-if="['aprobado', 'en proceso'].includes(data.hallazgo_estado)"
+                                @click.prevent="verEjecucionAcciones(data.id)">
+                                <i class="fas fa-tasks text-success fa-lg"></i>
                             </a>
-                            <a href="#" title="Eliminar Hallazgo" class="mr-2 d-inline-block"
-                                @click.prevent="deleteHallazgo(data.id)">
-                                <i class="fas fa-trash-alt text-danger fa-lg"></i>
-                            </a>
-                            <a href="#" title="Programar Verificación" class="mr-2 d-inline-block"
-                                @click.prevent="abrirModalAsignar(data.id)" v-if="data.hallazgo_estado === 'concluido'">
-                                <i class="fas fa-user-check text-warning fa-lg"></i>
-                            </a>
+
+
                         </template>
                     </Column>
                 </DataTable>
@@ -215,8 +204,8 @@ import Button from 'primevue/button';
 import { FilterMatchMode } from 'primevue/api';
 
 import HallazgoModal from '@/components/hallazgos/HallazgoModal.vue';
-import EnviarPlanAccionModal from '@/components/hallazgos/EnviarPlanAccionModal.vue';
-import HallazgoAsignarEspecialistaModal from '@/components/hallazgos/HallazgoAsignarEspecialistaModal.vue';
+
+
 import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const router = useRouter();
@@ -227,13 +216,9 @@ const errorMessage = ref('');
 const hallazgoStore = useHallazgoStore();
 const dt = ref(null); // Reference to the PrimeVue DataTable component
 
-// Variables para el modal de envío de plan
-const modalEnviarPlanVisible = ref(false);
-const hallazgoIdSeleccionado = ref(null);
 
-// Variables para el modal de asignación
-const modalAsignarVisible = ref(false);
-const hallazgoIdAsignar = ref(null);
+
+
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -309,51 +294,17 @@ const verPlanesDeAccion = (hallazgoId) => {
     router.push({ name: 'acciones.index', params: { hallazgoId } });
 };
 
+const verEjecucionAcciones = (hallazgoId) => {
+    router.push({ name: 'acciones.ejecucion', params: { hallazgoId } });
+};
+
 const deleteHallazgo = async () => {
     // ...
 };
 
-const abrirModalEnviarPlan = (hallazgoId) => {
-    hallazgoIdSeleccionado.value = hallazgoId;
-    modalEnviarPlanVisible.value = true;
-};
 
-const cerrarModalEnviarPlan = () => {
-    modalEnviarPlanVisible.value = false;
-    hallazgoIdSeleccionado.value = null;
-};
 
-const onPlanEnviado = () => {
-    // Actualizar la lista de hallazgos para reflejar el cambio de estado
-    fetchHallazgos();
-    successMessage.value = 'Plan de acción enviado exitosamente. El estado del hallazgo ha sido actualizado a "Aprobado".';
 
-    // Ocultar el mensaje después de unos segundos
-    setTimeout(() => {
-        successMessage.value = '';
-    }, 5000);
-    setTimeout(() => {
-        successMessage.value = '';
-    }, 5000);
-};
-
-const abrirModalAsignar = (hallazgoId) => {
-    hallazgoIdAsignar.value = hallazgoId;
-    modalAsignarVisible.value = true;
-};
-
-const cerrarModalAsignar = () => {
-    modalAsignarVisible.value = false;
-    hallazgoIdAsignar.value = null;
-};
-
-const onAsignado = () => {
-    fetchHallazgos();
-    successMessage.value = 'Especialista asignado correctamente.';
-    setTimeout(() => {
-        successMessage.value = '';
-    }, 5000);
-};
 
 // --- CICLO DE VIDA ---
 onMounted(() => {

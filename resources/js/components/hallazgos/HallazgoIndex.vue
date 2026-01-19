@@ -118,14 +118,12 @@
                             {{ data.hallazgo_estado }}
                         </template>
                     </Column>
-                    <Column header="Total Acciones" style="width:10%; text-align: center;">
+                    <Column header="Avance Acciones" style="width:12%; text-align: center;">
                         <template #body="{ data }">
-                            {{ data.acciones ? data.acciones.length : 0 }}
-                        </template>
-                    </Column>
-                    <Column header="Acciones Pendientes" style="width:10%; text-align: center;">
-                        <template #body="{ data }">
-                            {{ getAccionesPendientes(data.acciones) }}
+                            <span v-if="data.acciones && data.acciones.length > 0">
+                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{ data.acciones.length }}
+                            </span>
+                            <span v-else class="text-muted small">-</span>
                         </template>
                     </Column>
 

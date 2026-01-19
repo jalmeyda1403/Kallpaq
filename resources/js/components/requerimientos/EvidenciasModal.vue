@@ -93,6 +93,7 @@ import axios from 'axios';
 import { route } from 'ziggy-js';
 import { Ziggy } from '../../ziggy';
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2';
 
 export default {
   props: {
@@ -160,7 +161,7 @@ export default {
       if (!file) return;
 
       if (file.size > this.maxFileSize) {
-        alert('El archivo excede el tamaño máximo permitido (10MB).');
+        Swal.fire('Error', 'El archivo excede el tamaño máximo permitido (10MB).', 'error');
         this.$refs.fileInput.value = ''; // Reset file input
         return;
       }
@@ -223,13 +224,28 @@ export default {
     },
 
     deleteFile(file) {
-      axios.delete(route('requerimientos.evidencias.eliminar', { id: this.currentRequerimientoId, file_path: file.path }, false, Ziggy))
-        .then(() => {
-          this.files = this.files.filter(f => f.path !== file.path);
-        })
-        .catch(error => {
-          console.error('Error al eliminar la evidencia:', error);
-        });
+      Swal.fire({
+        title: '¿Eliminar evidencia?',
+        text: `Se eliminará el archivo ${file.name}.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          axios.delete(route('requerimientos.evidencias.eliminar', { id: this.currentRequerimientoId, file_path: file.path }, false, Ziggy))
+            .then(() => {
+              this.files = this.files.filter(f => f.path !== file.path);
+              Swal.fire('Eliminado', 'El archivo ha sido eliminado.', 'success');
+            })
+            .catch(error => {
+              console.error('Error al eliminar la evidencia:', error);
+              Swal.fire('Error', 'No se pudo eliminar el archivo.', 'error');
+            });
+        }
+      });
     },
   },
   mounted() {

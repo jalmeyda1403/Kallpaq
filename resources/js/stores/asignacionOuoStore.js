@@ -16,7 +16,8 @@ export const useAsignacionOuoStore = defineStore('asignacionOuo', {
         },
         filters: {
             search: '',
-            ouo_padre_id: null, // New filter state
+            ouo_padre_id: null,
+            estado: '', // New filter state
         },
     }),
     actions: {
@@ -28,8 +29,9 @@ export const useAsignacionOuoStore = defineStore('asignacionOuo', {
                     params: {
                         page: this.pagination.currentPage,
                         per_page: this.pagination.perPage,
-                        search: this.filters.search, // Use specific search filter
-                        ouo_padre_id: this.filters.ouo_padre_id, // Include ouo_padre_id filter
+                        search: this.filters.search,
+                        ouo_padre_id: this.filters.ouo_padre_id,
+                        estado: this.filters.estado, // Add estado filter
                     },
                 });
                 this.ouos = response.data.data;
@@ -67,9 +69,76 @@ export const useAsignacionOuoStore = defineStore('asignacionOuo', {
             this.filters = {
                 search: '',
                 ouo_padre_id: null,
+                estado: '', // Reset estado
             };
             this.pagination.currentPage = 1;
             this.fetchOuos();
+        },
+        async createOuo(ouoData) {
+            this.loading = true;
+            this.error = null;
+            try {
+                // Assuming route for store is 'ouos.store' or similar. 
+                // Based on standard Laravel resource controller and previous grep: 'ouos.store' exists.
+                // Re-checking router list provided earlier: "ouos.store":{"uri":"ouos","methods":["POST"]}
+                const response = await axios.post(route('ouos.store'), ouoData);
+                this.fetchOuos(); // Refresh list
+                return response.data;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Error al crear la OUO.';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+        async updateOuo(id, ouoData) {
+            this.loading = true;
+            this.error = null;
+            try {
+                // Based on router list: "ouos.update":{"uri":"ouos/{ouo}","methods":["PUT","PATCH"]}
+                const response = await axios.put(route('ouos.update', id), ouoData);
+                this.fetchOuos(); // Refresh list
+                return response.data;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Error al actualizar la OUO.';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+        async downloadTemplate() {
+            try {
+                const response = await axios.get(route('api.ouos.template'), {
+                    responseType: 'blob',
+                });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'ouos_template.xlsx');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Error downloading template:', error);
+                throw error;
+            }
+        },
+        async importOuos(formData) {
+            this.loading = true;
+            try {
+                const response = await axios.post(route('api.ouos.import'), formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                this.fetchOuos();
+                return response.data;
+            } catch (error) {
+                console.error('Error importing OUOs:', error);
+                throw error;
+            } finally {
+                this.loading = false;
+            }
         },
     },
     getters: {

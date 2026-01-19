@@ -79,6 +79,7 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import { route } from 'ziggy-js';
 import ModalHijo from '../generales/ModalHijo.vue';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -114,9 +115,9 @@ export default {
 
         const ouoRoles = ref([
             { label: 'Titular', value: 'titular' },
-            { label: 'Suplente', value: 'suplente' },
+            { label: 'Encargado', value: 'encargado' },
             { label: 'Facilitador', value: 'facilitador' },
-            { label: 'Miembro', value: 'miembro' },
+            { label: 'Colaborador', value: 'colaborador' },
         ]);
 
         // Fetch assigned users when component mounts or ouo prop changes
@@ -145,12 +146,8 @@ export default {
                 });
             } catch (error) {
                 console.error('Error fetching assigned users:', error);
-                if (error.response) {
-                    console.error('Backend Error Response (fetchAssignedUsers):', error.response.data);
-                    alert('Error al cargar los usuarios asignados: ' + (error.response.data.message || 'Verifique la consola para más detalles.'));
-                } else {
-                    alert('Error al cargar los usuarios asignados.');
-                }
+                const msg = error.response?.data?.message || 'Verifique la consola para más detalles.';
+                Swal.fire('Error', 'Error al cargar los usuarios asignados: ' + msg, 'error');
             } finally {
                 loading.value = false;
             }
@@ -186,13 +183,13 @@ export default {
                         id: selectedUser.value.id,
                         name: selectedUser.value.name,
                         email: selectedUser.value.email,
-                        role_in_ouo: 'miembro', // Default role
+                        role_in_ouo: 'colaborador', // Default role
                         activo: true, // Default to active
                     };
 
                     try {
                         if (!props.ouo || !props.ouo.id) {
-                            alert('No hay OUO seleccionada para añadir el usuario.');
+                            Swal.fire('Atención', 'No hay OUO seleccionada para añadir el usuario.', 'warning');
                             return;
                         }
 
@@ -202,48 +199,55 @@ export default {
                             activo: newUser.activo,
                         });
 
-                        alert('Usuario añadido y guardado con éxito.');
+                        Swal.fire('Guardado', 'Usuario añadido y guardado con éxito.', 'success');
                         selectedUser.value = { id: null, name: '', email: '' };
                         await fetchAssignedUsers(); // Refresh the list from DB
+                        emit('users-updated'); // Notify parent to update counts
                     } catch (error) {
                         console.error('Error adding and saving user:', error);
-                        if (error.response) {
-                            console.error('Backend Error Response:', error.response.data);
-                            alert('Error al añadir y guardar el usuario: ' + (error.response.data.message || 'Verifique la consola para más detalles.'));
-                        } else {
-                            alert('Error al añadir y guardar el usuario.');
-                        }
+                        const msg = error.response?.data?.message || 'Verifique la consola para más detalles.';
+                        Swal.fire('Error', 'Error al añadir y guardar el usuario: ' + msg, 'error');
                     }
                 } else {
-                    alert('Este usuario ya ha sido añadido.');
+                    Swal.fire('Atención', 'Este usuario ya ha sido añadido.', 'warning');
                 }
             }
         };
 
         const removeUser = async (userToRemove) => {
-            if (!confirm('¿Está seguro de que desea eliminar este usuario de la asignación?')) {
-                return;
-            }
+            Swal.fire({
+                title: '¿Desvincular Usuario?',
+                text: `Se desvinculará a ${userToRemove.name} de esta OUO.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, desvincular',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        if (!props.ouo || !props.ouo.id || !userToRemove || !userToRemove.id) {
+                            Swal.fire('Error', 'No hay OUO o usuario seleccionado para eliminar.', 'error');
+                            return;
+                        }
 
-            try {
-                if (!props.ouo || !props.ouo.id || !userToRemove || !userToRemove.id) {
-                    alert('No hay OUO o usuario seleccionado para eliminar.');
-                    return;
+                        await axios.delete(route('ouos.users.detach', { ouo: props.ouo.id, user: userToRemove.id }));
+
+                        Swal.fire('Desvinculado', 'Usuario eliminado de la asignación con éxito.', 'success');
+                        await fetchAssignedUsers(); // Refresh the list from DB
+                        emit('users-updated'); // Notify parent to update counts
+                    } catch (error) {
+                        console.error('Error removing user:', error);
+                        Swal.fire('Error', 'Error al eliminar el usuario de la asignación.', 'error');
+                    }
                 }
-
-                await axios.delete(route('ouos.users.detach', { ouo: props.ouo.id, user: userToRemove.id }));
-
-                alert('Usuario eliminado de la asignación con éxito.');
-                await fetchAssignedUsers(); // Refresh the list from DB
-            } catch (error) {
-                console.error('Error removing user:', error);
-                alert('Error al eliminar el usuario de la asignación.');
-            }
+            });
         };
 
         const updateUserRow = async (userToUpdate) => {
             if (!props.ouo || !props.ouo.id || !userToUpdate || !userToUpdate.id) {
-                alert('No hay OUO o usuario seleccionado para guardar los cambios.');
+                Swal.fire('Error', 'No hay OUO o usuario seleccionado para guardar los cambios.', 'error');
                 return;
             }
 
@@ -253,37 +257,47 @@ export default {
                     activo: userToUpdate.activo,
                 });
 
-                alert('Cambios del usuario guardados con éxito.');
+                Swal.fire('Actualizado', 'Cambios del usuario guardados con éxito.', 'success');
             } catch (error) {
                 console.error('Error saving user row:', error);
-                alert('Error al guardar los cambios del usuario.');
+                Swal.fire('Error', 'Error al guardar los cambios del usuario.', 'error');
             }
         };
 
         const restoreUser = async (userToRestore) => {
-            if (!confirm('¿Está seguro de que desea restaurar este usuario a la asignación?')) {
-                return;
-            }
+            Swal.fire({
+                title: '¿Restaurar Usuario?',
+                text: `Se restaurará la asignación de ${userToRestore.name}.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, restaurar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        if (!props.ouo || !props.ouo.id || !userToRestore || !userToRestore.id) {
+                            Swal.fire('Error', 'No hay OUO o usuario seleccionado para restaurar.', 'error');
+                            return;
+                        }
 
-            try {
-                if (!props.ouo || !props.ouo.id || !userToRestore || !userToRestore.id) {
-                    alert('No hay OUO o usuario seleccionado para restaurar.');
-                    return;
+                        // Reuse attachUser endpoint for restoration
+                        await axios.post(route('ouos.users.attach', props.ouo.id), {
+                            user_id: userToRestore.id,
+                            role_in_ouo: userToRestore.role_in_ouo,
+                            activo: true, // Restore as active
+                        });
+
+                        Swal.fire('Restaurado', 'Usuario restaurado a la asignación con éxito.', 'success');
+                        await fetchAssignedUsers(); // Refresh the list from DB
+                        emit('users-updated'); // Notify parent to update counts
+                    } catch (error) {
+                        console.error('Error restoring user:', error);
+                        Swal.fire('Error', 'Error al restaurar el usuario a la asignación.', 'error');
+                    }
                 }
-
-                // Reuse attachUser endpoint for restoration
-                await axios.post(route('ouos.users.attach', props.ouo.id), {
-                    user_id: userToRestore.id,
-                    role_in_ouo: userToRestore.role_in_ouo,
-                    activo: true, // Restore as active
-                });
-
-                alert('Usuario restaurado a la asignación con éxito.');
-                await fetchAssignedUsers(); // Refresh the list from DB
-            } catch (error) {
-                console.error('Error restoring user:', error);
-                alert('Error al restaurar el usuario a la asignación.');
-            }
+            });
         };
 
         const toggleShowDeleted = () => {

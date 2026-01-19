@@ -5,6 +5,7 @@ import { route } from 'ziggy-js';
 
 export const useUserStore = defineStore('userStore', () => {
     const users = ref([]);
+    const roles = ref([]); // Store available roles for filter
     const loading = ref(false); // Add loading state
     const pagination = reactive({
         currentPage: 1,
@@ -14,6 +15,7 @@ export const useUserStore = defineStore('userStore', () => {
     });
     const filters = reactive({
         search: '',
+        role: '' // Add role filter
     });
     const sorting = reactive({
         field: 'name',
@@ -28,6 +30,7 @@ export const useUserStore = defineStore('userStore', () => {
                     page: pagination.currentPage,
                     per_page: pagination.perPage,
                     search: filters.search,
+                    role: filters.role, // Send role filter
                     sort_field: sorting.field,
                     sort_order: sorting.order === 1 ? 'asc' : 'desc'
                 },
@@ -70,6 +73,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     const resetFilters = () => {
         filters.search = '';
+        filters.role = '';
         pagination.currentPage = 1;
         fetchUsers();
     };
@@ -125,12 +129,26 @@ export const useUserStore = defineStore('userStore', () => {
         await axios.post(route('api.admin.usuarios.reset-password'), { email });
     };
 
-    const downloadTemplate = () => {
-        window.location.href = route('api.admin.usuarios.template');
+    const downloadTemplate = async () => {
+        try {
+            const response = await axios.get(route('api.admin.usuarios.template'), {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'users_template.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Error downloading template:', error);
+        }
     };
 
     const fetchRoles = async () => {
         const response = await axios.get(route('api.admin.roles.index'));
+        roles.value = response.data; // Store roles for filter select
         return response.data;
     };
 
@@ -141,6 +159,7 @@ export const useUserStore = defineStore('userStore', () => {
 
     return {
         users,
+        roles, // Expose roles
         loading,
         pagination,
         filters,

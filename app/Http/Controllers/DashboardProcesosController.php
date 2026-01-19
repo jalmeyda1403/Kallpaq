@@ -130,7 +130,7 @@ class DashboardProcesosController extends Controller
             ->map(function ($group) {
                 $pei = $group->first()->objetivoPEI;
                 return [
-                    'nombre' => $pei ? $pei->planificacion_pei_nombre : 'Sin PEI',
+                    'nombre' => $pei ? $pei->pp_nombre : 'Sin PEI',
                     'promedio' => round($group->avg('current_cumplimiento'), 2),
                 ];
             })

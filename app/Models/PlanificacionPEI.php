@@ -9,7 +9,11 @@ class PlanificacionPEI extends Model
 {
     protected $table = 'planificacion_pei';
     protected $fillable = [
-        'id', 'planificacion_pei_cod', 'planificacion_pei_nombre'
+        'pp_cod',
+        'pp_nombre',
+        'pp_alcance',
+        'pp_documento_aprueba',
+        'pp_fecha_aprueba',
     ];
     protected $appends = ['descripcion']; 
 
@@ -23,7 +27,7 @@ class PlanificacionPEI extends Model
     }
      public function getDescripcionAttribute()
     {
-        return "{$this->planificacion_pei_cod} - {$this->planificacion_pei_nombre}";
+        return "{$this->pp_cod} - {$this->pp_nombre}";
     }  
 }
 	
