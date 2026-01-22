@@ -10,13 +10,14 @@ use Illuminate\Notifications\Notification;
 class ResetPasswordNotification extends Notification
 {
     use Queueable;
-    public $mailer = 'contraloria';
+    public $token;
+
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($token)
     {
-        //
+        $this->token = $token;
     }
 
     /**
@@ -35,11 +36,11 @@ class ResetPasswordNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-        ->subject('Reinicio de Contraseña')
-        ->line('Tu contraseña ha sido reiniciada.')
-        ->line('Por favor, cambia tu contraseña en el siguiente enlace:')
-        ->action('Cambiar Contraseña', url('/password/reset'))
-        ->line('Si no has solicitado este reinicio, ignora este mensaje.');
+            ->subject('Restablecimiento de Contraseña - Kallpaq')
+            ->greeting('Hola,')
+            ->line('Estás recibiendo este correo porque se solicitó un restablecimiento de contraseña para tu cuenta.')
+            ->action('Restablecer Contraseña', url(config('app.url') . route('password.reset', ['token' => $this->token, 'email' => $notifiable->getEmailForPasswordReset()], false)))
+            ->line('Si no solicitaste este restablecimiento, no es necesaria ninguna otra acción.');
     }
 
     /**

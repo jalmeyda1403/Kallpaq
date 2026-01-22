@@ -216,12 +216,14 @@ class DocumentoController extends Controller
 
             // Filtrar por tipo de documento
             if ($request->filled('tipo_documento')) {
-                $query->whereIn('tipo_documento_id', (array)$request->input('tipo_documento'));
+                $query->whereIn('tipo_documento_id', (array) $request->input('tipo_documento'));
             }
 
             // Obtener los documentos con los filtros aplicados
-            $documentos = $query->get();
-            Log::info('apiListar documents count: ' . $documentos->count());
+            $perPage = $request->input('rows', 20);
+            $documentos = $query->paginate($perPage);
+
+            Log::info('apiListar documents count: ' . $documentos->total());
 
             return response()->json($documentos);
         } catch (\Exception $e) {
@@ -504,9 +506,9 @@ class DocumentoController extends Controller
     public function versiones(Request $request, $documento_id)
     {
         $documento = Documento::findOrFail($documento_id);
-        
+
         $query = $documento->versiones();
-        
+
         if ($request->has('trashed') && $request->trashed == 1) {
             $query->onlyTrashed();
         }
@@ -625,8 +627,9 @@ class DocumentoController extends Controller
     }
     //methodos Dependencias
     // Versiones Management
-    public function storeVersion(Request $request) {
-         $data = $request->validate([
+    public function storeVersion(Request $request)
+    {
+        $data = $request->validate([
             'documento_id' => 'required|exists:documentos,id',
             'version' => 'required|integer',
             'control_cambios' => 'nullable|string',
@@ -640,18 +643,18 @@ class DocumentoController extends Controller
         try {
             return DB::transaction(function () use ($data, $request) {
                 $documento = Documento::findOrFail($data['documento_id']);
-                
+
                 // Handle file upload
                 if ($request->hasFile('archivo')) {
-                     $file = $request->file('archivo');
-                     $codDocumento = $documento->cod_documento;
-                     $fileName = $codDocumento . '_v' . $data['version'] . '.' . $file->getClientOriginalExtension();
-                     // Guardar en la carpeta del documento dentro del disco 'documentos'
-                     $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
-                     $data['archivo_path'] = $path;
-                     unset($data['archivo']);
+                    $file = $request->file('archivo');
+                    $codDocumento = $documento->cod_documento;
+                    $fileName = $codDocumento . '_v' . $data['version'] . '.' . $file->getClientOriginalExtension();
+                    // Guardar en la carpeta del documento dentro del disco 'documentos'
+                    $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
+                    $data['archivo_path'] = $path;
+                    unset($data['archivo']);
                 }
-                
+
                 // Create new version
                 $nuevaVersion = $documento->versiones()->create($data);
 
@@ -676,9 +679,10 @@ class DocumentoController extends Controller
         }
     }
 
-    public function updateVersion(Request $request, $id) {
+    public function updateVersion(Request $request, $id)
+    {
         $version = DocumentoVersion::findOrFail($id);
-        
+
         $data = $request->validate([
             'version' => 'required|integer',
             'control_cambios' => 'nullable|string',
@@ -689,21 +693,21 @@ class DocumentoController extends Controller
             'archivo' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:20480'
         ]);
 
-         try {
+        try {
             if ($request->hasFile('archivo')) {
                 // Delete old file if exists
                 if ($version->archivo_path && Storage::disk('documentos')->exists($version->archivo_path)) {
-                     Storage::disk('documentos')->delete($version->archivo_path);
+                    Storage::disk('documentos')->delete($version->archivo_path);
                 }
-                
-                 $documento = $version->documento;
-                 $codDocumento = $documento->cod_documento;
-                 $file = $request->file('archivo');
-                 $fileName = $codDocumento . '_v' . $data['version'] . '.' . $file->getClientOriginalExtension();
-                 // Guardar en la carpeta del documento dentro del disco 'documentos'
-                 $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
-                 $data['archivo_path'] = $path;
-                 unset($data['archivo']);
+
+                $documento = $version->documento;
+                $codDocumento = $documento->cod_documento;
+                $file = $request->file('archivo');
+                $fileName = $codDocumento . '_v' . $data['version'] . '.' . $file->getClientOriginalExtension();
+                // Guardar en la carpeta del documento dentro del disco 'documentos'
+                $path = Storage::disk('documentos')->putFileAs($codDocumento, $file, $fileName);
+                $data['archivo_path'] = $path;
+                unset($data['archivo']);
             }
 
             $version->update($data);
@@ -715,19 +719,21 @@ class DocumentoController extends Controller
         }
     }
 
-    public function destroyVersion($id) {
+    public function destroyVersion($id)
+    {
         $version = DocumentoVersion::findOrFail($id);
-        
+
         // Soft Delete
         $version->delete();
 
         return response()->json(['message' => 'Versión eliminada con éxito.']);
     }
 
-    public function restoreVersion($id) {
+    public function restoreVersion($id)
+    {
         $version = DocumentoVersion::onlyTrashed()->findOrFail($id);
         $version->restore();
-        
+
         return response()->json(['message' => 'Versión restaurada con éxito.']);
     }
 
@@ -756,7 +762,7 @@ class DocumentoController extends Controller
 
     public function removeDependencia(DocumentoVersion $version, Documento $hijo)
     {
-     
+
         $version->dependencias()->detach($hijo->id);
         return response()->json($version->dependencias()->get());
     }

@@ -30,30 +30,30 @@ class LoginController extends Controller
     }
     public function login(Request $request)
     {
-       
+
         // Validar las credenciales del usuario
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
-       
+
         Log::info('Login attempt with credentials:', ['email' => $credentials['email'], 'password' => '********']); // Log credentials
-        
+
         // Intentar autenticar al usuario
         if (Auth::attempt($credentials)) {
             Log::info('Auth::attempt successful for user:', ['email' => $credentials['email']]); // Log success
             $request->session()->regenerate();
-            
+
             $user = Auth::user();
             // Assuming toArrayWithRoles() exists on User model as seen in app.blade.php
             return response()->json([
                 'message' => 'Login successful',
-                'user' => $user->toArrayWithRoles() 
+                'user' => $user->toArrayWithRoles()
             ]);
         }
 
         Log::warning('Auth::attempt failed for user:', ['email' => $credentials['email']]); // Log failure
-        
+
         return response()->json([
             'message' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
             'errors' => ['email' => ['Las credenciales proporcionadas no coinciden con nuestros registros.']]
@@ -71,10 +71,13 @@ class LoginController extends Controller
     //     }
     // }
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
-        return response()->json(['message' => 'Logged out successfully']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/home');
     }
 
     public function redirectTo()

@@ -1,7 +1,7 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded shadow-sm">
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Listado de Auditores</li>
             </ol>
@@ -33,8 +33,11 @@
             </div>
 
             <div class="card-body">
-                <DataTable :value="auditores" :paginator="true" :rows="10" :loading="loading"
-                    tableStyle="min-width: 50rem"
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable :value="auditores" :paginator="true" :rows="10"
+                    :class="{ 'opacity-50 pointer-events-none': loading }" tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} auditores"
@@ -48,7 +51,7 @@
                                 </div>
                                 <div>
                                     <span class="font-weight-bold text-dark d-block">{{ slotProps.data.user.name
-                                        }}</span>
+                                    }}</span>
                                     <small class="text-muted">{{ slotProps.data.user.email }}</small>
                                 </div>
                             </div>
@@ -99,6 +102,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import { useToast } from 'primevue/usetoast';
 import Swal from 'sweetalert2';
 

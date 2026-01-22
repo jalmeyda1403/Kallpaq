@@ -9,8 +9,8 @@
                             <i class="fas fa-user-tag text-danger"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title mb-0 font-weight-bold">Asignar Rol</h5>
-                            <small class="text-white-50">Defina el nivel de acceso del usuario</small>
+                            <h5 class="modal-title mb-0 font-weight-bold">Asignar Roles</h5>
+                            <small class="text-white-50">Defina los niveles de acceso del usuario</small>
                         </div>
                     </div>
                     <button type="button" class="close text-white outline-none" aria-label="Close" @click="close">
@@ -47,18 +47,18 @@
                     <div v-else class="row">
                         <div class="col-md-4 mb-3" v-for="role in availableRoles" :key="role.id">
                             <div class="role-card h-100 p-3 rounded bg-white border shadow-sm cursor-pointer transition-all d-flex flex-column align-items-center justify-content-center text-center position-relative"
-                                :class="{ 'border-danger role-selected': selectedRole === role.name }"
-                                @click="selectedRole = role.name">
+                                :class="{ 'border-danger role-selected': isSelected(role.name) }"
+                                @click="toggleRole(role.name)">
 
                                 <div class="role-icon mb-2 rounded-circle d-flex align-items-center justify-content-center"
-                                    :class="selectedRole === role.name ? 'bg-danger text-white' : 'bg-light text-secondary'">
+                                    :class="isSelected(role.name) ? 'bg-danger text-white' : 'bg-light text-secondary'">
                                     <i :class="getRoleIcon(role.name)" class="fa-2x"></i>
                                 </div>
-                                <h6 class="mb-1 font-weight-bold" :class="{ 'text-danger': selectedRole === role.name }">{{
+                                <h6 class="mb-1 font-weight-bold" :class="{ 'text-danger': isSelected(role.name) }">{{
                                     role.name }}</h6>
 
                                 <div class="selection-check text-danger position-absolute"
-                                    style="top: 10px; right: 10px;" v-if="selectedRole === role.name">
+                                    style="top: 10px; right: 10px;" v-if="isSelected(role.name)">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                             </div>
@@ -100,7 +100,7 @@ const store = useUserStore();
 const modalEl = ref(null);
 let modalInstance = null;
 const availableRoles = ref([]);
-const selectedRole = ref(null);
+const selectedRoles = ref([]);
 const loading = ref(false);
 const saving = ref(false);
 
@@ -147,17 +147,24 @@ const getRoleIcon = (roleName) => {
     return icons[roleName.toLowerCase()] || 'fas fa-id-badge';
 };
 
-watch(() => props.user, (newUser) => {
-    if (newUser) {
-        // Handle if roles is array of strings or objects
-        if (newUser.roles && newUser.roles.length > 0) {
-             const firstRole = newUser.roles[0];
-             selectedRole.value = typeof firstRole === 'object' ? firstRole.name : firstRole;
-        } else {
-            selectedRole.value = null;
-        }
+const isSelected = (roleName) => {
+    return selectedRoles.value.includes(roleName);
+};
+
+const toggleRole = (roleName) => {
+    const index = selectedRoles.value.indexOf(roleName);
+    if (index > -1) {
+        selectedRoles.value.splice(index, 1);
     } else {
-        selectedRole.value = null;
+        selectedRoles.value.push(roleName);
+    }
+};
+
+watch(() => props.user, (newUser) => {
+    if (newUser && newUser.roles) {
+        selectedRoles.value = newUser.roles.map(r => typeof r === 'object' ? r.name : r);
+    } else {
+        selectedRoles.value = [];
     }
 });
 
@@ -181,20 +188,19 @@ const saveRoles = async () => {
 
     saving.value = true;
     try {
-        const rolesToSend = selectedRole.value ? [selectedRole.value] : [];
-        await store.assignRoles(props.user.id, rolesToSend);
+        await store.assignRoles(props.user.id, selectedRoles.value);
         emit('roles-updated');
         close();
         Swal.fire({
-            title: 'Rol Asignado',
-            text: 'El rol se ha actualizado correctamente.',
+            title: 'Roles Asignados',
+            text: 'Los roles se han actualizado correctamente.',
             icon: 'success',
             timer: 2000,
             showConfirmButton: false
         });
     } catch (error) {
         console.error('Error assigning roles:', error);
-        Swal.fire('Error', 'Error al asignar el rol.', 'error');
+        Swal.fire('Error', 'Error al asignar los roles.', 'error');
     } finally {
         saving.value = false;
     }

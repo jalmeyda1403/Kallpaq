@@ -1,5 +1,5 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <div v-if="successMessage" class="alert alert-success" id="success-alert">
             {{ successMessage }}
         </div>
@@ -8,9 +8,10 @@
         </div>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Mis Hallazgos</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Mis Solicitudes de Mejora</li>
             </ol>
         </nav>
 
@@ -22,7 +23,7 @@
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
-                        <h3 class="card-title mb-0">Mis Hallazgos</h3>
+                        <h3 class="card-title mb-0">Mis Solicitudes de Mejora</h3>
                     </div>
                 </div>
                 <br></br>
@@ -74,8 +75,13 @@
             </div>
 
             <div class="card-body">
-                <DataTable ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
+                <div class="h-1 mb-2" style="height: 4px;">
+                    <ProgressBar v-if="isLoading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="rows"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
+                    :class="{ 'opacity-50 pointer-events-none': isLoading }" :lazy="true" :totalRecords="totalRecords"
+                    @page="onPage"
                     :globalFilterFields="['hallazgo_cod', 'hallazgo_clasificacion', 'hallazgo_resumen', 'procesos.proceso_nombre', 'hallazgo_estado']">
                     <template #header>
                         <div class="d-flex align-items-center">
@@ -122,7 +128,8 @@
                     <Column header="Avance Acciones" style="width:12%; text-align: center;">
                         <template #body="{ data }">
                             <span v-if="data.acciones && data.acciones.length > 0">
-                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{ data.acciones.length }}
+                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{
+                                    data.acciones.length }}
                             </span>
                             <span v-else class="text-muted small">-</span>
                         </template>
@@ -157,7 +164,7 @@
                                 @click.prevent="verPlanesDeAccion(data.id)">
                                 <i class="fas fa-edit text-info fa-lg"></i>
                             </a>
-                            
+
                             <a href="#" title="Ejecución de Acciones" class="mr-2 d-inline-block"
                                 v-if="['aprobado', 'en proceso'].includes(data.hallazgo_estado)"
                                 @click.prevent="verEjecucionAcciones(data.id)">
@@ -200,6 +207,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 
 import { FilterMatchMode } from 'primevue/api';
 
@@ -210,6 +218,9 @@ import { useHallazgoStore } from '@/stores/hallazgoStore'; // Importa la tienda
 
 const router = useRouter();
 const hallazgos = ref([]);
+const totalRecords = ref(0);
+const rows = ref(10);
+const currentPage = ref(1);
 const procesos = ref([]);
 const successMessage = ref('');
 const errorMessage = ref('');
@@ -258,19 +269,30 @@ const getAccionesPendientes = (acciones) => {
 };
 
 // Métodos
-const fetchHallazgos = async () => {
+const fetchHallazgos = async (page = 1) => {
     isLoading.value = true;
     try {
         const response = await axios.get(route('hallazgos.mine'), {
-            params: serverFilters
+            params: {
+                ...serverFilters,
+                page: page,
+                rows: rows.value
+            }
         });
-        hallazgos.value = response.data;
+        hallazgos.value = response.data.data;
+        totalRecords.value = response.data.total;
+        currentPage.value = response.data.current_page;
     } catch (error) {
         console.error('Error al obtener los hallazgos:', error);
         errorMessage.value = 'Hubo un problema al cargar los hallazgos.';
     } finally {
         isLoading.value = false;
     }
+};
+
+const onPage = (event) => {
+    rows.value = event.rows;
+    fetchHallazgos(event.page + 1);
 };
 
 const fetchProcesos = async () => {

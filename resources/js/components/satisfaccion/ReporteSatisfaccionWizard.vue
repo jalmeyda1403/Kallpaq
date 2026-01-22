@@ -1,359 +1,419 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <!-- Breadcrumbs -->
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded mb-3">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item"><router-link :to="{ name: 'reportes-satisfaccion.index' }">Reportes de
-                        Satisfacción</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ isEditing ? 'Editar' : 'Nuevo' }} Reporte</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item">
+                    <router-link to="/home" class="text-danger font-weight-bold">Inicio</router-link>
+                </li>
+                <li class="breadcrumb-item">
+                    <router-link :to="{ name: 'reportes-satisfaccion.index' }"
+                        class="text-danger font-weight-bold">Reportes de Satisfacción</router-link>
+                </li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">
+                    {{ isEditing ? 'Editar' : 'Nuevo' }} Reporte
+                </li>
             </ol>
         </nav>
 
-        <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom">
-                <h3 class="card-title mb-0">
-                    <i class="fas fa-file-alt text-primary mr-2"></i>
-                    Generar Reporte Trimestral de Satisfacción
-                </h3>
+        <div class="card shadow-sm border-0 mb-4">
+            <!-- Header -->
+            <div class="card-header bg-danger py-2 px-3">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center mr-3 shadow-sm"
+                                style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="fas fa-file-alt text-danger" style="font-size: 0.9rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="font-weight-bold text-white mb-0">
+                                    Generar Reporte Trimestral de Satisfacción
+                                </h5>
+                                <p class="text-white mb-0" style="opacity: 0.9; font-size: 0.75rem;">
+                                    Complete los pasos para generar el reporte consolidado del periodo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-right mt-2 mt-md-0">
+                        <button class="btn btn-link text-white text-decoration-none mr-3 px-0 btn-sm"
+                            @click="router.push({ name: 'reportes-satisfaccion.index' })">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver al Listado
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="animate__animated animate__fadeIn">
-                    <div class="row">
-                        <!-- Stepper Sidebar -->
-                        <div class="col-md-3 mb-4">
-                            <div class="stepper-sidebar sticky-top" style="top: 20px; z-index: 1;">
-                                <div class="stepper-wrapper">
-                                    <!-- Step 1: Configuración -->
-                                    <div class="stepper-item"
-                                        :class="{ completed: currentStep > 1, active: currentStep === 1 }"
-                                        @click="goToStep(1)">
-                                        <div class="step-counter">
-                                            <i v-if="currentStep > 1" class="fas fa-check"></i>
-                                            <span v-else>1</span>
-                                        </div>
-                                        <div class="step-info">
-                                            <div class="step-name">Configuración</div>
-                                            <small class="step-desc">Selección de Periodo y Proceso</small>
-                                        </div>
-                                    </div>
 
-                                    <!-- Step 2: Resultados -->
-                                    <div class="stepper-item"
-                                        :class="{ completed: currentStep > 2, active: currentStep === 2 }"
-                                        @click="goToStep(2)">
-                                        <div class="step-counter">
-                                            <i v-if="currentStep > 2" class="fas fa-check"></i>
-                                            <span v-else>2</span>
-                                        </div>
-                                        <div class="step-info">
-                                            <div class="step-name">Resultados</div>
-                                            <small class="step-desc">Datos del Trimestre</small>
-                                        </div>
+            <div class="card-body p-0">
+                <div class="row no-gutters">
+                    <!-- Sidebar Stepper (Left) -->
+                    <div class="col-md-3 bg-light border-right min-vh-75">
+                        <div class="p-4">
+                            <div class="stepper-wrapper">
+                                <div class="stepper-item"
+                                    :class="{ 'active': currentStep === 1, 'completed': currentStep > 1 }"
+                                    @click="goToStep(1)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 1" class="fas fa-check"></i>
+                                        <span v-else>1</span>
                                     </div>
-
-                                    <!-- Step 3: Conclusiones -->
-                                    <div class="stepper-item"
-                                        :class="{ completed: currentStep > 3, active: currentStep === 3 }"
-                                        @click="goToStep(3)">
-                                        <div class="step-counter">
-                                            <i v-if="currentStep > 3" class="fas fa-check"></i>
-                                            <span v-else>3</span>
-                                        </div>
-                                        <div class="step-info">
-                                            <div class="step-name">Conclusiones</div>
-                                            <small class="step-desc">Oportunidades y Conclusiones</small>
-                                        </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Configuración</div>
+                                        <small class="step-desc">Periodo y Proceso</small>
                                     </div>
-
-                                    <!-- Step 4: Finalización -->
-                                    <div class="stepper-item"
-                                        :class="{ completed: currentStep > 4, active: currentStep === 4 }"
-                                        @click="goToStep(4)">
-                                        <div class="step-counter">
-                                            <i v-if="currentStep > 4" class="fas fa-check"></i>
-                                            <span v-else>4</span>
-                                        </div>
-                                        <div class="step-info">
-                                            <div class="step-name">Finalización</div>
-                                            <small class="step-desc">Revisar y Guardar</small>
-                                        </div>
+                                </div>
+                                <div class="stepper-item"
+                                    :class="{ 'active': currentStep === 2, 'completed': currentStep > 2 }"
+                                    @click="goToStep(2)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 2" class="fas fa-check"></i>
+                                        <span v-else>2</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Resultados</div>
+                                        <small class="step-desc">Datos del Trimestre</small>
+                                    </div>
+                                </div>
+                                <div class="stepper-item"
+                                    :class="{ 'active': currentStep === 3, 'completed': currentStep > 3 }"
+                                    @click="goToStep(3)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 3" class="fas fa-check"></i>
+                                        <span v-else>3</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Conclusiones</div>
+                                        <small class="step-desc">Análisis con IA</small>
+                                    </div>
+                                </div>
+                                <div class="stepper-item"
+                                    :class="{ 'active': currentStep === 4, 'completed': currentStep > 4 }"
+                                    @click="goToStep(4)">
+                                    <div class="step-counter">
+                                        <i v-if="currentStep > 4" class="fas fa-check"></i>
+                                        <span v-else>4</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Vista Previa</div>
+                                        <small class="step-desc">Revisión y Descarga</small>
+                                    </div>
+                                </div>
+                                <div class="stepper-item"
+                                    :class="{ 'active': currentStep === 5, 'completed': form.estado === 'firmado' }"
+                                    @click="goToStep(5)">
+                                    <div class="step-counter">
+                                        <i v-if="form.estado === 'firmado'" class="fas fa-check"></i>
+                                        <span v-else>5</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <div class="step-name">Firma y Envío</div>
+                                        <small class="step-desc">Adjuntar y Finalizar</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Main Content Area -->
-                        <div class="col-md-9">
-                            <div class="card card-primary card-outline shadow-sm border-0">
-                                <div class="card-body">
-                                    <!-- Readonly Alert -->
-                                    <div v-if="isReadonly" class="alert alert-warning border-warning shadow-sm mb-4">
-                                        <i class="fas fa-lock mr-2"></i>
-                                        <strong>Modo Solo Lectura:</strong> Este reporte ya está firmado y no puede ser
-                                        modificado.
+                    <!-- Content (Right) -->
+                    <div class="col-md-9 bg-white">
+                        <div class="p-4 p-lg-5">
+                            <!-- Readonly Alert -->
+                            <div v-if="isReadonly"
+                                class="alert alert-danger-light border-0 shadow-sm mb-4 p-4 rounded-lg">
+                                <div class="d-flex">
+                                    <i class="fas fa-lock fa-2x text-danger mr-4"></i>
+                                    <div>
+                                        <h6 class="font-weight-bold text-danger mb-1">Modo Solo Lectura</h6>
+                                        <p class="mb-0 text-dark small">Este reporte ya está firmado y no puede ser
+                                            modificado.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form @submit.prevent="">
+                                <!-- Step 1: Configuración -->
+                                <div v-show="currentStep === 1" class="step-pane fade-in">
+                                    <div class="pane-header mb-4">
+                                        <h4 class="text-dark font-weight-bold">1. Configuración del Reporte</h4>
+                                        <p class="text-muted">Seleccione el periodo y el proceso para el cual desea
+                                            generar el reporte.</p>
                                     </div>
 
-                                    <!-- PASO 1: Configuración -->
-                                    <div v-if="currentStep === 1"
-                                        class="step-content animate__animated animate__fadeIn">
-                                        <div class="step-header mb-4 pb-2 border-bottom">
-                                            <h4 class="text-dark"><i class="fas fa-cog text-primary mr-2"></i>
-                                                Configuración del Reporte</h4>
-                                            <p class="text-muted small">Seleccione el periodo y el proceso para el cual
-                                                desea generar el reporte.</p>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Periodo (Año)</label>
-                                                    <select v-model="form.anio" class="form-control"
-                                                        :disabled="isReadonly">
-                                                        <option v-for="year in [2024, 2025, 2026]" :key="year"
-                                                            :value="year">{{ year }}</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Trimestre</label>
-                                                    <select v-model="form.trimestre" class="form-control"
-                                                        :disabled="isReadonly">
-                                                        <option :value="1">I Trimestre</option>
-                                                        <option :value="2">II Trimestre</option>
-                                                        <option :value="3">III Trimestre</option>
-                                                        <option :value="4">IV Trimestre</option>
-                                                    </select>
-                                                </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-4">
+                                                <label class="font-weight-bold text-dark mb-2">Periodo (Año)</label>
+                                                <select v-model="form.anio"
+                                                    class="form-control form-control-lg border-2 shadow-none"
+                                                    :disabled="isReadonly">
+                                                    <option v-for="year in [2024, 2025, 2026]" :key="year"
+                                                        :value="year">{{ year }}</option>
+                                                </select>
                                             </div>
                                         </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-4">
+                                                <label class="font-weight-bold text-dark mb-2">Trimestre</label>
+                                                <select v-model="form.trimestre"
+                                                    class="form-control form-control-lg border-2 shadow-none"
+                                                    :disabled="isReadonly">
+                                                    <option :value="1">I Trimestre</option>
+                                                    <option :value="2">II Trimestre</option>
+                                                    <option :value="3">III Trimestre</option>
+                                                    <option :value="4">IV Trimestre</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                        <div class="form-group">
-                                            <label>Proceso</label>
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" :value="procesoNombre" readonly
-                                                    :disabled="isReadonly" placeholder="Seleccione un proceso..."
-                                                    style="background-color: white;">
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-primary" type="button"
-                                                        @click="openProcesoModal" :disabled="isReadonly">
-                                                        <i class="fas fa-search"></i> Buscar
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">Proceso Relacionado <span
+                                                class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-light border-2 border-right-0"><i
+                                                        class="fas fa-project-diagram"></i></span>
+                                            </div>
+                                            <input type="text"
+                                                class="form-control form-control-lg border-2 border-left-0 shadow-none"
+                                                :value="procesoNombre" readonly placeholder="Seleccione un proceso...">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-danger font-weight-bold px-4" type="button"
+                                                    @click="openProcesoModal" :disabled="isReadonly">
+                                                    <i class="fas fa-search mr-1"></i> Buscar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: Resultados -->
+                                <div v-show="currentStep === 2" class="step-pane fade-in">
+                                    <div class="pane-header mb-4 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h4 class="text-dark font-weight-bold">2. Resultados del Trimestre</h4>
+                                            <p class="text-muted">Revise los datos consolidados del periodo: <strong>{{
+                                                periodoTexto }}</strong></p>
+                                        </div>
+                                        <button @click="refreshQuarterData"
+                                            class="btn btn-outline-danger btn-sm font-weight-bold"
+                                            :disabled="loading || isReadonly">
+                                            <i class="fas fa-sync-alt mr-1" :class="{ 'fa-spin': loading }"></i>
+                                            Actualizar Datos
+                                        </button>
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">2.1 Encuestas de
+                                            Satisfacción</label>
+                                        <textarea v-model="form.resumen_encuestas"
+                                            class="form-control border-2 shadow-none" rows="4"
+                                            :disabled="isReadonly"></textarea>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">2.2 Sugerencias</label>
+                                        <textarea v-model="form.resumen_sugerencias"
+                                            class="form-control border-2 shadow-none" rows="4"
+                                            :disabled="isReadonly"></textarea>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">2.3 Reclamos (Manual)</label>
+                                        <textarea v-model="form.reclamos" class="form-control border-2 shadow-none"
+                                            rows="4" :disabled="isReadonly"></textarea>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">2.4 Salidas No Conformes
+                                            (SNC)</label>
+                                        <textarea v-model="form.resumen_snc" class="form-control border-2 shadow-none"
+                                            rows="4" :disabled="isReadonly"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: Conclusiones -->
+                                <div v-show="currentStep === 3" class="step-pane fade-in">
+                                    <div class="pane-header mb-4 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h4 class="text-dark font-weight-bold">3. Análisis y Conclusiones</h4>
+                                            <p class="text-muted">Genere las oportunidades de mejora y conclusiones
+                                                utilizando IA.</p>
+                                        </div>
+                                        <button @click="generateAIAnalysis"
+                                            class="btn btn-danger font-weight-bold px-4 shadow-sm"
+                                            :disabled="generatingAI || isReadonly">
+                                            <i class="fas fa-magic mr-1"></i> {{ generatingAI ? 'Generando...' :
+                                                'Generar con IA' }}
+                                        </button>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">III. Oportunidades de
+                                            Mejora</label>
+                                        <textarea v-model="form.oportunidades_mejora"
+                                            class="form-control border-2 shadow-none" rows="8"
+                                            :disabled="isReadonly"></textarea>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2">IV. Conclusiones</label>
+                                        <textarea v-model="form.conclusiones" class="form-control border-2 shadow-none"
+                                            rows="8" :disabled="isReadonly"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Step 4: Vista Previa -->
+                                <div v-show="currentStep === 4" class="step-pane fade-in">
+                                    <div class="pane-header mb-4">
+                                        <h4 class="text-dark font-weight-bold">4. Revisión e Impresión</h4>
+                                        <p class="text-muted">Genere la versión oficial del reporte para su firma.</p>
+                                    </div>
+
+                                    <div v-if="!form.id && !isReadonly"
+                                        class="alert alert-warning shadow-sm border-0 rounded-lg py-3">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Primero debe <strong>Guardar el Borrador</strong> para habilitar las descargas.
+                                    </div>
+
+                                    <div class="card shadow-sm border-0 mb-4 bg-light rounded-lg text-center py-5">
+                                        <div class="card-body">
+                                            <div class="mb-4">
+                                                <div class="bg-white rounded-circle shadow-sm d-inline-flex p-4">
+                                                    <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                                </div>
+                                            </div>
+                                            <h5 class="font-weight-bold mb-2 text-dark">Imprimir Reporte Trimestral</h5>
+                                            <p class="text-muted mb-4 px-5 mx-auto" style="max-width: 600px;">
+                                                Documento consolidado para ser firmado por el responsable del proceso.
+                                            </p>
+
+                                            <div class="d-flex justify-content-center flex-wrap gap-2">
+                                                <button
+                                                    class="btn btn-outline-danger px-4 py-2 shadow-sm rounded-pill font-weight-bold m-1"
+                                                    @click="openPrintModal">
+                                                    <i class="fas fa-eye mr-2"></i> Vista Previa PDF
+                                                </button>
+                                                <button v-if="form.id"
+                                                    class="btn btn-danger px-4 py-2 shadow-sm rounded-pill font-weight-bold m-1"
+                                                    @click="downloadWord">
+                                                    <i class="fas fa-file-word mr-2"></i> Descargar Word
+                                                </button>
+                                                <button v-else
+                                                    class="btn btn-outline-primary px-4 py-2 shadow-sm rounded-pill font-weight-bold m-1"
+                                                    @click="saveDraft" :disabled="loading">
+                                                    <i class="fas fa-save mr-2"></i> Guardar Borrador
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 5: Firma y Envío -->
+                                <div v-show="currentStep === 5" class="step-pane fade-in">
+                                    <div class="pane-header mb-4 border-bottom pb-3">
+                                        <h4 class="text-dark font-weight-bold">5. Firma y Envío</h4>
+                                        <p class="text-muted">Adjunte el reporte firmado y finalice el proceso.</p>
+                                    </div>
+
+                                    <div class="doc-upload-section">
+                                        <div v-if="form.archivo_path" class="mb-4">
+                                            <div class="card border-0 shadow-sm bg-success-light">
+                                                <div class="card-body p-3 d-flex align-items-center">
+                                                    <div class="bg-success text-white rounded-circle mr-3 d-flex align-items-center justify-content-center"
+                                                        style="width: 36px; height: 36px;">
+                                                        <i class="fas fa-check"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-0 font-weight-bold text-success-dark">Reporte
+                                                            Firmado Cargado</h6>
+                                                        <a :href="getAssetUrl(form.archivo_path)" target="_blank"
+                                                            class="text-success small">Ver Archivo Firmado.pdf</a>
+                                                    </div>
+                                                    <button
+                                                        class="btn btn-sm btn-white text-danger font-weight-bold shadow-sm"
+                                                        @click="triggerFileInput" v-if="!isReadonly">
+                                                        <i class="fas fa-sync-alt mr-1"></i> Reemplazar
                                                     </button>
                                                 </div>
                                             </div>
-                                            <small class="text-muted">Utilice el botón de búsqueda para seleccionar el
-                                                proceso.</small>
                                         </div>
 
-                                        <div class="text-right mt-4">
-                                            <button class="btn btn-primary px-4 shadow-sm" @click="fetchDataAndNext"
-                                                :disabled="!form.proceso_id || isReadonly">
-                                                Siguiente <i class="fas fa-arrow-right ml-2"></i>
-                                            </button>
+                                        <div class="drop-zone-premium shadow-sm border-2 rounded-lg py-5 text-center bg-white"
+                                            @click="triggerFileInput" v-if="!isReadonly"
+                                            :class="{ 'dragging': isDragging }" @dragover.prevent="isDragging = true"
+                                            @dragleave.prevent="isDragging = false" @drop.prevent="handleFileDrop">
+                                            <input type="file" ref="fileInput" class="d-none" accept=".pdf"
+                                                @change="handleFileSelect">
+                                            <div v-if="uploading">
+                                                <div class="spinner-border text-danger" role="status"></div>
+                                                <p class="mt-2 text-muted font-weight-bold">Subiendo archivo...</p>
+                                            </div>
+                                            <div v-else>
+                                                <i
+                                                    class="fas fa-cloud-upload-alt fa-3x text-danger mb-3 opacity-50"></i>
+                                                <h5 class="font-weight-bold text-dark mb-1">Arrastre aquí el reporte
+                                                    firmado</h5>
+                                                <p class="text-muted small">o haga clic para seleccionar archivo (PDF
+                                                    máximo 10MB)</p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- PASO 2: Resultados Preeliminares -->
-                                    <div v-if="currentStep === 2"
-                                        class="step-content animate__animated animate__fadeIn">
-                                        <div
-                                            class="step-header mb-4 pb-2 border-bottom d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <h4 class="text-dark mb-1"><i
-                                                        class="fas fa-chart-bar text-primary mr-2"></i> Resultados del
-                                                    Trimestre</h4>
-                                                <p class="text-muted small mb-0">Revise los datos consolidados del
-                                                    periodo: <strong>{{ periodoTexto }}</strong></p>
-                                            </div>
-                                            <button @click="refreshQuarterData" class="btn btn-primary btn-sm shadow"
-                                                :disabled="loading || isReadonly">
-                                                <i class="fas fa-sync-alt mr-1" :class="{ 'fa-spin': loading }"></i>
-                                                {{ loading ? 'Actualizando...' : 'Actualizar Datos' }}
-                                            </button>
-                                        </div>
-
-                                        <div class="card mb-3 border-light shadow-sm">
-                                            <div class="card-header bg-light"><strong>2.1 Encuestas de
-                                                    Satisfacción</strong></div>
-                                            <div class="card-body p-2">
-                                                <textarea v-model="form.resumen_encuestas" class="form-control" rows="5"
-                                                    placeholder="Resumen de encuestas..."
-                                                    :disabled="isReadonly"></textarea>
-                                            </div>
-                                        </div>
-
-                                        <div class="card mb-3 border-light shadow-sm">
-                                            <div class="card-header bg-light"><strong>2.2 Sugerencias</strong></div>
-                                            <div class="card-body p-2">
-                                                <textarea v-model="form.resumen_sugerencias" class="form-control"
-                                                    rows="5" placeholder="Resumen de sugerencias..."
-                                                    :disabled="isReadonly"></textarea>
-                                            </div>
-                                        </div>
-
-                                        <div class="card mb-3 border-warning shadow-sm"
-                                            style="border-left: 4px solid #ffc107;">
-                                            <div class="card-header bg-white"><strong>2.3 Reclamos (Ingreso
-                                                    Manual)</strong></div>
-                                            <div class="card-body p-2">
-                                                <textarea v-model="form.reclamos" class="form-control" rows="5"
-                                                    placeholder="Reclamos reportados..."
-                                                    :disabled="isReadonly"></textarea>
-                                            </div>
-                                        </div>
-
-                                        <div class="card mb-3 border-light shadow-sm">
-                                            <div class="card-header bg-light"><strong>2.4 Salidas No Conformes
-                                                    (SNC)</strong></div>
-                                            <div class="card-body p-2">
-                                                <textarea v-model="form.resumen_snc" class="form-control" rows="5"
-                                                    placeholder="Resumen de SNCs..." :disabled="isReadonly"></textarea>
-                                            </div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between mt-4">
-                                            <button class="btn btn-outline-secondary" @click="prevStep">
-                                                <i class="fas fa-arrow-left mr-2"></i> Atrás
-                                            </button>
-                                            <button class="btn btn-primary px-4 shadow-sm" @click="nextStep">
-                                                Siguiente <i class="fas fa-arrow-right ml-2"></i>
-                                            </button>
-                                        </div>
+                                    <div class="mt-5 pt-3 border-top text-right ml-auto">
+                                        <button
+                                            class="btn btn-success px-5 py-2 font-weight-bold shadow-sm rounded-pill"
+                                            @click="enviarReporte"
+                                            :disabled="!form.archivo_path || uploading || isReadonly">
+                                            <i class="fas fa-paper-plane mr-2"></i> {{ isReadonly ? 'Reporte Enviado'
+                                                : 'Enviar Reporte' }}
+                                        </button>
                                     </div>
+                                </div>
+                            </form>
 
-                                    <!-- PASO 3: Conclusiones -->
-                                    <div v-if="currentStep === 3"
-                                        class="step-content animate__animated animate__fadeIn">
-                                        <div
-                                            class="step-header mb-4 pb-2 border-bottom d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <h4 class="text-dark mb-1"><i
-                                                        class="fas fa-lightbulb text-warning mr-2"></i> Conclusiones
-                                                </h4>
-                                                <p class="text-muted small mb-0">Genere oportunidades de mejora y
-                                                    conclusiones utilizando IA.</p>
-                                            </div>
-                                            <button @click="generateAIAnalysis" class="btn btn-purple btn-sm shadow"
-                                                :disabled="generatingAI || isReadonly">
-                                                <i class="fas fa-magic mr-1"></i>
-                                                {{ generatingAI ? 'Generando...' : 'Generar con IA' }}
-                                                <span v-if="generatingAI"
-                                                    class="spinner-border spinner-border-sm ml-1"></span>
-                                            </button>
-                                        </div>
+                            <!-- Navigation Footer -->
+                            <div class="navigation-footer d-flex justify-content-between pt-5 mt-5 border-top">
+                                <button v-if="currentStep > 1"
+                                    class="btn btn-light px-4 py-2 font-weight-bold text-muted border"
+                                    @click="prevStep">
+                                    <i class="fas fa-chevron-left mr-2"></i> Anterior
+                                </button>
+                                <div v-else></div>
 
-                                        <div class="form-group">
-                                            <label class="font-weight-bold text-primary">III. Oportunidades de Mejora
-                                                Identificadas</label>
-                                            <textarea v-model="form.oportunidades_mejora" class="form-control" rows="10"
-                                                placeholder="Escriba las oportunidades de mejora..."
-                                                :disabled="isReadonly"></textarea>
-                                            <small class="text-muted">Use guiones (-) para listas y saltos de línea para
-                                                separar párrafos</small>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label class="font-weight-bold text-primary">IV. Conclusiones</label>
-                                            <textarea v-model="form.conclusiones" class="form-control" rows="10"
-                                                placeholder="Escriba las conclusiones..."
-                                                :disabled="isReadonly"></textarea>
-                                            <small class="text-muted">Use saltos de línea para separar párrafos</small>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between mt-4">
-                                            <button class="btn btn-outline-secondary" @click="prevStep">
-                                                <i class="fas fa-arrow-left mr-2"></i> Atrás
-                                            </button>
-                                            <button class="btn btn-primary px-4 shadow-sm" @click="nextStep">
-                                                Siguiente <i class="fas fa-arrow-right ml-2"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- PASO 4: Confirmación -->
-                                    <div v-if="currentStep === 4"
-                                        class="step-content animate__animated animate__fadeIn">
-                                        <div class="step-header mb-4 pb-2 border-bottom">
-                                            <h4 class="text-dark"><i class="fas fa-check-circle text-success mr-2"></i>
-                                                Finalización</h4>
-                                            <p class="text-muted small">Revise la información y genere el reporte
-                                                oficial.</p>
-                                        </div>
-
-                                        <div class="alert alert-light border shadow-sm">
-                                            <h5><i class="fas fa-info-circle text-info mr-2"></i> Resumen del Reporte
-                                            </h5>
-                                            <ul class="mt-2 mb-0">
-                                                <li><strong>Proceso:</strong> {{ procesoNombre }}</li>
-                                                <li><strong>Periodo:</strong> {{ form.anio }} - Trimestre {{
-                                                    form.trimestre }}</li>
-                                                <li><strong>Encuestas:</strong> {{ form.resumen_encuestas ?
-                                                    'Registradas' : 'Sin datos' }}</li>
-                                                <li><strong>Análisis IA:</strong> {{ form.oportunidades_mejora ?
-                                                    'Generado' : 'Pendiente' }}</li>
-                                            </ul>
-                                        </div>
-
-                                        <div class="text-center py-4">
-                                            <button v-if="!isReadonly && !reporteSaved" @click="saveDraft"
-                                                class="btn btn-danger btn-md px-4 shadow mr-3">
-                                                <i class="fas fa-save mr-2"></i> Guardar y Generar Reporte
-                                            </button>
-                                            <button v-if="reporteSaved" @click="downloadWord"
-                                                class="btn btn-primary btn-md px-4 shadow">
-                                                <i class="fas fa-download mr-2"></i> Descargar Word
-                                            </button>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between mt-4 border-top pt-3">
-                                            <button class="btn btn-secondary" @click="prevStep">
-                                                <i class="fas fa-arrow-left mr-2"></i> Atrás
-                                            </button>
-                                            <router-link :to="{ name: 'reportes-satisfaccion.index' }"
-                                                class="btn btn-outline-secondary">
-                                                <i class="fas fa-list mr-2"></i> Volver al Listado
-                                            </router-link>
-                                        </div>
-                                    </div>
-
+                                <div class="ml-auto">
+                                    <button v-if="currentStep < 5"
+                                        class="btn btn-danger px-5 py-2 font-weight-bold shadow-sm rounded-pill"
+                                        @click="handleNextClick" :disabled="currentStep === 1 && !form.proceso_id">
+                                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                                    </button>
+                                    <router-link v-if="currentStep === 5" :to="{ name: 'reportes-satisfaccion.index' }"
+                                        class="btn btn-light px-4 py-2 font-weight-bold text-muted border rounded-pill">
+                                        <i class="fas fa-list mr-2"></i> Volver al Listado
+                                    </router-link>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Loading Overlay -->
-            <div v-if="loading" class="overlay">
-                <div class="spinner-container text-center">
-                    <i class="fas fa-3x fa-sync-alt fa-spin text-white"></i>
-                    <p class="text-white mt-2 font-weight-bold">Procesando...</p>
-                </div>
-            </div>
-
-
-            <!-- Modal Hijo para Selección de Proceso -->
-            <ModalHijo ref="procesoModal" :fetch-url="procesoFetchUrl" target-id="proceso_id"
-                target-desc="proceso_nombre" @update-target="handleProcesoSeleccionado" />
-        </div> <!-- /card -->
-    </div> <!-- /container-fluid -->
+        <!-- Modals -->
+        <ModalHijo ref="procesoModal" :fetch-url="procesoFetchUrl" target-id="proceso_id" target-desc="proceso_nombre"
+            @update-target="handleProcesoSeleccionado" />
+        <ReporteSatisfaccionPrintModal ref="reportePrintModalRef" />
+    </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useReporteSatisfaccionStore } from '../../stores/reporteSatisfaccionStore';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import ModalHijo from '../generales/ModalHijo.vue';
+import ReporteSatisfaccionPrintModal from './ReporteSatisfaccionPrintModal.vue';
 import { route } from 'ziggy-js';
-import axios from 'axios'; // Import Axios
+import axios from 'axios';
 
 const props = defineProps({
-    id: {
-        type: [String, Number],
-        default: null
-    }
+    id: { type: [String, Number], default: null }
 });
 
 const store = useReporteSatisfaccionStore();
@@ -364,6 +424,10 @@ const loading = computed(() => store.loading);
 const generatingAI = ref(false);
 const editorRefreshKey = ref(0);
 const procesoModal = ref(null);
+const reportePrintModalRef = ref(null);
+const fileInput = ref(null);
+const uploading = ref(false);
+const isDragging = ref(false);
 
 const periodoTexto = ref('');
 const procesoNombre = ref('');
@@ -374,352 +438,267 @@ const reporteSaved = ref(false);
 const procesoFetchUrl = computed(() => route('procesos.buscar'));
 
 const form = ref({
-    id: null, // Add ID for update handling
-    anio: new Date().getFullYear(),
-    trimestre: 4,
-    proceso_id: null,
-    resumen_encuestas: '',
-    resumen_sugerencias: '',
-    reclamos: 'No se registraron reclamos en este periodo.',
-    resumen_snc: '',
-    oportunidades_mejora: '',
-    conclusiones: '',
-    estado: 'borrador',
-    fecha_generacion: null
+    id: null, anio: new Date().getFullYear(), trimestre: 1, proceso_id: null,
+    resumen_encuestas: '', resumen_sugerencias: '', reclamos: 'No se registraron reclamos.',
+    resumen_snc: '', oportunidades_mejora: '', conclusiones: '', estado: 'borrador', archivo_path: null
 });
 
-onMounted(async () => {
-    if (isEditing.value) {
-        try {
-            console.log('Fetching single report:', props.id);
-            const reporte = await store.fetchReporte(props.id);
-
-            console.log('Reporte fetched:', reporte);
-
-            if (reporte) {
-                form.value = { ...reporte };
-
-                if (reporte.proceso) {
-                    console.log('Proceso loaded:', reporte.proceso);
-                    procesoNombre.value = reporte.proceso.proceso_nombre;
-                } else {
-                    procesoNombre.value = 'Proceso no encontrado (ID: ' + reporte.proceso_id + ')';
-                }
-
-                // Set period text
-                periodoTexto.value = `${form.value.anio} - Trimestre ${form.value.trimestre}`;
-
-                // Force editor refresh
-                editorRefreshKey.value++;
-            }
-        } catch (e) {
-            console.error('Error fetching report:', e);
-            Swal.fire('Error', 'No se pudo cargar el reporte.', 'error').then(() => {
-                router.push({ name: 'reportes-satisfaccion.index' });
-            });
+const loadReporte = async () => {
+    if (!props.id) return;
+    try {
+        const reporte = await store.fetchReporte(props.id);
+        if (reporte) {
+            form.value = { ...reporte };
+            if (reporte.proceso) procesoNombre.value = reporte.proceso.proceso_nombre;
+            periodoTexto.value = `${form.value.anio} - Trimestre ${form.value.trimestre}`;
+            reporteSaved.value = true;
+            editorRefreshKey.value++;
         }
-    }
-});
-
-const openProcesoModal = () => {
-    if (procesoModal.value) {
-        procesoModal.value.open();
+    } catch (e) {
+        Swal.fire('Error', 'No se pudo cargar el reporte.', 'error');
     }
 };
 
+onMounted(loadReporte);
+watch(() => props.id, (newId) => { if (newId) loadReporte(); });
+
+const openProcesoModal = () => procesoModal.value?.open();
 const handleProcesoSeleccionado = (data) => {
     form.value.proceso_id = data.idValue;
     procesoNombre.value = data.descValue;
 };
 
 const goToStep = (step) => {
-    // Basic validation to prevent jumping ahead without data
     if (step > 1 && !form.value.proceso_id) {
-        Swal.fire('Atención', 'Debe seleccionar un proceso primero.', 'warning');
-        return;
+        return Swal.fire('Atención', 'Debe seleccionar un proceso primero.', 'warning');
     }
-
-    // If jumping to step 2 or more, ensure we fetched data if coming from step 1
-    if (currentStep.value === 1 && step > 1) {
-        fetchDataAndNext(); // This handles the jump inside
-        return;
-    }
-
     currentStep.value = step;
 };
 
 const nextStep = () => currentStep.value++;
 const prevStep = () => currentStep.value--;
+const handleNextClick = () => currentStep.value === 1 ? fetchDataAndNext() : nextStep();
 
 const fetchDataAndNext = async () => {
     if (!form.value.proceso_id) return;
-
     try {
         const data = await store.getQuarterData({
-            proceso_id: form.value.proceso_id,
-            anio: form.value.anio,
-            trimestre: form.value.trimestre
+            proceso_id: form.value.proceso_id, anio: form.value.anio, trimestre: form.value.trimestre
         });
-
-        // Populate form if empty or update (logic can be refined to not overwrite user edits)
         if (!form.value.resumen_encuestas) form.value.resumen_encuestas = data.resumen_encuestas;
         if (!form.value.resumen_sugerencias) form.value.resumen_sugerencias = data.resumen_sugerencias;
         if (!form.value.resumen_snc) form.value.resumen_snc = data.resumen_snc;
         periodoTexto.value = data.periodo_texto;
-
         currentStep.value = 2;
     } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'No se pudieron cargar los datos del trimestre.', 'error');
+        Swal.fire('Error', 'No se pudieron cargar los datos.', 'error');
     }
 };
 
 const refreshQuarterData = async () => {
     if (!form.value.proceso_id) return;
-
     try {
         const data = await store.getQuarterData({
-            proceso_id: form.value.proceso_id,
-            anio: form.value.anio,
-            trimestre: form.value.trimestre
+            proceso_id: form.value.proceso_id, anio: form.value.anio, trimestre: form.value.trimestre
         });
-
-        // Overwrite all data with fresh values
         form.value.resumen_encuestas = data.resumen_encuestas;
         form.value.resumen_sugerencias = data.resumen_sugerencias;
         form.value.resumen_snc = data.resumen_snc;
         periodoTexto.value = data.periodo_texto;
-
-        Swal.fire({
-            title: '¡Datos Actualizados!',
-            text: 'Los datos del trimestre se han actualizado correctamente.',
-            icon: 'success',
-            timer: 2000
-        });
+        Swal.fire({ title: '¡Datos Actualizados!', icon: 'success', timer: 2000 });
     } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'No se pudieron actualizar los datos del trimestre.', 'error');
+        Swal.fire('Error', 'No se pudo actualizar.', 'error');
     }
 };
 
 const generateAIAnalysis = async () => {
     generatingAI.value = true;
     try {
-        const payload = {
-            ...form.value,
-            proceso_nombre: procesoNombre.value
-        };
-        const analysis = await store.generateDraft(payload);
-
-        console.log('AI Analysis Result:', analysis);
-
-        // Ensure reactivity
+        const analysis = await store.generateDraft({ ...form.value, proceso_nombre: procesoNombre.value });
         form.value.oportunidades_mejora = analysis.oportunidades || form.value.oportunidades_mejora;
         form.value.conclusiones = analysis.conclusiones || form.value.conclusiones;
-
-        // Force editor refresh
         editorRefreshKey.value++;
-
-        // Force editor refresh if needed (usually v-model handles it, but just in case)
-        // If keys are missing in JSON, show alert
-        if (!analysis.oportunidades && !analysis.conclusiones) {
-            Swal.fire('Atención', 'La IA no devolvió contenido válido. Por favor intente nuevamente.', 'warning');
-        }
-
-        Swal.fire({
-            title: '¡Análisis Generado!',
-            text: 'La IA ha propuesto oportunidades y conclusiones. Revísalas y edítalas si es necesario.',
-            icon: 'success',
-            timer: 3000
-        });
+        Swal.fire({ title: '¡Análisis Generado!', icon: 'success', timer: 2000 });
     } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'Falló la generación IA. Intente nuevamente.', 'error');
+        Swal.fire('Error', 'Falló la IA.', 'error');
     } finally {
         generatingAI.value = false;
     }
 };
 
 const saveDraft = async () => {
-    if (!form.value.proceso_id) {
-        Swal.fire('Error', 'Debe seleccionar un proceso.', 'error');
-        return;
-    }
-
     try {
-        if (isEditing.value && form.value.id) {
-            await store.updateReporte(form.value.id, form.value);
-        } else {
+        if (isEditing.value && form.value.id) await store.updateReporte(form.value.id, form.value);
+        else {
             const result = await store.createReporte(form.value);
             form.value.id = result.id;
         }
-
         reporteSaved.value = true;
-
-        Swal.fire({
-            title: '¡Éxito!',
-            text: 'El reporte ha sido guardado correctamente. Ahora puede descargarlo en formato Word.',
-            icon: 'success',
-            timer: 3000
-        });
+        Swal.fire({ title: '¡Guardado!', icon: 'success', timer: 1500 });
     } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'No se pudo guardar el reporte.', 'error');
+        Swal.fire('Error', 'No se pudo guardar.', 'error');
     }
 };
 
 const downloadWord = async () => {
-    if (!form.value.id) return;
-
     try {
-        const response = await axios.get(`/api/reportes-satisfaccion/${form.value.id}/download`, {
-            responseType: 'blob',
-            headers: {
-                'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            }
-        });
-
+        const response = await axios.get(`/api/reportes-satisfaccion/${form.value.id}/download`, { responseType: 'blob' });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Reporte_Satisfaccion_${form.value.anio}_T${form.value.trimestre}.docx`;
-        document.body.appendChild(a);
+        a.download = `Reporte_${form.value.anio}_T${form.value.trimestre}.docx`;
         a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    } catch (error) {
-        console.error('Error downloading:', error);
-        Swal.fire('Error', 'No se pudo descargar el reporte. Verifique que haya iniciado sesión.', 'error');
+    } catch (e) {
+        Swal.fire('Error', 'Falla al descargar.', 'error');
     }
 };
+
+const openPrintModal = () => reportePrintModalRef.value?.open({ ...form.value, proceso: { proceso_nombre: procesoNombre.value } });
+const triggerFileInput = () => fileInput.value?.click();
+const handleFileSelect = (e) => uploadFile(e.target.files[0]);
+const handleFileDrop = (e) => { isDragging.value = false; uploadFile(e.dataTransfer.files[0]); };
+
+const uploadFile = async (file) => {
+    if (!file || file.type !== 'application/pdf') return Swal.fire('Error', 'Solo PDF.', 'error');
+    uploading.value = true;
+    try {
+        const resp = await store.uploadSigned(form.value.id, file);
+        form.value.archivo_path = resp.path;
+        Swal.fire({ title: 'Archivo Cargado', text: 'Ahora puede proceder a enviar el reporte.', icon: 'success', timer: 2000 });
+    } catch (e) {
+        Swal.fire('Error', 'Falla al subir.', 'error');
+    } finally { uploading.value = false; }
+};
+
+const enviarReporte = async () => {
+    const result = await Swal.fire({ title: '¿Enviar Reporte?', text: 'Se cerrará el reporte y no podrá ser modificado.', icon: 'question', showCancelButton: true });
+    if (result.isConfirmed) {
+        try {
+            form.value.estado = 'firmado';
+            await store.updateReporte(form.value.id, form.value);
+            Swal.fire('¡Éxito!', 'Reporte enviado correctamente.', 'success');
+        } catch (e) { Swal.fire('Error', 'Falla al enviar.', 'error'); }
+    }
+};
+
+const getAssetUrl = (path) => `/storage/${path}`;
 </script>
 
 <style scoped>
-/* Stepper Styles copied and adapted */
-.stepper-sidebar {
-    background-color: #f8f9fa;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
+.min-vh-75 {
+    min-height: 75vh;
 }
 
-.stepper-wrapper {
-    position: relative;
-    padding-left: 0.5rem;
+.bg-success-light {
+    background-color: #f0fff4;
+}
+
+.text-success-dark {
+    color: #22543d;
+}
+
+.drop-zone-premium {
+    border: 2px dashed #e2e8f0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.drop-zone-premium:hover,
+.drop-zone-premium.dragging {
+    border-color: #dc3545;
+    background-color: #fff5f5;
 }
 
 .stepper-item {
-    position: relative;
     display: flex;
-    align-items: flex-start;
     padding: 1rem;
     margin-bottom: 0.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    border-left: 4px solid transparent;
 }
 
 .stepper-item:hover {
-    background-color: #e9ecef;
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* Line connector */
-.stepper-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: calc(1rem + 13px);
-    top: 3.5rem;
-    width: 2px;
-    height: calc(100% - 20px);
-    background-color: #dee2e6;
-    z-index: 0;
-}
-
-.stepper-item.completed:not(:last-child)::before {
-    background-color: #28a745;
-}
-
-
-
-.step-counter {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    border-radius: 50%;
-    background-color: #dee2e6;
-    color: #6c757d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.8rem;
-    z-index: 1;
-    margin-right: 1rem;
-    transition: all 0.3s;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #dee2e6;
-}
-
-.stepper-item.active .step-counter {
-    background-color: #007bff;
-    /* Primary Blue */
-    color: white;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+.stepper-item.active {
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-left-color: #dc3545;
 }
 
 .stepper-item.completed .step-counter {
     background-color: #28a745;
     color: white;
-    box-shadow: none;
-}
-
-.step-info {
-    flex: 1;
-}
-
-.step-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #495057;
-}
-
-.step-desc {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
-
-.stepper-item.active .step-name {
-    color: #007bff;
+    border-color: #28a745;
 }
 
 .stepper-item.completed .step-name {
     color: #28a745;
 }
 
-/* Custom colors */
-.text-purple {
-    color: #6f42c1 !important;
-}
-
-.btn-purple {
-    background-color: #6f42c1;
-    color: white;
-}
-
-.btn-purple:hover {
-    background-color: #5a32a3;
-    color: white;
-}
-
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 9999;
+.step-counter {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 50%;
+    border: 2px solid #dee2e6;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #adb5bd;
+    margin-right: 1rem;
+}
+
+.stepper-item.active .step-counter {
+    border-color: #dc3545;
+    color: #dc3545;
+    background-color: white;
+    transform: scale(1.1);
+}
+
+.step-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #6c757d;
+}
+
+.stepper-item.active .step-name {
+    color: #dc3545;
+}
+
+.step-desc {
+    color: #adb5bd;
+    line-height: 1.2;
+    font-size: 0.75rem;
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.breadcrumb {
+    font-size: 0.85rem;
+}
+
+.alert-danger-light {
+    background-color: #fef2f2;
+    border: 1px solid #fee2e2;
 }
 </style>

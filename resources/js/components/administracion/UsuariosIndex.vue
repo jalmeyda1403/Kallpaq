@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'documentos.index' }">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Gestión de Usuarios</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Gestión de Usuarios</li>
             </ol>
         </nav>
         <div class="card">
@@ -57,12 +58,15 @@
                 </div>
             </div>
             <div class="card-body">
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="store.loading" mode="indeterminate" style="height: 4px;" />
+                </div>
                 <DataTable ref="dt" :value="store.users" :lazy="true" :paginator="true" :rows="20"
-                    :totalRecords="store.pagination.total"
+                    :class="{ 'opacity-50 pointer-events-none': store.loading }" :totalRecords="store.pagination.total"
                     :first="(store.pagination.currentPage - 1) * store.pagination.perPage" @page="onPage" @sort="onSort"
                     :sortField="store.sorting.field" :sortOrder="store.sorting.order"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" :globalFilterFields="['id', 'name', 'email']"
-                    :loading="store.loading" class="p-datatable-striped p-datatable-hoverable-rows">
+                    class="p-datatable-striped p-datatable-hoverable-rows">
 
                     <Column field="id" header="ID" sortable style="width:5%"></Column>
                     <Column field="name" header="Usuario" sortable style="width:30%">
@@ -166,6 +170,7 @@ import { route } from 'ziggy-js';
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 
 // Custom Components
 import RolModal from './RolModal.vue';
@@ -447,15 +452,7 @@ const onPermissionsSaved = () => {
     align-items: center;
 }
 
-/* Custom loader styles - remove opacity and change color to red */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-}
 
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
-}
 
 :deep(.p-datatable .p-datatable-tbody > tr > td),
 :deep(.p-datatable .p-datatable-thead > tr > th) {

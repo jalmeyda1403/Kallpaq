@@ -1,127 +1,132 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Indicadores de Gestión</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Indicadores de Gestión</li>
             </ol>
         </nav>
-    <div class="card">
-        <div class="card-header">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h3 class="card-title">Listado de Indicadores</h3>
-                </div>
-                <div class="col-md-6 text-right">
-                    <button class="btn btn-primary btn-sm" @click="openCreateModal">
-                        <i class="fas fa-plus"></i> Nuevo Indicador
-                    </button>
-                </div>
-            </div>
-            <hr>
-            <form @submit.prevent="loadIndicadores">
-                <div class="form-row">
-                    <div class="col">
-                        <input type="text" class="form-control" v-model="filters.search"
-                            placeholder="Buscar por proceso o descripción...">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-line text-danger mr-2"></i> Listado de Indicadores
+                        </h3>
                     </div>
-                    <div class="col">
-                        <select class="form-control" v-model="filters.year">
-                            <option value="">Todos los Años</option>
-                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <select class="form-control" v-model="filters.indicador_sig">
-                            <option value="">Todos los Sistemas</option>
-                            <option v-for="sig in sigOptions" :key="sig" :value="sig">{{ sig }}</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <select class="form-control" v-model="filters.mes">
-                            <option value="">Todos los Meses</option>
-                            <option v-for="(mes, index) in meses" :key="index" :value="index + 1">{{ mes }}</option>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn bg-dark">
-                            <i class="fas fa-search"></i> Buscar
+                    <div class="col-md-6 text-right">
+                        <button class="btn btn-primary btn-sm" @click="openCreateModal">
+                            <i class="fas fa-plus"></i> Nuevo Indicador
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
-        <div class="card-body">
-            <!-- Loading State - Spinner circular rojo -->
-            <LoadingState v-if="loading" variant="danger" size="lg" text="Cargando indicadores..." />
-            
-            <DataTable v-else :value="indicadores" :paginator="true" :rows="10"
-                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                :rowsPerPageOptions="[10, 20, 50]" responsiveLayout="scroll"
-                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
+                <hr>
+                <form @submit.prevent="loadIndicadores">
+                    <div class="form-row">
+                        <div class="col">
+                            <input type="text" class="form-control" v-model="filters.search"
+                                placeholder="Buscar por proceso o descripción...">
+                        </div>
+                        <div class="col">
+                            <select class="form-control" v-model="filters.year">
+                                <option value="">Todos los Años</option>
+                                <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select class="form-control" v-model="filters.indicador_sig">
+                                <option value="">Todos los Sistemas</option>
+                                <option v-for="sig in sigOptions" :key="sig" :value="sig">{{ sig }}</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select class="form-control" v-model="filters.mes">
+                                <option value="">Todos los Meses</option>
+                                <option v-for="(mes, index) in meses" :key="index" :value="index + 1">{{ mes }}</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn bg-dark">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable :value="indicadores" :class="{ 'opacity-50 pointer-events-none': loading }" :paginator="true"
+                    :rows="10"
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                    :rowsPerPageOptions="[10, 20, 50]" responsiveLayout="scroll"
+                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
 
-                <Column field="indicador_nombre" header="Nombre" :sortable="true"></Column>
-                <Column v-if="!procesoId" field="proceso.proceso_nombre" header="Proceso" :sortable="true"></Column>
-                <Column field="indicador_frecuencia" header="Frecuencia" :sortable="true"></Column>
-                <Column field="indicador_meta" header="Meta (Base)" :sortable="true"></Column>
-                <Column header="Periodo">
-                    <template #body="slotProps">
-                        {{ slotProps.data.ultimo_periodo ?? 'N/A' }}
-                    </template>
-                </Column>
-                <Column header="Meta (Periodo)">
-                    <template #body="slotProps">
-                        {{ slotProps.data.ultima_meta ?? 'N/A' }}
-                    </template>
-                </Column>
-                <Column header="Valor (Periodo)">
-                    <template #body="slotProps">
-                        <span :class="getValorClass(slotProps.data)">
-                            {{ slotProps.data.ultimo_valor ?? 'N/A' }}
-                        </span>
-                    </template>
-                </Column>
-                <Column header="Cumplimiento">
-                    <template #body="slotProps">
-                        <span v-if="slotProps.data.ultimo_valor && slotProps.data.ultima_meta"
-                            :class="getComplianceBadge(slotProps.data).class">
-                            {{ getComplianceBadge(slotProps.data).text }}
-                        </span>
-                        <span v-else class="text-muted">N/A</span>
-                    </template>
-                </Column>
-                <Column header="Acciones" style="width: 150px">
-                    <template #body="slotProps">
-                        <a href="#" class="mr-3 d-inline-block" @click.prevent="editIndicador(slotProps.data)"
-                            title="Editar">
-                            <i class="fas fa-pencil-alt text-warning fa-lg"></i>
-                        </a>
-                        <a href="#" class="mr-3 d-inline-block" @click.prevent="openAvanceModal(slotProps.data)"
-                            title="Registrar Avance">
-                            <i class="fas fa-clipboard-list text-info fa-lg"></i>
-                        </a>
-                        <a href="#" class="mr-3 d-inline-block" @click.prevent="openGraficoModal(slotProps.data)"
-                            title="Ver Gráfico">
-                            <i class="fas fa-chart-line text-success fa-lg"></i>
-                        </a>
-                        <a href="#" class="mr-3 d-inline-block" @click.prevent="deleteIndicador(slotProps.data)"
-                            title="Eliminar">
-                            <i class="fas fa-trash-alt text-danger fa-lg"></i>
-                        </a>
-                    </template>
-                </Column>
-            </DataTable>
-        </div>
+                    <Column field="indicador_nombre" header="Nombre" :sortable="true"></Column>
+                    <Column v-if="!procesoId" field="proceso.proceso_nombre" header="Proceso" :sortable="true"></Column>
+                    <Column field="indicador_frecuencia" header="Frecuencia" :sortable="true"></Column>
+                    <Column header="Periodo">
+                        <template #body="slotProps">
+                            {{ slotProps.data.ultimo_periodo ?? 'N/A' }}
+                        </template>
+                    </Column>
+                    <Column header="Meta Anual / Meta (Periodo)">
+                        <template #body="slotProps">
+                            <span class="font-weight-bold">{{ slotProps.data.indicador_meta }}</span>
+                            <span class="text-muted mx-1">/</span>
+                            <span>{{ slotProps.data.ultima_meta ?? 'N/A' }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Valor (Periodo)">
+                        <template #body="slotProps">
+                            <span :class="getValorClass(slotProps.data)">
+                                {{ slotProps.data.ultimo_valor ?? 'N/A' }}
+                            </span>
+                        </template>
+                    </Column>
+                    <Column header="Cumplimiento">
+                        <template #body="slotProps">
+                            <span v-if="slotProps.data.ultimo_valor && slotProps.data.ultima_meta"
+                                :class="getComplianceBadge(slotProps.data).class">
+                                {{ getComplianceBadge(slotProps.data).text }}
+                            </span>
+                            <span v-else class="text-muted">N/A</span>
+                        </template>
+                    </Column>
+                    <Column header="Acciones" style="width: 150px">
+                        <template #body="slotProps">
+                            <a href="#" class="mr-3 d-inline-block" @click.prevent="editIndicador(slotProps.data)"
+                                title="Editar">
+                                <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                            </a>
+                            <a href="#" class="mr-3 d-inline-block" @click.prevent="openAvanceModal(slotProps.data)"
+                                title="Registrar Avance">
+                                <i class="fas fa-clipboard-list text-info fa-lg"></i>
+                            </a>
+                            <a href="#" class="mr-3 d-inline-block" @click.prevent="openGraficoModal(slotProps.data)"
+                                title="Ver Gráfico">
+                                <i class="fas fa-chart-line text-success fa-lg"></i>
+                            </a>
+                            <a href="#" class="mr-3 d-inline-block" @click.prevent="deleteIndicador(slotProps.data)"
+                                title="Eliminar">
+                                <i class="fas fa-trash-alt text-danger fa-lg"></i>
+                            </a>
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
 
-        <!-- Modales -->
-        <IndicadorForm v-if="showFormModal" :visible="showFormModal" :indicador="selectedIndicador"
-            :proceso-id="procesoId" :pei-options="peiOptions" :sig-plan-options="sigPlanOptions" @close="closeFormModal"
-            @saved="loadIndicadores" />
-        <IndicadorAvanceForm v-if="showAvanceModal" :visible="showAvanceModal" :indicador="selectedIndicador"
-            @close="closeAvanceModal" @saved="loadIndicadores" />
-        <IndicadorGrafico v-if="showGraficoModal" :visible="showGraficoModal" :indicador="selectedIndicador"
-            @close="closeGraficoModal" />
-    </div>
+            <!-- Modales -->
+            <IndicadorForm v-if="showFormModal" :visible="showFormModal" :indicador="selectedIndicador"
+                :proceso-id="procesoId" :pei-options="peiOptions" :sig-plan-options="sigPlanOptions"
+                @close="closeFormModal" @saved="loadIndicadores" />
+            <IndicadorAvanceForm v-if="showAvanceModal" :visible="showAvanceModal" :indicador="selectedIndicador"
+                @close="closeAvanceModal" @saved="loadIndicadores" />
+            <IndicadorGrafico v-if="showGraficoModal" :visible="showGraficoModal" :indicador="selectedIndicador"
+                @close="closeGraficoModal" />
+        </div>
     </div>
 </template>
 
@@ -130,6 +135,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import Swal from 'sweetalert2';
 import IndicadorForm from './IndicadorForm.vue';
 import IndicadorAvanceForm from './IndicadorAvanceForm.vue';
@@ -287,11 +293,11 @@ const getComplianceBadge = (indicador) => {
     const porcentaje = (valor / meta) * 100;
 
     if (porcentaje <= 70) {
-        return { class: 'badge badge-danger', text: porcentaje.toFixed(1) + '%' };
+        return { class: 'badge badge-danger', text: porcentaje.toFixed(1) };
     } else if (porcentaje > 70 && porcentaje <= 95) {
-        return { class: 'badge badge-warning', text: porcentaje.toFixed(1) + '%' };
+        return { class: 'badge badge-warning', text: porcentaje.toFixed(1) };
     } else {
-        return { class: 'badge badge-success', text: porcentaje.toFixed(1) + '%' };
+        return { class: 'badge badge-success', text: porcentaje.toFixed(1) };
     }
 };
 
@@ -310,5 +316,18 @@ onMounted(() => {
 :deep(.p-datatable .p-datatable-tbody > tr > td) {
     padding: 0.65rem !important;
     /* Increased padding for taller rows */
+}
+
+/* Custom loader styles - remove opacity and change color to red */
+/* Remove the semi-transparent overlay that dims the table content during loading */
+:deep(.p-datatable .p-datatable-loading-overlay) {
+    background: rgba(255, 255, 255, 0) !important;
+    /* Make background completely transparent */
+}
+
+/* Change the loader icon to red */
+:deep(.p-datatable .p-datatable-loading-icon) {
+    color: red !important;
+    font-size: 2rem !important;
 }
 </style>

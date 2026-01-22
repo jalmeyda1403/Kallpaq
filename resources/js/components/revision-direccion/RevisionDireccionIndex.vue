@@ -1,5 +1,5 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <!-- Alertas -->
         <div v-if="successMessage" class="alert alert-success alert-dismissible fade show">
             {{ successMessage }}
@@ -7,7 +7,7 @@
         </div>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link :to="{ name: 'home' }">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Revisión por la Dirección</li>
             </ol>
@@ -62,11 +62,9 @@
                                 </div>
 
                                 <div class="col" style="min-width: 200px;">
-                                    <MultiSelect v-model="filtros.sistema_gestion" :options="availableSystems" 
-                                        placeholder="Sistemas de Gestión" 
-                                        class="w-100 custom-multiselect"
-                                        panelClass="custom-multiselect-panel"
-                                        display="chip" />
+                                    <MultiSelect v-model="filtros.sistema_gestion" :options="availableSystems"
+                                        placeholder="Sistemas de Gestión" class="w-100 custom-multiselect"
+                                        panelClass="custom-multiselect-panel" display="chip" />
                                 </div>
                                 <div class="col-auto">
                                     <button type="submit" class="btn bg-dark btn-block shadow-sm rounded-lg">
@@ -87,8 +85,12 @@
 
                 <!-- Tabla de Revisiones -->
                 <div v-else>
-                    <DataTable :value="revisiones" :loading="isLoading" :paginator="true" :rows="10"
-                        responsiveLayout="scroll" class="p-datatable-sm p-datatable-striped">
+                    <div class="h-1 mb-2">
+                        <ProgressBar v-if="isLoading" mode="indeterminate" style="height: 4px;" />
+                    </div>
+                    <DataTable :value="revisiones" :paginator="true" :rows="10"
+                        :class="{ 'opacity-50 pointer-events-none': isLoading }" responsiveLayout="scroll"
+                        class="p-datatable-sm p-datatable-striped">
                         <Column field="codigo" header="Código">
                             <template #body="{ data }">
                                 <strong class="text-primary">{{ data.codigo }}</strong>
@@ -142,7 +144,7 @@
                                         </div>
                                     </div>
                                     <span class="small font-weight-bold text-dark ml-2">{{ data.avance_general
-                                        }}%</span>
+                                    }}%</span>
                                 </div>
                             </template>
                         </Column>
@@ -184,6 +186,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import MultiSelect from 'primevue/multiselect';
+import ProgressBar from 'primevue/progressbar';
 
 const router = useRouter();
 const store = useRevisionDireccionStore();
@@ -300,20 +303,24 @@ onMounted(() => {
 
 /* MultiSelect custom styling to match form-control */
 ::v-deep(.custom-multiselect) {
-    background: #f8f9fa; /* bg-light */
+    background: #f8f9fa;
+    /* bg-light */
     border: 1px solid #ced4da;
-    border-radius: 0.3rem; /* rounded-lg equivalent */
+    border-radius: 0.3rem;
+    /* rounded-lg equivalent */
 }
 
 ::v-deep(.custom-multiselect .p-multiselect-label) {
     padding: 0.375rem 0.75rem;
     font-weight: 400;
-    font-size: 0.85rem; /* Reduced from 1rem */
+    font-size: 0.85rem;
+    /* Reduced from 1rem */
     color: #495057;
 }
 
 ::v-deep(.custom-multiselect .p-multiselect-token) {
-    font-size: 0.85rem; /* Smaller chips */
+    font-size: 0.85rem;
+    /* Smaller chips */
     padding: 0.1rem 0.5rem;
 }
 
@@ -332,6 +339,7 @@ onMounted(() => {
 .custom-multiselect-panel .p-multiselect-item {
     font-size: 0.85rem !important;
 }
+
 .custom-multiselect-panel .p-multiselect-header {
     padding: 0.5rem 1rem !important;
 }

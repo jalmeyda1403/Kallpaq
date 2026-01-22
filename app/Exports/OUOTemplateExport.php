@@ -13,10 +13,15 @@ class OUOTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, With
     public function headings(): array
     {
         return [
-            'codigo',
-            'nombre',
-            'nivel',
-            'fecha_inicio'
+            'id',
+            'ouo_codigo',
+            'ouo_nombre',
+            'ouo_sigla',
+            'ouo_cod_padre',
+            'ouo_padre',
+            'nivel_jerarquico',
+            'doc_vigencia_alta',
+            'fecha_vigencia_inicio'
         ];
     }
 
@@ -24,10 +29,15 @@ class OUOTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, With
     {
         return [
             [
-                'OUO-001',
-                'Gerencia General',
-                '1',
-                '2024-01-01'
+                '', // id
+                'GG', // ouo_codigo
+                'GERENCIA GENERAL', // ouo_nombre
+                'GG', // ouo_sigla
+                '', // ouo_cod_padre
+                '', // ouo_padre
+                '1', // nivel_jerarquico
+                'R.G. N° 001-2024', // doc_vigencia_alta
+                '2024-01-01' // fecha_vigencia_inicio
             ]
         ];
     }

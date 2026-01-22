@@ -32,29 +32,38 @@ class RequerimientoController extends Controller
             ->get();
 
         $allPossibleStatuses = ['creado', 'aprobado', 'evaluado', 'desestimado', 'asignado', 'en_proceso', 'atendido', 'finalizado', 'anulado'];
-        
+
         $queryStatuses = Requerimiento::select('estado')->distinct();
-        
+
         // Filter statuses based on 'include_all' or 'mine'
-        if (!($request->filled('include_all') && $request->include_all === 'true') && 
-            !($request->filled('mine') && $request->mine === 'true')) {
+        if (
+            !($request->filled('include_all') && $request->include_all === 'true') &&
+            !($request->filled('mine') && $request->mine === 'true')
+        ) {
             $queryStatuses->whereNotIn('estado', ['creado', 'anulado']);
         }
-        
+
         $statuses = $queryStatuses->pluck('estado');
 
 
         $query = Requerimiento::with('proceso', 'especialista', 'avance', 'movimientos');
 
         // Apply 'creado'/'anulado' exclusion ONLY if NOT 'include_all' AND NOT 'mine'
-        if (!($request->filled('include_all') && $request->include_all === 'true') && 
-            !($request->filled('mine') && $request->mine === 'true')) {
+        // If 'include_all' is true (Ver Borradores), show ONLY 'creado'.
+        if ($request->filled('include_all') && $request->include_all === 'true') {
+            $query->where('estado', 'creado');
+        }
+        // Otherwise, if NOT 'mine', exclude 'creado' and 'anulado'
+        elseif (!($request->filled('mine') && $request->mine === 'true')) {
             $query->whereNotIn('estado', ['creado', 'anulado']);
         }
 
         $requerimientos = $query->orderByRaw("FIELD(estado, 'creado', 'aprobado', 'evaluado', 'asignado', 'en_proceso', 'atendido', 'finalizado', 'desestimado', 'anulado')")
             ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
-                return $query->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%');
+                return $query->where(function ($q) use ($request) {
+                    $q->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%')
+                        ->orWhere('id', 'like', '%' . $request->buscar_requerimiento . '%');
+                });
             })
             ->when($request->filled('especialista_id'), function ($query) use ($request) {
                 return $query->where('especialista_id', $request->especialista_id);
@@ -65,7 +74,7 @@ class RequerimientoController extends Controller
             ->when($request->filled('mine') && $request->mine === 'true', function ($query) {
                 // Obtener las OUOs a las que pertenece el usuario
                 $userOuoIds = Auth::user()->ouos()->pluck('ouos.id');
-                
+
                 // Obtener los IDs de los procesos asociados a esas OUOs
                 $procesoIds = DB::table('procesos_ouo')
                     ->whereIn('id_ouo', $userOuoIds)
@@ -83,15 +92,15 @@ class RequerimientoController extends Controller
     public function webApiEspecialista(Request $request)
     {
         $user = Auth::user();
-        
+
         $statuses = ['asignado', 'finalizado', 'desestimado'];
-        
+
         $requerimientos = Requerimiento::with('proceso', 'avance', 'movimientos')
             ->where('especialista_id', $user->id)
             ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
-                return $query->where(function($q) use ($request) {
+                return $query->where(function ($q) use ($request) {
                     $q->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%')
-                      ->orWhere('id', 'like', '%' . $request->buscar_requerimiento . '%');
+                        ->orWhere('id', 'like', '%' . $request->buscar_requerimiento . '%');
                 });
             })
             ->when($request->filled('estado'), function ($query) use ($request) {
@@ -110,7 +119,7 @@ class RequerimientoController extends Controller
             ->where('estado', 1)
             ->get();
         $statuses = ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'];
-        $requerimientos = Requerimiento::whereIn('estado', ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'])
+        $requerimientos = Requerimiento::whereIn('estado', ['aprobado', 'evaluado', 'desestimado', 'asignado', 'atendido'], 'and', false)
             ->orderByRaw("FIELD(estado, 'aprobado', 'desestimado', 'asignado', 'atendido')")
             ->when($request->filled('buscar_requerimiento'), function ($query) use ($request) {
                 return $query->where('asunto', 'like', '%' . $request->buscar_requerimiento . '%');
@@ -275,14 +284,14 @@ class RequerimientoController extends Controller
         $user = Auth::user();
 
         if ($rol === 'especialista') {
-            $requerimientos = Requerimiento::where('especialista_id', $user->id)
-                ->where('estado', 'en_proceso')->get();
+            $requerimientos = Requerimiento::where('especialista_id', '=', $user->id, 'and')
+                ->where('estado', '=', 'en_proceso', 'and')->get();
         } elseif (in_array($rol, ['facilitador', 'subgerente'])) {
             $procesoIds = $user->procesos->pluck('id');
-            $requerimientos = Requerimiento::whereIn('proceso_id', $procesoIds)
-                ->whereIn('estado', ['asignado', 'en proceso'])->get();
+            $requerimientos = Requerimiento::whereIn('proceso_id', $procesoIds, 'and', false)
+                ->whereIn('estado', ['asignado', 'en proceso'], 'and', false)->get();
         } elseif (in_array($rol, ['supervisor', 'admin'])) {
-            $requerimientos = Requerimiento::whereIn('estado', ['asignado', 'en proceso'])->get();
+            $requerimientos = Requerimiento::whereIn('estado', ['asignado', 'en proceso'], 'and', false)->get();
         }
 
         return view('requerimientos.index', compact('requerimientos'));
@@ -292,14 +301,14 @@ class RequerimientoController extends Controller
         $user = Auth::user();
 
         if ($rol === 'especialista') {
-            $requerimientos = Requerimiento::where('especialista_id', $user->id)
-                ->where('estado', 'finalizado')->get();
+            $requerimientos = Requerimiento::where('especialista_id', '=', $user->id, 'and')
+                ->where('estado', '=', 'finalizado', 'and')->get();
         } elseif (in_array($rol, ['facilitador', 'subgerente'])) {
             $procesoIds = $user->procesos->pluck('id');
-            $requerimientos = Requerimiento::whereIn('proceso_id', $procesoIds)
-                ->where('estado', 'finalizado')->get();
+            $requerimientos = Requerimiento::whereIn('proceso_id', $procesoIds, 'and', false)
+                ->where('estado', '=', 'finalizado', 'and')->get();
         } elseif (in_array($rol, ['supervisor', 'admin'])) {
-            $requerimientos = Requerimiento::where('estado', 'finalizado')->get();
+            $requerimientos = Requerimiento::where('estado', '=', 'finalizado', 'and')->get();
         }
 
         return view('requerimientos.atendidos', compact('requerimientos'));
@@ -364,7 +373,7 @@ class RequerimientoController extends Controller
     {
         $especialistas = User::role('Especialista')->get();
         $statuses = Requerimiento::select('estado')->distinct()->get();
-        $requerimientos = Requerimiento::whereIn('estado', ['aprobado', 'evaluado'])
+        $requerimientos = Requerimiento::whereIn('estado', ['aprobado', 'evaluado'], 'and', false)
             ->when($request->especialista_id, function ($query, $especialista_id) {
                 return $query->where('especialista_id', $especialista_id);
             })
@@ -465,7 +474,7 @@ class RequerimientoController extends Controller
 
     public function listarEvidencias($id)
     {
-        $avance = RequerimientoAvance::where('requerimiento_id', $id)->first();
+        $avance = RequerimientoAvance::where('requerimiento_id', '=', $id, 'and')->first();
 
         if ($avance && $avance->ruta_evidencias) {
             return response()->json(json_decode($avance->ruta_evidencias));
@@ -504,7 +513,7 @@ class RequerimientoController extends Controller
             'file_path' => 'required|string',
         ]);
 
-        $avance = RequerimientoAvance::where('requerimiento_id', $id)->firstOrFail();
+        $avance = RequerimientoAvance::where('requerimiento_id', '=', $id, 'and')->firstOrFail();
 
         $evidencias = json_decode($avance->ruta_evidencias, true);
         $newEvidencias = array_filter($evidencias, function ($evidencia) use ($request) {
@@ -538,7 +547,7 @@ class RequerimientoController extends Controller
 
     public function getEvaluacion($id)
     {
-        $evaluacion = RequerimientoEvaluacion::where('requerimiento_id', $id)->latest()->first();
+        $evaluacion = RequerimientoEvaluacion::where('requerimiento_id', '=', $id, 'and')->latest()->first();
         return response()->json($evaluacion);
     }
 

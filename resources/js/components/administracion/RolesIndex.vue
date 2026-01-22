@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'documentos.index' }">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Gestión de Roles</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Gestión de Roles</li>
             </ol>
         </nav>
         <div class="card">
@@ -38,9 +39,13 @@
                 </div>
             </div>
             <div class="card-body">
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
                 <DataTable ref="dt" :value="roles" :lazy="true" :paginator="true" :rows="10"
-                    :totalRecords="totalRecords" :loading="loading" @page="onPage" @sort="onSort"
-                    :rowsPerPageOptions="[5, 10, 20, 50]" class="p-datatable-striped p-datatable-hoverable-rows">
+                    :totalRecords="totalRecords" @page="onPage" @sort="onSort"
+                    :class="{ 'opacity-50 pointer-events-none': loading }" :rowsPerPageOptions="[5, 10, 20, 50]"
+                    class="p-datatable-striped p-datatable-hoverable-rows">
 
                     <Column field="id" header="ID" sortable style="width:7%"></Column>
                     <Column field="name" header="Nombre del Rol" sortable style="width:20%">
@@ -98,6 +103,7 @@ import { onMounted, ref, reactive } from 'vue';
 import axios from 'axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import RolesForm from './RolesForm.vue';
 import PermisosRolModal from './PermisosRolModal.vue';
 import Swal from 'sweetalert2';
@@ -258,15 +264,7 @@ const closeRoleModal = () => {
     transform: scale(1.2);
 }
 
-/* Custom loader styles - remove opacity and change color to red */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0.1) !important;
-}
 
-.p-datatable-loading-icon {
-    color: #dc3545 !important;
-    font-size: 2.5rem !important;
-}
 
 :deep(.p-datatable .p-datatable-tbody > tr > td),
 :deep(.p-datatable .p-datatable-thead > tr > th) {

@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Consolidado de Sugerencias</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Consolidado de Sugerencias</li>
             </ol>
         </nav>
 
@@ -14,7 +15,8 @@
                         <h3 class="card-title mb-0">Consolidado de Sugerencias</h3>
                     </div>
                     <div class="col-md-6 text-md-right">
-                        <button class="btn btn-primary btn-sm ml-1" @click="openModal()" v-if="!authStore.hasRole('facilitador')">
+                        <button class="btn btn-primary btn-sm ml-1" @click="openModal()"
+                            v-if="!authStore.hasRole('facilitador')">
                             <i class="fa fa-plus-circle"></i> Nueva Sugerencia
                         </button>
                     </div>
@@ -61,13 +63,17 @@
             </div>
 
             <div class="card-body">
-
+                <!-- Loading State - Barra de progreso -->
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="storeLoading" mode="indeterminate" style="height: 4px;" />
+                </div>
                 <!-- Tabla -->
                 <DataTable ref="dt" :value="sugerencias" v-model:filters="filtersPrimevue"
                     v-model:selection="selectedSugerencia" selectionMode="single" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['id', 'sugerencia_clasificacion', 'sugerencia_estado', 'sugerencia_procedencia', 'proceso.proceso_nombre']"
-                    :loading="storeLoading" class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
+                    :class="{ 'opacity-50 pointer-events-none': storeLoading }"
+                    class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
                     <template #header>
                         <div class="d-flex align-items-center">
                             <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
@@ -111,8 +117,8 @@
                     <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
                         bodyStyle="width: 15%">
                         <template #body="{ data }">
-                            <a href="#" title="Editar" class="mr-2 d-inline-block"
-                                @click.prevent="editSugerencia(data)" v-if="!authStore.hasRole('facilitador')">
+                            <a href="#" title="Editar" class="mr-2 d-inline-block" @click.prevent="editSugerencia(data)"
+                                v-if="!authStore.hasRole('facilitador')">
                                 <i class="fas fa-pencil-alt text-warning fa-lg"></i>
                             </a>
                             <a href="#" title="Tratamiento" class="mr-2 d-inline-block"
@@ -157,6 +163,7 @@ import Swal from 'sweetalert2';
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import Button from 'primevue/button';
 import { FilterMatchMode } from 'primevue/api';
 
@@ -350,19 +357,6 @@ onMounted(() => {
 </script>
 
 <style>
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
-}
-
-/* Change the loader icon to red */
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
-}
-
 /* Improved badge styling */
 .badge-text {
     font-size: 0.9em !important;

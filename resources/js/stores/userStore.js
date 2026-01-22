@@ -94,6 +94,11 @@ export const useUserStore = defineStore('userStore', () => {
         fetchUsers();
     };
 
+    const createMassiveUsers = async (users) => {
+        await axios.post(route('api.admin.usuarios.massive'), { users });
+        fetchUsers();
+    };
+
     const updateUser = async (id, userData) => {
         const formData = new FormData();
         Object.keys(userData).forEach(key => {
@@ -171,6 +176,7 @@ export const useUserStore = defineStore('userStore', () => {
         applyFilters,
         resetFilters,
         createUser,
+        createMassiveUsers,
         updateUser,
         deleteUser,
         importUsers,

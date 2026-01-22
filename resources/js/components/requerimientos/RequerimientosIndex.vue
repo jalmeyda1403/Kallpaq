@@ -2,7 +2,8 @@
     <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'requerimientos.index' }" class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
                 <li class="breadcrumb-item active text-muted" aria-current="page">Bandeja de Requerimientos</li>
             </ol>
         </nav>
@@ -15,11 +16,6 @@
                                 <h3 class="card-title mb-0">Lista de Requerimientos</h3>
                             </div>
                             <div class="col-md-6 text-md-right d-flex justify-content-end align-items-center">
-                                <div class="custom-control custom-switch mr-3">
-                                    <input type="checkbox" class="custom-control-input" id="includeAllSwitch"
-                                        v-model="serverFilters.include_all" @change="fetchRequerimientos">
-                                    <label class="custom-control-label" for="includeAllSwitch">Ver Todos</label>
-                                </div>
                                 <a href="#" class="btn btn-primary btn-sm ml-1"
                                     @click.prevent="goToCreateRequerimiento">
                                     <i class="fas fa-plus-circle"></i> Nuevo Requerimiento
@@ -72,16 +68,25 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Loading State - Spinner circular rojo -->
+                        <!-- Loading State - Barra de progreso -->
+                        <div class="h-1 mb-2">
+                            <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                        </div>
                         <DataTable ref="dt" :value="requerimientos" v-model:filters="filters" paginator :rows="10"
                             :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']"
-                            :loading="loading">
+                            :class="{ 'opacity-50 pointer-events-none': loading }"
+                            :globalFilterFields="['id', 'proceso.proceso_nombre', 'asunto', 'complejidad', 'estado', 'especialista.name']">
                             <template #header>
                                 <div class="d-flex align-items-center">
+                                    <div class="custom-control custom-switch mr-3 ml-auto">
+                                        <input type="checkbox" class="custom-control-input" id="includeAllSwitch"
+                                            v-model="serverFilters.include_all" @change="fetchRequerimientos">
+                                        <label class="custom-control-label" for="includeAllSwitch">Ver
+                                            Borradores</label>
+                                    </div>
                                     <Button type="button" icon="pi pi-download" label="Descargar CSV"
                                         severity="secondary" @click="exportCSV($event)"
-                                        class="btn btn-secondary ml-auto shadow-sm btn-sm">
+                                        class="btn btn-secondary shadow-sm btn-sm">
                                     </Button>
                                 </div>
                             </template>
@@ -99,7 +104,8 @@
                             </Column>
                             <Column field="estado" header="Estado" style="width:8%">
                                 <template #body="{ data }">
-                                    <span class="badge badge-pill text-uppercase px-2" :class="getStatusBadgeClass(data.estado)">
+                                    <span class="badge badge-pill text-uppercase px-2"
+                                        :class="getStatusBadgeClass(data.estado)">
                                         {{ data.estado }}
                                     </span>
                                 </template>
@@ -119,14 +125,17 @@
                                 <template #body="{ data }">
                                     <div class="small">
                                         <div class="d-flex align-items-center mb-1">
-                                            <i class="fas fa-calendar-alt text-primary mr-1" title="Fecha Programada"></i>
-                                            <span class="text-primary font-weight-bold">{{ formatDate(data.fecha_limite) || '-' }}</span>
+                                            <i class="fas fa-calendar-alt text-primary mr-1"
+                                                title="Fecha Programada"></i>
+                                            <span class="text-primary font-weight-bold">{{ formatDate(data.fecha_limite)
+                                                || '-' }}</span>
                                         </div>
                                         <div class="d-flex align-items-center" v-if="data.fecha_fin">
                                             <i class="fas fa-calendar-check text-success mr-1" title="Fecha Real"></i>
                                             <span class="text-success">{{ formatDate(data.fecha_fin) }}</span>
                                         </div>
-                                        <span v-else class="text-muted small"><i class="fas fa-clock mr-1"></i>Pendiente</span>
+                                        <span v-else class="text-muted small"><i
+                                                class="fas fa-clock mr-1"></i>Pendiente</span>
                                     </div>
                                 </template>
                             </Column>
@@ -162,8 +171,8 @@
                                             class="mr-2 d-inline-block shadow-sm rounded-circle p-2 bg-light"
                                             :class="{ 'disabled-action': !['evaluado', 'asignado'].includes(data.estado) }"
                                             @click.prevent="['evaluado', 'asignado'].includes(data.estado) && openModal('mostrarAsignacion', data)">
-                                            <i class="fas fa-user-check" 
-                                               :class="['evaluado', 'asignado'].includes(data.estado) ? 'text-dark' : 'text-secondary'"></i>
+                                            <i class="fas fa-user-check"
+                                                :class="['evaluado', 'asignado'].includes(data.estado) ? 'text-dark' : 'text-secondary'"></i>
                                         </a>
                                     </template>
                                     <a href="#" title="Ver Avance Requerimiento"
@@ -198,7 +207,9 @@ import { useRouter } from 'vue-router';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
+
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 import { FilterMatchMode } from 'primevue/api';
 
 // Components
@@ -244,12 +255,15 @@ const fetchRequerimientos = async () => {
 
 const getStatusBadgeClass = (estado) => {
     switch (estado) {
+        case 'atendido':
         case 'finalizado': return 'badge-success';
+        case 'desestimado':
         case 'vencido': return 'badge-danger';
-        case 'en_proceso': return 'badge-info';
-        case 'creado': return 'badge-secondary';
+        case 'aprobado': return 'badge-info';
         case 'asignado': return 'badge-primary';
-        case 'evaluado': return 'badge-warning';
+        case 'evaluado': return 'badge-dark'; // Darker than primary
+        case 'creado': return 'badge-secondary';
+        case 'en_proceso': return 'badge-info';
         default: return 'badge-light';
     }
 };
@@ -277,7 +291,7 @@ const confirmDelete = (id) => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await axios.delete(route('web.requerimientos.destroy', id)); 
+                await axios.delete(route('web.requerimientos.destroy', id));
                 fetchRequerimientos();
                 Swal.fire('¡Eliminado!', 'El requerimiento ha sido eliminado.', 'success');
             } catch (error) {
@@ -319,11 +333,15 @@ onMounted(() => {
 .breadcrumb {
     font-size: 0.85rem;
 }
-.breadcrumb-item + .breadcrumb-item::before {
+
+.breadcrumb-item+.breadcrumb-item::before {
     content: "\f105";
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
     color: #adb5bd;
 }
-.rounded-lg { border-radius: 0.75rem !important; }
+
+.rounded-lg {
+    border-radius: 0.75rem !important;
+}
 </style>

@@ -1,5 +1,6 @@
 <template>
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0 shadow-sm"
+        style="border-bottom: 1px solid #eee !important;">
         <ul class="navbar-nav">
             <li class="nav-item">
                 <a class="nav-link" href="#" role="button" @click.prevent="uiStore.toggleSidebar">

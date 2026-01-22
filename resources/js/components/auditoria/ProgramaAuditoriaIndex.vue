@@ -1,7 +1,7 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Programa de Auditoría</li>
             </ol>
@@ -40,9 +40,12 @@
                 </div>
             </div>
 
-            <div class="card-body">
-                <DataTable :value="programas" :paginator="true" :rows="10" :loading="loading"
-                    tableStyle="min-width: 50rem"
+            <div class="card-body p-0">
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable :value="programas" :paginator="true" :rows="10"
+                    :class="{ 'opacity-50 pointer-events-none': loading }" tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
@@ -117,6 +120,7 @@ import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import ProgramaAuditoriaForm from './ProgramaAuditoriaForm.vue';
 
 const toast = useToast();

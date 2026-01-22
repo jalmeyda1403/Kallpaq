@@ -1,5 +1,5 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <div v-if="successMessage" class="alert alert-success" id="success-alert">
             {{ successMessage }}
         </div>
@@ -8,9 +8,10 @@
         </div>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Solicitudes de Mejora</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Solicitudes de Mejora</li>
             </ol>
         </nav>
 
@@ -71,11 +72,15 @@
             </div>
 
             <div class="card-body">
+                <!-- Loading State - Barra de progreso -->
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="isLoading" mode="indeterminate" style="height: 4px;" />
+                </div>
                 <!-- Loading State - Spinner circular rojo -->
                 <DataTable ref="dt" :value="hallazgos" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['hallazgo_cod', 'hallazgo_clasificacion', 'hallazgo_resumen', 'procesos.proceso_nombre', 'hallazgo_estado']"
-                    :loading="isLoading">
+                    :class="{ 'opacity-50 pointer-events-none': isLoading }">
                     <template #header>
                         <div class="d-flex align-items-center">
                             <Button type="button" icon="pi pi-download" label="Descargar CSV" severity="secondary"
@@ -121,7 +126,8 @@
                     <Column header="Avance Acciones" style="width:12%; text-align: center;">
                         <template #body="{ data }">
                             <span v-if="data.acciones && data.acciones.length > 0">
-                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{ data.acciones.length }}
+                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{
+                                    data.acciones.length }}
                             </span>
                             <span v-else class="text-muted small">-</span>
                         </template>
@@ -183,6 +189,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 
 import { FilterMatchMode } from 'primevue/api';
 

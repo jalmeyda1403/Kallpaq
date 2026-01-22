@@ -24,7 +24,8 @@ class OUOController extends Controller
             'ouo_nombre' => 'required|string|max:255',
             'ouo_codigo' => 'required|string|max:255|unique:ouos,ouo_codigo',
             'ouo_padre' => 'nullable|exists:ouos,id',
-
+            'ouo_cod_padre' => 'nullable|string|max:50',
+            'ouo_sigla' => 'nullable|string|max:50',
             'nivel_jerarquico' => 'required|integer',
             'doc_vigencia_alta' => 'nullable|string|max:255',
             'fecha_vigencia_inicio' => 'required|date',
@@ -51,7 +52,8 @@ class OUOController extends Controller
             'ouo_nombre' => 'sometimes|required|string|max:255',
             'ouo_codigo' => 'sometimes|required|string|max:255|unique:ouos,ouo_codigo,' . $ouo->id,
             'ouo_padre' => 'nullable|exists:ouos,id',
-            'subgerente_condicion' => 'nullable|in:encargatura,designacion,suplencia',
+            'ouo_cod_padre' => 'nullable|string|max:50',
+            'ouo_sigla' => 'nullable|string|max:50',
             'nivel_jerarquico' => 'sometimes|required|integer',
             'doc_vigencia_alta' => 'nullable|string|max:255',
             'fecha_vigencia_inicio' => 'sometimes|required|date',
@@ -76,16 +78,16 @@ class OUOController extends Controller
     {
         // Check for dependencies before deleting
         if ($ouo->users()->exists() || $ouo->procesos()->exists()) {
-             return response()->json(['message' => 'No se puede eliminar la OUO porque tiene usuarios o procesos asignados.'], 409);
+            return response()->json(['message' => 'No se puede eliminar la OUO porque tiene usuarios o procesos asignados.'], 409);
         }
 
-        $ouo->delete();
+        OUO::destroy($ouo->id);
         return response()->json(['message' => 'OUO eliminada con éxito.'], 200);
     }
 
     public function buscar()
     {
-        $ouos = OUO::select('id', 'ouo_nombre AS descripcion')->get();
+        $ouos = OUO::select(['id', 'ouo_nombre AS descripcion'])->get();
         return response()->json($ouos);
     }
 
@@ -131,8 +133,8 @@ class OUOController extends Controller
         $cambiadoPor = Auth::id(); // Usuario autenticado
 
         // Verificar si la asignación ya existe
-        $existingOuoUser = OuoUser::where('ouo_id', $ouo->id)
-            ->where('user_id', $userId)
+        $existingOuoUser = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+            ->where('user_id', '=', $userId, 'and')
             ->first();
 
         if ($existingOuoUser) {
@@ -144,8 +146,8 @@ class OUOController extends Controller
             $ouo->users()->attach($userId, ['role_in_ouo' => $roleInOuo]);
 
             // Obtener el ID del registro recién creado en ouo_user
-            $newOuoUser = OuoUser::where('ouo_id', $ouo->id)
-                ->where('user_id', $userId)
+            $newOuoUser = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+                ->where('user_id', '=', $userId, 'and')
                 ->first();
 
             // Registrar el movimiento
@@ -169,8 +171,8 @@ class OUOController extends Controller
     {
         $cambiadoPor = Auth::id(); // Usuario autenticado
 
-        $ouoUser = OuoUser::where('ouo_id', $ouo->id)
-            ->where('user_id', $user->id)
+        $ouoUser = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+            ->where('user_id', '=', $user->id, 'and')
             ->firstOrFail();
 
         DB::transaction(function () use ($ouo, $user, $ouoUser, $cambiadoPor) {
@@ -203,8 +205,8 @@ class OUOController extends Controller
         $newRole = $request->input('role_in_ouo');
         $cambiadoPor = Auth::id();
 
-        $ouoUser = OuoUser::where('ouo_id', $ouo->id)
-            ->where('user_id', $user->id)
+        $ouoUser = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+            ->where('user_id', '=', $user->id, 'and')
             ->firstOrFail();
 
         $oldRole = $ouoUser->role_in_ouo;
@@ -243,7 +245,7 @@ class OUOController extends Controller
             $searchTerm = $request->input('search');
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('ouo_nombre', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('ouo_codigo', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('ouo_codigo', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -274,7 +276,7 @@ class OUOController extends Controller
                     'fecha_vigencia_fin' => $ouo->fecha_vigencia_fin ? $ouo->fecha_vigencia_fin->format('Y-m-d') : null,
                     'ouo_padre_nombre' => $ouo->ouoPadre ? $ouo->ouoPadre->ouo_nombre : 'N/A',
                     'procesos_count' => $ouo->procesos_count,
-                    'users_count' => $ouo->users_count, 
+                    'users_count' => $ouo->users_count,
                 ];
             })->values(),
             'current_page' => $ouos->currentPage(),
@@ -288,8 +290,8 @@ class OUOController extends Controller
      */
     public function getOuoPadresForDropdown()
     {
-        $ouoPadres = OUO::whereIn('nivel_jerarquico', [1, 2])
-            ->select('id', 'ouo_nombre')
+        $ouoPadres = OUO::whereIn('nivel_jerarquico', [1, 2], 'and', false)
+            ->select(['id', 'ouo_nombre'])
             ->get();
 
         return response()->json($ouoPadres);
@@ -302,7 +304,7 @@ class OUOController extends Controller
      */
     public function getGestorUsersForDropdown()
     {
-        $users = User::select('id', 'name', 'email')
+        $users = User::select(['id', 'name', 'email'])
             ->orderBy('name', 'asc')
             ->get();
 
@@ -370,8 +372,8 @@ class OUOController extends Controller
 
     public function detachUser(OUO $ouo, User $user)
     {
-        $ouoUser = OuoUser::where('ouo_id', $ouo->id)
-            ->where('user_id', $user->id)
+        $ouoUser = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+            ->where('user_id', '=', $user->id, 'and')
             ->firstOrFail();
         $ouoUser->update(
             ['activo' => 0,]
@@ -425,8 +427,8 @@ class OUOController extends Controller
         ]);
 
         // Get the newly created OuoUser pivot record
-        $newOuoUser = OuoUser::where('ouo_id', $ouo->id)
-            ->where('user_id', $request->input('user_id'))
+        $newOuoUser = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+            ->where('user_id', '=', $request->input('user_id'), 'and')
             ->first();
 
         // Register the movement
@@ -528,5 +530,90 @@ class OUOController extends Controller
     public function downloadTemplate()
     {
         return Excel::download(new \App\Exports\OUOTemplateExport, 'ouos_template.xlsx');
+    }
+    public function syncUsers(Request $request, OUO $ouo)
+    {
+        $request->validate([
+            'users' => 'array',
+            'users.*.id' => 'required|exists:users,id',
+            'users.*.role_in_ouo' => 'required|in:titular,encargado,facilitador,colaborador',
+            'users.*.activo' => 'nullable|boolean',
+        ]);
+
+        $cambiadoPor = Auth::id();
+        $usersData = $request->input('users', []);
+        $userIds = collect($usersData)->pluck('id')->toArray();
+
+        DB::transaction(function () use ($ouo, $usersData, $userIds, $cambiadoPor) {
+            // 1. Desvincular usuarios que no están en la nueva lista
+            OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+                ->whereNotIn('user_id', $userIds, 'and')
+                ->each(function ($ouoUser) use ($cambiadoPor) {
+                    OuoUserMovimiento::create([
+                        'ouo_user_id' => $ouoUser->id,
+                        'cambiado_por' => $cambiadoPor,
+                        'tipo_anterior' => $ouoUser->role_in_ouo,
+                        'tipo_nuevo' => null,
+                        'motivo' => 'Desvinculación masiva de usuario de OUO',
+                        'fecha_cambio' => now(),
+                    ]);
+                    $ouoUser->delete();
+                });
+
+            // 2. Actualizar o Crear asignaciones
+            foreach ($usersData as $data) {
+                $userId = $data['id'];
+                $role = $data['role_in_ouo'];
+                $activo = $data['activo'] ?? true;
+
+                $existing = OuoUser::withTrashed()
+                    ->where('ouo_id', '=', $ouo->id, 'and')
+                    ->where('user_id', '=', $userId, 'and')
+                    ->first();
+
+                if ($existing) {
+                    $oldRole = $existing->role_in_ouo;
+                    $oldActivo = $existing->activo;
+
+                    if ($existing->trashed()) {
+                        $existing->restore();
+                        $existing->update(['role_in_ouo' => $role, 'activo' => $activo]);
+                        OuoUserMovimiento::create([
+                            'ouo_user_id' => $existing->id,
+                            'cambiado_por' => $cambiadoPor,
+                            'tipo_nuevo' => $role,
+                            'motivo' => 'Restauración y actualización masiva de rol',
+                            'fecha_cambio' => now(),
+                        ]);
+                    } elseif ($oldRole !== $role || $oldActivo != $activo) {
+                        $existing->update(['role_in_ouo' => $role, 'activo' => $activo]);
+                        OuoUserMovimiento::create([
+                            'ouo_user_id' => $existing->id,
+                            'cambiado_por' => $cambiadoPor,
+                            'tipo_anterior' => $oldRole,
+                            'tipo_nuevo' => $role,
+                            'motivo' => 'Actualización masiva de rol/estado',
+                            'fecha_cambio' => now(),
+                        ]);
+                    }
+                } else {
+                    $ouo->users()->attach($userId, ['role_in_ouo' => $role, 'activo' => $activo]);
+
+                    $newPivot = OuoUser::where('ouo_id', '=', $ouo->id, 'and')
+                        ->where('user_id', '=', $userId, 'and')
+                        ->first();
+
+                    OuoUserMovimiento::create([
+                        'ouo_user_id' => $newPivot->id,
+                        'cambiado_por' => $cambiadoPor,
+                        'tipo_nuevo' => $role,
+                        'motivo' => 'Asignación masiva inicial',
+                        'fecha_cambio' => now(),
+                    ]);
+                }
+            }
+        });
+
+        return response()->json(['message' => 'Usuarios de OUO sincronizados con éxito.']);
     }
 }

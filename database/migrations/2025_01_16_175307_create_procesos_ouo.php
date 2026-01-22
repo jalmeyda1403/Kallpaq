@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,11 +14,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_proceso');
             $table->unsignedBigInteger('id_ouo');
-            $table->timestamp('inactivate_at')->nullable(); 
+            $table->timestamp('inactivate_at')->nullable();
             $table->timestamps();
             // Foreign keys
             $table->foreign('id_proceso')->references('id')->on('procesos')->onDelete('cascade');
-            $table->foreign('id_ouo')->references('id')->on('ouo')->onDelete('cascade');
+            $table->foreign('id_ouo')->references('id')->on('ouos')->onDelete('cascade');
         });
     }
 

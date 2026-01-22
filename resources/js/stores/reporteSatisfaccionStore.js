@@ -83,7 +83,10 @@ export const useReporteSatisfaccionStore = defineStore('reporteSatisfaccion', {
         async updateReporte(id, data) {
             this.loading = true;
             try {
-                data.estado = 'generado';
+                // Si el estado no es firmado, ponerlo como generado por defecto
+                if (data.estado !== 'firmado') {
+                    data.estado = 'generado';
+                }
                 const response = await axios.put(`/api/reportes-satisfaccion/${id}`, data);
                 await this.fetchReportes();
                 return response.data;

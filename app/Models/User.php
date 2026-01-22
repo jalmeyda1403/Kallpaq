@@ -11,12 +11,25 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+use App\Notifications\ResetPasswordNotification;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
     use HasRoles {
         hasPermissionTo as hasPermissionToOriginal;
         getAllPermissions as getAllPermissionsOriginal;
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**
@@ -162,7 +175,7 @@ class User extends Authenticatable
                 ->orWherePivot('delegado', 1)
                 ->pluck('procesos.id')
                 ->toArray();
-            
+
             $processIds = array_merge($processIds, $procesos);
         }
 
@@ -182,7 +195,7 @@ class User extends Authenticatable
             $procesos = $ouo->procesos()
                 ->pluck('procesos.id')
                 ->toArray();
-            
+
             $processIds = array_merge($processIds, $procesos);
         }
 

@@ -1,7 +1,7 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Normas Auditables</li>
             </ol>
@@ -21,8 +21,12 @@
                 </div>
             </div>
 
-            <div class="card-body">
-                <DataTable :value="normas" :paginator="true" :rows="10" :loading="loading" tableStyle="min-width: 50rem"
+            <div class="card-body p-0">
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable :value="normas" :paginator="true" :rows="10" tableStyle="min-width: 50rem"
+                    :class="{ 'opacity-50 pointer-events-none': loading }"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
@@ -78,6 +82,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import NormasISOForm from './NormasISOForm.vue';
 
 const normas = ref([]);

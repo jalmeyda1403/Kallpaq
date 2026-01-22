@@ -1,30 +1,78 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Mis SMP Asignadas</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link to="/home"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Mis SMP Asignadas</li>
             </ol>
         </nav>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Mis SMP Asignadas</h3>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <input type="text" v-model="filters.global.value" class="form-control"
-                                placeholder="Buscar...">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-md-left">
+                        <h3 class="card-title">Mis SMP Asignadas</h3>
+                    </div>
+                </div>
+
+                <form @submit.prevent="fetchHallazgos">
+                    <div class="form-row">
+                        <div class="col">
+                            <input type="text" v-model="serverFilters.descripcion" class="form-control"
+                                placeholder="Buscar por descripción o resumen...">
+                        </div>
+                        <div class="col">
+                            <select v-model="serverFilters.proceso_id" class="form-control select-truncate">
+                                <option value="">Todos los Procesos</option>
+                                <option v-for="proceso in procesos" :key="proceso.id" :value="proceso.id"
+                                    :title="proceso.proceso_nombre">
+                                    {{ proceso.proceso_nombre }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col">
+                            <select v-model="serverFilters.clasificacion" class="form-control">
+                                <option value="">Todas las Clasificaciones</option>
+                                <option value="NCM">No Conformidad Mayor</option>
+                                <option value="Ncme">No Conformidad Menor</option>
+                                <option value="Obs">Observación</option>
+                                <option value="Odm">Oportunidad de Mejora</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select v-model="serverFilters.estado" class="form-control">
+                                <option value="">Todos los Estados</option>
+                                <option value="creado">Creado</option>
+                                <option value="aprobado">Aprobado</option>
+                                <option value="desestimado">Desestimado</option>
+                                <option value="en proceso">En Proceso</option>
+                                <option value="concluido">Concluido</option>
+                                <option value="evaluado">Evaluado</option>
+                                <option value="cerrado">Cerrado</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn bg-dark">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
                         </div>
                     </div>
+                </form>
+                <br></br>
+            </div>
+            <div class="card-body">
+
+
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
                 </div>
 
                 <DataTable :value="hallazgos" :paginator="true" :rows="10" :filters="filters"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} hallazgos"
-                    responsiveLayout="scroll" :loading="loading">
+                    responsiveLayout="scroll" :class="{ 'opacity-50 pointer-events-none': loading }">
 
                     <Column field="hallazgo_cod" header="Código" sortable></Column>
                     <Column field="hallazgo_resumen" header="Resumen" sortable></Column>
@@ -50,13 +98,14 @@
                     <Column header="Avance Acciones" style="width:12%; text-align: center;">
                         <template #body="{ data }">
                             <span v-if="data.acciones && data.acciones.length > 0">
-                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{ data.acciones.length }}
+                                {{ data.acciones.length - getAccionesPendientes(data.acciones) }}/{{
+                                    data.acciones.length }}
                             </span>
                             <span v-else class="text-muted small">-</span>
                         </template>
                     </Column>
                     <Column field="hallazgo_avance" header="Avance" sortable>
-                         <template #body="{ data }">
+                        <template #body="{ data }">
                             <template v-if="['creado', 'asignado', 'desestimado'].includes(data.hallazgo_estado)">
                                 <span class="small text-muted">Sin avance</span>
                             </template>
@@ -104,11 +153,27 @@
     </div>
 </template>
 
+<style scoped>
+.select-truncate option {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.select-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
+
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import axios from 'axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import { FilterMatchMode } from 'primevue/api';
 import VerificarEficaciaModal from './VerificarEficaciaModal.vue';
 import { route } from 'ziggy-js';
@@ -122,19 +187,39 @@ const modalVisible = ref(false);
 const selectedHallazgo = ref(null);
 const initialTab = ref('evidencias'); // New state for tab control
 
+const procesos = ref([]);
+
 const filters = reactive({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
+
+const serverFilters = reactive({
+    descripcion: '',
+    proceso_id: '',
+    clasificacion: '',
+    estado: ''
 });
 
 const fetchHallazgos = async () => {
     loading.value = true;
     try {
-        const response = await axios.get(route('hallazgo.eficacia.listar'));
+        const response = await axios.get(route('hallazgo.eficacia.listar'), {
+            params: serverFilters
+        });
         hallazgos.value = response.data;
     } catch (error) {
         console.error('Error al cargar hallazgos:', error);
     } finally {
         loading.value = false;
+    }
+};
+
+const fetchProcesos = async () => {
+    try {
+        const response = await axios.get(route('procesos.listar'));
+        procesos.value = response.data;
+    } catch (error) {
+        console.error('Error al obtener los procesos:', error);
     }
 };
 
@@ -170,5 +255,6 @@ const getAccionesPendientes = (acciones) => {
 
 onMounted(() => {
     fetchHallazgos();
+    fetchProcesos();
 });
 </script>

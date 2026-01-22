@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link :to="{ name: 'salidas-nc.index' }">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Salidas No Conformes</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Salidas No Conformes</li>
             </ol>
         </nav>
 
@@ -68,10 +69,14 @@
             </div>
 
             <div class="card-body">
+                <!-- Loading State - Barra de progreso -->
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
                 <DataTable ref="dt" :value="salidasNC" v-model:filters="filters" paginator :rows="10"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['id', 'snc_descripcion', 'snc_clasificacion', 'snc_estado', 'snc_origen']"
-                    :loading="loading"
+                    :class="{ 'opacity-50 pointer-events-none': loading }"
                     class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
                     <template #header>
                         <div class="d-flex align-items-center">
@@ -128,7 +133,8 @@
                 </DataTable>
                 <!-- Modals -->
                 <SalidaNCModal :show="showCreateModal" :snc="selectedSNC" @update:show="showCreateModal = $event"
-                    @saved="onSNCSaved"></SalidaNCModal>
+                    @saved="onSNCSaved">
+                </SalidaNCModal>
                 <SNCtratamientoModal :show="showTratamientoModal" :snc="selectedSNCForTratamiento"
                     @update:show="showTratamientoModal = $event" @saved="onSNCSaved"></SNCtratamientoModal>
             </div>
@@ -148,6 +154,7 @@ import SNCtratamientoModal from '@/components/salidas-nc/SNCtratamientoModal.vue
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 import { FilterMatchMode } from 'primevue/api';
 
 // Usamos el store
@@ -278,18 +285,5 @@ onMounted(() => {
 .badge {
     font-size: 0.85rem;
     padding: 0.35em 0.65em;
-}
-
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
-}
-
-/* Change the loader icon to red */
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
 }
 </style>

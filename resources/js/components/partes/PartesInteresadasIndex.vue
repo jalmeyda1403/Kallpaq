@@ -1,8 +1,9 @@
 <template>
-    <div class="container-fluid fade-in">
+    <div class="container-fluid fade-in py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link to="/home"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Partes Interesadas</li>
             </ol>
         </nav>
@@ -10,7 +11,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
                 <div class="row align-items-center">
-                     <div class="col-md-6">
+                    <div class="col-md-6">
                         <h5 class="mb-0 font-weight-bold text-dark">Partes Interesadas</h5>
                     </div>
                     <div class="col-md-6 text-md-right">
@@ -22,36 +23,38 @@
                         </button>
                     </div>
                 </div>
-                 
+
                 <!-- Filter Tabs -->
                 <div class="mt-3">
                     <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
-                            <a class="nav-link" :class="{ active: filterNorma === 'all' }" href="#" @click.prevent="filterNorma = 'all'">Todos</a>
+                            <a class="nav-link" :class="{ active: filterNorma === 'all' }" href="#"
+                                @click.prevent="filterNorma = 'all'">Todos</a>
                         </li>
                         <li class="nav-item" v-for="norma in normasList" :key="norma">
-                             <a class="nav-link" :class="{ active: filterNorma === norma }" href="#" @click.prevent="filterNorma = norma">{{ norma }}</a>
+                            <a class="nav-link" :class="{ active: filterNorma === norma }" href="#"
+                                @click.prevent="filterNorma = norma">{{ norma }}</a>
                         </li>
                     </ul>
                 </div>
             </div>
 
             <div class="card-body p-0">
-                <div v-if="store.loading" class="p-5 text-center">
-                     <div class="spinner-border text-danger" role="status">
-                        <span class="sr-only">Cargando...</span>
-                    </div>
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="store.loading" mode="indeterminate" style="height: 4px;" />
                 </div>
-                
-                <div v-else class="p-3">
+
+                <div class="p-3">
                     <DataTable :value="filteredPartes" :paginator="true" :rows="10" responsiveLayout="scroll"
-                        class="p-datatable-sm" :rowsPerPageOptions="[5,10,20]"
+                        :class="{ 'opacity-50 pointer-events-none': store.loading }" class="p-datatable-sm"
+                        :rowsPerPageOptions="[5, 10, 20]"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="{first}-{last} de {totalRecords}">
-                        
+
                         <template #empty>
                             <div class="text-center py-5">
-                                <img :src="'/images/empty-state.svg'" alt="No data" style="max-width: 150px; opacity: 0.5" class="mb-3">
+                                <img :src="'/images/empty-state.svg'" alt="No data"
+                                    style="max-width: 150px; opacity: 0.5" class="mb-3">
                                 <h6 class="text-muted">No se encontraron partes interesadas</h6>
                                 <p class="small text-muted">Comienza agregando una nueva parte interesada.</p>
                             </div>
@@ -60,34 +63,37 @@
                         <Column field="pi_nombre" header="Nombre">
                             <template #body="slotProps">
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-initial rounded-circle mr-2 shadow-sm d-flex align-items-center justify-content-center text-white font-weight-bold" 
-                                         :class="getAvatarColor(slotProps.data.pi_nombre)"
-                                         style="width: 28px; height: 28px; min-width: 28px; font-size: 11px;">
+                                    <div class="avatar-initial rounded-circle mr-2 shadow-sm d-flex align-items-center justify-content-center text-white font-weight-bold"
+                                        :class="getAvatarColor(slotProps.data.pi_nombre)"
+                                        style="width: 28px; height: 28px; min-width: 28px; font-size: 11px;">
                                         {{ getInitials(slotProps.data.pi_nombre) }}
                                     </div>
                                     <div>
                                         <div class="font-weight-bold text-dark">{{ slotProps.data.pi_nombre }}</div>
-                                        <div class="small text-muted text-truncate" style="max-width: 200px">{{ slotProps.data.pi_descripcion }}</div>
+                                        <div class="small text-muted text-truncate" style="max-width: 200px">{{
+                                            slotProps.data.pi_descripcion }}</div>
                                     </div>
                                 </div>
                             </template>
                         </Column>
-                        
-                        <Column field="pi_tipo" header="Tipo" >
-                             <template #body="slotProps">
-                                <span class="badge badge-pill badge-soft-secondary">{{ slotProps.data.pi_tipo.toUpperCase() }}</span>
+
+                        <Column field="pi_tipo" header="Tipo">
+                            <template #body="slotProps">
+                                <span class="badge badge-pill badge-soft-secondary">{{
+                                    slotProps.data.pi_tipo.toUpperCase() }}</span>
                             </template>
                         </Column>
 
                         <Column header="Matriz Poder/Interés">
-                             <template #body="slotProps">
+                            <template #body="slotProps">
                                 <div v-if="calculateCuadrante(slotProps.data)" class="d-flex align-items-center">
-                                    <div class="quadrant-badge mr-2 text-center text-white font-weight-bold rounded-circle d-flex align-items-center justify-content-center" 
-                                         :class="getCuadranteClass(calculateCuadrante(slotProps.data).cuadrante)"
-                                         style="width: 28px; height: 28px; font-size: 12px;">
+                                    <div class="quadrant-badge mr-2 text-center text-white font-weight-bold rounded-circle d-flex align-items-center justify-content-center"
+                                        :class="getCuadranteClass(calculateCuadrante(slotProps.data).cuadrante)"
+                                        style="width: 28px; height: 28px; font-size: 12px;">
                                         {{ calculateCuadrante(slotProps.data).cuadrante }}
                                     </div>
-                                    <span class="small font-weight-bold" :class="getTextClass(calculateCuadrante(slotProps.data).cuadrante)">
+                                    <span class="small font-weight-bold"
+                                        :class="getTextClass(calculateCuadrante(slotProps.data).cuadrante)">
                                         {{ calculateCuadrante(slotProps.data).valoracion }}
                                     </span>
                                 </div>
@@ -98,7 +104,8 @@
                         <Column header="Normas">
                             <template #body="slotProps">
                                 <div class="d-flex flex-wrap">
-                                    <span v-for="norma in getNormas(slotProps.data)" :key="norma" class="badge badge-outlined-info mr-1 mb-1">
+                                    <span v-for="norma in getNormas(slotProps.data)" :key="norma"
+                                        class="badge badge-outlined-info mr-1 mb-1">
                                         {{ norma }}
                                     </span>
                                 </div>
@@ -108,7 +115,8 @@
                         <Column header="Requisitos" style="width: 100px; text-align: center">
                             <template #body="slotProps">
                                 <span class="font-weight-bold text-dark">
-                                    {{ getRequisitosImplementados(slotProps.data) }}/{{ getTotalRequisitos(slotProps.data) }}
+                                    {{ getRequisitosImplementados(slotProps.data) }}/{{
+                                        getTotalRequisitos(slotProps.data) }}
                                 </span>
                             </template>
                         </Column>
@@ -119,14 +127,14 @@
                                     <div class="font-weight-bold text-dark mb-1" style="font-size: 10px;">
                                         {{ getCumplimientoPercentage(slotProps.data) }}%
                                     </div>
-                                    <div class="progress rounded-pill shadow-sm" style="height: 6px; background-color: #e9ecef;">
-                                        <div class="progress-bar rounded-pill" 
-                                             :class="getProgressBarClass(getCumplimientoPercentage(slotProps.data))"
-                                             :style="{ width: getCumplimientoPercentage(slotProps.data) + '%' }"
-                                             role="progressbar" 
-                                             :aria-valuenow="getCumplimientoPercentage(slotProps.data)" 
-                                             aria-valuemin="0" 
-                                             aria-valuemax="100">
+                                    <div class="progress rounded-pill shadow-sm"
+                                        style="height: 6px; background-color: #e9ecef;">
+                                        <div class="progress-bar rounded-pill"
+                                            :class="getProgressBarClass(getCumplimientoPercentage(slotProps.data))"
+                                            :style="{ width: getCumplimientoPercentage(slotProps.data) + '%' }"
+                                            role="progressbar"
+                                            :aria-valuenow="getCumplimientoPercentage(slotProps.data)" aria-valuemin="0"
+                                            aria-valuemax="100">
                                         </div>
                                     </div>
                                 </div>
@@ -136,14 +144,14 @@
                         <Column header="Acciones" style="width: 160px; text-align: center">
                             <template #body="slotProps">
                                 <div class="d-flex justify-content-center gap-2">
-                                    
-                                    <Button icon="pi pi-pencil" 
+
+                                    <Button icon="pi pi-pencil"
                                         class="p-button-rounded p-button-warning p-button-text p-button-sm"
                                         @click="store.openFormModal(slotProps.data)" v-tooltip.top="'Editar'" />
-                                   <Button icon="pi pi-list" 
+                                    <Button icon="pi pi-list"
                                         class="p-button-rounded p-button-info p-button-text p-button-sm"
                                         @click="openReqModal(slotProps.data)" v-tooltip.top="'Requisitos'" />
-                                        <Button icon="pi pi-trash" 
+                                    <Button icon="pi pi-trash"
                                         class="p-button-rounded p-button-danger p-button-text p-button-sm"
                                         @click="store.deleteParte(slotProps.data.id)" v-tooltip.top="'Eliminar'" />
                                 </div>
@@ -153,15 +161,16 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Modal Form -->
         <ParteInteresadaForm />
-        
+
         <!-- Modal Mapa Actores -->
         <MapaActoresModal :visible="showMapModal" :partes="store.partes" @close="showMapModal = false" />
 
         <!-- Modal Requisitos -->
-        <PartesRequisitosModal :visible="showReqModal" :parte="selectedParte" :filter-context="filterNorma" @close="showReqModal = false" />
+        <PartesRequisitosModal :visible="showReqModal" :parte="selectedParte" :filter-context="filterNorma"
+            @close="showReqModal = false" />
 
     </div>
 </template>
@@ -175,6 +184,7 @@ import PartesRequisitosModal from './PartesRequisitosModal.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 import LoadingState from '@/components/generales/LoadingState.vue';
 
 const store = useParteStore();
@@ -200,7 +210,7 @@ const getInitials = (name) => {
     // Actually, simpler: take first two words.
     // User Example: PJ Poder Judicial -> PJ.
     const words = name.trim().split(/\s+/);
-    if(words.length === 1) return words[0].substring(0,2).toUpperCase();
+    if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
     return (words[0][0] + words[1][0]).toUpperCase();
 };
 
@@ -219,13 +229,13 @@ const calculateCuadrante = (parte) => {
     if (!parte.pi_nivel_influencia || !parte.pi_nivel_interes) return null;
     const inf = parte.pi_nivel_influencia.toLowerCase();
     const int = parte.pi_nivel_interes.toLowerCase();
-    
+
     // Matrix Logic
     // Infl (Y) | Int (X)
     // High=3, Med=2, Low=1
-    
+
     let c = '';
-    
+
     if (inf === 'alto') {
         if (int === 'alto' || int === 'medio') c = 'I'; // C1: High/High, High/Med
         else c = 'II'; // C2: High/Low
@@ -245,21 +255,21 @@ const calculateCuadrante = (parte) => {
        C3 = III (Informar)
        C4 = IV (Monitorear)
     */
-    
+
     let label = '';
     if (c === 'I') label = 'Jugador Clave';
     else if (c === 'II') label = 'Satisfacer';
     else if (c === 'III') label = 'Informar';
     else if (c === 'IV') label = 'Monitorear';
 
-    return { 
-        cuadrante: c, 
+    return {
+        cuadrante: c,
         valoracion: label
     };
 };
 
 const getCuadranteClass = (c) => {
-    switch(c) {
+    switch (c) {
         case 'I': return 'bg-danger text-white shadow-sm';
         case 'II': return 'bg-warning text-dark shadow-sm';
         case 'III': return 'bg-info text-white shadow-sm'; // Teal/Cyan (Informar)
@@ -269,7 +279,7 @@ const getCuadranteClass = (c) => {
 };
 
 const getTextClass = (c) => {
-     switch(c) {
+    switch (c) {
         case 'I': return 'text-danger';
         case 'II': return 'text-warning-dark'; // Custom?
         default: return 'text-muted';
@@ -286,7 +296,7 @@ const getNormas = (parte) => {
 
 const filteredPartes = computed(() => {
     if (filterNorma.value === 'all') return store.partes;
-    
+
     return store.partes.filter(parte => {
         const normas = getNormas(parte);
         return normas.some(n => n.includes(filterNorma.value) || filterNorma.value.includes(n));
@@ -296,7 +306,7 @@ const filteredPartes = computed(() => {
 const getFilteredExpectativas = (parte) => {
     if (!parte.expectativas) return [];
     if (filterNorma.value === 'all') return parte.expectativas;
-    
+
     return parte.expectativas.filter(e => {
         const normas = e.exp_normas || [];
         return normas.some(n => n.includes(filterNorma.value) || filterNorma.value.includes(n));
@@ -330,17 +340,21 @@ const getProgressBarClass = (percentage) => {
 <style scoped>
 /* Standard Bootstrap/AdminLTE Overrides if needed */
 .card-header-tabs {
-    margin-bottom: -1rem; /* Align tabs with bottom border */
+    margin-bottom: -1rem;
+    /* Align tabs with bottom border */
     border-bottom: 0;
 }
+
 .nav-tabs .nav-link {
     border: none;
     border-bottom: 2px solid transparent;
     color: #6c757d;
 }
+
 .nav-tabs .nav-link:hover {
     color: #495057;
 }
+
 .nav-tabs .nav-link.active {
     color: #dc3545;
     border-bottom: 2px solid #dc3545;

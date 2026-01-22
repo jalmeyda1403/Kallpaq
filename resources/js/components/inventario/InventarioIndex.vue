@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid">
+  <div class="container-fluid py-4">
     <div v-if="successMessage" class="alert alert-success" id="success-alert">
       {{ successMessage }}
     </div>
@@ -8,9 +8,10 @@
     </div>
 
     <nav aria-label="breadcrumb">
-      <ol class="breadcrumb bg-light py-2 px-3 rounded">
-        <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-        <li class="breadcrumb-item active" aria-current="page">Inventario de Procesos</li>
+      <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+        <li class="breadcrumb-item"><router-link to="/home" class="text-danger font-weight-bold">Inicio</router-link>
+        </li>
+        <li class="breadcrumb-item active text-muted" aria-current="page">Inventario de Procesos</li>
       </ol>
     </nav>
 
@@ -21,35 +22,31 @@
             <h3 class="card-title mb-0">Gestión del Inventario</h3>
           </div>
           <div class="col-md-6 text-md-right">
-            <a href="#" class="btn btn-primary" @click.prevent="openNewInventarioModal"
-              title="Nuevo Inventario">
+            <a href="#" class="btn btn-primary" @click.prevent="openNewInventarioModal" title="Nuevo Inventario">
               <i class="fas fa-plus-circle"></i> Agregar Inventario
             </a>
           </div>
         </div>
       </div>
       <div class="card-body">
-        <DataTable
-          :value="inventarios"
-          :loading="loading"
-          stripedRows
-          paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
-          responsiveLayout="scroll"
-        >
+        <div class="h-1 mb-2">
+          <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+        </div>
+        <DataTable :value="inventarios" :class="{ 'opacity-50 pointer-events-none': loading }" stripedRows paginator
+          :rows="10" :rowsPerPageOptions="[10, 20, 50]" responsiveLayout="scroll">
           <Column field="id" header="ID" sortable></Column>
-          <Column field="nombre" header="Nombre" ></Column>
-          <Column field="descripcion" header="Descripción"  style="width: 25%;"></Column>
+          <Column field="nombre" header="Nombre"></Column>
+          <Column field="descripcion" header="Descripción" style="width: 25%;"></Column>
           <Column header="Documento de Aprobación">
             <template #body="slotProps">
-              <a v-if="slotProps.data.documento_aprueba" :href="slotProps.data.documento_aprueba" target="_blank" rel="noopener noreferrer" download>
+              <a v-if="slotProps.data.documento_aprueba" :href="slotProps.data.documento_aprueba" target="_blank"
+                rel="noopener noreferrer" download>
                 {{ getFileName(slotProps.data.documento_aprueba) }}
               </a>
               <span v-else>Sin documento</span>
             </template>
           </Column>
-          <Column field="vigencia" header="Vigencia" >
+          <Column field="vigencia" header="Vigencia">
             <template #body="slotProps">
               {{ formatDate(slotProps.data.vigencia) }}
             </template>
@@ -71,22 +68,27 @@
           </Column>
           <Column header="Acciones" :exportable="false" style="min-width: 160px">
             <template #body="slotProps">
-              <a href="#" :title="slotProps.data.estado_flujo === 'borrador' ? 'Editar Inventario' : 'No se puede editar - estado: ' + slotProps.data.estado_flujo" class="mr-3 d-inline-block"
-                @click.prevent="editInventario(slotProps.data)"
-                :class="{'disabled-link': slotProps.data.estado_flujo !== 'borrador'}"
-                :style="slotProps.data.estado_flujo !== 'borrador' ? {'pointer-events': 'none', 'opacity': '0.5'} : {}">
-                <i class="fas fa-edit" :class="{'text-warning': slotProps.data.estado_flujo === 'borrador', 'text-muted': slotProps.data.estado_flujo !== 'borrador'}"></i>
+              <a href="#"
+                :title="slotProps.data.estado_flujo === 'borrador' ? 'Editar Inventario' : 'No se puede editar - estado: ' + slotProps.data.estado_flujo"
+                class="mr-3 d-inline-block" @click.prevent="editInventario(slotProps.data)"
+                :class="{ 'disabled-link': slotProps.data.estado_flujo !== 'borrador' }"
+                :style="slotProps.data.estado_flujo !== 'borrador' ? { 'pointer-events': 'none', 'opacity': '0.5' } : {}">
+                <i class="fas fa-edit"
+                  :class="{ 'text-warning': slotProps.data.estado_flujo === 'borrador', 'text-muted': slotProps.data.estado_flujo !== 'borrador' }"></i>
               </a>
               <a href="#" title="Gestionar Procesos" class="mr-3 d-inline-block"
-                @click.prevent="manageProcesses(slotProps.data.id)" :disabled="slotProps.data.estado_flujo !== 'borrador'">
+                @click.prevent="manageProcesses(slotProps.data.id)"
+                :disabled="slotProps.data.estado_flujo !== 'borrador'">
                 <i class="fas fa-tasks text-info fa-lg"></i>
               </a>
               <a href="#" title="Ver Procesos" class="mr-3 d-inline-block"
-                @click.prevent="viewProcesses(slotProps.data.id)" :disabled="slotProps.data.estado_flujo !== 'aprobado'">
+                @click.prevent="viewProcesses(slotProps.data.id)"
+                :disabled="slotProps.data.estado_flujo !== 'aprobado'">
                 <i class="fas fa-list text-primary fa-lg"></i>
               </a>
               <a href="#" title="Eliminar Inventario" class="mr-3 d-inline-block"
-                @click.prevent="deleteInventario(slotProps.data.id)" :disabled="slotProps.data.estado_flujo !== 'borrador'">
+                @click.prevent="deleteInventario(slotProps.data.id)"
+                :disabled="slotProps.data.estado_flujo !== 'borrador'">
                 <i class="fas fa-trash-alt text-danger fa-lg"></i>
               </a>
             </template>
@@ -105,6 +107,7 @@ import axios from 'axios';
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 
 import InventarioModal from '@/components/inventario/InventarioModal.vue';
 import { useInventarioStore } from '@/stores/inventarioStore'; // Importa la tienda

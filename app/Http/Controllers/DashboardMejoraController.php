@@ -20,13 +20,21 @@ class DashboardMejoraController extends Controller
         // Obtener OUOs del usuario (relación many-to-many)
         $userOuos = $user->ouos->pluck('id')->toArray();
 
-        // Parámetro para mostrar todos (solo para administradores)
         $mostrarTodos = $request->get('mostrarTodos', false);
-        // Convertir string "true"/"false" a booleano si es necesario
         $mostrarTodos = filter_var($mostrarTodos, FILTER_VALIDATE_BOOLEAN);
+        $year = $request->get('year');
 
         // Consulta base de hallazgos
         $hallazgosQuery = Hallazgo::with(['procesos.ouos', 'acciones']);
+
+        // Aplicar filtro de año si existe
+        if ($year) {
+            if (is_array($year)) {
+                $hallazgosQuery->whereIn(\Illuminate\Support\Facades\DB::raw('YEAR(hallazgo_fecha_identificacion)'), $year);
+            } else {
+                $hallazgosQuery->whereYear('hallazgo_fecha_identificacion', $year);
+            }
+        }
 
         // Aplicar filtros según el rol del usuario
         // Los usuarios NO administradores SIEMPRE se filtran por OUO
@@ -34,21 +42,21 @@ class DashboardMejoraController extends Controller
 
         $debeFiltrarPorOuo = false;
 
-        if (! $esAdmin) {
+        if (!$esAdmin) {
             // Usuarios no administradores SIEMPRE se filtran por OUO
             $debeFiltrarPorOuo = true;
-        } elseif ($esAdmin && ! $mostrarTodos) {
+        } elseif ($esAdmin && !$mostrarTodos) {
             // Administradores se filtran por OUO cuando NO han marcado la opción de mostrar todos
             $debeFiltrarPorOuo = true;
         }
         // Si es admin y marcó mostrarTodos, entonces NO se filtra
 
-        if ($debeFiltrarPorOuo && ! empty($userOuos)) {
+        if ($debeFiltrarPorOuo && !empty($userOuos)) {
             // Filtrar hallazgos por procesos donde la OUO del usuario es PROPIETARIA (propietario = 1)
             $hallazgosQuery->whereHas('procesos', function ($query) use ($userOuos) {
                 $query->whereHas('ouos', function ($q) use ($userOuos) {
                     $q->whereIn('ouos.id', $userOuos)
-                      ->where('procesos_ouo.propietario', 1);
+                        ->where('procesos_ouo.propietario', 1);
                 });
             });
         }
@@ -86,8 +94,8 @@ class DashboardMejoraController extends Controller
         $hastaFecha = Carbon::today()->addDays(7);
         $accionesProximasVencer = $acciones->filter(function ($accion) use ($hastaFecha) {
             return $accion->accion_fecha_fin_planificada &&
-                   Carbon::parse($accion->accion_fecha_fin_planificada) > Carbon::today() &&
-                   Carbon::parse($accion->accion_fecha_fin_planificada) <= $hastaFecha;
+                Carbon::parse($accion->accion_fecha_fin_planificada) > Carbon::today() &&
+                Carbon::parse($accion->accion_fecha_fin_planificada) <= $hastaFecha;
         })->values();
 
         // Agrupar hallazgos por proceso
@@ -97,7 +105,7 @@ class DashboardMejoraController extends Controller
         // 1. Filtrar los procesos obtenidos de los hallazgos para dejar SOLO los que pertenecen a la OUO del usuario.
         //    (Esto evita que aparezcan procesos ajenos que comparten un hallazgo con un proceso propio).
         // 2. Agregar los procesos donde la OUO del usuario es propietaria (para mostrar ceros si es necesario).
-        if ($debeFiltrarPorOuo && ! empty($userOuos)) {
+        if ($debeFiltrarPorOuo && !empty($userOuos)) {
             // 1. Filtrar procesos para dejar SOLO aquellos donde la OUO del usuario es PROPIETARIA (propietario = 1).
             //    El usuario solicitó explícitamente ver solo los procesos de su propiedad.
             $procesos = $procesos->filter(function ($proceso) use ($userOuos) {
@@ -110,7 +118,7 @@ class DashboardMejoraController extends Controller
             // 2. Agregar procesos propios (propietario = 1) que quizás no tenían hallazgos
             $procesosPropios = \App\Models\Proceso::whereHas('ouos', function ($query) use ($userOuos) {
                 $query->whereIn('ouos.id', $userOuos)
-                      ->where('procesos_ouo.propietario', 1);
+                    ->where('procesos_ouo.propietario', 1);
             })->get();
 
             $procesos = $procesos->merge($procesosPropios)->unique('id');

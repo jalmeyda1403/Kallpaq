@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Reportes de Satisfacción</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link :to="{ name: 'home' }"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Reportes de Satisfacción</li>
             </ol>
         </nav>
 
@@ -57,8 +58,12 @@
             </div>
 
             <div class="card-body">
-                <DataTable :value="reportes" :paginator="true" :rows="25" stripedRows :loading="loading"
-                    tableStyle="min-width: 50rem"
+                <!-- Loading State - Barra de progreso -->
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable :value="reportes" :paginator="true" :rows="25" stripedRows
+                    :class="{ 'opacity-50 pointer-events-none': loading }" tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros">
@@ -92,21 +97,14 @@
                                     class="p-button-rounded p-button-warning p-button-text p-button-sm"
                                     @click="editReporte(slotProps.data)" v-tooltip.top="'Editar'" />
 
-                                <!-- Enviar Firmado (solo si está generado) -->
-                                <Button v-if="slotProps.data.estado === 'generado'" icon="pi pi-upload"
-                                    class="p-button-rounded p-button-success p-button-text p-button-sm"
-                                    @click="openEnviarModal(slotProps.data)" v-tooltip.top="'Enviar Firmado'" />
-
-                                <!-- Ver PDF Firmado (solo si está firmado) -->
-                                <Button v-if="slotProps.data.estado === 'firmado' && slotProps.data.archivo_path"
-                                    icon="pi pi-file-pdf"
-                                    class="p-button-rounded p-button-danger p-button-text p-button-sm"
-                                    @click="viewPDF(slotProps.data)" v-tooltip.top="'Ver PDF Firmado'" />
-
-                                <!-- Eliminar -->
-                                <Button icon="pi pi-trash"
+                                <!-- Acciones condicionadas: Eliminar o Ver PDF -->
+                                <Button v-if="slotProps.data.estado !== 'firmado'" icon="pi pi-trash"
                                     class="p-button-rounded p-button-danger p-button-text p-button-sm"
                                     @click="deleteReporte(slotProps.data)" v-tooltip.top="'Eliminar'" />
+
+                                <Button v-else-if="slotProps.data.archivo_path" icon="pi pi-file-pdf"
+                                    class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                    @click="viewPDF(slotProps.data)" v-tooltip.top="'Ver PDF Firmado'" />
                             </div>
                         </template>
                     </Column>
@@ -114,8 +112,7 @@
             </div>
         </div>
 
-        <!-- Modal de Enviar Firmado -->
-        <ReporteSatisfaccionEnviar ref="enviarModal" :reporte-id="selectedReporte?.id" @success="handleEnviarSuccess" />
+
     </div>
 </template>
 
@@ -129,17 +126,16 @@ import Swal from 'sweetalert2';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 
 // Components
-import ReporteSatisfaccionEnviar from './ReporteSatisfaccionEnviar.vue';
+
 
 const store = useReporteSatisfaccionStore();
 const router = useRouter();
 
 const reportes = ref([]);
 const loading = ref(false);
-const enviarModal = ref(null);
-const selectedReporte = ref(null);
 const filters = reactive({
     anio: new Date().getFullYear(),
     trimestre: null,
@@ -178,14 +174,7 @@ const editReporte = (reporte) => {
     router.push({ name: 'reportes-satisfaccion.wizard', params: { id: reporte.id } });
 };
 
-const openEnviarModal = (reporte) => {
-    selectedReporte.value = reporte;
-    enviarModal.value.open();
-};
 
-const handleEnviarSuccess = async () => {
-    await fetchReportes(); // Reload data
-};
 
 const viewPDF = (reporte) => {
     if (reporte.archivo_path_url) {
@@ -226,15 +215,5 @@ onMounted(() => {
 .p-button-sm {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
-}
-
-/* Custom loader styles - remove opacity and change color to red */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-}
-
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
 }
 </style>

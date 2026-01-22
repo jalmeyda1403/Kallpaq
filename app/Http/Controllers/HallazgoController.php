@@ -147,7 +147,8 @@ class HallazgoController extends Controller
                 $query->where('hallazgo_estado', $request->estado);
             }
 
-            $hallazgos = $query->get();
+            $perPage = $request->input('rows', 10);
+            $hallazgos = $query->paginate($perPage);
 
             return response()->json($hallazgos);
         } catch (\Throwable $e) {
@@ -499,7 +500,7 @@ class HallazgoController extends Controller
         // Iniciar consulta con relaciones necesarias
         // Iniciar consulta con relaciones necesarias
         $query = Hallazgo::with(['procesos', 'acciones', 'especialista', 'evaluaciones']);
-           // ->where('hallazgo_estado', 'concluido'); // Comentado para mostrar todos los asignados
+        // ->where('hallazgo_estado', 'concluido'); // Comentado para mostrar todos los asignados
 
         // Filtrar SIEMPRE por el especialista actual (Mis SMP Asignadas)
         $query->where('especialista_id', $user->id);
@@ -521,6 +522,10 @@ class HallazgoController extends Controller
 
         if ($request->filled('clasificacion')) {
             $query->where('hallazgo_clasificacion', $request->clasificacion);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('hallazgo_estado', $request->estado);
         }
 
         return response()->json($query->latest()->get());
@@ -641,7 +646,7 @@ class HallazgoController extends Controller
             // Limpiar nombre de archivo
             $originalName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $file->getClientOriginalName());
             $filename = time() . '_' . $originalName;
-            
+
             // Guardar en disco publico
             $path = $file->storeAs('hallazgos/planes', $filename, 'public');
 
@@ -649,7 +654,7 @@ class HallazgoController extends Controller
             $hallazgo->save();
 
             return response()->json([
-                'path' => $path, 
+                'path' => $path,
                 'url' => asset('storage/' . $path),
                 'message' => 'Plan de acción subido correctamente.'
             ]);
@@ -665,7 +670,7 @@ class HallazgoController extends Controller
         }
 
         // Cambiar estado a 'aprobado' según indicación del usuario
-        $hallazgo->hallazgo_estado = 'aprobado'; 
+        $hallazgo->hallazgo_estado = 'aprobado';
         $hallazgo->save();
 
         return response()->json(['message' => 'Plan de acción enviado correctamente.', 'estado' => $hallazgo->hallazgo_estado]);

@@ -32,7 +32,7 @@
                                                 <div class="form-control bg-light text-capitalize text-muted font-weight-bold"
                                                     style="opacity: 0.8;">
                                                     <i class="fas fa-clock mr-2 small"></i> {{
-                                                    indicador?.indicador_frecuencia || 'No def.' }}
+                                                        indicador?.indicador_frecuencia || 'No def.' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -54,12 +54,12 @@
                                                         <span class="input-group-text bg-light border-right-0"><i
                                                                 class="fas fa-hashtag text-muted small"></i></span>
                                                     </div>
-                                                    <input type="text" v-model="form.is_numero_periodo"
-                                                        class="form-control bg-light" readonly>
+                                                    <input type="number" v-model="form.is_numero_periodo"
+                                                        class="form-control" placeholder="Ej: 1, 2, 3...">
                                                     <div class="input-group-append">
                                                         <button class="btn btn-outline-info border-left-0" type="button"
                                                             @click="fetchNextPeriod" :disabled="isLoadingPeriod"
-                                                            title="Siguiente periodo">
+                                                            title="Sugerir siguiente periodo">
                                                             <i class="fas"
                                                                 :class="isLoadingPeriod ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
                                                         </button>
@@ -71,97 +71,103 @@
                                 </div>
                             </div>
 
-                            <!-- SECTION 2: Centro de Cálculo -->
+                            <!-- SECTION 2: Cálculo del Indicador (REDISEÑADO) -->
                             <div class="section-header mb-3" v-if="indicador?.indicador_formula">
                                 <span class="badge badge-danger-soft text-danger mr-2"><i
                                         class="fas fa-calculator"></i></span>
-                                <span class="text-uppercase font-weight-bold small text-muted letter-spacing-1">Centro
-                                    de Procesamiento</span>
+                                <span class="text-uppercase font-weight-bold small text-muted letter-spacing-1">Cálculo
+                                    del Indicador</span>
                             </div>
 
-                            <div class="card border-0 shadow-sm mb-4" v-if="indicador?.indicador_formula">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <!-- Bloque Izquierdo: Lógica y Proyección -->
-                                        <div class="col-md-5 border-right">
-                                            <div class="mb-3">
-                                                <label
-                                                    class="custom-label-small text-muted text-uppercase d-block mb-2">Fórmula
-                                                    Activa</label>
-                                                <div class="bg-danger-soft p-2 rounded text-center border-danger-light">
-                                                    <span class="text-monospace font-weight-bold text-danger h5 mb-0">{{
-                                                        indicador.indicador_formula }}</span>
-                                                </div>
+                            <div class="card border-0 shadow-lg mb-4 overflow-hidden"
+                                v-if="indicador?.indicador_formula">
+                                <div class="card-body p-0">
+                                    <!-- Cabecera de Fórmula: Simple y Clara -->
+                                    <div
+                                        class="bg-light p-3 border-bottom d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center mr-3"
+                                                style="width: 35px; height: 35px;">
+                                                <i class="fas fa-microchip text-danger small"></i>
                                             </div>
-
-                                            <div class="evaluated-box p-3 text-center rounded bg-light border">
-                                                <small class="text-muted text-uppercase d-block mb-2 font-weight-bold"
-                                                    style="font-size: 0.65rem;">Proyección del Cálculo (Live)</small>
-                                                <div v-html="evaluatedFormula"
-                                                    class="h5 mb-0 text-dark font-weight-bold"></div>
+                                            <div>
+                                                <small
+                                                    class="text-muted text-uppercase d-block font-weight-bold p-0 m-0"
+                                                    style="font-size: 0.6rem; line-height: 1;">Fórmula de
+                                                    Cálculo</small>
+                                                <div class="text-danger font-weight-bold text-monospace"
+                                                    v-html="evaluatedFormulaSimple"></div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Bloque Derecho: Entrada de Variables -->
-                                        <div class="col-md-7">
-                                            <label
-                                                class="custom-label-small text-muted text-uppercase d-block mb-3 ml-2">Construcción
-                                                de Variables</label>
-                                            <div class="row no-gutters mx-n2">
-                                                <div v-for="(v, index) in activeVariables" :key="v.n" :class="[
-                                                    'px-2 mb-3',
-                                                    (activeVariables.length % 2 !== 0 && index === activeVariables.length - 1) ? 'col-md-12' : 'col-md-6'
-                                                ]">
-                                                    <div class="variable-field p-2 rounded border-light-2 shadow-xs has-hover-info"
-                                                        :class="{ 'mx-auto': activeVariables.length % 2 !== 0 && index === activeVariables.length - 1 }"
-                                                        :style="activeVariables.length % 2 !== 0 && index === activeVariables.length - 1 ? 'max-width: 50%;' : ''">
-                                                        <label
-                                                            class="custom-label-small text-muted text-uppercase d-flex justify-content-between mb-1">
-                                                            <span><span class="text-danger font-weight-bold">V{{ v.n
-                                                            }}</span></span>
-                                                            <i class="fas fa-info-circle text-info"></i>
-                                                        </label>
-                                                        <div
-                                                            class="variable-info-overlay small text-info font-weight-bold mb-1">
-                                                            {{ v.name }}
-                                                        </div>
+                                    <!-- Variables: Grid moderno -->
+                                    <div class="p-4">
+                                        <div class="row">
+                                            <div v-for="(v, index) in activeVariables" :key="v.n" class="col-md-6 mb-3">
+                                                <div
+                                                    class="variable-input-group p-3 border rounded-lg bg-white transition-all shadow-hover">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span
+                                                            class="badge badge-pill badge-danger-soft text-danger font-weight-bold px-3">V{{
+                                                                v.n }}</span>
+                                                        <i class="fas fa-info-circle text-muted opacity-5"
+                                                            :title="v.name"></i>
+                                                    </div>
+                                                    <div class="small text-muted font-weight-bold text-truncate mb-2"
+                                                        style="font-size: 0.7rem;">{{ v.name }}</div>
+                                                    <div class="input-group">
                                                         <input type="number" v-model="form['is_var' + v.n]"
-                                                            class="form-control form-control-sm border-0 bg-transparent text-right font-weight-bold px-0 h-auto"
-                                                            style="font-size: 1.1rem;" placeholder="0.00">
+                                                            class="form-control form-control-lg border-0 bg-light rounded-pill text-right font-weight-bold px-4"
+                                                            placeholder="0.00" @input="calculateValue">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Barra de Resultados (Footer) -->
-                                <div
-                                    class="card-footer bg-danger text-white border-top-0 d-flex align-items-center py-3 rounded-bottom">
-                                    <div class="flex-grow-1 pr-3">
-                                        <label class="custom-label-white mb-0 text-uppercase d-block"
-                                            style="font-size: 0.65rem; opacity: 0.8;">Meta del
-                                            Periodo</label>
-                                        <input type="text" v-model="form.is_meta"
-                                            class="form-control-plaintext text-white font-weight-bold py-0"
-                                            style="font-size: 1.2rem;" :readonly="isMetaReadonly">
-                                    </div>
+                                    <!-- Zona de Resultados: Una Sola Línea y Automática -->
+                                    <div class="bg-danger text-white py-3 px-4">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center flex-wrap">
+                                                <!-- Meta -->
+                                                <div class="d-flex align-items-center mr-5 mb-2 mb-md-0">
+                                                    <span class="text-uppercase font-weight-bold opacity-8 mr-3"
+                                                        style="font-size: 0.7rem; letter-spacing: 1px;">Meta del
+                                                        Periodo:</span>
+                                                    <div
+                                                        class="d-flex align-items-center bg-white-10 px-3 py-1 rounded-pill">
+                                                        <input type="number" v-model="form.is_meta"
+                                                            class="form-control-plaintext text-white font-weight-bold p-0 w-auto h5 mb-0"
+                                                            style="width: 70px !important;" placeholder="0"
+                                                            :readonly="isMetaReadonly">
+                                                        <i v-if="!isMetaReadonly"
+                                                            class="fas fa-edit ml-2 small opacity-7"
+                                                            style="font-size: 0.7rem;"></i>
+                                                    </div>
+                                                </div>
 
-                                    <div class="text-center px-4 border-left border-white-50">
-                                        <label class="custom-label-white mb-0 text-uppercase d-block"
-                                            style="font-size: 0.65rem; opacity: 0.8;">Valor
-                                            Obtenido</label>
-                                        <div class="h4 mb-0 font-weight-bold">
-                                            {{ form.is_valor || '0.00' }} <small>%</small>
+                                                <!-- Separador Visual (Escritorio) -->
+                                                <div class="d-none d-md-block border-left border-white-20 mr-5"
+                                                    style="height: 30px;"></div>
+
+                                                <!-- Logro -->
+                                                <div class="d-flex align-items-center mb-2 mb-md-0">
+                                                    <span class="text-uppercase font-weight-bold opacity-8 mr-3"
+                                                        style="font-size: 0.7rem; letter-spacing: 1px;">Logro
+                                                        Alcanzado:</span>
+                                                    <div class="h4 mb-0 font-weight-bold d-flex align-items-center">
+                                                        <span class="anim-pop">{{ form.is_valor || '0.00' }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Indicador de Estado -->
+                                            <div
+                                                class="badge badge-white-10 text-white px-3 py-2 rounded-pill font-weight-bold small d-none d-lg-block">
+                                                <i class="fas fa-sync-alt fa-spin mr-2 small"></i> Sincronizado
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div class="pl-4">
-                                        <button
-                                            class="btn btn-light btn-sm font-weight-bold text-danger ripple px-4 shadow-sm"
-                                            type="button" @click="calculateValue">
-                                            <i class="fas fa-bolt mr-1"></i> CALCULAR
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -250,69 +256,6 @@
                                 </div>
                             </div>
 
-                            <!-- SECTION 4: Historial de Avances -->
-                            <div class="section-header mb-3">
-                                <span class="badge badge-info-soft text-info mr-2"><i class="fas fa-history"></i></span>
-                                <span
-                                    class="text-uppercase font-weight-bold small text-muted letter-spacing-1">Trazabilidad
-                                    de Registro</span>
-                            </div>
-
-                            <div class="card border-0 shadow-sm">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-sm mb-0">
-                                        <thead class="table-header-gray">
-                                            <tr>
-                                                <th class="text-center font-weight-bold p-2 border-0">Periodo</th>
-                                                <th class="text-center font-weight-bold p-2 border-0">Meta</th>
-                                                <th class="text-center font-weight-bold p-2 border-0">Logro</th>
-                                                <th class="font-weight-bold p-2 border-0 text-center">Comentario</th>
-                                                <th class="text-center font-weight-bold p-2 border-0">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-if="isLoadingHistory">
-                                                <td colspan="5" class="text-center py-5">
-                                                    <div class="spinner-border text-danger spinner-border-sm"
-                                                        role="status"></div>
-                                                    <p class="text-muted mt-2 mb-0 small">Sincronizando historial...</p>
-                                                </td>
-                                            </tr>
-                                            <tr v-else-if="avances.length === 0">
-                                                <td colspan="5" class="text-center text-muted py-4">No hay registros
-                                                    previos.</td>
-                                            </tr>
-                                            <tr v-else v-for="avance in avances" :key="avance.id">
-                                                <td class="text-center align-middle">
-                                                    <span class="badge badge-light p-2">{{ avance.is_periodo }}-{{
-                                                        avance.is_numero_periodo
-                                                        }}</span>
-                                                </td>
-                                                <td class="text-center align-middle font-weight-bold">{{ avance.is_meta
-                                                    }}</td>
-                                                <td class="text-center align-middle">
-                                                    <span class="text-success font-weight-bold">{{ avance.is_valor
-                                                        }}%</span>
-                                                </td>
-                                                <td class="align-middle">
-                                                    <small class="text-muted text-truncate d-block"
-                                                        style="max-width: 180px;" :title="avance.is_comentario">
-                                                        {{ avance.is_comentario || '-' }}
-                                                    </small>
-                                                </td>
-                                                <td v-if="isAdmin" class="text-center align-middle">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-warning rounded-circle"
-                                                        style="width: 32px; height: 32px; padding: 0;"
-                                                        @click="editAvance(avance)">
-                                                        <i class="fas fa-pencil-alt"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
                         </div>
                         <div class="modal-footer d-flex justify-content-between">
                             <div></div> <!-- Empty div for spacing -->
@@ -327,6 +270,70 @@
                             </div>
                         </div>
                     </form>
+
+                    <!-- SECTION 4: Historial de Avances (Movido fuera del form/footer) -->
+                    <div class="px-4 pb-4">
+                        <div class="section-header mb-3">
+                            <span class="badge badge-info-soft text-info mr-2"><i class="fas fa-history"></i></span>
+                            <span class="text-uppercase font-weight-bold small text-muted letter-spacing-1">Trazabilidad
+                                de Registro</span>
+                        </div>
+
+                        <div class="card border-0 shadow-sm overflow-hidden">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm mb-0">
+                                    <thead class="table-header-gray">
+                                        <tr>
+                                            <th class="text-center font-weight-bold p-2 border-0">Periodo</th>
+                                            <th class="text-center font-weight-bold p-2 border-0">Meta</th>
+                                            <th class="text-center font-weight-bold p-2 border-0">Logro</th>
+                                            <th class="font-weight-bold p-2 border-0 text-center">Comentario</th>
+                                            <th class="text-center font-weight-bold p-2 border-0">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-if="isLoadingHistory">
+                                            <td colspan="5" class="text-center py-5">
+                                                <div class="spinner-border text-danger spinner-border-sm" role="status">
+                                                </div>
+                                                <p class="text-muted mt-2 mb-0 small">Sincronizando historial...</p>
+                                            </td>
+                                        </tr>
+                                        <tr v-else-if="avances.length === 0">
+                                            <td colspan="5" class="text-center text-muted py-4">No hay registros
+                                                previos.</td>
+                                        </tr>
+                                        <tr v-else v-for="avance in avances" :key="avance.id"
+                                            :class="{ 'bg-yellow-light': editingAvanceId === avance.id }">
+                                            <td class="text-center align-middle">
+                                                <span class="badge badge-light p-2">{{ avance.is_periodo }}-{{
+                                                    avance.is_numero_periodo }}</span>
+                                            </td>
+                                            <td class="text-center align-middle font-weight-bold">{{ avance.is_meta }}
+                                            </td>
+                                            <td class="text-center align-middle">
+                                                <span class="text-success font-weight-bold">{{ avance.is_valor }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <small class="text-muted text-truncate d-block"
+                                                    style="max-width: 180px;" :title="avance.is_comentario">
+                                                    {{ avance.is_comentario || '-' }}
+                                                </small>
+                                            </td>
+                                            <td v-if="isAdmin" class="text-center align-middle">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-warning rounded-circle"
+                                                    style="width: 32px; height: 32px; padding: 0;"
+                                                    @click="editAvance(avance)">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -351,11 +358,18 @@ const modalInstance = ref(null);
 const fileInput = ref(null);
 
 // Evaluación de la fórmula en tiempo real
-const evaluatedFormula = computed(() => {
+// Evaluación de la fórmula en tiempo real de forma simplificada
+const evaluatedFormulaSimple = computed(() => {
     if (!props.indicador?.indicador_formula) return '';
     let formula = props.indicador.indicador_formula;
     formula = formula.replace(/x/gi, '*');
-    const getVarValue = (val, placeholder) => (val !== undefined && val !== null && val !== '') ? `<span class="text-danger border-bottom border-danger">${val}</span>` : `<span class="text-muted">[${placeholder}]</span>`;
+
+    const getVarValue = (val, placeholder) => {
+        return (val !== undefined && val !== null && val !== '')
+            ? `<span class="text-danger border-bottom border-danger font-weight-bold">${val}</span>`
+            : `<span class="text-muted" style="opacity: 0.5;">[${placeholder}]</span>`;
+    };
+
     const variables = {
         'V1': getVarValue(form.value.is_var1, 'V1'),
         'V2': getVarValue(form.value.is_var2, 'V2'),
@@ -364,6 +378,7 @@ const evaluatedFormula = computed(() => {
         'V5': getVarValue(form.value.is_var5, 'V5'),
         'V6': getVarValue(form.value.is_var6, 'V6'),
     };
+
     for (const [key, value] of Object.entries(variables)) {
         const regex = new RegExp(`\\b${key}\\b`, 'gi');
         formula = formula.replace(regex, value);
@@ -398,17 +413,14 @@ const isLoadingPeriod = ref(false);
 const isLoadingHistory = ref(false);
 const isPeriodFull = ref(false);
 
-// Generar lista de años (actual +/- 1)
-const years = computed(() => {
-    const currentYear = new Date().getFullYear();
-    return [currentYear - 1, currentYear, currentYear + 1].sort((a, b) => b - a);
-});
+// Generar lista de años (Fijado a 2025 por solicitud)
+const years = computed(() => [2025]);
 
 // TODO: Implementar lógica real de permisos. Por ahora asumimos true o lo dejamos pendiente.
 const isAdmin = ref(true);
 
 const form = ref({
-    is_periodo: new Date().getFullYear(),
+    is_periodo: 2025,
     is_numero_periodo: '',
     is_fecha: new Date().toISOString().substr(0, 10),
     is_meta: '',
@@ -425,6 +437,11 @@ const form = ref({
 console.log('IndicadorAvanceForm initialized', form.value);
 
 const isMetaReadonly = computed(() => {
+    // Si la agregación es ACUMULADA, permitimos editar la meta del periodo
+    if (props.indicador?.indicador_tipo_agregacion?.toUpperCase() === 'ACUMULADA') {
+        return false;
+    }
+    // Por defecto es solo lectura si es de sentido lineal (o cualquier otro caso no acumulado)
     return props.indicador?.indicador_sentido === 'lineal';
 });
 
@@ -436,6 +453,7 @@ const isSaveDisabled = computed(() => {
     return false;
 });
 
+
 const fetchNextPeriod = async () => {
     if (!props.indicador?.id || !form.value.is_periodo) return;
     isLoadingPeriod.value = true;
@@ -445,6 +463,19 @@ const fetchNextPeriod = async () => {
             year: form.value.is_periodo
         });
         form.value.is_numero_periodo = response.data.periodo;
+
+        // Limpiar campos al cambiar de periodo manual
+        form.value.is_valor = '';
+        form.value.is_var1 = '';
+        form.value.is_var2 = '';
+        form.value.is_var3 = '';
+        form.value.is_var4 = '';
+        form.value.is_var5 = '';
+        form.value.is_var6 = '';
+        form.value.is_comentario = '';
+        filesToUpload.value = [];
+        existingFiles.value = [];
+
         if (response.data.full) {
             isPeriodFull.value = true;
             Swal.fire({
@@ -496,7 +527,16 @@ const fetchHistory = async () => {
 
 const calculateValue = () => {
     if (!props.indicador?.indicador_formula) {
-        alert('El indicador no tiene una fórmula definida.');
+        return;
+    }
+
+    // Verificar que todas las variables activas tengan un valor
+    const allFilled = activeVariables.value.every(v => {
+        const val = form.value['is_var' + v.n];
+        return val !== undefined && val !== null && val !== '';
+    });
+
+    if (!allFilled) {
         return;
     }
 
@@ -529,16 +569,28 @@ const calculateValue = () => {
             throw new Error("La fórmula contiene caracteres no válidos.");
         }
 
-        const result = eval(formula);
+        const formulaResult = eval(formula);
 
-        if (!isFinite(result) || isNaN(result)) {
+        if (!isFinite(formulaResult) || isNaN(formulaResult)) {
             throw new Error("El resultado no es un número válido (posible división por cero).");
         }
 
-        form.value.is_valor = parseFloat(result.toFixed(2)); // Redondear a 2 decimales
+        // Si el indicador es 'lineal', el valor (cumplimiento) es (Resultado / Meta) * 100
+        if (props.indicador?.indicador_sentido === 'lineal') {
+            const meta = parseFloat(form.value.is_meta);
+            if (meta > 0) {
+                form.value.is_valor = parseFloat(((formulaResult / meta) * 100).toFixed(2));
+            } else {
+                form.value.is_valor = 0;
+            }
+        } else {
+            // Caso normal o manual: se usa el resultado directo de la fórmula (o ingreso manual si no hay fórmula)
+            form.value.is_valor = parseFloat(formulaResult.toFixed(2));
+        }
+
     } catch (error) {
         console.error("Error al calcular:", error);
-        alert("Error al calcular la fórmula: " + error.message);
+        // alert("Error al calcular la fórmula: " + error.message);
     }
 };
 
@@ -595,16 +647,6 @@ const removeExistingFile = (index) => {
 };
 
 // Watchers
-watch(() => form.value.is_periodo, () => {
-    fetchNextPeriod();
-});
-
-// Limpiar valor si cambian las variables
-watch(() => [form.value.is_var1, form.value.is_var2, form.value.is_var3, form.value.is_var4, form.value.is_var5, form.value.is_var6], () => {
-    if (form.value.is_valor) {
-        form.value.is_valor = '';
-    }
-});
 
 const editAvance = (avance) => {
     editingAvanceId.value = avance.id;
@@ -620,6 +662,9 @@ const editAvance = (avance) => {
     form.value.is_var5 = avance.is_var5;
     form.value.is_var6 = avance.is_var6;
     form.value.is_comentario = avance.is_comentario || '';
+
+    // Forzar recalculo para asegurar consistencia tras cargar
+    calculateValue();
 
     existingFiles.value = [];
     if (avance.evidencias_list && Array.isArray(avance.evidencias_list)) {
@@ -642,6 +687,20 @@ const editAvance = (avance) => {
 
 const submitForm = async () => {
     try {
+        // Validar que la meta del periodo sea menor o igual a la meta anual
+        const metaPeriodo = parseFloat(form.value.is_meta);
+        const metaAnual = parseFloat(props.indicador?.indicador_meta);
+
+        if (!isNaN(metaPeriodo) && !isNaN(metaAnual) && metaPeriodo > metaAnual) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Meta Excedida',
+                text: `La meta del periodo (${metaPeriodo}) no puede ser mayor a la meta anual (${metaAnual}).`,
+                confirmButtonColor: '#d33'
+            });
+            return;
+        }
+
         // Verificar si hay cambios en los archivos (nuevos o eliminados)
         const hasNewFiles = filesToUpload.value.length > 0;
         const hasFileChanges = hasNewFiles || existingFiles.value.length > 0;
@@ -783,7 +842,7 @@ watch(() => props.visible, async (newVal) => {
         }
 
         // Fetch data asynchronously after showing modal
-        Promise.all([fetchNextPeriod(), fetchHistory()]).catch(console.error);
+        Promise.all([fetchHistory()]).catch(console.error);
 
     } else {
         if (modalInstance.value) {
@@ -1097,5 +1156,81 @@ h6.font-weight-bold {
     background-color: #f8f9fa;
     transform: translateY(-1px);
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.hover-shadow-sm:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-hover:hover {
+    border-color: #dc3545 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.08);
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.rounded-xl {
+    border-radius: 1rem !important;
+}
+
+.bg-white-10 {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.border-white-20 {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.anim-pop {
+    animation: pop 0.3s ease-out;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+        color: #fff;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@media (min-width: 768px) {
+    .border-right-md {
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+    }
+}
+
+.variable-input-group {
+    background: #fff;
+    border: 1px solid #f1f5f9 !important;
+}
+
+.bg-light {
+    background-color: #f8fafc !important;
+}
+
+.form-control-lg {
+    height: calc(1.5em + 1rem + 2px);
+    padding: 0.5rem 1rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    border-radius: 0.3rem;
+}
+
+.rounded-pill {
+    border-radius: 50rem !important;
+}
+
+.text-monospace {
+    font-family: 'Fira Code', 'Roboto Mono', monospace;
 }
 </style>

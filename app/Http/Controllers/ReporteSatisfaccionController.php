@@ -63,18 +63,18 @@ class ReporteSatisfaccionController extends Controller
         ]);
 
         // 2.1 Encuestas: Traer el ÚLTIMO resultado registrado para el proceso
-        $encuestas = EncuestaSatisfaccion::where('proceso_id', $procesoId)
+        $encuestas = EncuestaSatisfaccion::where('proceso_id', '=', $procesoId, 'and')
             ->orderBy('es_anio', 'desc')
             ->orderBy('es_numero_periodo', 'desc')
             ->with('detalles')
-            ->first(); 
+            ->first();
 
         if ($encuestas) {
             $periodoEncuesta = $encuestas->es_periodo ?? ($encuestas->es_numero_periodo ? "Trimestre " . $encuestas->es_numero_periodo : "Anual");
-            $conductores = $encuestas->detalles->map(function($d) {
+            $conductores = $encuestas->detalles->map(function ($d) {
                 return "{$d->esd_categoria}: {$d->esd_puntaje}";
             })->implode(', ');
-            
+
             $resumenEncuestas = "Se consideró los resultados de la medición correspondiente al periodo {$periodoEncuesta} del año {$encuestas->es_anio}. " .
                 "Se obtuvo un índice de satisfacción (Score Global) de {$encuestas->es_score}% y un NPS de {$encuestas->es_nps_score}. " .
                 "La medición se realizó sobre una muestra de {$encuestas->es_cantidad} encuestados. " .
@@ -84,17 +84,17 @@ class ReporteSatisfaccionController extends Controller
         }
 
         // 2.2 Sugerencias
-        $sugerencias = Sugerencia::where('proceso_id', $procesoId)
+        $sugerencias = Sugerencia::where('proceso_id', '=', $procesoId, 'and')
             ->whereBetween('sugerencia_fecha_ingreso', [$startDate, $endDate])
             ->get();
-        
+
         if ($sugerencias->count() > 0) {
             $estados = $sugerencias->groupBy('sugerencia_estado')->map(function ($group, $key) {
                 return "{$key} ({$group->count()})";
             })->implode(', ');
 
             $tratadas = $sugerencias->whereNotNull('sugerencia_tratamiento')->count();
-            
+
             $resumenSugerencias = "Durante el periodo {$trimestre} del año {$anio}, se recibieron un total de {$sugerencias->count()} sugerencias. " .
                 "El estado actual de las mismas es: {$estados}. " .
                 "Del total recibido, {$tratadas} han sido analizadas y cuentan con tratamiento definido.";
@@ -103,20 +103,20 @@ class ReporteSatisfaccionController extends Controller
         }
 
         // 2.4 Salidas No Conformes
-        $snc = SalidaNoConforme::where('proceso_id', $procesoId)
+        $snc = SalidaNoConforme::where('proceso_id', '=', $procesoId, 'and')
             ->whereBetween('snc_fecha_deteccion', [$startDate, $endDate])
             ->get();
 
         if ($snc->count() > 0) {
             $cerradas = $snc->where('snc_estado', 'Cerrado')->count();
             $abiertas = $snc->where('snc_estado', '!=', 'Cerrado')->count();
-            
+
             $resumenSnc = "Se identificaron {$snc->count()} salidas no conformes en el periodo. " .
                 "De las cuales, {$cerradas} se encuentran cerradas y {$abiertas} permanecen en proceso de tratamiento/cierre.";
         } else {
             $resumenSnc = "No se reportaron Salidas No Conformes en el periodo evaluado.";
         }
-        
+
         \Illuminate\Support\Facades\Log::info('Data Found', [
             'encuestas' => $encuestas ? 'Si' : 'No',
             'sugerencias' => $sugerencias->count(),
@@ -138,15 +138,15 @@ class ReporteSatisfaccionController extends Controller
     {
         $data = $request->all();
         // data expects: proceso_nombre, resumen_encuestas, resumen_sugerencias, reclamos, resumen_snc
-        
+
         // Si proceso_nombre no viene, buscarlo
         if (!isset($data['proceso_nombre']) && isset($data['proceso_id'])) {
-            $proceso = Proceso::find($data['proceso_id']);
+            $proceso = Proceso::find($data['proceso_id'], ['*']);
             $data['proceso_nombre'] = $proceso ? $proceso->proceso_nombre : 'Proceso Desconocido';
         }
 
         $analisis = $this->aiService->generateQuarterlyReportAnalysis($data);
-        
+
         return response()->json($analisis); // { oportunidades, conclusiones }
     }
 
@@ -189,12 +189,12 @@ class ReporteSatisfaccionController extends Controller
         ]);
 
         $reporte = ReporteSatisfaccion::findOrFail($id);
-        
+
         // Update generation date if it was draft
         if ($reporte->estado == 'borrador' && $request->estado == 'generado') {
-             $validated['fecha_generacion'] = now();
+            $validated['fecha_generacion'] = now();
         }
-        
+
         $reporte->update($validated);
 
         return response()->json(['message' => 'Reporte actualizado correctamente', 'id' => $reporte->id]);
@@ -202,9 +202,8 @@ class ReporteSatisfaccionController extends Controller
 
     public function destroy($id)
     {
-        $reporte = ReporteSatisfaccion::findOrFail($id);
-        $reporte->delete();
-        
+        ReporteSatisfaccion::destroy($id);
+
         return response()->json(['message' => 'Reporte eliminado correctamente']);
     }
 
@@ -213,28 +212,28 @@ class ReporteSatisfaccionController extends Controller
         $validated = $request->validate([
             'archivo_path' => 'required|file|mimes:pdf|max:10240' // Max 10MB
         ]);
-        
+
         $reporte = ReporteSatisfaccion::findOrFail($id);
-        
+
         // Solo permitir si está en estado 'generado'
         if ($reporte->estado !== 'generado') {
             return response()->json(['message' => 'Solo se puede firmar reportes generados'], 400);
         }
-        
+
         // Eliminar archivo anterior si existe
         if ($reporte->archivo_path && \Storage::disk('public')->exists($reporte->archivo_path)) {
             \Storage::disk('public')->delete($reporte->archivo_path);
         }
-        
+
         // Guardar nuevo archivo
         $path = $request->file('archivo_path')->store("satisfaccion/reporte_trimestral/{$reporte->proceso_id}", 'public');
-        
+
         // Actualizar reporte
         $reporte->update([
             'archivo_path' => $path,
             'estado' => 'firmado'
         ]);
-        
+
         return response()->json([
             'message' => 'Archivo firmado subido correctamente',
             'archivo_url' => asset('storage/' . $path)
@@ -244,7 +243,7 @@ class ReporteSatisfaccionController extends Controller
     public function downloadWord($id)
     {
         $reporte = ReporteSatisfaccion::with('proceso')->findOrFail($id);
-        
+
         $phpWord = new PhpWord();
         $phpWord->getSettings()->setThemeFontLang(new Language(Language::ES_ES));
 
@@ -253,7 +252,7 @@ class ReporteSatisfaccionController extends Controller
         $headerStyle = ['bold' => true, 'size' => 11, 'name' => 'Arial'];
         $bodyStyle = ['size' => 10, 'name' => 'Arial', 'align' => 'both'];
         $titleStyle = ['bold' => true, 'size' => 12, 'name' => 'Arial', 'color' => '000000', 'allCaps' => true];
-        
+
         // Table styles
         $tableStyle = ['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 50, 'alignment' => \PhpOffice\PhpWord\SimpleType\JcTable::CENTER];
         $phpWord->addTableStyle('EstiloTabla', $tableStyle);
@@ -282,19 +281,19 @@ class ReporteSatisfaccionController extends Controller
             ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
         );
         $section->addTextBreak(1);
-        
+
         // I. DATOS GENERALES
         $section->addText("I. Datos generales", $headerStyle);
         $table = $section->addTable('EstiloTabla');
-        
+
         $table->addRow();
         $table->addCell(2000, $headerCellStyle)->addText('Proceso', ['bold' => true, 'size' => 9]);
         $table->addCell(4000)->addText($reporte->proceso->proceso_nombre, ['size' => 9]);
         $table->addCell(1500, $headerCellStyle)->addText('Tipo', ['bold' => true, 'size' => 9]);
         $table->addCell(2500)->addText($reporte->proceso->tipo_proceso ?? 'Misional', ['size' => 9]); // Asumiendo campo tipo en proceso
-        
+
         $section->addTextBreak(1);
-        
+
         // Tabla Mecanismos (Hardcoded structure based on image, but logical)
         $table2 = $section->addTable('EstiloTabla');
         $table2->addRow();
@@ -371,11 +370,10 @@ class ReporteSatisfaccionController extends Controller
         ]);
 
         $reporte = ReporteSatisfaccion::findOrFail($id);
-        
+
         if ($request->hasFile('archivo')) {
             $path = $request->file('archivo')->store('reportes_satisfaccion', 'public');
             $reporte->archivo_path = $path;
-            $reporte->estado = 'firmado';
             $reporte->save();
         }
 

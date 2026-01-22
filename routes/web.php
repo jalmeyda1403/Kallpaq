@@ -194,6 +194,7 @@ Route::get('/ouos/{ouo}/users/deleted', [OUOController::class, 'getSoftDeletedUs
 Route::put('/ouos/{ouo}/users/{user}', [OUOController::class, 'updateUserPivot'])->name('ouos.users.updatePivot');
 Route::delete('/ouos/{ouo}/users/{user}', [OUOController::class, 'detachUser'])->name('ouos.users.detach');
 Route::post('/ouos/{ouo}/users', [OUOController::class, 'attachUser'])->name('ouos.users.attach');
+Route::post('/ouos/{ouo}/users/sync', [OUOController::class, 'syncUsers'])->name('ouos.users.sync');
 
 Route::resource('documentos', DocumentoController::class);
 Route::resource('sipoc', SipocController::class);
@@ -534,11 +535,13 @@ Route::post('admin/usuarios', [UserController::class, 'store'])->name('usuarios.
 Route::get('admin/usuarios/', [UserController::class, 'index'])->name('usuarios.index');
 Route::get('api/admin/usuarios', [UserController::class, 'apiIndex'])->name('api.admin.usuarios.index');
 Route::post('api/admin/usuarios', [UserController::class, 'storeApi'])->name('api.admin.usuarios.store');
+Route::post('api/admin/usuarios/massive', [UserController::class, 'storeMassiveApi'])->name('api.admin.usuarios.massive');
 Route::put('api/admin/usuarios/{user}', [UserController::class, 'updateApi'])->name('api.admin.usuarios.update');
 Route::delete('api/admin/usuarios/{user}', [UserController::class, 'destroyApi'])->name('api.admin.usuarios.destroy');
 Route::post('api/admin/usuarios/import', [UserController::class, 'import'])->name('api.admin.usuarios.import');
 Route::post('api/admin/usuarios/reset-password', [UserController::class, 'sendResetLinkEmail'])->name('api.admin.usuarios.reset-password');
 Route::post('api/admin/usuarios/generate-initials', [UserController::class, 'generateUniqueInitials'])->name('api.admin.usuarios.generate-initials');
+Route::post('api/admin/usuarios/{id}/reset-password-link', [UserController::class, 'sendResetLink'])->name('api.admin.users.reset-link');
 Route::get('api/admin/roles', [UserController::class, 'getRolesApi'])->name('api.admin.roles.index');
 Route::post('api/admin/usuarios/{user}/roles', [UserController::class, 'assignRolesApi'])->name('api.admin.usuarios.assign-roles');
 Route::get('api/admin/usuarios/template', [UserController::class, 'downloadTemplate'])->name('api.admin.usuarios.template');

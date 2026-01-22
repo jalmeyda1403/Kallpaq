@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Procesos</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link to="/home"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Procesos</li>
             </ol>
         </nav>
 
@@ -49,9 +50,12 @@
             </div>
 
             <div class="card-body">
-                <!-- Loading State - Spinner circular rojo -->
-                <DataTable :value="procesos" :paginator="true" :rows="25" stripedRows :loading="loading"
-                    tableStyle="min-width: 50rem"
+                <!-- Loading State - ProgressBar -->
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+                <DataTable :value="procesos" :paginator="true" :rows="25" stripedRows
+                    :class="{ 'opacity-50 pointer-events-none': loading }" tableStyle="min-width: 50rem"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 25, 50]"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros">
@@ -65,7 +69,7 @@
                             <span :title="slotProps.data.proceso_producto">
                                 {{ slotProps.data.proceso_producto ? (slotProps.data.proceso_producto.length > 50 ?
                                     slotProps.data.proceso_producto.substring(0, 50) + '...' :
-                                slotProps.data.proceso_producto) : '-' }}
+                                    slotProps.data.proceso_producto) : '-' }}
                             </span>
                         </template>
                     </Column>
@@ -162,6 +166,7 @@ import Swal from 'sweetalert2';
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ProgressBar from 'primevue/progressbar';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import Dialog from 'primevue/dialog';
@@ -403,18 +408,5 @@ const uploadImport = async () => {
 .p-button-sm {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
-}
-
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
-}
-
-/* Change the loader icon to red */
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
 }
 </style>

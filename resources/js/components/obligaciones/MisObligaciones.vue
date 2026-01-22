@@ -1,9 +1,10 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Mis Obligaciones</li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link to="/home"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Mis Obligaciones</li>
             </ol>
         </nav>
 
@@ -16,54 +17,44 @@
                         </h5>
                     </div>
                 </div>
-                <!-- Buscador -->
-                <div class="mt-3 p-3 bg-light rounded border">
-                    <form @submit.prevent="obligacionStore.fetchMisObligaciones">
-                        <div class="form-row">
-                            <div class="col-md-3 mb-2">
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text border-0 bg-white"><i class="fas fa-file-alt text-muted"></i></span>
-                                    </div>
-                                    <input type="text" v-model="obligacionStore.filters.documento" class="form-control border-0"
+                <hr>
+                <div class="row">
+                    <div class="col-md-12">
+                        <form @submit.prevent="obligacionStore.fetchMisObligaciones">
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="text" v-model="obligacionStore.filters.documento" class="form-control"
                                         placeholder="Buscar por documento...">
                                 </div>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text border-0 bg-white"><i class="fas fa-project-diagram text-muted"></i></span>
-                                    </div>
-                                    <input type="text" v-model="obligacionStore.filters.proceso" class="form-control border-0"
+                                <div class="col">
+                                    <input type="text" v-model="obligacionStore.filters.proceso" class="form-control"
                                         placeholder="Buscar por proceso...">
                                 </div>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text border-0 bg-white"><i class="fas fa-globe text-muted"></i></span>
-                                    </div>
-                                    <select v-model="obligacionStore.filters.fuente" class="form-control border-0">
+                                <div class="col">
+                                    <select v-model="obligacionStore.filters.fuente" class="form-control">
                                         <option value="">Todas las fuentes</option>
                                         <option value="interno">Fuente Interna</option>
                                         <option value="externo">Fuente Externa</option>
                                     </select>
                                 </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn bg-dark text-white shadow-sm">
+                                        <i class="fas fa-search mr-1"></i> Buscar
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-3 mb-2 text-right">
-                                <button type="submit" class="btn btn-dark btn-sm btn-block">
-                                    <i class="fas fa-search mr-1"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
 
             <div class="card-body p-0">
-                <LoadingState :loading="obligacionStore.loading" />
-                
-                <DataTable v-if="!obligacionStore.loading" ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="obligacionStore.loading" mode="indeterminate" style="height: 4px;" />
+                </div>
+
+                <DataTable ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
+                    :class="{ 'opacity-50 pointer-events-none': obligacionStore.loading }"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
                     :globalFilterFields="['proceso.proceso_nombre', 'documento_tecnico_normativo', 'obligacion_principal', 'consecuencia_incumplimiento', 'estado_obligacion']"
                     class="p-datatable-sm table-hover" stripedRows responsiveLayout="scroll">
@@ -80,25 +71,31 @@
                     </Column>
                     <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
                         <template #body="{ data }">
-                            <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A' }}</span>
+                            <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A'
+                            }}</span>
                         </template>
                     </Column>
                     <Column field="documento.nombre_documento" header="Documento" style="width:25%">
                         <template #body="{ data }">
                             <div class="d-flex align-items-center">
                                 <i class="far fa-file-pdf text-danger mr-2 fa-lg" v-if="data.documento"></i>
-                                <span v-if="data.documento" class="text-break small">{{ data.documento.nombre_documento }}</span>
-                                <span v-else class="text-break small text-muted">{{ data.documento_tecnico_normativo || 'Sin documento' }}</span>
+                                <span v-if="data.documento" class="text-break small">{{
+                                    data.documento.nombre_documento
+                                }}</span>
+                                <span v-else class="text-break small text-muted">{{ data.documento_tecnico_normativo
+                                    ||
+                                    'Sin documento' }}</span>
                             </div>
                         </template>
                     </Column>
                     <Column field="obligacion_principal" header="Obligación Principal" style="width:25%">
                         <template #body="{ data }">
-                            <span class="small d-block text-justify text-secondary">{{ data.obligacion_principal }}</span>
+                            <span class="small d-block text-justify text-secondary">{{ data.obligacion_principal
+                            }}</span>
                         </template>
                     </Column>
                     <Column field="consecuencia_incumplimiento" header="Consecuencia" style="width:15%">
-                         <template #body="{ data }">
+                        <template #body="{ data }">
                             <span class="small text-muted">{{ data.consecuencia_incumplimiento }}</span>
                         </template>
                     </Column>
@@ -111,7 +108,7 @@
                     </Column>
                     <Column header="Acciones" :exportable="false" style="width:10%" class="text-center">
                         <template #body="{ data }">
-                           <button type="button" class="btn btn-light text-danger btn-sm" title="Ver Riesgos"
+                            <button type="button" class="btn btn-light text-danger btn-sm" title="Ver Riesgos"
                                 @click.prevent="obligacionStore.openRiesgosModal(data.id)">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </button>
@@ -151,6 +148,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useObligacionStore } from '@/stores/obligacionStore';
 import { FilterMatchMode } from 'primevue/api';
+import ProgressBar from 'primevue/progressbar';
 
 // PrimeVue Imports
 import DataTable from 'primevue/datatable';
@@ -217,11 +215,32 @@ onMounted(() => {
     margin-right: 5px;
 }
 
-.badge-success { background-color: #28a745; }
-.badge-warning { background-color: #ffc107; color: #212529; }
-.badge-danger { background-color: #dc3545; }
-.badge-info { background-color: #17a2b8; }
-.badge-primary { background-color: #007bff; }
-.badge-secondary { background-color: #6c757d; }
-.badge-dark { background-color: #343a40; }
+.badge-success {
+    background-color: #28a745;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+}
+
+.badge-primary {
+    background-color: #007bff;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+}
+
+.badge-dark {
+    background-color: #343a40;
+}
 </style>

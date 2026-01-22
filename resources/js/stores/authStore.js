@@ -20,7 +20,6 @@ const menuConfigByRole = {
             'riesgos',
             'auditoria',
             'continuidad',
-            'satisfaccion',
             'direccion'
         ],
         priority: 2
@@ -42,7 +41,8 @@ const menuConfigByRole = {
             'documentacion',
             'requerimientos',
             'procesos',
-            'mejora'
+            'mejora',
+            'satisfaccion'
         ],
         priority: 4
     },
@@ -157,6 +157,7 @@ const modulePermissions = {
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(window.App?.user || null);
+    const activeRole = ref(localStorage.getItem('activeRole') || null);
 
     const isAuthenticated = computed(() => !!user.value);
 
@@ -164,18 +165,29 @@ export const useAuthStore = defineStore('auth', () => {
     const permissions = computed(() => user.value?.permissions || []);
 
     /**
-     * Obtiene el rol principal del usuario (el de mayor prioridad)
+     * Obtiene la configuración de un rol (manejando mayúsculas/minúsculas)
+     */
+    const getRoleConfig = (roleName) => {
+        if (!roleName) return null;
+        const roleKey = roleName.toLowerCase();
+        // Mapeos adicionales si los nombres de la DB difieren de las llaves del config
+        if (roleKey === 'administrador') return menuConfigByRole['admin'];
+        return menuConfigByRole[roleKey] || null;
+    };
+
+    /**
+     * Obtiene el rol por defecto del usuario (el de menor privilegios / mayor número de prioridad)
      */
     const primaryRole = computed(() => {
         if (roles.value.length === 0) return null;
 
-        let highestPriority = Infinity;
+        let lowestPriorityLevel = -Infinity;
         let primaryRoleName = roles.value[0];
 
         for (const role of roles.value) {
-            const config = menuConfigByRole[role];
-            if (config && config.priority < highestPriority) {
-                highestPriority = config.priority;
+            const config = getRoleConfig(role);
+            if (config && config.priority > lowestPriorityLevel) {
+                lowestPriorityLevel = config.priority;
                 primaryRoleName = role;
             }
         }
@@ -183,8 +195,25 @@ export const useAuthStore = defineStore('auth', () => {
         return primaryRoleName;
     });
 
+    /**
+     * Obtiene el rol actualmente seleccionado o el principal por defecto
+     */
+    const currentRole = computed(() => {
+        if (!activeRole.value || !roles.value.includes(activeRole.value)) {
+            return primaryRole.value;
+        }
+        return activeRole.value;
+    });
+
+    const setActiveRole = (role) => {
+        if (roles.value.includes(role)) {
+            activeRole.value = role;
+            localStorage.setItem('activeRole', role);
+        }
+    };
+
     const hasRole = (roleName) => {
-        return roles.value.some(role => role.toLowerCase() === roleName.toLowerCase());
+        return currentRole.value?.toLowerCase() === roleName.toLowerCase();
     };
 
     const hasAnyRole = (roleNames) => {
@@ -192,64 +221,59 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     /**
-     * Verifica si el usuario puede acceder a un módulo específico
+     * Verifica si el usuario puede acceder a un módulo específico basado en el rol activo
      */
     const canAccessModule = (moduleName) => {
         if (!isAuthenticated.value) return false;
 
-        for (const role of roles.value) {
-            const config = menuConfigByRole[role];
-            if (config) {
-                if (config.modules.includes('*') || config.modules.includes(moduleName)) {
-                    return true;
-                }
+        const role = currentRole.value;
+        const config = getRoleConfig(role);
+        if (config) {
+            if (config.modules.includes('*') || config.modules.includes(moduleName)) {
+                return true;
             }
         }
         return false;
     };
 
     /**
-     * Obtiene los módulos disponibles para el usuario según sus roles
+     * Obtiene los módulos disponibles para el usuario según el rol activo
      */
     const getMenusForRole = () => {
-        const availableModules = new Set();
-
-        for (const role of roles.value) {
-            const config = menuConfigByRole[role];
-            if (config) {
-                if (config.modules.includes('*')) {
-                    // Admin: retornar todos los módulos
-                    return Object.keys(modulePermissions);
-                }
-                config.modules.forEach(module => availableModules.add(module));
+        const role = currentRole.value;
+        const config = getRoleConfig(role);
+        if (config) {
+            if (config.modules.includes('*')) {
+                // Admin: retornar todos los módulos
+                return Object.keys(modulePermissions);
             }
+            return config.modules;
         }
 
-        return Array.from(availableModules);
+        return [];
     };
 
     /**
-     * Obtiene los permisos específicos del usuario para un módulo
+     * Obtiene los permisos específicos del usuario para un módulo según el rol activo
      */
     const getPermissionsForModule = (moduleName) => {
-        const permissions = new Set();
+        const role = currentRole.value;
+        if (!role) return [];
 
-        for (const role of roles.value) {
-            const modulePerms = modulePermissions[moduleName]?.[role];
-            if (modulePerms) {
-                modulePerms.forEach(perm => permissions.add(perm));
-            }
-            // Admin tiene todos los permisos
-            if (role === 'admin') {
-                return ['view', 'create', 'edit', 'delete', 'manage', 'approve', 'assign'];
-            }
+        const config = getRoleConfig(role);
+        // Admin tiene todos los permisos
+        if (config && config.modules.includes('*')) {
+            return ['view', 'create', 'edit', 'delete', 'manage', 'approve', 'assign'];
         }
 
-        return Array.from(permissions);
+        // Mapear rol a llave de modulePermissions (normalizar)
+        const roleKey = role.toLowerCase();
+        const permissionsForModule = modulePermissions[moduleName]?.[roleKey] || [];
+        return permissionsForModule;
     };
 
     /**
-     * Verifica si el usuario tiene un permiso específico en un módulo
+     * Verifica si el usuario tiene un permiso específico en un módulo según el rol activo
      */
     const hasPermission = (moduleName, permission) => {
         const permissions = getPermissionsForModule(moduleName);
@@ -258,10 +282,34 @@ export const useAuthStore = defineStore('auth', () => {
 
     /**
      * Verifica si el usuario tiene un permiso específico (basado en Spatie permissions)
+     * Respetando el rol activo y sus módulos permitidos.
      */
     const can = (permissionName) => {
         if (!isAuthenticated.value) return false;
-        return permissions.value.includes(permissionName);
+
+        // 1. Verificar si el usuario TIENE el permiso (Spatie)
+        if (!permissions.value.includes(permissionName)) {
+            return false;
+        }
+
+        // 2. Si es Admin, tiene acceso a todo lo que posea
+        const role = currentRole.value;
+        const config = getRoleConfig(role);
+        if (config && config.modules.includes('*')) {
+            return true;
+        }
+
+        // 3. Filtrar permisos por módulo (ej: menu.documentacion.inventario)
+        const parts = permissionName.split('.');
+        if (parts.length >= 2 && parts[0] === 'menu') {
+            const moduleName = parts[1];
+            // Si el rol activo no puede ver este módulo, denegar permiso
+            if (!canAccessModule(moduleName)) {
+                return false;
+            }
+        }
+
+        return true;
     };
 
     const login = async (credentials) => {
@@ -281,7 +329,10 @@ export const useAuthStore = defineStore('auth', () => {
         user,
         isAuthenticated,
         roles,
+        activeRole,
+        currentRole,
         primaryRole,
+        setActiveRole,
         hasRole,
         hasAnyRole,
         canAccessModule,

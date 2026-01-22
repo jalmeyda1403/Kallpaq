@@ -1,88 +1,111 @@
 <template>
     <div>
-        <div class="d-flex align-items-center my-4">
-            <div class="input-group mr-3">
-                <input type="hidden" v-model="selectedProcess.id" />
-                <input type="text" class="form-control" placeholder="Seleccione el Proceso a Asociar"
-                    v-model="selectedProcess.nombre" readonly />
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-dark" @click="openProcesoModal">
-                        <i class="fas fa-search"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger" :disabled="!selectedProcess.id" @click="addProcess">
-                        <i class="fas fa-link"></i> Añadir
-                    </button>
+        <div class="d-flex align-items-center justify-content-between my-4">
+            <div class="d-flex align-items-center flex-grow-1">
+                <div class="input-group mr-3" style="max-width: 400px;">
+                    <input type="text" class="form-control" placeholder="Seleccione el Proceso a Asociar..."
+                        v-model="selectedProcess.nombre" readonly @click="openProcesoModal" />
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-dark shadow-sm" @click="openProcesoModal"
+                            title="Buscar Proceso">
+                            <i class="fas fa-search"></i> Seleccionar
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <button type="button" class="btn btn-success shadow px-4 font-weight-bold"
+                :disabled="saving || assignedProcesses.length === 0" @click="saveAllChanges">
+                <i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i> Guardar Cambios
+            </button>
         </div>
 
         <!-- PrimeVue DataTable for Assigned Processes -->
-        <DataTable :value="assignedProcesses" dataKey="id" responsiveLayout="scroll" class="p-datatable-sm" :loading="loading">
+        <DataTable :value="assignedProcesses" dataKey="id" responsiveLayout="scroll"
+            class="p-datatable-sm shadow-sm rounded border" :loading="loading"
+            :rowClass="data => data.isNew ? 'table-success' : ''">
             <template #empty>
-                No hay procesos asignados.
+                <div class="text-center p-4">
+                    <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No hay procesos asignados a esta unidad orgánica.</p>
+                </div>
             </template>
             <template #loading>
-                <div class="d-flex justify-content-center align-items-center p-4">
-                    <div class="spinner-border text-danger" role="status">
+                <div class="d-flex justify-content-center align-items-center p-5">
+                    <div class="spinner-grow text-danger" role="status">
                         <span class="sr-only">Cargando...</span>
                     </div>
                 </div>
             </template>
-            <Column field="codigo" header="Código" style="width:10%"></Column>
-            <Column field="nombre" header="Nombre" style="width:25%"></Column>
-            <Column header="P (*)" style="width:5%; text-align: center;" headerStyle="text-align: center;">
+            <Column field="codigo" header="Código" style="width:10%"
+                headerClass="small font-weight-bold text-uppercase"></Column>
+            <Column field="nombre" header="Nombre" style="width:25%"
+                headerClass="small font-weight-bold text-uppercase">
                 <template #body="{ data }">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" :id="`propietario-${data.id}`"
+                    <div class="font-weight-bold">{{ data.nombre }}</div>
+                </template>
+            </Column>
+
+            <!-- Responsabilidades columns -->
+            <Column header="P" style="width:5%; text-align: center;" headerStyle="text-align: center;"
+                headerClass="small font-weight-bold text-uppercase" title="Propietario">
+                <template #body="{ data }">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" :id="`p-${data.id}`"
                             v-model="data.propietario">
-                        <label class="form-check-label" :for="`propietario-${data.id}`"></label>
+                        <label class="custom-control-label" :for="`p-${data.id}`"></label>
                     </div>
                 </template>
             </Column>
-            <Column header="D (*)" style="width:5%; text-align: center;" >
+            <Column header="D" style="width:5%; text-align: center;" headerClass="small font-weight-bold text-uppercase"
+                title="Delegado">
                 <template #body="{ data }">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" :id="`delegado-${data.id}`"
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" :id="`d-${data.id}`"
                             v-model="data.delegado">
-                        <label class="form-check-label" :for="`delegado-${data.id}`"></label>
+                        <label class="custom-control-label" :for="`d-${data.id}`"></label>
                     </div>
                 </template>
             </Column>
-            <Column header="E (*)" style="width:5%; text-align: center;" headerStyle="text-align: center;">
+            <Column header="E" style="width:5%; text-align: center;" headerStyle="text-align: center;"
+                headerClass="small font-weight-bold text-uppercase" title="Ejecutor">
                 <template #body="{ data }">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" :id="`ejecutor-${data.id}`"
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" :id="`e-${data.id}`"
                             v-model="data.ejecutor">
-                        <label class="form-check-label" :for="`ejecutor-${data.id}`"></label>
+                        <label class="custom-control-label" :for="`e-${data.id}`"></label>
                     </div>
                 </template>
             </Column>
+
             <!-- Individual Columns for Management Systems -->
             <Column v-for="system in managementSystems" :key="system.value" :header="system.label"
-                style="width:5%; text-align: center;" headerStyle="text-align: center;">
+                style="width:5%; text-align: center;" headerStyle="text-align: center;"
+                headerClass="small font-weight-bold text-uppercase">
                 <template #body="{ data }">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox"
-                            :id="`system-${data.id}-${system.value}`" v-model="data[system.value]">
-                        <label class="form-check-label" :for="`system-${data.id}-${system.value}`"></label>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" :id="`sys-${data.id}-${system.value}`"
+                            v-model="data[system.value]">
+                        <label class="custom-control-label border-danger"
+                            :for="`sys-${data.id}-${system.value}`"></label>
                     </div>
                 </template>
             </Column>
-            <Column header="Acciones" style="width:15%; text-align: center;" headerStyle="text-align: center;">
-                <template #body="{ data, index }">
-                    <button class="btn btn-danger btn-sm ml-1" @click="removeProcess(index)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button type="button" class="btn btn-dark btn-sm ml-1" @click="updateProcessRow(data)">
-                        <i class="fas fa-save"></i>
+
+            <Column header="Acciones" style="width:10%; text-align: center;" headerStyle="text-align: center;"
+                headerClass="small font-weight-bold text-uppercase">
+                <template #body="{ index }">
+                    <button class="btn btn-outline-danger btn-sm rounded-circle shadow-sm"
+                        @click="removeProcessLocal(index)" title="Quitar">
+                        <i class="fas fa-times"></i>
                     </button>
                 </template>
             </Column>
         </DataTable>
-       
+
         <ModalHijo ref="procesoModal" :fetch-url="proceso_route" target-id="id" target-desc="descripcion"
             @update-target="handleProcesoSelection">
-            
+
         </ModalHijo>
     </div>
 </template>
@@ -121,7 +144,8 @@ export default {
         const procesoModal = ref(null);
         const selectedProcess = ref({ id: null, nombre: '', codigo: '' });
         const assignedProcesses = reactive([]);
-        const loading = ref(true); // Initialize loading state
+        const loading = ref(true);
+        const saving = ref(false);
 
         const proceso_route = route('procesos.buscar');
 
@@ -133,16 +157,14 @@ export default {
             { label: 'SGCO', value: 'sgco' },
         ];
 
-        // Fetch assigned processes when component mounts or ouo prop changes
         const fetchAssignedProcesses = async () => {
             if (!props.ouo || !props.ouo.id) {
-                assignedProcesses.splice(0); // Clear array if no OUO is selected
+                assignedProcesses.splice(0);
                 return;
             }
-            loading.value = true; // Set loading to true before fetching
+            loading.value = true;
             try {
                 const response = await axios.get(route('ouos.procesos.index', props.ouo.id));
-                // Clear existing processes and populate with fetched data
                 assignedProcesses.splice(0);
                 response.data.forEach(p => {
                     assignedProcesses.push({
@@ -157,13 +179,14 @@ export default {
                         sgcm: !!p.pivot.sgcm,
                         sgsi: !!p.pivot.sgsi,
                         sgco: !!p.pivot.sgco,
+                        isNew: false
                     });
                 });
             } catch (error) {
                 console.error('Error fetching assigned processes:', error);
-                Swal.fire('Error', 'Error al cargar los procesos asignados.', 'error');
+                Swal.fire('Error', 'Error al cargar los procesos.', 'error');
             } finally {
-                loading.value = false; // Set loading to false after fetching (whether success or error)
+                loading.value = false;
             }
         };
 
@@ -171,160 +194,76 @@ export default {
             fetchAssignedProcesses();
         });
 
-        watch(() => props.ouo, (newOuo, oldOuo) => {
-            if (newOuo && newOuo.id !== (oldOuo ? oldOuo.id : null)) {
-                fetchAssignedProcesses();
-            }
-        }, { deep: true });
-
+        watch(() => props.ouo, (newOuo) => {
+            if (newOuo) fetchAssignedProcesses();
+        });
 
         const openProcesoModal = () => {
             procesoModal.value.open();
         };
 
         const handleProcesoSelection = (data) => {
-            // Parse descValue to extract codigo and nombre
+            const processId = data.idValue;
+            const isDuplicate = assignedProcesses.some(p => p.id === processId);
+
+            if (isDuplicate) {
+                Swal.fire('Aviso', 'Este proceso ya está en la lista.', 'info');
+                return;
+            }
+
             const descParts = data.descValue.split(' - ');
             const codigo = descParts.length > 1 ? descParts[0] : '';
             const nombre = descParts.length > 1 ? descParts.slice(1).join(' - ') : data.descValue;
 
-            selectedProcess.value = { id: data.idValue, nombre: nombre, codigo: codigo };
-        };
-
-        const addProcess = async () => {
-            if (selectedProcess.value.id) {
-                const isDuplicate = assignedProcesses.some(
-                    (p) => p.id === selectedProcess.value.id
-                );
-
-                if (!isDuplicate) {
-                    const newProcess = {
-                        id: selectedProcess.value.id,
-                        codigo: selectedProcess.value.codigo || 'N/A',
-                        nombre: selectedProcess.value.nombre,
-                        propietario: false,
-                        delegado: false,
-                        ejecutor: false,
-                        sgc: false,
-                        sgas: false,
-                        sgcm: false,
-                        sgsi: false,
-                        sgco: false,
-                    };
-
-                    // Optimistically add to local array
-                    assignedProcesses.push(newProcess);
-                    selectedProcess.value = { id: null, nombre: '', codigo: '' };
-
-                    // Immediately save this single new process to the backend
-                    try {
-                        if (!props.ouo || !props.ouo.id) {
-                            Swal.fire('Atención', 'No hay OUO seleccionada para añadir el proceso.', 'warning');
-                            return;
-                        }
-
-                        // Send all current assigned processes to sync
-                        await axios.post(route('ouos.procesos.sync', props.ouo.id), {
-                            procesos: assignedProcesses.map(p => ({
-                                id: p.id,
-                                propietario: p.propietario,
-                                delegado: p.delegado,
-                                ejecutor: p.ejecutor,
-                                sgc: p.sgc,
-                                sgas: p.sgas,
-                                sgcm: p.sgcm,
-                                sgsi: p.sgsi,
-                                sgco: p.sgco,
-                            }))
-                        });
-
-                        Swal.fire('Guardado', 'Proceso añadido y guardado con éxito.', 'success');
-                        await fetchAssignedProcesses(); // Refresh the list from DB
-                        emit('processes-updated'); // Notify parent to update counts
-                    } catch (error) {
-                        console.error('Error adding and saving process:', error);
-                        Swal.fire('Error', 'Error al añadir y guardar el proceso.', 'error');
-                        // Revert local addition if save fails
-                        assignedProcesses.splice(assignedProcesses.indexOf(newProcess), 1);
-                    }
-                } else {
-                    Swal.fire('Atención', 'Este proceso ya ha sido añadido.', 'warning');
-                }
-            }
-        };
-
-        const removeProcess = async (index) => {
-            Swal.fire({
-                title: '¿Desvincular Proceso?',
-                text: `Se desvinculará este proceso de la OUO.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, desvincular',
-                cancelButtonText: 'Cancelar'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    const removedProcess = assignedProcesses[index];
-                    assignedProcesses.splice(index, 1); // Remove from local array
-
-                    try {
-                        if (!props.ouo || !props.ouo.id) {
-                            Swal.fire('Error', 'No hay OUO seleccionada para eliminar el proceso.', 'error');
-                            return;
-                        }
-
-                        // Send the updated list of assigned processes to the sync endpoint
-                        await axios.post(route('ouos.procesos.sync', props.ouo.id), {
-                            procesos: assignedProcesses.map(p => ({
-                                id: p.id,
-                                propietario: p.propietario,
-                                delegado: p.delegado,
-                                ejecutor: p.ejecutor,
-                                sgc: p.sgc,
-                                sgas: p.sgas,
-                                sgcm: p.sgcm,
-                                sgsi: p.sgsi,
-                                sgco: p.sgco,
-                            }))
-                        });
-
-                        Swal.fire('Desvinculado', 'Proceso eliminado de la asignación con éxito.', 'success');
-                        await fetchAssignedProcesses(); // Refresh the list from DB
-                        emit('processes-updated'); // Notify parent to update counts
-                    } catch (error) {
-                        console.error('Error removing process:', error);
-                        Swal.fire('Error', 'Error al eliminar el proceso de la asignación.', 'error');
-                        // Revert local removal if save fails
-                        assignedProcesses.splice(index, 0, removedProcess);
-                    }
-                }
+            assignedProcesses.unshift({
+                id: processId,
+                codigo: codigo || 'N/A',
+                nombre: nombre,
+                propietario: false,
+                delegado: false,
+                ejecutor: false,
+                sgc: false,
+                sgas: false,
+                sgcm: false,
+                sgsi: false,
+                sgco: false,
+                isNew: true
             });
+
+            selectedProcess.value = { id: null, nombre: '', codigo: '' };
         };
 
-        const updateProcessRow = async (processToUpdate) => {
-            if (!props.ouo || !props.ouo.id || !processToUpdate || !processToUpdate.id) {
-                Swal.fire('Error', 'No hay OUO o proceso seleccionado para guardar los cambios.', 'error');
-                return;
-            }
+        const removeProcessLocal = (index) => {
+            assignedProcesses.splice(index, 1);
+        };
 
+        const saveAllChanges = async () => {
+            saving.value = true;
             try {
-                await axios.put(route('ouos.procesos.updatePivot', { ouo: props.ouo.id, proceso: processToUpdate.id }), {
-                    propietario: processToUpdate.propietario,
-                    delegado: processToUpdate.delegado,
-                    ejecutor: processToUpdate.ejecutor,
-                    sgc: processToUpdate.sgc,
-                    sgas: processToUpdate.sgas,
-                    sgcm: processToUpdate.sgcm,
-                    sgsi: processToUpdate.sgsi,
-                    sgco: processToUpdate.sgco,
+                const payload = assignedProcesses.map(p => ({
+                    id: p.id,
+                    propietario: p.propietario,
+                    delegado: p.delegado,
+                    ejecutor: p.ejecutor,
+                    sgc: p.sgc,
+                    sgas: p.sgas,
+                    sgcm: p.sgcm,
+                    sgsi: p.sgsi,
+                    sgco: p.sgco,
+                }));
+
+                await axios.post(route('ouos.procesos.sync', props.ouo.id), {
+                    procesos: payload
                 });
 
-                Swal.fire('Actualizado', 'Cambios del proceso guardados con éxito.', 'success');
-                // No need to fetchAssignedProcesses as only this row was updated and local state is already correct
+                Swal.fire('Éxito', 'Todos los procesos han sido sincronizados.', 'success');
+                await fetchAssignedProcesses();
+                emit('processes-updated');
             } catch (error) {
-                console.error('Error saving process row:', error);
-                Swal.fire('Error', 'Error al guardar los cambios del proceso.', 'error');
+                console.error('Error saving processes:', error);
+                Swal.fire('Error', 'No se pudieron guardar las asignaciones de procesos.', 'error');
+            } finally {
+                saving.value = false;
             }
         };
 
@@ -332,14 +271,14 @@ export default {
             procesoModal,
             selectedProcess,
             assignedProcesses,
-            loading, // Ensure loading is returned
+            loading,
+            saving,
             proceso_route,
             managementSystems,
             openProcesoModal,
             handleProcesoSelection,
-            addProcess,
-            removeProcess,
-            updateProcessRow,
+            removeProcessLocal,
+            saveAllChanges,
         };
     },
 };
@@ -347,15 +286,18 @@ export default {
 
 <style scoped>
 /* Add any specific styles for this component here */
-.p-datatable .p-datatable-tbody > tr > td {
+.p-datatable .p-datatable-tbody>tr>td {
     padding: 1.5rem 1rem;
-    margin-bottom: 1rem; /* Further increased vertical padding */
+    margin-bottom: 1rem;
+    /* Further increased vertical padding */
 }
 
 /* Ensure form-check-inline elements have some margin for better spacing */
 .form-check-inline {
-    margin-right: 1rem; /* Increased margin */
-    margin-bottom: 0.5rem; /* Add some vertical margin for wrapping */
+    margin-right: 1rem;
+    /* Increased margin */
+    margin-bottom: 0.5rem;
+    /* Add some vertical margin for wrapping */
 }
 
 /* Adjust button margins for better spacing */
@@ -363,6 +305,4 @@ export default {
     margin-left: 0.25rem;
     margin-right: 0.25rem;
 }
-</style>       
-
-        
+</style>

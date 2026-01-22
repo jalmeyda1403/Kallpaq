@@ -10,6 +10,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password; // Added Password facade
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
@@ -243,7 +244,7 @@ class UserController extends Controller
 
         // Apply role filter
         if ($request->has('role') && $request->input('role') != '') {
-             $query->role($request->input('role'));
+            $query->role($request->input('role'));
         }
 
         // Sorting
@@ -495,7 +496,7 @@ class UserController extends Controller
 
     public function getRolesApi()
     {
-        $roles = Role::select('id', 'name')->get(); 
+        $roles = Role::select(['id', 'name'])->get();
         return response()->json($roles);
     }
 
@@ -517,13 +518,13 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $allPermissions = Permission::all();
-        
+
         // Permisos otorgados por roles (sin filtrar blacklist aún)
         $rolePermissions = $user->getPermissionsViaRoles()->pluck('id')->toArray();
-        
+
         // Permisos otorgados directamente
         $directPermissions = $user->getDirectPermissions()->pluck('id')->toArray();
-        
+
         // Permisos denegados explícitamente (blacklist)
         $deniedPermissions = $user->deniedPermissions()->pluck('id')->toArray();
 
@@ -549,7 +550,7 @@ class UserController extends Controller
         // Lists to sync
         $directToAdd = [];
         $deniedToAdd = [];
-        
+
         // 1. Analyze what needs to be Direct (User wants it, but Role doesn't have it)
         $allSystemPermissions = Permission::all();
 
@@ -595,8 +596,8 @@ class UserController extends Controller
             // 2. Active/Create specialists
             foreach ($especialistaUsers as $user) {
                 // Check individually to avoid overwriting existing 'cargo' with a default if it exists
-                $especialista = Especialista::where('user_id', $user->id)->first();
-                
+                $especialista = Especialista::where('user_id', '=', $user->id, 'and')->first();
+
                 if ($especialista) {
                     $especialista->update([
                         'estado' => 1,
@@ -614,7 +615,7 @@ class UserController extends Controller
 
             // 3. Soft delete (deactivate) specialists who no longer have the role
             // We find specialists whose user_id is NOT in the list of current specialist users
-            Especialista::whereNotIn('user_id', $especialistaUserIds)
+            Especialista::whereNotIn('user_id', $especialistaUserIds, 'and')
                 ->update([
                     'estado' => 0,
                     'inactived_at' => now()
@@ -629,6 +630,69 @@ class UserController extends Controller
                 'message' => 'Error al sincronizar especialistas: ' . $e->getMessage()
             ], 500);
         }
+    }
+    public function storeMassiveApi(Request $request)
+    {
+        $request->validate([
+            'users' => 'required|array|min:1',
+            'users.*.name' => 'required|string|max:255',
+            'users.*.email' => 'required|email|unique:users,email',
+            'users.*.user_cod_personal' => 'nullable|string|unique:users,user_cod_personal',
+            'users.*.user_iniciales' => 'nullable|string|max:10|unique:users,user_iniciales',
+        ]);
+
+        $createdUsers = [];
+        $defaultPassword = Hash::make('password123');
+
+        foreach ($request->users as $userData) {
+            // Normalizar Nombre
+            $name = collect(explode(' ', strtolower(trim($userData['name']))))
+                ->map(fn($word) => ucfirst($word))
+                ->filter()
+                ->implode(' ');
+
+            // Normalizar Email
+            $email = strtolower(trim($userData['email']));
+
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'password' => $defaultPassword,
+                'user_cod_personal' => $userData['user_cod_personal'] ?? null,
+                'user_iniciales' => $userData['user_iniciales'] ?? null,
+            ]);
+
+            $createdUsers[] = $user;
+        }
+
+        return response()->json([
+            'message' => count($createdUsers) . ' usuarios creados correctamente.',
+            'users' => $createdUsers
+        ], 201);
+    }
+
+    /**
+     * Send a password reset link to the given user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendResetLink(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        // We can use the Password broker to send the link
+        // We pass the email of the user we want to send the link to
+        $status = Password::broker()->sendResetLink(
+            ['email' => $user->email]
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => __($status)]);
+        }
+
+        return response()->json(['message' => __($status)], 422);
     }
 }
 

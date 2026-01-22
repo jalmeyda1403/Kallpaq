@@ -1,5 +1,5 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <div v-if="successMessage" class="alert alert-success" id="success-alert">
             {{ successMessage }}
         </div>
@@ -8,8 +8,9 @@
         </div>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-light py-2 px-3 rounded">
-                <li class="breadcrumb-item"><router-link to="/home">Inicio</router-link></li>
+            <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
+                <li class="breadcrumb-item"><router-link to="/home"
+                        class="text-danger font-weight-bold">Inicio</router-link></li>
                 <li class="breadcrumb-item active" aria-current="page">Documentos</li>
             </ol>
         </nav>
@@ -53,9 +54,9 @@
                             </div>
                             <div class="col-md-4">
                                 <MultiSelect v-model="filters.tipo_documento" :options="tipoDocumentoOptions"
-                                    optionLabel="td_nombre" optionValue="id"
-                                    placeholder="Seleccione Tipo de Documento" class="w-100 custom-multiselect"
-                                    display="chip" :filter="true" panelClass="custom-multiselect-panel" />
+                                    optionLabel="td_nombre" optionValue="id" placeholder="Seleccione Tipo de Documento"
+                                    class="w-100 custom-multiselect" display="chip" :filter="true"
+                                    panelClass="custom-multiselect-panel" />
                             </div>
                             <div class="col-md-auto">
                                 <button type="submit" class="btn bg-dark btn-sm">
@@ -70,10 +71,14 @@
 
             <div class="card-body">
                 <!-- Loading State - Spinner circular rojo -->
+                <!-- Loading State - Barra de progreso -->
+                <div class="h-1 mb-2">
+                    <ProgressBar v-if="isLoading" mode="indeterminate" style="height: 4px;" />
+                </div>
                 <div>
                     <DataTable :value="documentos" selectionMode="single" v-model:selection="selectedDocumento"
-                        :loading="isLoading" dataKey="id" :paginator="true" :rows="20"
-                        :rowsPerPageOptions="[5, 10, 25, 50]">
+                        :class="{ 'opacity-50 pointer-events-none': isLoading }" dataKey="id" :paginator="true"
+                        :rows="20" :rowsPerPageOptions="[5, 10, 25, 50]">
 
 
                         <Column field="cod_documento" header="Código Documento" sortable></Column>
@@ -108,21 +113,20 @@
                         <Column header="Vigencia" class="text-center">
                             <template #body="slotProps">
                                 {{ slotProps.data.usa_versiones_documento == '1' ?
-                                    (slotProps.data.ultima_version ? formatDate(slotProps.data.ultima_version.fecha_publicacion) : '')
+                                    (slotProps.data.ultima_version ?
+                                        formatDate(slotProps.data.ultima_version.fecha_publicacion) : '')
                                     : formatDate(slotProps.data.fecha_aprobacion_documento) }}
                             </template>
                         </Column>
                         <Column header="Archivo" class="text-center">
-                             <template #body="slotProps">
-                                <a v-if="getFileUrl(slotProps.data) !== '#'" 
-                                   :href="getFileUrl(slotProps.data)" 
-                                   target="_blank"
-                                   class="btn btn-outline-danger btn-sm border-0 rounded-circle"
-                                   data-toggle="tooltip" 
-                                   title="Ver / Descargar Archivo">
+                            <template #body="slotProps">
+                                <a v-if="getFileUrl(slotProps.data) !== '#'" :href="getFileUrl(slotProps.data)"
+                                    target="_blank" class="btn btn-outline-danger btn-sm border-0 rounded-circle"
+                                    data-toggle="tooltip" title="Ver / Descargar Archivo">
                                     <i class="fas fa-file-pdf fa-lg"></i>
                                 </a>
-                                <span v-else class="text-muted"><i class="fas fa-file-excel fa-lg opacity-25"></i></span>
+                                <span v-else class="text-muted"><i
+                                        class="fas fa-file-excel fa-lg opacity-25"></i></span>
                             </template>
                         </Column>
                         <Column header="Acciones" class="text-center">
@@ -165,6 +169,7 @@ import Button from 'primevue/button'; // Import Button
 import Tag from 'primevue/tag'; // Re-introduce Tag
 import { useToast } from 'primevue/usetoast'; // Re-introduce useToast
 import MultiSelect from 'primevue/multiselect';
+import ProgressBar from 'primevue/progressbar';
 
 const documentos = ref([]);
 const selectedDocumento = ref(null);
@@ -205,7 +210,7 @@ const fetchDocumentos = async () => {
         const response = await axios.get(route('api.documentos'), {
             params: params
         });
-        documentos.value = response.data;
+        documentos.value = response.data.data;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al cargar los documentos. Intente de nuevo más tarde.', life: 3000 });
     } finally {
@@ -266,7 +271,7 @@ const getFileUrl = (documento) => {
     }
 
     if (!path) return '#';
-    
+
     // Si el path ya es una URL externa (http), retornarla directamente
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
@@ -294,8 +299,8 @@ const formatDate = (dateString) => {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return ''; // Check for Invalid Date
         // Adjust for timezone offset to prevent off-by-one errors if dateString is YYYY-MM-DD
-         const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-         const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+        const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
 
         return new Intl.DateTimeFormat('es-PE', {
             year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'
@@ -395,16 +400,5 @@ onMounted(() => {
     z-index: 1050;
 }
 
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-.p-datatable-loading-overlay {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
-}
-
-/* Change the loader icon to red */
-.p-datatable-loading-icon {
-    color: red !important;
-    font-size: 2rem !important;
-}
+/* Custom loader styles - removed as we use ProgressBar */
 </style>

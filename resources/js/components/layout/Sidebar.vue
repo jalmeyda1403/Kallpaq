@@ -1,35 +1,62 @@
 <template>
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo -->
-        <a href="#" class="brand-link">
-            <img :src="'/vendor/adminlte/dist/img/kallpaq_ico.png'" alt="AdminLTE Logo"
-                class="brand-image img-circle elevation-3" style="opacity: .8">
-            <span class="brand-text font-weight-light"> KALLPAQ v1.0</span>
+        <a href="#" class="brand-link border-bottom-0">
+            <img :src="'/vendor/adminlte/dist/img/kallpaq_ico.png'" alt="Kallpaq Logo"
+                class="brand-image img-circle elevation-3" style="opacity: .9">
+            <span class="brand-text font-weight-bold text-white"> KALLPAQ v1.0</span>
         </a>
 
         <!-- Sidebar -->
         <div class="sidebar">
             <!-- Sidebar user panel -->
-            <div class="user-panel mt-2 pb-2 mb-2 d-flex">
-                <div class="info" v-if="authStore.isAuthenticated">
-                    <a href="#" class="d-block text-white">
-                        <i class="far fa-user nav-icon"></i>
-                        {{ authStore.user.name }}
-                    </a>
-                    <div class="small text-right mt-1 text-white">
-                        <span>
-                            Rol: {{ userRole }}
-                        </span>
-                        <span class="mx-1">|</span>
-                        <a href="/logout" class="text-white" @click.prevent="logout">
-                            <i class="nav-icon fas fa-sign-out-alt"></i>
-                            Cerrar Sesión
+            <div class="user-panel mt-2 pb-3 mb-3 d-flex">
+                <div class="info w-100" v-if="authStore.isAuthenticated">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <a href="#" class="d-block text-white mb-0 flex-grow-1">
+                            <i class="fas fa-user-circle nav-icon mr-2"></i>
+                            {{ authStore.user.name }}
+                        </a>
+                        <a href="/logout" class="logout-power-btn ml-2" @click.prevent="logout" title="Cerrar Sesión">
+                            <i class="fas fa-power-off"></i>
                         </a>
                     </div>
+                    <div class="d-flex align-items-center mt-2">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <i class="fas fa-shield-alt text-white opacity-75 mr-2" style="font-size: 0.8rem;"></i>
+                            <div class="role-selector-wrapper flex-grow-1">
+                                <Dropdown v-if="authStore.roles.length > 1" v-model="activeRole"
+                                    :options="authStore.roles" @change="changeRole" class="role-dropdown-modern" :pt="{
+                                        root: { class: 'bg-transparent border-0 p-0 shadow-none d-flex align-items-center' },
+                                        label: { class: 'text-white font-weight-bold p-0 small-text' },
+                                        trigger: { class: 'text-white-50 ml-1' },
+                                        panel: { class: 'bg-white shadow-lg border-0 rounded' },
+                                        item: { class: 'text-dark small py-2' }
+                                    }">
+                                    <template #value="slotProps">
+                                        <div class="d-flex align-items-center">
+                                            <span v-if="slotProps.value" class="text-white">{{
+                                                formatRoleName(slotProps.value) }}</span>
+                                        </div>
+                                    </template>
+                                    <template #option="slotProps">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-tag x-small-text mr-2 text-danger opacity-75"></i>
+                                            <span>{{ formatRoleName(slotProps.option) }}</span>
+                                        </div>
+                                    </template>
+                                </Dropdown>
+                                <span v-else class="text-white-50 small font-weight-bold">
+                                    {{ formatRoleName(authStore.currentRole) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <!-- Login Link if not authenticated -->
                 <div class="info" v-else>
-                    <router-link to="/login" class="d-block text-white">
-                        <i class="far fa-user nav-icon"></i>
+                    <router-link to="/login" class="d-block text-white p-2">
+                        <i class="far fa-user nav-icon mr-1"></i>
                         Iniciar Sesión
                     </router-link>
                 </div>
@@ -37,10 +64,10 @@
 
             <!-- Sidebar Menu -->
             <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
 
                     <!-- Documentación por Procesos -->
-                    <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }" 
+                    <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('documentacion') }"
                         v-if="canViewModule('documentacion')">
                         <a href="#" class="nav-link"
                             :class="{ 'active': isModuleActive('/inventario-publico') || isModuleActive('/procesos/mapa') }"
@@ -53,19 +80,22 @@
                         </a>
                         <ul class="nav nav-treeview" v-show="isMenuOpen('documentacion')">
                             <li class="nav-item">
-                                <router-link to="/inventario-publico/0" class="nav-link" active-class="active" v-if="authStore.can('menu.documentacion.inventario')">
+                                <router-link to="/inventario-publico/0" class="nav-link" active-class="active"
+                                    v-if="authStore.can('menu.documentacion.inventario')">
                                     <i class="nav-icon fas fa-book"></i>
                                     <p>Inventario de Procesos</p>
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link to="/procesos/mapa" class="nav-link" active-class="active" v-if="authStore.can('menu.documentacion.mapa')">
+                                <router-link to="/procesos/mapa" class="nav-link" active-class="active"
+                                    v-if="authStore.can('menu.documentacion.mapa')">
                                     <i class="nav-icon fas fa-sitemap"></i>
                                     <p>Mapa de Procesos</p>
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link to="/documentos/listado" class="nav-link" active-class="active" v-if="authStore.can('menu.documentacion.documentos')">
+                                <router-link to="/documentos/listado" class="nav-link" active-class="active"
+                                    v-if="authStore.can('menu.documentacion.documentos')">
                                     <i class="nav-icon fas fa-clipboard-list"></i>
                                     <p>Listado de documentos</p>
                                 </router-link>
@@ -353,8 +383,7 @@
                         <!-- Satisfacción del Cliente -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('satisfaccion') }"
                             v-if="canViewModule('satisfaccion')">
-                            <a href="#" class="nav-link"
-                                :class="{ 'active': isModuleActive('/satisfaccion') }"
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/satisfaccion') }"
                                 @click.prevent="toggleMenu('satisfaccion')">
                                 <i class="nav-icon fas fa-smile"></i>
                                 <p>
@@ -393,8 +422,7 @@
                         <!-- Gestión de Auditorías -->
                         <li class="nav-item has-treeview" :class="{ 'menu-open': isMenuOpen('auditoria') }"
                             v-if="canViewModule('auditoria')">
-                            <a href="#" class="nav-link"
-                                :class="{ 'active': isModuleActive('/auditoria') }"
+                            <a href="#" class="nav-link" :class="{ 'active': isModuleActive('/auditoria') }"
                                 @click.prevent="toggleMenu('auditoria')">
                                 <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>
@@ -502,19 +530,41 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
+import { useUIStore } from '../../stores/uiStore';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import Dropdown from 'primevue/dropdown';
 
 const authStore = useAuthStore();
+const uiStore = useUIStore();
 const router = useRouter();
 
-const userRole = computed(() => {
-    return authStore.primaryRole || (authStore.roles.length > 0 ? authStore.roles[0] : '');
+const activeRole = computed({
+    get: () => authStore.currentRole,
+    set: (val) => authStore.setActiveRole(val)
 });
+
+const userRole = computed(() => {
+    return authStore.currentRole;
+});
+
+const changeRole = () => {
+    // El v-model ya actualiza el store mediante el setter del computed
+    // Solo manejamos la navegación aquí
+    router.push({ name: 'home' });
+};
 
 const hasRole = (role) => authStore.hasRole(role);
 const hasAnyRole = (roles) => authStore.hasAnyRole(roles);
 const canAccessModule = (module) => authStore.canAccessModule(module);
+
+const formatRoleName = (role) => {
+    if (!role) return '';
+    // Capitalizar y limpiar guiones
+    return role.split(/[_-]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+};
 
 const openMenus = ref({});
 
@@ -586,73 +636,82 @@ watch(() => router.currentRoute.value.path, (newPath) => {
 </script>
 
 <style scoped>
-/* Transiciones suaves para todos los elementos del menú */
-.nav-pills .nav-link {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    /* Movimiento fluido */
-    border-radius: 6px;
-    margin-bottom: 4px;
-    border: 1px solid transparent;
-    /* Evita saltos al agregar bordes */
+/* Estilos para unificar el header y el brand */
+.main-header {
+    border-bottom: 1px solid #eee !important;
+    background-color: #ffffff !important;
 }
 
-/* --- Menú Padre Activo --- */
-.nav-pills .nav-link.active,
-.nav-pills .show>.nav-link {
-    /* Gradiente moderno en rojo "Premium" */
+.brand-link {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: transparent !important;
+}
+
+/* --- Estilos Generales de Enlaces --- */
+.nav-pills .nav-link {
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Menú Padre ACTIVO (Solo si está seleccionado) --- */
+.nav-sidebar>.nav-item>.nav-link.active {
     background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%) !important;
     color: #fff !important;
-
-    /* Efecto 3D sutil para elevación */
-    box-shadow: 0 4px 15px rgba(211, 47, 47, 0.35);
-
-    /* Pequeño desplazamiento para feedback táctil visual */
-    transform: translateX(2px);
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+    border-radius: 6px;
 }
 
-/* Hover en Menú Padre (No activo) */
-.nav-pills .nav-link:not(.active):hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    transform: translateX(2px);
-}
-
-/* --- Submenú (Hijo) --- */
-.nav-treeview {
-    background-color: rgba(0, 0, 0, 0.15);
-    /* Fondo ligeramente más oscuro para el contenedor hijo */
-    border-radius: 8px;
-    margin-top: 5px;
-    padding: 5px 0;
-}
-
-.nav-treeview>.nav-item>.nav-link {
-    padding-left: 2.8rem;
-    /* Mayor indentación para jerarquía */
-    font-size: 0.95em;
-    opacity: 0.85;
-    /* Texto un poco apagado por defecto */
-}
-
-/* --- Submenú Activo --- */
-/* --- Submenú Activo --- */
-.nav-treeview>.nav-item>.nav-link.active,
-.nav-treeview>.nav-item>.nav-link.active:hover {
-    /* Estilo "Mouseover" / Sutil solicitado */
-    background-color: rgba(255, 255, 255, 0.15) !important;
-    /* Un poco más visible que el hover normal */
-
-    /* Texto Blanco para mantener consistencia con el tema oscuro */
+/* --- Menú Padre ABIERTO pero no seleccionado --- */
+.nav-item.menu-open>.nav-link:not(.active) {
+    background: transparent !important;
     color: #fff !important;
-
-    font-weight: 600;
-    opacity: 1;
-
-    /* Borde de acento a la izquierda (Opcional, pero ayuda a identificar activo) */
-    /* Mantenemos el rojo pero sutil o lo quitamos si se prefiere totalmente plano. 
-       Lo mantendré rojo para identificarlo, pero el fondo es lo critico. */
-    border-left: 3px solid #d32f2f;
-
     box-shadow: none;
+}
+
+/* --- Menú Padre NO Activo (Hover ligero sin cambio de fondo) --- */
+.nav-pills .nav-link:not(.active):hover {
+    color: #fff;
+    background-color: transparent;
+}
+
+/* --- Contenedor de Submenú --- */
+.nav-treeview {
+    background-color: transparent;
+    padding: 2px 0;
+}
+
+/* --- Enlace de Submenú (Hijo) --- */
+.nav-treeview>.nav-item>.nav-link {
+    padding-left: 2.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- Submenú ACTIVO (Seleccionado) --- */
+.nav-treeview>.nav-item>.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    font-weight: 600;
+    box-shadow: none;
+    border-left: none;
+    /* Quitamos el borde para mayor limpieza según la nueva idea */
+}
+
+/* --- Submenú NO Activo (Hover ligero) --- */
+.nav-treeview>.nav-item>.nav-link:not(.active):hover {
+    color: #fff;
+    background-color: transparent;
+}
+
+/* Animaciones sutiles */
+.nav-link i {
+    transition: transform 0.2s ease;
+}
+
+.nav-link.active i {
+    transform: scale(1.1);
 }
 
 /* Iconos en estado activo */
@@ -673,5 +732,116 @@ watch(() => router.currentRoute.value.path, (newPath) => {
     100% {
         transform: scale(1);
     }
+}
+
+.user-panel {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-panel .info {
+    padding: 5px 15px;
+}
+
+.x-small-text {
+    font-size: 0.85rem;
+}
+
+/* Estilos para el Dropdown Moderno */
+:deep(.role-dropdown-modern) {
+    height: auto !important;
+    line-height: 1.2 !important;
+}
+
+:deep(.role-dropdown-modern .p-dropdown-label) {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.4);
+    padding-bottom: 1px;
+    margin-right: 5px;
+}
+
+:deep(.role-dropdown-modern .p-dropdown-trigger) {
+    width: auto !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 0.7rem !important;
+}
+
+:deep(.role-dropdown-modern:hover .p-dropdown-label) {
+    border-bottom-color: #ff4d4d;
+    color: #fff !important;
+}
+
+/* Panel de Opciones con mayor contraste */
+:deep(.p-dropdown-panel) {
+    background: #ffffff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    margin-top: 5px !important;
+}
+
+:deep(.p-dropdown-item) {
+    margin: 2px 5px !important;
+    padding: 8px 12px !important;
+    border-radius: 4px !important;
+    color: #333 !important;
+    font-weight: 500 !important;
+}
+
+:deep(.p-dropdown-item:hover) {
+    background: #fdf2f2 !important;
+    color: #d32f2f !important;
+}
+
+:deep(.p-dropdown-item.p-highlight) {
+    background: #d32f2f !important;
+    color: #ffffff !important;
+}
+
+/* Botón de Salida (Power Off) */
+.logout-power-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+}
+
+.logout-power-btn:hover {
+    background: #d32f2f;
+    color: white !important;
+    border-color: #d32f2f;
+    box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);
+    transform: translateY(-1px);
+}
+
+.small-text {
+    font-size: 0.85rem;
+}
+
+.hover-danger:hover {
+    color: #ff4d4d !important;
+    transition: color 0.2s;
+}
+
+.font-weight-600 {
+    font-weight: 600;
+}
+
+.brand-link {
+    height: 57px;
+    /* Altura estándar de navbar en AdminLTE */
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.brand-image {
+    margin-top: 0 !important;
 }
 </style>

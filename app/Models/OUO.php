@@ -12,11 +12,11 @@ class OUO extends Model
     protected $table = 'ouos';  // Define el nombre de la tabla
 
     protected $fillable = [
+        'ouo_nombre',
         'ouo_codigo',
-        'ouo_nombre',       
         'ouo_padre',
-        'subgerente_id',
-        'subgerente_id',
+        'ouo_cod_padre',
+        'ouo_sigla',
         'nivel_jerarquico',
         'doc_vigencia_alta',
         'fecha_vigencia_inicio',
@@ -27,8 +27,10 @@ class OUO extends Model
     ];
 
     protected $casts = [
+        'nivel_jerarquico' => 'integer',
         'fecha_vigencia_inicio' => 'date',
         'fecha_vigencia_fin' => 'date',
+        'estado' => 'integer',
         'inactive_at' => 'datetime',
     ];
 
@@ -38,8 +40,8 @@ class OUO extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'ouo_user', 'ouo_id', 'user_id')
-                    ->using(OuoUser::class)
-                    ->withPivot('role_in_ouo', 'activo');
+            ->using(OuoUser::class)
+            ->withPivot('role_in_ouo', 'activo');
     }
 
     /**
@@ -55,8 +57,8 @@ class OUO extends Model
     {
         // Assuming ProcesoOuo model exists for the 'procesos_ouo' pivot table
         return $this->belongsToMany(Proceso::class, 'procesos_ouo', 'id_ouo', 'id_proceso')
-        ->using(ProcesoOuo::class) // Assuming ProcesoOuo model exists
-        ->withPivot('propietario', 'delegado', 'ejecutor', 'sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
+            ->using(ProcesoOuo::class) // Assuming ProcesoOuo model exists
+            ->withPivot('propietario', 'delegado', 'ejecutor', 'sgc', 'sgas', 'sgcm', 'sgsi', 'sgco');
     }
 
     // Relación con ouo_padre (uno a muchos)
@@ -65,9 +67,5 @@ class OUO extends Model
         return $this->belongsTo(Ouo::class, 'ouo_padre');
     }
 
-    // Relación con subgerente (dependiendo de la tabla que relaciona)
-    public function subgerente()
-    {
-        return $this->belongsTo(User::class, 'subgerente_id');
-    }
+
 }
