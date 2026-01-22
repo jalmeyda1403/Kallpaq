@@ -669,6 +669,9 @@ Route::prefix('api/salidas-nc')->middleware('auth')->name('api.salidas-nc.')->gr
 // Ruta para el dashboard de mejora
 Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraController::class, 'index'])->name('dashboard.mejora.api');
 
+// Ruta para el dashboard de riesgos
+Route::get('/api/dashboard/riesgos', [App\Http\Controllers\DashboardRiesgosController::class, 'index'])->name('dashboard.riesgos.api');
+
 // Ruta para el dashboard de procesos (Nuevo)
 Route::get('/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'index'])->name('dashboard.procesos.view')->middleware('auth');
 Route::get('/api/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'data'])->name('dashboard.procesos.data')->middleware('auth');

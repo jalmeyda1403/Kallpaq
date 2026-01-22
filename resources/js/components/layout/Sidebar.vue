@@ -12,29 +12,31 @@
             <!-- Sidebar user panel -->
             <div class="user-panel mt-2 pb-3 mb-3 d-flex">
                 <div class="info w-100" v-if="authStore.isAuthenticated">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        <a href="#" class="d-block text-white mb-0 flex-grow-1">
-                            <i class="fas fa-user-circle nav-icon mr-2"></i>
-                            {{ authStore.user.name }}
+                    <div class="d-flex align-items-center justify-content-between mb-1" style="flex-wrap: nowrap;">
+                        <a href="#" class="d-block text-white mb-0 text-truncate mr-2"
+                            style="max-width: calc(100% - 40px);">
+                            <i class="fas fa-user-circle nav-icon mr-1"></i>
+                            {{ formattedUserName }}
                         </a>
-                        <a href="/logout" class="logout-power-btn ml-2" @click.prevent="logout" title="Cerrar Sesión">
+                        <a href="/logout" class="logout-power-btn flex-shrink-0" @click.prevent="logout"
+                            title="Cerrar Sesión">
                             <i class="fas fa-power-off"></i>
                         </a>
                     </div>
                     <div class="d-flex align-items-center mt-2">
-                        <div class="d-flex align-items-center flex-grow-1">
+                        <div class="d-flex align-items-center ml-auto">
                             <i class="fas fa-shield-alt text-white opacity-75 mr-2" style="font-size: 0.8rem;"></i>
-                            <div class="role-selector-wrapper flex-grow-1">
+                            <div class="role-selector-wrapper">
                                 <Dropdown v-if="authStore.roles.length > 1" v-model="activeRole"
                                     :options="authStore.roles" @change="changeRole" class="role-dropdown-modern" :pt="{
                                         root: { class: 'bg-transparent border-0 p-0 shadow-none d-flex align-items-center' },
-                                        label: { class: 'text-white font-weight-bold p-0 small-text' },
+                                        label: { class: 'text-white font-weight-bold p-0 small-text text-right' },
                                         trigger: { class: 'text-white-50 ml-1' },
                                         panel: { class: 'bg-white shadow-lg border-0 rounded' },
                                         item: { class: 'text-dark small py-2' }
                                     }">
                                     <template #value="slotProps">
-                                        <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center justify-content-end">
                                             <span v-if="slotProps.value" class="text-white">{{
                                                 formatRoleName(slotProps.value) }}</span>
                                         </div>
@@ -546,6 +548,12 @@ const activeRole = computed({
 
 const userRole = computed(() => {
     return authStore.currentRole;
+});
+
+const formattedUserName = computed(() => {
+    if (!authStore.user?.name) return '';
+    const parts = authStore.user.name.trim().split(/\s+/);
+    return parts.length > 2 ? parts.slice(0, 2).join(' ') : authStore.user.name;
 });
 
 const changeRole = () => {

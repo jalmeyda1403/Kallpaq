@@ -289,7 +289,7 @@ const routes = [
             {
                 path: 'dashboard/riesgos',
                 name: 'dashboard.riesgos',
-                component: BladeViewPlaceholder // Placeholder
+                component: () => import('@/components/dashboard/DashboardRiesgos.vue')
             },
 
             // Gestión de Continuidad
