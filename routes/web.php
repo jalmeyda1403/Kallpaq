@@ -76,6 +76,8 @@ Route::get('/debug/recursos', function () {
 
 Auth::routes();
 
+require __DIR__.'/auth.php';
+
 Route::get('home', function () {
     return view('app');
 })->name('home');
@@ -942,3 +944,6 @@ Route::prefix('api/reportes-satisfaccion')->middleware('auth')->name('api.report
 });
 
 // Catch-all route for Vue SPA
+
+
+

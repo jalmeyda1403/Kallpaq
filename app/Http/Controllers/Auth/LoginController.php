@@ -45,10 +45,10 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
-            // Assuming toArrayWithRoles() exists on User model as seen in app.blade.php
             return response()->json([
                 'message' => 'Login successful',
-                'user' => $user->toArrayWithRoles()
+                'user' => $user->toArrayWithRoles(),
+                'force_password_change' => $user->force_password_change
             ]);
         }
 

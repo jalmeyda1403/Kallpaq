@@ -323,21 +323,26 @@ const deleteUser = (user) => {
 const resetPassword = (user) => {
     Swal.fire({
         title: '¿Restablecer Contraseña?',
-        text: `Se enviará un correo a ${user.name} (${user.email}) con un enlace para restablecer su contraseña.`,
-        icon: 'question',
+        text: `La contraseña de ${user.name} se restablecerá a su Código Personal (${user.user_cod_personal || 'No registrado'}). El usuario deberá cambiarla en su próximo ingreso.`,
+        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, enviar',
+        confirmButtonText: 'Sí, restablecer',
         cancelButtonText: 'Cancelar'
     }).then(async (result) => {
         if (result.isConfirmed) {
+            if (!user.user_cod_personal) {
+                Swal.fire('Error', 'El usuario no tiene un código personal registrado.', 'error');
+                return;
+            }
             try {
                 await store.resetPassword(user.email);
-                Swal.fire('Enviado', 'Correo de restablecimiento enviado exitosamente.', 'success');
+                Swal.fire('Restablecida', 'La contraseña ha sido reseteada al código personal.', 'success');
             } catch (error) {
-                console.error('Error sending reset link:', error);
-                Swal.fire('Error', 'Error al enviar el correo de restablecimiento.', 'error');
+                console.error('Error resetting password:', error);
+                const msg = error.response?.data?.message || 'Error al restablecer la contraseña.';
+                Swal.fire('Error', msg, 'error');
             }
         }
     });

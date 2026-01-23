@@ -316,7 +316,12 @@ export const useAuthStore = defineStore('auth', () => {
         await axios.get('/sanctum/csrf-cookie');
         const response = await axios.post('/login', credentials);
         user.value = response.data.user;
-        window.location.href = '/home';
+
+        if (response.data.force_password_change) {
+            window.location.href = '/vue/change-password';
+        } else {
+            window.location.href = '/home';
+        }
     };
 
     const logout = async () => {

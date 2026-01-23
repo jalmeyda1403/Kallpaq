@@ -451,17 +451,19 @@ class UserController extends Controller
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate(['email' => 'required|email']);
+        $user = User::where('email', $request->email)->firstOrFail();
 
-        // We can use the Password broker to send the link
-        $status = \Illuminate\Support\Facades\Password::sendResetLink(
-            $request->only('email')
-        );
-
-        if ($status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT) {
-            return response()->json(['message' => __($status)]);
+        if (!$user->user_cod_personal) {
+            return response()->json([
+                'message' => 'El usuario no tiene un código personal registrado. No se puede resetear la contraseña.'
+            ], 422);
         }
 
-        return response()->json(['message' => __($status)], 422);
+        $user->password = Hash::make($user->user_cod_personal);
+        $user->force_password_change = true;
+        $user->save();
+
+        return response()->json(['message' => 'Contraseña reseteada al código personal exitosamente.']);
     }
 
     public function generateUniqueInitials(Request $request)
@@ -672,7 +674,7 @@ class UserController extends Controller
     }
 
     /**
-     * Send a password reset link to the given user.
+     * Resets the user's password to their personal code and sets force_password_change to true.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
@@ -682,17 +684,19 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // We can use the Password broker to send the link
-        // We pass the email of the user we want to send the link to
-        $status = Password::broker()->sendResetLink(
-            ['email' => $user->email]
-        );
-
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['message' => __($status)]);
+        if (!$user->user_cod_personal) {
+            return response()->json([
+                'message' => 'El usuario no tiene un código personal registrado. No se puede resetear la contraseña.'
+            ], 422);
         }
 
-        return response()->json(['message' => __($status)], 422);
+        $user->password = Hash::make($user->user_cod_personal);
+        $user->force_password_change = true;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Contraseña reseteada al código personal exitosamente.'
+        ]);
     }
 }
 

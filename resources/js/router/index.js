@@ -26,6 +26,11 @@ const routes = [
         meta: { guest: true }
     },
     {
+        path: '/change-password',
+        name: 'password.change',
+        component: () => import('@/components/auth/ChangePassword.vue')
+    },
+    {
         path: '/',
         component: AppLayout,
         children: [
@@ -404,6 +409,24 @@ const routes = [
 const router = createRouter({
     history: createWebHistory('/vue/'),
     routes,
+});
+
+
+router.beforeEach(async (to, from, next) => {
+    try {
+        const { useAuthStore } = await import('@/stores/authStore');
+        const authStore = useAuthStore();
+
+        if (authStore.isAuthenticated) {
+            if (authStore.user?.force_password_change && to.name !== 'password.change') {
+                return next({ name: 'password.change' });
+            }
+        }
+    } catch (e) {
+        console.error('Router Guard Error:', e);
+    }
+
+    next();
 });
 
 export default router;

@@ -44,6 +44,7 @@ class User extends Authenticatable
         'user_foto_url',
         'email',
         'password',
+        'force_password_change',
     ];
 
     /**
@@ -64,6 +65,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'force_password_change' => 'boolean',
     ];
 
     /**
@@ -150,7 +152,7 @@ class User extends Authenticatable
     public function toArrayWithRoles(): array
     {
         return array_merge(
-            $this->only(['id', 'name', 'user_iniciales', 'user_cod_personal', 'user_foto_url', 'email']),
+            $this->only(['id', 'name', 'user_iniciales', 'user_cod_personal', 'user_foto_url', 'email', 'force_password_change']),
             [
                 'roles' => $this->getRoleNames(),
                 'permissions' => $this->getAllPermissions()->pluck('name')
