@@ -20,7 +20,8 @@
                 ASIGNAR ESPECIALISTA DE APOYO
             </h6>
             <p class="small text-muted">
-                Este módulo permite asignar a un especialista para apoyar con la gestión del hallazgo y acompñar en la identificación de acciones de mejora.
+                Este módulo permite asignar a un especialista para apoyar con la gestión del hallazgo y acompñar en la
+                identificación de acciones de mejora.
             </p>
             <!-- Mostrar Especialista Actual -->
             <div v-if="hallazgoStore.especialistaActual"
@@ -28,7 +29,7 @@
                 <i class="fas fa-info-circle text-primary mr-2"></i>
                 <p class="mb-0 small">
                     Actualmente asignado a: <strong class="text-dark">{{ hallazgoStore.especialistaActual.name
-                    }}</strong>.
+                        }}</strong>.
                 </p>
 
             </div>
@@ -38,34 +39,45 @@
             </div>
 
             <!-- Formulario para Cambiar Asignación -->
-            <label class="form-label small font-weight-bold text-secondary mt-3">
-                {{ hallazgoStore.especialistaActual ? 'Reasignar a un nuevo especialista:' : 'Asignar especialista:' }}
-            </label>
-            <div class="d-flex align-items-center my-4">
-                <div class="input-group mr-3">
-                    <select v-if="hallazgoStore.especialistas.length > 0" v-model="especialistaSeleccionado.id"
-                        class="form-control">
-                        <option value="" disabled>Seleccionar Especialista</option>
-                        <option v-for="especialista in hallazgoStore.especialistas" :key="especialista.id"
-                            :value="especialista.id">
-                            {{ especialista.descripcion }}
-                        </option>
-                    </select>
-                    <span v-else class="form-control text-muted">Cargando especialistas...</span>
-                    <div class="input-group-append">
-                        <!-- Asignar Button -->
-                        <button type="button" class="btn btn-danger btn-sm" @click="confirmarAsignacion"
-                            :disabled="!especialistaSeleccionado.id">
-                            <i class="fas fa-save"></i> Asignar
-                        </button>
+            <template v-if="!hallazgoStore.isReadOnly">
+                <label class="form-label small font-weight-bold text-secondary mt-3">
+                    {{ hallazgoStore.especialistaActual ? 'Reasignar a un nuevo especialista:' : 'Asignar especialista:'
+                    }}
+                </label>
+                <div class="d-flex align-items-center my-4">
+                    <div class="input-group mr-3">
+                        <select v-if="hallazgoStore.especialistas.length > 0" v-model="especialistaSeleccionado.id"
+                            class="form-control">
+                            <option value="" disabled>Seleccionar Especialista</option>
+                            <option v-for="especialista in hallazgoStore.especialistas" :key="especialista.id"
+                                :value="especialista.id">
+                                {{ especialista.descripcion }}
+                            </option>
+                        </select>
+                        <span v-else class="form-control text-muted">Cargando especialistas...</span>
+                        <div class="input-group-append">
+                            <!-- Asignar Button -->
+                            <button type="button" class="btn btn-danger btn-sm" @click="confirmarAsignacion"
+                                :disabled="!especialistaSeleccionado.id">
+                                <i class="fas fa-save"></i> Asignar
+                            </button>
 
-                        <!-- Ver Historial Button -->
-                        <button type="button" class="btn btn-secondary btn-sm" @click="showHistory = !showHistory">
-                            <i class="fas fa-history"></i> {{ showHistory ? 'Ocultar Historial' : 'Historial' }}
-                        </button>
+                            <!-- Ver Historial Button -->
+                            <button type="button" class="btn btn-secondary btn-sm" @click="showHistory = !showHistory">
+                                <i class="fas fa-history"></i> {{ showHistory ? 'Ocultar Historial' : 'Historial' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </template>
+            <template v-else>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-secondary btn-sm" @click="showHistory = !showHistory">
+                        <i class="fas fa-history"></i> {{ showHistory ? 'Ocultar Historial de Asignaciones'
+                            : 'Ver Historial de Asignaciones' }}
+                    </button>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -166,11 +178,14 @@ onMounted(() => {
 }
 
 .history-item {
-    padding: 0.5rem 0.75rem; /* Reduced padding */
-    font-size: 0.85rem; /* Smaller text */
+    padding: 0.5rem 0.75rem;
+    /* Reduced padding */
+    font-size: 0.85rem;
+    /* Smaller text */
 }
 
 .history-item .history-date {
-    font-size: 0.75rem; /* Even smaller date text */
+    font-size: 0.75rem;
+    /* Even smaller date text */
 }
 </style>

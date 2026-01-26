@@ -17,7 +17,7 @@
             una mejor
             trazabilidad y gestión.
         </p>
-        <div class="d-flex align-items-center my-4">
+        <div v-if="!hallazgoStore.isReadOnly" class="d-flex align-items-center my-4">
             <div class="input-group mr-3">
                 <input type="hidden" v-model="selectedProceso.id" />
                 <input type="text" class="form-control" placeholder="Seleccione el Proceso a Asociar"
@@ -53,7 +53,7 @@
                             <th>Id</th>
                             <th>Código del Proceso</th>
                             <th>Nombre del Proceso</th>
-                            <th class="text-center text-nowrap">Acciones</th>
+                            <th v-if="!hallazgoStore.isReadOnly" class="text-center text-nowrap">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,7 +61,7 @@
                             <td>{{ proceso.id }}</td>
                             <td>{{ proceso.cod_proceso }}</td>
                             <td>{{ proceso.proceso_nombre }}</td>
-                            <td class="text-center text-nowrap">
+                            <td v-if="!hallazgoStore.isReadOnly" class="text-center text-nowrap">
                                 <button class="btn btn-danger btn-sm"
                                     @click="hallazgoStore.disociarProceso(proceso.id)">
                                     <i class="fas fa-trash-alt"></i>

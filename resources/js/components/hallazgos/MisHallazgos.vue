@@ -313,7 +313,7 @@ const editHallazgo = (hallazgo) => {
 };
 
 const verPlanesDeAccion = (hallazgoId) => {
-    router.push({ name: 'acciones.index', params: { hallazgoId } });
+    router.push({ name: 'acciones.index', params: { hallazgoId }, query: { from: 'hallazgos.mine.vue' } });
 };
 
 const verEjecucionAcciones = (hallazgoId) => {

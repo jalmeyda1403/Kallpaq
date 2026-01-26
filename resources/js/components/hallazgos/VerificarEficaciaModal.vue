@@ -31,85 +31,138 @@
                     </ul>
 
                     <div class="tab-content" id="verificationTabsContent">
-                        <!-- TAB 1: EVIDENCIAS (Antes EvaluacionArchivosModal) -->
+                        <!-- TAB 1: EVIDENCIAS -->
                         <div class="tab-pane fade show active" id="evidencias" role="tabpanel"
                             aria-labelledby="evidencias-tab">
+
+                            <!-- Lista de archivos ya subidos -->
                             <div v-if="evidencias.length > 0" class="mb-4">
-                                <h6 class="font-weight-bold">Documentos Subidos:</h6>
-                                <ul class="list-group">
-                                    <li v-for="(file, index) in evidencias" :key="index"
-                                        class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                        <a :href="file.path" target="_blank text-truncate" style="max-width: 85%;">
-                                            <i class="fas fa-file-alt mr-2 text-muted"></i> {{ file.name }}
+                                <h6 class="font-weight-bold text-dark d-flex align-items-center mb-3">
+                                    <i class="fas fa-archive text-danger mr-2"></i> Documentos Subidos:
+                                </h6>
+                                <div class="list-group shadow-sm rounded-lg">
+                                    <div v-for="(file, index) in evidencias" :key="index"
+                                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 border-left-danger">
+                                        <a :href="file.path" target="_blank"
+                                            class="text-decoration-none text-dark text-truncate"
+                                            style="max-width: 85%;">
+                                            <i class="fas fa-file-pdf mr-2 text-danger"></i> {{ file.name }}
                                         </a>
-                                    </li>
-                                </ul>
+                                        <span class="badge badge-light badge-pill">Existente</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div v-else class="mb-4 text-muted small">
-                                <i class="fas fa-info-circle mr-1"></i> No hay documentos de evidencia subidos aún.
+                            <div v-else class="mb-4 text-center py-4 bg-light rounded-lg border border-dashed">
+                                <i class="fas fa-info-circle text-muted fa-2x mb-2 d-xl-block"></i>
+                                <p class="text-muted mb-0 small">No hay documentos de evidencia subidos aún.</p>
                             </div>
 
-                            <div class="card bg-light border-0">
-                                <div class="card-body p-3">
-                                    <form @submit.prevent="subirArchivos">
-                                        <div class="form-group">
-                                            <label for="files" class="font-weight-bold ml-1">Subir Nuevas
-                                                Evidencias:</label>
-                                            <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="files" multiple
-                                                    @change="handleFileUpload"
-                                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
-                                                <label class="custom-file-label" for="files" data-browse="Elegir">
-                                                    {{ selectedFiles.length > 0 ? `${selectedFiles.length} archivos seleccionados` : 'Seleccionar archivos...' }}
-                                                </label>
-                                            </div>
-                                            <small class="form-text text-muted">Formatos: PDF, Imágenes, Office.</small>
+                            <!-- Zona de Carga de Archivos -->
+                            <div class="card border-0 shadow-sm rounded-lg">
+                                <div class="card-body p-0">
+                                    <div class="drop-zone" :class="{ 'drag-over': isDragging }"
+                                        @dragenter.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
+                                        @dragover.prevent @drop.prevent="onDrop" @click="$refs.fileInput.click()">
+
+                                        <input type="file" ref="fileInput" class="d-none" multiple
+                                            @change="handleFileUpload"
+                                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+
+                                        <div class="text-center py-2">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-danger opacity-50"></i>
+                                            <h6 class="mt-3 font-weight-bold text-dark">Subir Nuevas Evidencias</h6>
+                                            <p class="text-muted small mb-0">Arrastre archivos aquí o haga clic para
+                                                seleccionar</p>
+                                            <small class="text-muted mt-2 d-block" style="font-size: 0.7rem;">Formatos
+                                                aceptados: PDF, Imágenes, Office (Máx 10MB por archivo)</small>
                                         </div>
+                                    </div>
+
+                                    <!-- Lista de archivos seleccionados pendientes de subir -->
+                                    <div v-if="selectedFiles.length > 0" class="p-3 bg-white border-top">
+                                        <h6 class="small font-weight-bold text-secondary mb-3">Archivos seleccionados
+                                            ({{ selectedFiles.length }}):</h6>
+                                        <ul class="list-group list-group-flush mb-3">
+                                            <li v-for="(file, index) in selectedFiles" :key="index"
+                                                class="list-group-item px-0 d-flex justify-content-between align-items-center py-2">
+                                                <div class="d-flex align-items-center overflow-hidden">
+                                                    <i class="fas fa-file-alt text-muted mr-3"></i>
+                                                    <div class="text-truncate">
+                                                        <span class="small font-weight-bold d-block text-truncate">{{
+                                                            file.name }}</span>
+                                                        <span class="text-muted" style="font-size: 0.65rem;">{{
+                                                            (file.size / 1024).toFixed(1) }} KB</span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-danger btn-xs border-0"
+                                                    @click.stop="removeSelectedFile(index)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </li>
+                                        </ul>
                                         <div class="text-right">
-                                            <button type="submit" class="btn btn-primary btn-sm"
-                                                :disabled="loadingUpload || selectedFiles.length === 0">
-                                                <span v-if="loadingUpload" class="spinner-border spinner-border-sm"
-                                                    role="status" aria-hidden="true"></span>
-                                                <i class="fas fa-upload mr-1" v-else></i> Subir Archivos
+                                            <button type="button"
+                                                class="btn btn-danger btn-sm rounded-pill px-4 shadow-sm"
+                                                @click="subirArchivos" :disabled="loadingUpload">
+                                                <span v-if="loadingUpload" class="spinner-border spinner-border-sm mr-2"
+                                                    role="status"></span>
+                                                <i class="fas fa-upload mr-2" v-else></i> Subir Seleccionados
                                             </button>
                                         </div>
-                                    </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- TAB 2: EVALUACIÓN (Antes HallazgoEvaluacionModal) -->
+                        <!-- TAB 2: EVALUACIÓN -->
                         <div class="tab-pane fade" id="evaluacion" role="tabpanel" aria-labelledby="evaluacion-tab">
-                            <form @submit.prevent="guardarEvaluacion">
-                                <div class="form-group">
-                                    <label for="resultado" class="font-weight-bold">Resultado de la Eficacia <span
+                            <form @submit.prevent="guardarEvaluacion" class="p-2">
+                                <div class="form-group mb-4">
+                                    <label class="small font-weight-bold text-dark">Resultado de la Eficacia <span
                                             class="text-danger">*</span></label>
-                                    <select v-model="form.he_resultado" class="form-control" required>
-                                        <option value="" disabled>Seleccione un resultado</option>
-                                        <option value="con eficacia">Con Eficacia (Cierra el hallazgo)</option>
-                                        <option value="sin eficacia">Sin Eficacia (Solicita nuevo plan de acción)
-                                        </option>
-                                    </select>
+                                    <div class="input-group shadow-sm rounded">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-white border-right-0"><i
+                                                    class="fas fa-poll text-danger"></i></span>
+                                        </div>
+                                        <select v-model="form.he_resultado" class="form-control border-left-0" required>
+                                            <option value="" disabled>Seleccione un resultado</option>
+                                            <option value="con eficacia">Con Eficacia (Cierra el hallazgo)</option>
+                                            <option value="sin eficacia">Sin Eficacia (Solicita nuevo plan de acción)
+                                            </option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="fecha_evaluacion" class="font-weight-bold">Fecha de Evaluación <span
+                                <div class="form-group mb-4">
+                                    <label class="small font-weight-bold text-dark">Fecha de Evaluación <span
                                             class="text-danger">*</span></label>
-                                    <input type="date" v-model="form.he_fecha" class="form-control" required>
+                                    <div class="input-group shadow-sm rounded">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-white border-right-0"><i
+                                                    class="fas fa-calendar-alt text-danger"></i></span>
+                                        </div>
+                                        <input type="date" v-model="form.he_fecha" class="form-control border-left-0"
+                                            required>
+                                    </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="observaciones" class="font-weight-bold">Observaciones / Conclusión <span
+                                <div class="form-group mb-4">
+                                    <label class="small font-weight-bold text-dark">Observaciones / Conclusión <span
                                             class="text-danger">*</span></label>
-                                    <textarea v-model="form.he_comentario" class="form-control" rows="4" required
-                                        placeholder="Describa los detalles de la verificación y la conclusión final..."></textarea>
+                                    <div class="shadow-sm rounded bg-white p-1">
+                                        <textarea v-model="form.he_comentario" class="form-control border-0" rows="5"
+                                            required
+                                            placeholder="Describa los detalles de la verificación y la conclusión final..."></textarea>
+                                    </div>
                                 </div>
 
-                                <div class="text-right mt-3">
-                                    <button type="submit" class="btn btn-danger" :disabled="loadingForm">
-                                        <span v-if="loadingForm" class="spinner-border spinner-border-sm" role="status"
-                                            aria-hidden="true"></span>
-                                        <i class="fas fa-save mr-1" v-else></i> Guardar Verificación
+                                <div class="text-right mt-4 pt-2">
+                                    <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow"
+                                        :disabled="loadingForm">
+                                        <span v-if="loadingForm" class="spinner-border spinner-border-sm mr-2"
+                                            role="status"></span>
+                                        <i class="fas fa-save mr-2" v-else></i> Guardar Verificación
                                     </button>
                                 </div>
                             </form>
@@ -146,6 +199,8 @@ let modalInstance = null;
 const loadingUpload = ref(false);
 const evidencias = ref([]);
 const selectedFiles = ref([]);
+const fileInput = ref(null);
+const isDragging = ref(false);
 
 // Form State
 const loadingForm = ref(false);
@@ -172,7 +227,33 @@ const fetchEvaluacion = async () => {
 };
 
 const handleFileUpload = (event) => {
-    selectedFiles.value = Array.from(event.target.files);
+    const files = Array.from(event.target.files);
+    addFiles(files);
+};
+
+const onDrop = (event) => {
+    isDragging.value = false;
+    const files = Array.from(event.dataTransfer.files);
+    addFiles(files);
+};
+
+const addFiles = (files) => {
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+    files.forEach(file => {
+        if (file.size > maxFileSize) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Archivo demasiado grande',
+                text: `El archivo "${file.name}" supera el límite de 10MB.`,
+            });
+            return;
+        }
+        selectedFiles.value.push(file);
+    });
+};
+
+const removeSelectedFile = (index) => {
+    selectedFiles.value.splice(index, 1);
 };
 
 const subirArchivos = async () => {
@@ -191,7 +272,7 @@ const subirArchivos = async () => {
 
         evidencias.value = response.data.evidencias;
         selectedFiles.value = [];
-        document.getElementById('files').value = ''; // Reset input
+        if (fileInput.value) fileInput.value.value = ''; // Reset input
 
         Swal.fire({
             icon: 'success',
@@ -251,9 +332,9 @@ const abrirModal = () => {
         modalInstance.show();
         // Set active tab based on prop or default
         setTimeout(() => {
-             // Activate tab manually using JQuery/Bootstrap logic since we are using bootstrap tabs
-             const tabName = props.initialTab === 'evaluacion' ? '#evaluacion-tab' : '#evidencias-tab';
-             $(tabName).tab('show');
+            // Activate tab manually using JQuery/Bootstrap logic since we are using bootstrap tabs
+            const tabName = props.initialTab === 'evaluacion' ? '#evaluacion-tab' : '#evidencias-tab';
+            $(tabName).tab('show');
         }, 100);
     }
 };
@@ -286,12 +367,70 @@ watch(() => props.visible, (newVal) => {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .nav-tabs .nav-link.active {
     color: #dc3545;
     font-weight: bold;
     border-top: 3px solid #dc3545;
+    background-color: transparent !important;
 }
+
 .nav-tabs .nav-link {
     color: #6c757d;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    transition: all 0.2s;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.drop-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 30px 20px;
+    transition: all 0.3s ease;
+    background-color: #fdfdfd;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.1);
+}
+
+.drop-zone i {
+    transition: transform 0.3s ease;
+}
+
+.drop-zone:hover i {
+    transform: translateY(-5px);
+}
+
+.border-left-danger {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.btn-xs {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+}
+
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
+}
+
+.rounded-lg {
+    border-radius: .5rem !important;
+}
+
+.border-dashed {
+    border-style: dashed !important;
 }
 </style>

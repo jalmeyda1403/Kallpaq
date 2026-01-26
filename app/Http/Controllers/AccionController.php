@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Models\HallazgoProceso;
+use App\Models\AccionReprogramacion;
 
 class AccionController extends Controller
 {
@@ -20,7 +21,9 @@ class AccionController extends Controller
                 'responsable:id,name,email',
                 'responsable.ouos:id,ouo_nombre',
                 'hallazgoProceso.proceso:id,proceso_nombre,proceso_sigla',
-                'reprogramaciones' // Eager load reprogramaciones
+                'reprogramaciones',
+                'movimientos.usuario:id,name',
+                'avances.usuario:id,name'
             ])
             ->select([
                 'id',
@@ -34,7 +37,7 @@ class AccionController extends Controller
                 'accion_fecha_fin_planificada',
                 'accion_fecha_fin_reprogramada',
                 'accion_estado',
-                'accion_ruta_evidencia',
+                'accion_estado',
                 'created_at',
                 'updated_at'
             ])
@@ -84,10 +87,11 @@ class AccionController extends Controller
         // Obtener las acciones con sus relaciones
         $acciones = $hallazgo->acciones()
             ->with([
-                'responsable:id,name,email',
                 'responsable.ouos:id,ouo_nombre',
-                'hallazgoProceso.proceso:id,proceso_nombre,cod_proceso',
-                'reprogramaciones' // Eager load reprogramaciones
+                'hallazgoProceso.proceso:id,proceso_nombre,proceso_sigla',
+                'reprogramaciones',
+                'movimientos.usuario:id,name',
+                'avances.usuario:id,name'  // Load advances with user
             ])
             ->select([
                 'id',
@@ -101,7 +105,7 @@ class AccionController extends Controller
                 'accion_fecha_fin_planificada',
                 'accion_fecha_fin_reprogramada',
                 'accion_estado',
-                'accion_ruta_evidencia',
+                'accion_estado',
                 'created_at',
                 'updated_at'
             ])
@@ -140,6 +144,10 @@ class AccionController extends Controller
 
     public function reprogramar(Request $request, Accion $accion)
     {
+        if (!auth()->check()) {
+            return response()->json(['error' => 'Usuario no autenticado.'], 401);
+        }
+
         $request->validate([
             'actionType' => 'required|string|in:reprogramar,desestimar',
             'accion_justificacion' => 'required|string',
@@ -149,24 +157,91 @@ class AccionController extends Controller
         $accion->accion_justificacion = $request->accion_justificacion;
 
         if ($request->actionType === 'reprogramar') {
-            // Guardar historial de reprogramación
+            // Guardar historial de reprogramación con estado solicitado
             $accion->reprogramaciones()->create([
                 'ar_fecha_anterior' => $accion->accion_fecha_fin_reprogramada ?? $accion->accion_fecha_fin_planificada,
                 'ar_fecha_nueva' => $request->accion_fecha_fin_reprogramada,
                 'ar_justificacion' => $request->accion_justificacion,
-                'ar_usuario_id' => auth()->id(),
+                'ar_usuario_id' => auth()->id() ?? $accion->hallazgo->especialista_id, // Fallback to specialist if somehow null
+                'ar_estado' => 'solicitado',
             ]);
 
-            $accion->accion_fecha_fin_reprogramada = $request->accion_fecha_fin_reprogramada;
+            // No actualizamos la fecha reprogramada hasta que sea aprobada
+            // $accion->accion_fecha_fin_reprogramada = $request->accion_fecha_fin_reprogramada;
+
+            // Registrar movimiento
+            $accion->movimientos()->create([
+                'user_id' => auth()->id() ?? $accion->hallazgo->especialista_id,
+                'estado' => $accion->accion_estado,
+                'comentario' => "Solicitud de Reprogramación: " . $request->accion_justificacion,
+            ]);
+
+            return response()->json(['message' => 'Solicitud de reprogramación enviada con éxito. Pendiente de aprobación.']);
+
         } else { // desestimar
             $accion->accion_estado = 'desestimada';
+            $accion->save();
+
+            // Registrar movimiento
+            $accion->movimientos()->create([
+                'user_id' => auth()->id() ?? $accion->hallazgo->especialista_id,
+                'estado' => $accion->accion_estado,
+                'comentario' => "Acción desestimada: " . $request->accion_justificacion,
+            ]);
+
+            $this->updateHallazgoAvance($accion->hallazgo);
+            return response()->json(['message' => 'Acción desestimada con éxito.']);
+        }
+    }
+
+    public function aprobarReprogramacion(Request $request, Accion $accion, AccionReprogramacion $reprogramacion)
+    {
+        // Solo el especialista puede aprobar
+        if (auth()->id() !== $accion->hallazgo->especialista_id) {
+            return response()->json(['error' => 'Solo el especialista asignado puede aprobar reprogramaciones.'], 403);
         }
 
+        // Verify state
+        /* if ($reprogramacion->ar_estado !== 'solicitado') {
+             return response()->json(['error' => 'Esta solicitud no está en estado solicitado.'], 400);
+        } */
+
+        $reprogramacion->update(['ar_estado' => 'aprobado']);
+
+        // Assign the new date to the action
+        // Ensure we are getting the value correctly.
+        $accion->accion_fecha_fin_reprogramada = $reprogramacion->ar_fecha_nueva;
+        $accion->accion_estado = 'reprogramada';
         $accion->save();
 
-        $this->updateHallazgoAvance($accion->hallazgo);
+        $accion->movimientos()->create([
+            'user_id' => auth()->id(),
+            'estado' => 'reprogramada',
+            'comentario' => 'Reprogramación aprobada. Nueva fecha: ' . $reprogramacion->ar_fecha_nueva->format('d/m/Y'),
+        ]);
 
-        return response()->json(['message' => 'Acción gestionada con éxito.']);
+        return response()->json(['message' => 'Reprogramación aprobada con éxito.']);
+    }
+
+    public function rechazarReprogramacion(Request $request, Accion $accion, AccionReprogramacion $reprogramacion)
+    {
+        // Solo el especialista puede rechazar
+        if (auth()->id() !== $accion->hallazgo->especialista_id) {
+            return response()->json(['error' => 'Solo el especialista asignado puede rechazar reprogramaciones.'], 403);
+        }
+
+        $reprogramacion->update(['ar_estado' => 'rechazado']);
+
+        $accion->accion_estado = 'observado';
+        $accion->save();
+
+        $accion->movimientos()->create([
+            'user_id' => auth()->id(),
+            'estado' => 'observado',
+            'comentario' => 'Reprogramación rechazada/observada: ' . $request->motivo,
+        ]);
+
+        return response()->json(['message' => 'Reprogramación observada con éxito.']);
     }
 
     public function concluir(Request $request, Accion $accion)
@@ -180,11 +255,12 @@ class AccionController extends Controller
             return response()->json(['message' => 'Debe adjuntar al menos un archivo de evidencia para poder concluir la acción.'], 422);
         }
 
-        $accion->accion_estado = 'finalizada';
+        $accion->accion_estado = 'implementada';
         $accion->accion_fecha_fin_real = Carbon::now();
         $accion->save();
 
         $this->updateHallazgoAvance($accion->hallazgo);
+        $accion->hallazgo->verificarYActualizarEstado();
 
         return response()->json(['message' => 'Acción concluida con éxito.']);
     }
@@ -213,68 +289,6 @@ class AccionController extends Controller
         return response()->download(storage_path('app/public/' . $path));
     }
 
-    public function uploadEvidencia(Request $request, Accion $accion)
-    {
-        $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240', // Max 10MB
-        ]);
-
-        $file = $request->file('file');
-        $originalName = $file->getClientOriginalName();
-
-        $hallazgoCod = $accion->hallazgo->hallazgo_cod;
-        $accionCod = $accion->accion_cod;
-        $pathPrefix = "hallazgos/{$hallazgoCod}/acciones/{$accionCod}";
-
-        $path = $file->store($pathPrefix, 'public');
-
-        $newFile = [
-            'path' => $path,
-            'name' => $originalName,
-        ];
-
-        $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
-        if (!is_array($existingFiles)) {
-            $existingFiles = [];
-        }
-
-        $existingFiles[] = $newFile;
-
-        $accion->accion_ruta_evidencia = json_encode($existingFiles);
-        $accion->save();
-
-        return response()->json($newFile);
-    }
-
-    public function deleteEvidencia(Request $request, Accion $accion)
-    {
-        $request->validate([
-            'path' => 'required|string',
-        ]);
-
-        $pathToDelete = $request->input('path');
-
-        // 1. Delete from storage
-        if (Storage::disk('public')->exists($pathToDelete)) {
-            Storage::disk('public')->delete($pathToDelete);
-        }
-
-        // 2. Update the JSON column
-        $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
-        if (!is_array($existingFiles)) {
-            $existingFiles = [];
-        }
-
-        $updatedFiles = array_filter($existingFiles, function ($file) use ($pathToDelete) {
-            return $file['path'] !== $pathToDelete;
-        });
-
-        // Re-index the array to prevent it from becoming an object on empty
-        $accion->accion_ruta_evidencia = json_encode(array_values($updatedFiles));
-        $accion->save();
-
-        return response()->json(['message' => 'Archivo eliminado con éxito.']);
-    }
 
     public function listarCausaRaiz(Hallazgo $hallazgo)
     {
@@ -305,9 +319,9 @@ class AccionController extends Controller
     {
         // Fetch actions related to the specific hallazgo and process
         // Eager load necessary relationships for the frontend display
-        $acciones = Accion::where('hallazgo_id', $hallazgo->id)
+        $acciones = Accion::where('hallazgo_id', '=', $hallazgo->id, 'and')
             ->whereHas('hallazgoProceso', function ($query) use ($proceso) {
-                $query->where('proceso_id', $proceso->id);
+                $query->where('proceso_id', '=', $proceso->id, 'and');
             })
             ->with('responsable.ouos', 'hallazgoProceso.proceso')
             ->get();
@@ -343,10 +357,10 @@ class AccionController extends Controller
         $causa->fill($validatedData);
         $causa->hallazgo_id = $hallazgo->id; // Ensure hallazgo_id is set
         $causa->save();
-        
+
         // Auto-transition to 'evaluado' if currently 'creado'
-        if ($hallazgo->hallazgo_estado === 'creado') { 
-            $hallazgo->update(['hallazgo_estado' => 'evaluado']); 
+        if ($hallazgo->hallazgo_estado === 'creado') {
+            $hallazgo->update(['hallazgo_estado' => 'evaluado']);
         }
 
         return response()->json($causa);
@@ -354,6 +368,10 @@ class AccionController extends Controller
 
     public function updateAccion(Request $request, Accion $accion)
     {
+        // Bloquear al especialista
+        if (auth()->id() === $accion->hallazgo->especialista_id) {
+            return response()->json(['error' => 'No tiene permisos para editar acciones (Rol: Especialista).'], 403);
+        }
         // Validar el estado del hallazgo asociado a la acción
         $this->validarEstadoHallazgo($accion->hallazgo);
 
@@ -369,6 +387,7 @@ class AccionController extends Controller
         ]);
 
         $accion->update($validatedData);
+        $accion->hallazgo->verificarYActualizarEstado();
 
         return response()->json($accion);
     }
@@ -377,50 +396,70 @@ class AccionController extends Controller
     {
         // Validar el estado del hallazgo asociado a la acción
         // Permitimos registrar avance en estados donde se permite gestión
-        // $this->validarEstadoHallazgo($accion->hallazgo); 
+        // $this->validarEstadoHallazgo($accion->hallazgo);
 
         $validatedData = $request->validate([
             'accion_estado' => 'required|string',
             'accion_comentario' => 'nullable|string',
+            'accion_avance_porcentaje' => 'required|integer|min:0|max:100',
             'accion_fecha_fin_real' => 'nullable|date',
             'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
         ]);
 
+        // Update Parent Action State
         $accion->accion_estado = $request->accion_estado;
-        $accion->accion_comentario = $request->accion_comentario;
+        // $accion->accion_comentario = $request->accion_comentario; // We now store comments in history
 
         if ($request->accion_fecha_fin_real) {
             $accion->accion_fecha_fin_real = $request->accion_fecha_fin_real;
         }
 
         // Handle file upload if present
+        $evidencePathJson = null;
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $originalName = $file->getClientOriginalName();
 
             $hallazgoCod = $accion->hallazgo->hallazgo_cod;
             $accionCod = $accion->accion_cod;
-            $pathPrefix = "hallazgos/{$hallazgoCod}/acciones/{$accionCod}";
+            // Use timestamp to allow same filename multiple times in different advances
+            $timestamp = time();
+            $pathPrefix = "hallazgos/{$hallazgoCod}/acciones/{$accionCod}/avances";
 
             $path = $file->store($pathPrefix, 'public');
 
             $newFile = [
                 'path' => $path,
                 'name' => $originalName,
+                'uploaded_at' => now()->toIso8601String()
             ];
 
-            $existingFiles = json_decode($accion->accion_ruta_evidencia, true) ?: [];
-            if (!is_array($existingFiles)) {
-                $existingFiles = [];
-            }
-
-            $existingFiles[] = $newFile;
-            $accion->accion_ruta_evidencia = json_encode($existingFiles);
+            // Store as JSON because the column anticipates strict structure, or array of files
+            // Ideally we support multiple files per advance, but input is single 'file'.
+            // Storing as array for future proofing.
+            $evidencePathJson = json_encode([$newFile]);
         }
 
         $accion->save();
 
+        // Create Valid History Record
+        $accion->avances()->create([
+            'accion_avance_porcentaje' => $request->input('accion_avance_porcentaje', 0),
+            'accion_avance_comentario' => $request->accion_comentario,
+            'accion_avance_estado' => $request->accion_estado,
+            'accion_avance_evidencia' => $evidencePathJson,
+            'user_id' => auth()->id()
+        ]);
+
+        // Also log movement for general compatibility
+        $accion->movimientos()->create([
+            'user_id' => auth()->id(),
+            'estado' => $accion->accion_estado,
+            'comentario' => ($request->accion_comentario ?: "Registro de avance") . " (" . $request->input('accion_avance_porcentaje', 0) . "%)",
+        ]);
+
         $this->updateHallazgoAvance($accion->hallazgo);
+        $accion->hallazgo->verificarYActualizarEstado();
 
         return response()->json($accion);
     }
@@ -440,12 +479,12 @@ class AccionController extends Controller
         ]);
 
         // Find the corresponding hallazgo_proceso pivot record
-        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', $hallazgo->id)
-            ->where('proceso_id', $proceso->id)
+        $hallazgoProceso = HallazgoProceso::where('hallazgo_id', '=', $hallazgo->id, 'and')
+            ->where('proceso_id', '=', $proceso->id, 'and')
             ->firstOrFail();
 
         // Generate accion_cod
-        $ultimoAccion = Accion::where('hallazgo_id', $hallazgo->id)->latest('id')->first();
+        $ultimoAccion = Accion::where('hallazgo_id', '=', $hallazgo->id, 'and')->latest('id')->first();
         if ($ultimoAccion) {
             $parts = explode('-', $ultimoAccion->accion_cod);
             $correlativo = (int) end($parts) + 1;
@@ -464,8 +503,10 @@ class AccionController extends Controller
 
         // Auto-transition to 'evaluado' if currently 'creado'
         if ($hallazgo->hallazgo_estado === 'creado') {
-             $hallazgo->update(['hallazgo_estado' => 'evaluado']);
+            $hallazgo->update(['hallazgo_estado' => 'evaluado']);
         }
+
+        $hallazgo->verificarYActualizarEstado();
 
         return response()->json($accion, 201);
     }
@@ -475,7 +516,7 @@ class AccionController extends Controller
         // Validar el estado del hallazgo asociado a la acción
         $this->validarEstadoHallazgo($accion->hallazgo);
 
-        $accion->delete();
+        Accion::destroy($accion->id);
 
         return response()->json(['message' => 'Acción eliminada con éxito.']);
     }
@@ -587,7 +628,7 @@ class AccionController extends Controller
 
         // Generate PDF using DomPDF
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('acciones.imprimir-plan-accion', compact('hallazgo', 'acciones', 'causaRaiz'));
-        
+
         // Optional: Set options if needed, e.g., enable remote images (like the logo)
         $pdf->setOptions(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true]);
         $pdf->setPaper('a4', 'portrait');

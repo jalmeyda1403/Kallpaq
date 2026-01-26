@@ -18,183 +18,187 @@
       <div class="row">
         <div class="col-12">
           <form @submit.prevent="hallazgoStore.saveHallazgo">
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-12">
-                  <h6 class="text-left"><b>1. Identificación de la Mejora</b></h6>
+            <fieldset :disabled="hallazgoStore.isReadOnly" class="border-0 p-0 m-0">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <h6 class="text-left"><b>1. Identificación de la Mejora</b></h6>
+                  </div>
                 </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="hallazgo_origen">Origen</label>
-                    <select v-model="hallazgoStore.hallazgoForm.hallazgo_origen" class="form-control"
-                      :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_origen }" id="hallazgo_origen" required>
-                      <option value="" disabled>Seleccione un origen...</option>
-                      <option v-for="option in hallazgoOrigenOptions" :key="option.value" :value="option.value">
-                        {{ option.text }}
-                      </option>
-                    </select>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_origen">
-                      {{ hallazgoStore.errors.hallazgo_origen[0] }}
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="hallazgo_origen">Origen</label>
+                      <select v-model="hallazgoStore.hallazgoForm.hallazgo_origen" class="form-control"
+                        :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_origen }" id="hallazgo_origen" required>
+                        <option value="" disabled>Seleccione un origen...</option>
+                        <option v-for="option in hallazgoOrigenOptions" :key="option.value" :value="option.value">
+                          {{ option.text }}
+                        </option>
+                      </select>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_origen">
+                        {{ hallazgoStore.errors.hallazgo_origen[0] }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label for="hallazgo_clasificacion">Clasificación</label>
+                      <select v-model="hallazgoStore.hallazgoForm.hallazgo_clasificacion" class="form-control"
+                        :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_clasificacion }"
+                        id="hallazgo_clasificacion" required>
+                        <option value="NCM">No Conformidad Mayor</option>
+                        <option value="Ncme">No Conformidad Menor</option>
+                        <option value="Obs">Observación</option>
+                        <option value="Odm">Oportunidad de Mejora</option>
+                      </select>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_clasificacion">
+                        {{ hallazgoStore.errors.hallazgo_clasificacion[0] }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label for="hallazgo_fecha_identificacion">Fecha de Identificación</label>
+                      <input type="date" v-model="hallazgoStore.hallazgoForm.hallazgo_fecha_identificacion"
+                        class="form-control"
+                        :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_fecha_identificacion }"
+                        id="hallazgo_fecha_identificacion" required>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_fecha_identificacion">
+                        {{ hallazgoStore.errors.hallazgo_fecha_identificacion[0] }}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label for="hallazgo_clasificacion">Clasificación</label>
-                    <select v-model="hallazgoStore.hallazgoForm.hallazgo_clasificacion" class="form-control"
-                      :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_clasificacion }" id="hallazgo_clasificacion"
-                      required>
-                      <option value="NCM">No Conformidad Mayor</option>
-                      <option value="Ncme">No Conformidad Menor</option>
-                      <option value="Obs">Observación</option>
-                      <option value="Odm">Oportunidad de Mejora</option>
-                    </select>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_clasificacion">
-                      {{ hallazgoStore.errors.hallazgo_clasificacion[0] }}
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label for="hallazgo_fecha_identificacion">Fecha de Identificación</label>
-                    <input type="date" v-model="hallazgoStore.hallazgoForm.hallazgo_fecha_identificacion"
-                      class="form-control" :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_fecha_identificacion }"
-                      id="hallazgo_fecha_identificacion" required>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_fecha_identificacion">
-                      {{ hallazgoStore.errors.hallazgo_fecha_identificacion[0] }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="informe_id">Informe o documento</label>
-                    <input type="text" v-model="hallazgoStore.hallazgoForm.informe_id" class="form-control"
-                      :class="{ 'is-invalid': hallazgoStore.errors.informe_id }" id="informe_id"
-                      placeholder="Código o nombre del informe relacionado">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="informe_id">Informe o documento</label>
+                      <input type="text" v-model="hallazgoStore.hallazgoForm.informe_id" class="form-control"
+                        :class="{ 'is-invalid': hallazgoStore.errors.informe_id }" id="informe_id"
+                        placeholder="Código o nombre del informe relacionado">
 
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="auditor_id">Auditor que identificó</label>
-                    <select v-model="hallazgoStore.hallazgoForm.auditor_id" class="form-control"
-                      :class="{ 'is-invalid': hallazgoStore.errors.auditor_id }" id="auditor_id">
-                      <option value="">Seleccione un auditor...</option>
-                      <option v-for="auditor in hallazgoStore.auditores" :key="auditor.id" :value="auditor.id">
-                        {{ auditor.descripcion }} </option>
-                    </select>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.auditor_id">
-                      {{ hallazgoStore.errors.auditor_id[0] }}
                     </div>
                   </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group small">
-                    <label for="hallazgo_sig" class="form-label font-weight-bold">Sistemas de Gestión</label>
-                    <MultiSelect v-model="hallazgoStore.hallazgoForm.hallazgo_sig" :options="sigOptions"
-                      optionLabel="label" optionValue="value" placeholder="Seleccione los sistemas..." display="chip"
-                      class="w-100 custom-multiselect" :class="{ 'p-invalid': hallazgoStore.errors.hallazgo_sig }" />
-                    <div class="invalid-feedback d-block" v-if="hallazgoStore.errors.hallazgo_sig">
-                      {{ hallazgoStore.errors.hallazgo_sig[0] }}
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="auditor_id">Auditor que identificó</label>
+                      <select v-model="hallazgoStore.hallazgoForm.auditor_id" class="form-control"
+                        :class="{ 'is-invalid': hallazgoStore.errors.auditor_id }" id="auditor_id">
+                        <option value="">Seleccione un auditor...</option>
+                        <option v-for="auditor in hallazgoStore.auditores" :key="auditor.id" :value="auditor.id">
+                          {{ auditor.descripcion }} </option>
+                      </select>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.auditor_id">
+                        {{ hallazgoStore.errors.auditor_id[0] }}
+                      </div>
                     </div>
                   </div>
                 </div>
-
-              </div>
-              <hr>
-              <div class="row">
-                <div class="col-12">
-                  <h6 class="text-left"><b>2. Detalle de la Mejora</b></h6>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <label for="hallazgo_resumen">Resumen </label>
-                      <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_resumen?.length || 0
-                        }}/255</small>
-                    </div>
-
-                    <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_resumen" class="form-control"
-                      :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_resumen }" id="hallazgo_resumen" rows="3"
-                      required
-                      placeholder="Redacte un resumen de la mejora, breve y conciso, enfocándose en la naturaleza del hallazgo. Ej: Falta de procedimiento para gestión de cambios en el área de producción."></textarea>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_resumen">
-                      {{ hallazgoStore.errors.hallazgo_resumen[0] }}
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group small">
+                      <label for="hallazgo_sig" class="form-label font-weight-bold">Sistemas de Gestión</label>
+                      <MultiSelect v-model="hallazgoStore.hallazgoForm.hallazgo_sig" :options="sigOptions"
+                        optionLabel="label" optionValue="value" placeholder="Seleccione los sistemas..." display="chip"
+                        class="w-100 custom-multiselect" :class="{ 'p-invalid': hallazgoStore.errors.hallazgo_sig }" />
+                      <div class="invalid-feedback d-block" v-if="hallazgoStore.errors.hallazgo_sig">
+                        {{ hallazgoStore.errors.hallazgo_sig[0] }}
+                      </div>
                     </div>
                   </div>
+
                 </div>
-              </div>
+                <hr>
+                <div class="row">
+                  <div class="col-12">
+                    <h6 class="text-left"><b>2. Detalle de la Mejora</b></h6>
+                  </div>
+                </div>
 
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <label for="hallazgo_descripcion">Descripción (Condición)</label>
-                      <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_descripcion?.length || 0
-                        }}/1000</small>
-                    </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="hallazgo_resumen">Resumen </label>
+                        <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_resumen?.length || 0
+                          }}/255</small>
+                      </div>
 
-                    <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_descripcion" class="form-control"
-                      maxlength="1000" :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_descripcion }"
-                      id="hallazgo_descripcion" rows="10" required
-                      placeholder="Decriba los hechos del hallazgo, el 'que' y 'donde' : Ej: Durante la auditoría interna se observó que no existe un procedimiento formal documentado para registrar y evaluar los cambios en la maquinaria de producción, lo que podría afectar la calidad del producto y la seguridad operacional. "></textarea>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_descripcion">
-                      {{ hallazgoStore.errors.hallazgo_descripcion[0] }}
+                      <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_resumen" class="form-control"
+                        :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_resumen }" id="hallazgo_resumen" rows="3"
+                        required
+                        placeholder="Redacte un resumen de la mejora, breve y conciso, enfocándose en la naturaleza del hallazgo. Ej: Falta de procedimiento para gestión de cambios en el área de producción."></textarea>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_resumen">
+                        {{ hallazgoStore.errors.hallazgo_resumen[0] }}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-              </div>
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <label for="hallazgo_criterio">Referencia (Criterio)</label>
-                      <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_criterio?.length || 0
-                        }}/500</small>
-                    </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="hallazgo_descripcion">Descripción (Condición)</label>
+                        <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_descripcion?.length || 0
+                          }}/1000</small>
+                      </div>
 
-                    <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_criterio" class="form-control"
-                      maxlength="500" :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_criterio }"
-                      id="hallazgo_criterio" rows="6"
-                      placeholder="Citar la referencia normativa, legal o interna específica que se incumple o que serviría de base para la mejora.Ej: ISO 9001:2015 - Cláusula 6.3 Planificación de los cambios / Procedimiento P-PRD-001 'Control de Producción', punto 4.1"></textarea>
-                    <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_criterio">
-                      {{ hallazgoStore.errors.hallazgo_criterio[0] }}
+                      <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_descripcion" class="form-control"
+                        maxlength="1000" :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_descripcion }"
+                        id="hallazgo_descripcion" rows="10" required
+                        placeholder="Decriba los hechos del hallazgo, el 'que' y 'donde' : Ej: Durante la auditoría interna se observó que no existe un procedimiento formal documentado para registrar y evaluar los cambios en la maquinaria de producción, lo que podría afectar la calidad del producto y la seguridad operacional. "></textarea>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_descripcion">
+                        {{ hallazgoStore.errors.hallazgo_descripcion[0] }}
+                      </div>
                     </div>
                   </div>
+
                 </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <label for="evidencia">Evidencias</label>
-                      <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_evidencia?.length || 0
-                        }}/500</small>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="hallazgo_criterio">Referencia (Criterio)</label>
+                        <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_criterio?.length || 0
+                          }}/500</small>
+                      </div>
+
+                      <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_criterio" class="form-control"
+                        maxlength="500" :class="{ 'is-invalid': hallazgoStore.errors.hallazgo_criterio }"
+                        id="hallazgo_criterio" rows="6"
+                        placeholder="Citar la referencia normativa, legal o interna específica que se incumple o que serviría de base para la mejora.Ej: ISO 9001:2015 - Cláusula 6.3 Planificación de los cambios / Procedimiento P-PRD-001 'Control de Producción', punto 4.1"></textarea>
+                      <div class="invalid-feedback" v-if="hallazgoStore.errors.hallazgo_criterio">
+                        {{ hallazgoStore.errors.hallazgo_criterio[0] }}
+                      </div>
                     </div>
-                    <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_evidencia" class="form-control"
-                      id="hallazgo_evidencia" rows="6"
-                      placeholder="Tipo de información (fechas, personas, documentos, observaciones) que respalda el hallazgo Ej: Entrevista con el jefe de producción (05/03/2024), revisión de registros de mantenimiento de las últimas 3 máquinas modificadas (sin evidencia de evaluación de cambios), observación directa en línea de producción."></textarea>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="evidencia">Evidencias</label>
+                        <small class="text-muted">{{ hallazgoStore.hallazgoForm.hallazgo_evidencia?.length || 0
+                          }}/500</small>
+                      </div>
+                      <textarea v-model="hallazgoStore.hallazgoForm.hallazgo_evidencia" class="form-control"
+                        id="hallazgo_evidencia" rows="6"
+                        placeholder="Tipo de información (fechas, personas, documentos, observaciones) que respalda el hallazgo Ej: Entrevista con el jefe de producción (05/03/2024), revisión de registros de mantenimiento de las últimas 3 máquinas modificadas (sin evidencia de evaluación de cambios), observación directa en línea de producción."></textarea>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </fieldset>
 
             <div class="modal-footer justify-content-center w-100">
-              <button type="submit" class="btn btn-danger" :disabled="hallazgoStore.loading">
+              <button v-if="!hallazgoStore.isReadOnly" type="submit" class="btn btn-danger"
+                :disabled="hallazgoStore.loading">
                 <span v-if="hallazgoStore.loading" class="spinner-border spinner-border-sm" role="status"
                   aria-hidden="true"></span>
                 {{ hallazgoStore.isEditing ? 'Actualizar' : 'Grabar' }}
               </button>
               <button type="button" class="btn btn-secondary ml-2" @click="hallazgoStore.closeModal">
-                Cancelar
+                {{ hallazgoStore.isReadOnly ? 'Cerrar' : 'Cancelar' }}
               </button>
             </div>
           </form>

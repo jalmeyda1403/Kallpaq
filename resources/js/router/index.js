@@ -222,7 +222,7 @@ const routes = [
             {
                 path: 'hallazgos/:hallazgoId/acciones',
                 name: 'acciones.index',
-                component: () => import('@/components/acciones/PlanesAccion.vue'),
+                component: () => import('@/components/acciones/PlanesAccionWizard.vue'),
                 props: true
             },
             {

@@ -102,6 +102,10 @@
                                     data.acciones.length }}
                             </span>
                             <span v-else class="text-muted small">-</span>
+                            <span v-if="hasPendingReprogramming(data.acciones)" class="badge badge-warning ml-2"
+                                title="Solicitudes de reprogramación pendientes">
+                                <i class="fas fa-clock"></i>
+                            </span>
                         </template>
                     </Column>
                     <Column field="hallazgo_avance" header="Avance" sortable>
@@ -124,20 +128,29 @@
                             </template>
                         </template>
                     </Column>
-                    <Column header="Acciones" style="width: 150px">
+                    <Column header="Acciones" style="width: 200px">
                         <template #body="slotProps">
-                            <div class="d-flex justify-content-around">
+                            <div class="d-flex justify-content-around align-items-center">
+                                <!-- Visualizar SMP -->
+                                <button class="btn btn-link p-0 text-dark" title="Visualizar SMP"
+                                    @click.prevent="verHallazgo(slotProps.data)">
+                                    <i class="fas fa-eye fa-lg"></i>
+                                </button>
+
                                 <!-- Ver Plan de Acción -->
-                                <a href="#" title="Ver Plan de Acción" class="text-info"
+                                <a href="#" title="Ver Plan de Acción" class="text-danger"
                                     @click.prevent="verPlanAccion(slotProps.data.id)">
                                     <i class="fas fa-tasks fa-lg"></i>
                                 </a>
 
                                 <!-- Verificar Eficacia -->
-                                <a href="#" title="Verificar Eficacia" class="text-success"
+                                <button class="btn btn-link p-0"
+                                    :class="slotProps.data.hallazgo_estado === 'concluido' ? 'text-success' : 'text-muted'"
+                                    :title="slotProps.data.hallazgo_estado === 'concluido' ? 'Verificar Eficacia' : 'La eficacia solo se puede verificar cuando el plan está concluido'"
+                                    :disabled="slotProps.data.hallazgo_estado !== 'concluido'"
                                     @click.prevent="verificarEficacia(slotProps.data)">
                                     <i class="fas fa-check-circle fa-lg"></i>
-                                </a>
+                                </button>
                             </div>
                         </template>
                     </Column>
@@ -150,6 +163,8 @@
 
         <VerificarEficaciaModal :visible="modalVisible" :hallazgo="selectedHallazgo" :initialTab="initialTab"
             @cerrar="modalVisible = false" @guardado="onEvaluacionGuardada" @archivos-subidos="onArchivosSubidos" />
+
+        <HallazgoModal />
     </div>
 </template>
 
@@ -176,10 +191,13 @@ import Column from 'primevue/column';
 import ProgressBar from 'primevue/progressbar';
 import { FilterMatchMode } from 'primevue/api';
 import VerificarEficaciaModal from './VerificarEficaciaModal.vue';
+import HallazgoModal from './HallazgoModal.vue';
+import { useHallazgoStore } from '@/stores/hallazgoStore';
 import { route } from 'ziggy-js';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const hallazgoStore = useHallazgoStore();
 
 const hallazgos = ref([]);
 const loading = ref(true);
@@ -229,10 +247,14 @@ const verificarEficacia = (hallazgo) => {
     modalVisible.value = true;
 };
 
+const verHallazgo = (hallazgo) => {
+    hallazgoStore.openViewOnlyModal(hallazgo);
+};
+
 
 
 const verPlanAccion = (id) => {
-    window.location.href = `/vue/hallazgos/${id}/acciones`;
+    router.push({ name: 'acciones.ejecucion', params: { hallazgoId: id }, query: { from: 'hallazgos.eficacia' } });
 };
 
 const onEvaluacionGuardada = () => {
@@ -251,6 +273,11 @@ const formatDate = (dateString) => {
 const getAccionesPendientes = (acciones) => {
     if (!acciones) return 0;
     return acciones.filter(accion => ['programada', 'en ejecucion'].includes(accion.accion_estado.toLowerCase())).length;
+};
+
+const hasPendingReprogramming = (acciones) => {
+    if (!acciones) return false;
+    return acciones.some(accion => accion.reprogramaciones && accion.reprogramaciones.some(r => r.ar_estado === 'pendiente'));
 };
 
 onMounted(() => {

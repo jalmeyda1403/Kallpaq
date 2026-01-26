@@ -157,9 +157,11 @@
                     <Column header="Acciones" :exportable="false" style="width:10%" headerStyle="width: 10%"
                         bodyStyle="width: 10%">
                         <template #body="{ data }">
-                            <a href="#" title="Editar Hallazgo" class="mr-3 d-inline-block"
-                                @click.prevent="editHallazgo(data)">
-                                <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                            <a href="#"
+                                :title="['concluido', 'desestimado', 'cerrado'].includes(data.hallazgo_estado?.toLowerCase()) ? 'Visualizar Hallazgo' : 'Editar Hallazgo'"
+                                class="mr-3 d-inline-block" @click.prevent="editHallazgo(data)">
+                                <i :class="['concluido', 'desestimado', 'cerrado'].includes(data.hallazgo_estado?.toLowerCase()) ? 'fas fa-eye text-dark' : 'fas fa-pencil-alt text-warning'"
+                                    class="fa-lg"></i>
                             </a>
                             <a href="#" title="Planes de Acción" class="mr-3 d-inline-block"
                                 @click.prevent="verPlanesDeAccion(data.id)">
@@ -286,7 +288,7 @@ const editHallazgo = (hallazgo) => {
 };
 
 const verPlanesDeAccion = (hallazgoId) => {
-    router.push({ name: 'acciones.index', params: { hallazgoId } });
+    router.push({ name: 'acciones.index', params: { hallazgoId }, query: { from: 'hallazgos.index' } });
 };
 
 const deleteHallazgo = async () => {

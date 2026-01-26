@@ -5,8 +5,8 @@
             <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link to="/home"
                         class="text-danger font-weight-bold">Inicio</router-link></li>
-                <li class="breadcrumb-item"><router-link :to="{ name: 'hallazgos.mine.vue' }"
-                        class="text-danger font-weight-bold">Mis Solicitudes</router-link></li>
+                <li class="breadcrumb-item"><router-link :to="backRoute" class="text-danger font-weight-bold">{{
+                    backLabel }}</router-link></li>
                 <li class="breadcrumb-item active text-muted" aria-current="page">Ejecución de Acciones</li>
             </ol>
         </nav>
@@ -27,10 +27,16 @@
                                 </p>
                             </div>
                         </div>
-                        <router-link :to="{ name: 'hallazgos.mine.vue' }"
-                            class="btn btn-outline-light btn-sm rounded-pill px-3 font-weight-bold">
-                            <i class="fas fa-arrow-left mr-2"></i> Volver
-                        </router-link>
+                        <div class="d-flex">
+                            <button v-if="canManageActions" @click="openActionModal()"
+                                class="btn btn-outline-light btn-sm rounded-pill px-3 font-weight-bold mr-2">
+                                <i class="fas fa-plus mr-2"></i> Nueva Acción
+                            </button>
+                            <router-link :to="backRoute"
+                                class="btn btn-link text-white text-decoration-none px-3 btn-sm font-weight-bold">
+                                <i class="fas fa-arrow-left mr-2"></i> Volver a {{ backLabel }}
+                            </router-link>
+                        </div>
                     </div>
                 </div>
 
@@ -91,38 +97,103 @@
                                     }}</span></template>
                         </Column>
 
-                        <Column header="Vencimiento">
+                        <Column header="Vencimiento" style="width: 15%;">
                             <template #body="{ data }">
-                                <span class="small"
-                                    :class="{ 'text-danger font-weight-bold': isFechaVencida(data.accion_fecha_fin_reprogramada || data.accion_fecha_fin_planificada) }">
-                                    {{ formatDate(data.accion_fecha_fin_reprogramada ||
-                                    data.accion_fecha_fin_planificada) }}
-                                </span>
-                                <i v-if="data.accion_fecha_fin_reprogramada" class="fas fa-clock text-warning ml-1"
-                                    title="Reprogramada"></i>
+                                <!-- Caso 1: Reprogramación Aprobada (Ya aplicada) -->
+                                <div v-if="data.accion_fecha_fin_reprogramada">
+                                    <span class="badge badge-warning text-wrap d-block mb-1 mx-auto"
+                                        style="font-size: 90%; width: fit-content;"
+                                        :class="{ 'badge-danger': isFechaVencida(data.accion_fecha_fin_reprogramada) }">
+                                        {{ formatDate(data.accion_fecha_fin_reprogramada) }}
+                                        <i class="fas fa-clock ml-1"></i>
+                                    </span>
+                                    <small class="text-muted d-block text-center"
+                                        style="text-decoration: line-through;">
+                                        {{ formatDate(data.accion_fecha_fin_planificada) }}
+                                    </small>
+                                </div>
+                                <!-- Caso 2: Solicitud Pendiente (Mostrar fecha solicitada) -->
+                                <div v-else-if="hasPendingReprogramming(data)">
+                                    <span class="small d-block text-center mb-1">
+                                        {{ formatDate(data.accion_fecha_fin_planificada) }}
+                                    </span>
+                                    <span class="badge badge-warning d-block mx-auto"
+                                        style="font-size: 90%; width: fit-content;"
+                                        title="Solicitud de Reprogramación Pendiente">
+                                        {{ formatDate(getPendingReprogramming(data).ar_fecha_nueva) }}
+                                    </span>
+                                </div>
+                                <!-- Caso 3: Normal -->
+                                <div v-else>
+                                    <span class="small font-weight-bold d-block text-center"
+                                        :class="{ 'text-danger': isFechaVencida(data.accion_fecha_fin_planificada) }">
+                                        {{ formatDate(data.accion_fecha_fin_planificada) }}
+                                    </span>
+                                </div>
                             </template>
                         </Column>
 
-                        <Column field="accion_estado" header="Estado">
+                        <Column field="accion_estado" header="Estado" style="width: 10%;">
                             <template #body="{ data }">
                                 <span :class="getEstadoBadgeClass(data.accion_estado) + ' small'">{{ data.accion_estado
-                                    }}</span>
+                                }}</span>
+                                <div v-if="hasPendingReprogramming(data)"
+                                    @click="reviewPendingRequest(getPendingReprogramming(data))"
+                                    class="badge badge-warning font-weight-normal mt-1 d-block cursor-pointer"
+                                    style="cursor: pointer;" title="Clic para revisar solicitud">
+                                    <i class="fas fa-clock mr-1"></i> Solicitud Pend.
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column header="Avance" style="width: 15%;">
+                            <template #body="{ data }">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1" style="height: 12px; background-color: #e9ecef;">
+                                        <div class="progress-bar progress-bar-striped" role="progressbar"
+                                            :style="{ width: getPorcentajeAvance(data) + '%' }"
+                                            :class="{ 'bg-success': getPorcentajeAvance(data) === 100, 'bg-info': getPorcentajeAvance(data) < 100 }"
+                                            :aria-valuenow="getPorcentajeAvance(data)" aria-valuemin="0"
+                                            aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <span class="small ml-2 font-weight-bold text-muted">{{ getPorcentajeAvance(data)
+                                        }}%</span>
+                                </div>
                             </template>
                         </Column>
 
                         <Column header="Gestión" style="width: 15%; text-align: center;">
                             <template #body="{ data }">
-                                <div class="d-flex justify-content-center">
-                                    <button class="btn btn-outline-info btn-sm mr-2 shadow-sm rounded-circle"
-                                        @click="openAvanceModal(data)" title="Registrar Avance"
-                                        style="width: 32px; height: 32px; padding: 0;">
-                                        <i class="fas fa-tasks"></i>
-                                    </button>
-                                    <button class="btn btn-outline-warning btn-sm shadow-sm rounded-circle"
-                                        @click="openReprogramarModal(data)" title="Reprogramar"
-                                        style="width: 32px; height: 32px; padding: 0;">
-                                        <i class="fas fa-calendar-alt"></i>
-                                    </button>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <template v-if="isReadOnly && hasPendingReprogramming(data)">
+                                        <button class="btn btn-xs btn-success mr-2"
+                                            @click="aprobarReprogramacion(getPendingReprogramming(data))"
+                                            title="Aprobar Reprogramación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-danger"
+                                            @click="rechazarReprogramacion(getPendingReprogramming(data))"
+                                            title="Observar/Rechazar Reprogramación">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </template>
+                                    <template v-else>
+                                        <button class="btn btn-xs btn-link p-0 text-info" @click="openAvanceModal(data)"
+                                            title="Registrar Avance">
+                                            <i class="fas fa-tasks fa-lg"></i>
+                                        </button>
+                                        <template v-if="canManageActions">
+                                            <button class="btn btn-xs btn-link p-0 ml-3 text-warning"
+                                                @click="openActionModal(data)" title="Editar Acción">
+                                                <i class="fas fa-pencil-alt fa-lg"></i>
+                                            </button>
+                                            <button class="btn btn-xs btn-link p-0 ml-3 text-danger"
+                                                @click="confirmDelete(data)" title="Eliminar Acción">
+                                                <i class="fas fa-trash-alt fa-lg"></i>
+                                            </button>
+                                        </template>
+                                    </template>
                                 </div>
                             </template>
                         </Column>
@@ -131,23 +202,28 @@
             </div>
 
             <!-- Modals -->
-            <AccionesAvanceForm :show="showAvanceModal" :actionData="selectedAction" @close="closeAvanceModal"
-                @saved="refreshData" />
+            <AccionesAvanceForm :show="showAvanceModal" :actionData="selectedAction" :initialTab="activeTab"
+                :readonly="isReadOnly" @close="closeAvanceModal" @saved="refreshData" />
 
-            <AccionesReprogramarForm ref="reprogramarModal" @accion-gestionada="refreshData" />
+            <AccionesForm :show="showActionModal" :actionData="selectedAction" :hallazgoId="hallazgoId"
+                :procesos="hallazgo.procesos" @close="closeActionModal" @saved="refreshData" />
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useHallazgoStore } from '@/stores/hallazgoStore';
 import { storeToRefs } from 'pinia';
+import axios from 'axios';
+import { route } from 'ziggy-js';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ProgressBar from 'primevue/progressbar';
 import AccionesAvanceForm from './AccionesAvanceForm.vue';
-import AccionesReprogramarForm from './AccionesReprogramarForm.vue';
+import AccionesForm from './AccionesForm.vue';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     hallazgoId: {
@@ -156,39 +232,201 @@ const props = defineProps({
     }
 });
 
+const routeData = useRoute();
 const hallazgoStore = useHallazgoStore();
 const { hallazgoForm: hallazgo, todasLasAcciones: acciones, loading } = storeToRefs(hallazgoStore);
 
+// Navigation Logic
+const backRoute = computed(() => {
+    if (routeData.query.from) {
+        return { name: routeData.query.from };
+    }
+    return { name: 'hallazgos.mine.vue' };
+});
+
+const backLabel = computed(() => {
+    const name = backRoute.value.name;
+    if (name === 'hallazgos.index') return 'Solicitudes de Mejora';
+    if (name === 'hallazgos.mine.vue') return 'Mis Solicitudes';
+    if (name === 'hallazgos.eficacia') return 'Bandeja de Eficacia';
+    return 'Mis Solicitudes';
+});
+
+// Permissions
+const canManageActions = computed(() => {
+    const estado = (hallazgo.value.hallazgo_estado || '').toLowerCase();
+    return ['creado', 'evaluado'].includes(estado);
+});
+
 // Modal States
 const showAvanceModal = ref(false);
+const showActionModal = ref(false);
 const selectedAction = ref(null);
-const reprogramarModal = ref(null);
+const activeTab = ref('avance');
+const isReadOnly = computed(() => routeData.query.from === 'hallazgos.eficacia');
 
 // Methods
-const openAvanceModal = (accion) => {
+const openAvanceModal = (accion, tab = 'avance') => {
     selectedAction.value = accion;
+    activeTab.value = tab;
     showAvanceModal.value = true;
 };
 
 const closeAvanceModal = () => {
     showAvanceModal.value = false;
     selectedAction.value = null;
+    activeTab.value = 'avance';
 };
 
-const openReprogramarModal = (accion) => {
-    if (reprogramarModal.value) {
-        // Dispatch event as defined in AccionesReprogramarForm (formerly ReprogramarAccionModal)
-        // Or if it exposes a method. The previous code used global event listener 'open-reprogramar-modal'
-        // or passed data. Let's start by using a custom event or exposed method if available.
-        // Checking the previous file content (AccionesReprogramarForm.vue) would be ideal, 
-        // but assuming it uses the standard 'open-reprogramar-modal' event listener pattern common in this codebase:
-        const event = new CustomEvent('open-reprogramar-modal', { detail: accion });
-        document.dispatchEvent(event);
-    }
+const openActionModal = (accion = null) => {
+    selectedAction.value = accion;
+    showActionModal.value = true;
+};
+
+const closeActionModal = () => {
+    showActionModal.value = false;
+    selectedAction.value = null;
 };
 
 const refreshData = async () => {
-    await hallazgoStore.fetchTodasLasAcciones(props.hallazgoId);
+    await hallazgoStore.fetchTodasLasAcciones(props.hallazgoId, true);
+};
+
+const confirmDelete = (accion) => {
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: "¡No podrá revertir esta acción!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await hallazgoStore.deleteAccion(accion.id);
+                await refreshData();
+                Swal.fire('Eliminado', 'La acción ha sido eliminada.', 'success');
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo eliminar la acción.', 'error');
+            }
+        }
+    });
+};
+
+const hasPendingReprogramming = (accion) => {
+    return accion.reprogramaciones && accion.reprogramaciones.some(r => r.ar_estado === 'solicitado');
+};
+
+const getPendingReprogramming = (accion) => {
+    return accion.reprogramaciones.find(r => r.ar_estado === 'solicitado');
+};
+
+const executeAprobarReprogramacion = async (reprogramacion) => {
+    try {
+        await axios.post(route('acciones.reprogramar.aprobar', { accion: reprogramacion.accion_id, reprogramacion: reprogramacion.id }));
+        Swal.fire('Aprobado', 'La reprogramación ha sido aprobada.', 'success');
+        await refreshData();
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Error', 'No se pudo aprobar la solicitud.', 'error');
+    }
+};
+
+const executeRechazarReprogramacion = async (reprogramacion, motivo) => {
+    try {
+        await axios.post(route('acciones.reprogramar.rechazar', { accion: reprogramacion.accion_id, reprogramacion: reprogramacion.id }), { motivo: motivo });
+        Swal.fire('Observado', 'La solicitud ha sido observada.', 'success');
+        await refreshData();
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Error', 'No se pudo rechazar la solicitud.', 'error');
+    }
+};
+
+const aprobarReprogramacion = async (reprogramacion) => {
+    const result = await Swal.fire({
+        title: '¿Aprobar Reprogramación?',
+        text: `Nueva fecha solicitada: ${formatDate(reprogramacion.ar_fecha_nueva)}. Justificación: ${reprogramacion.ar_justificacion}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, Aprobar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#28a745'
+    });
+
+    if (result.isConfirmed) {
+        await executeAprobarReprogramacion(reprogramacion);
+    }
+};
+
+const rechazarReprogramacion = async (reprogramacion) => {
+    const result = await Swal.fire({
+        title: 'Observar/Rechazar Solicitud',
+        input: 'text',
+        inputLabel: 'Motivo de la observación',
+        inputPlaceholder: 'Ingrese el motivo...',
+        showCancelButton: true,
+        confirmButtonText: 'Observar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debe ingresar un motivo!';
+            }
+        }
+    });
+
+    if (result.isConfirmed) {
+        await executeRechazarReprogramacion(reprogramacion, result.value);
+    }
+};
+
+const reviewPendingRequest = async (reprogramacion) => {
+    if (!isReadOnly.value) return; // Sólo lectura (Especialista) puede revisar
+
+    if (!reprogramacion) return;
+
+    const result = await Swal.fire({
+        title: 'Revisión de Reprogramación',
+        html: `
+            <div class="text-left">
+                <p><strong>Fecha Actual:</strong> ${formatDate(reprogramacion.ar_fecha_anterior)}</p>
+                <p><strong>Nueva Fecha Solicitada:</strong> <span class="text-danger font-weight-bold">${formatDate(reprogramacion.ar_fecha_nueva)}</span></p>
+                <p><strong>Solicitante:</strong> ${reprogramacion.usuario ? reprogramacion.usuario.name : 'Usuario'}</p>
+                <p><strong>Justificación:</strong></p>
+                <div class="alert alert-secondary small p-2">${reprogramacion.ar_justificacion}</div>
+            </div>
+        `,
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-check"></i> Aprobar',
+        denyButtonText: '<i class="fas fa-times"></i> Observar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#28a745',
+        denyButtonColor: '#dc3545'
+    });
+
+    if (result.isConfirmed) {
+        await executeAprobarReprogramacion(reprogramacion);
+    } else if (result.isDenied) {
+        const motifResult = await Swal.fire({
+            title: 'Motivo de la observación',
+            input: 'text',
+            inputPlaceholder: 'Ingrese el motivo...',
+            showCancelButton: true,
+            confirmButtonText: 'Observar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value) return 'Debe ingresar un motivo';
+            }
+        });
+
+        if (motifResult.isConfirmed) {
+            await executeRechazarReprogramacion(reprogramacion, motifResult.value);
+        }
+    }
 };
 
 // Utils
@@ -224,6 +462,15 @@ const getStatusBadgeClass = (estado) => {
         'evaluado': 'bg-info text-white'
     };
     return map[estado] || 'bg-secondary text-white';
+};
+
+const getPorcentajeAvance = (accion) => {
+    if (!accion.avances || accion.avances.length === 0) return 0;
+    // Assuming advances are ordered by ID or created_at desc/asc. 
+    // In Controller I used ->get() which typically returns default order (asc id).
+    // Let's assume the last one is the latest.
+    const last = accion.avances[accion.avances.length - 1];
+    return last.accion_avance_porcentaje || 0;
 };
 
 onMounted(async () => {

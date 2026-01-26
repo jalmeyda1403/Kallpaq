@@ -154,4 +154,41 @@ class Hallazgo extends Model
 
         return $query->where('hallazgo_clasificacion', $clasificacion);
     }
+
+    /**
+     * Verifica y actualiza el estado del hallazgo según las reglas del negocio.
+     */
+    public function verificarYActualizarEstado()
+    {
+        $estadoActual = $this->hallazgo_estado;
+
+        // 1. Cerrado: última evaluación 'con eficacia'
+        $ultimaEval = $this->ultimaEvaluacion;
+        if ($ultimaEval && $ultimaEval->he_resultado === 'con eficacia') {
+            $this->hallazgo_estado = 'cerrado';
+        }
+        // 2. Concluido: todas las acciones 'implementada'
+        else {
+            $acciones = $this->acciones;
+            if ($acciones->count() > 0) {
+                $todasImplementadas = $acciones->every(function ($accion) {
+                    return $accion->accion_estado === 'implementada';
+                });
+
+                if ($todasImplementadas) {
+                    $this->hallazgo_estado = 'concluido';
+                } else if ($estadoActual === 'aprobado') {
+                    // 3. En Proceso: aprobado y fecha inicio de la acción con menor fecha alcanzada
+                    $fechaMinima = $acciones->min('accion_fecha_inicio');
+                    if ($fechaMinima && \Carbon\Carbon::parse($fechaMinima)->isPast()) {
+                        $this->hallazgo_estado = 'en proceso';
+                    }
+                }
+            }
+        }
+
+        if ($this->hallazgo_estado !== $estadoActual) {
+            $this->save();
+        }
+    }
 }

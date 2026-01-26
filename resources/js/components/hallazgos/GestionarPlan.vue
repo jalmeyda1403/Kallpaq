@@ -29,20 +29,21 @@
                     <small class="text-muted">{{ proceso.cod_proceso }}</small>
                 </div>
                 <button class="btn btn-danger btn-sm" @click="hallazgoStore.openGestionPlanModal(proceso)">
-                    <i class="fas fa-tasks mr-1"></i> Plan Acción
+                    <i class="fas fa-tasks mr-1"></i> {{ hallazgoStore.isReadOnly ? 'Ver Plan Acción' : 'Plan Acción' }}
                 </button>
             </div>
         </div>
 
         <!-- El modal de gestión se renderiza aquí cuando es llamado por el store -->
-        <PlanesAccion v-if="hallazgoStore.isGestionPlanModalOpen" :hallazgoId="hallazgoStore.hallazgoForm.id" :embedded="true" />
+        <PlanesAccionWizard v-if="hallazgoStore.isGestionPlanModalOpen" :hallazgoId="hallazgoStore.hallazgoForm.id"
+            :embedded="true" />
     </div>
 </template>
 
 <script setup>
 
 import { useHallazgoStore } from '@/stores/hallazgoStore';
-import PlanesAccion from '../acciones/PlanesAccion.vue';
+import PlanesAccionWizard from '../acciones/PlanesAccionWizard.vue';
 
 const hallazgoStore = useHallazgoStore();
 
@@ -60,8 +61,8 @@ const hallazgoStore = useHallazgoStore();
     display: flex;
     align-items: center;
 }
+
 .table {
     font-size: 12px;
 }
-
 </style>

@@ -28,6 +28,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
         loading: false,
         errors: {},
         currentTab: 'HallazgoForm', // Pestaña inicial del modal
+        isReadOnly: false, // Flag para modo solo lectura
 
         // Datos para los selects
         procesos: [],
@@ -43,6 +44,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
         historialAsignaciones: [],
         loadingAsignaciones: false,
         especialistas: [],
+        asignacionesCargadasParaHallazgoId: null,
 
         //Estado Planes de Acción
         isGestionPlanModalOpen: false,
@@ -57,6 +59,11 @@ export const useHallazgoStore = defineStore('hallazgo', {
         accionesDelPlan: [],
         todasLasAcciones: [], // Nueva propiedad para almacenar todas las acciones de un hallazgo
 
+        //Flags de optimización
+        accionesCargadasParaHallazgoId: null,
+        causaCargadaParaHallazgoId: null,
+        hallazgoCargadoId: null,
+
     }),
 
     getters: {
@@ -65,8 +72,8 @@ export const useHallazgoStore = defineStore('hallazgo', {
 
         // Getter para verificar si las acciones y el análisis de causa raíz están permitidos
         accionesPermitidas: (state) => {
-            const estado = state.hallazgoForm.hallazgo_estado;
-            return estado === 'creado' || estado === 'modificado' || estado === 'evaluado';
+            const estado = (state.hallazgoForm.hallazgo_estado || '').toLowerCase();
+            return ['creado', 'evaluado'].includes(estado);
         },
 
         // Getter para verificar si las acciones de gestión (reprogramar y concluir) están permitidas
@@ -125,11 +132,30 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.currentTab = 'HallazgoForm';
 
             if (hallazgo) {
-                this.modalTitle = hallazgo.id ? 'Editar Solicitud de Mejora' : 'Nueva Solicitud de Mejora';
+                // Si el estado es concluido, desestimado o cerrado, el modal debe ser de solo lectura
+                const readOnlyStates = ['concluido', 'desestimado', 'cerrado'];
+                if (readOnlyStates.includes(hallazgo.hallazgo_estado?.toLowerCase())) {
+                    this.isReadOnly = true;
+                    this.modalTitle = 'Visualizar Solicitud de Mejora';
+                } else {
+                    this.modalTitle = hallazgo.id ? 'Editar Solicitud de Mejora' : 'Nueva Solicitud de Mejora';
+                }
+
                 await this.fetchHallazgo(hallazgo.id); // Carga los datos completos del hallazgo
             } else {
                 this.modalTitle = 'Registrar Nueva Solicitud de Mejora';
             }
+            this.isModalOpen = true;
+        },
+
+        // Abre el modal en modo solo lectura para visualización
+        async openViewOnlyModal(hallazgo) {
+            this.resetForm();
+            this.isReadOnly = true;
+            this.loadGlobalData();
+            this.currentTab = 'HallazgoForm';
+            this.modalTitle = 'Visualizar Solicitud de Mejora';
+            await this.fetchHallazgo(hallazgo.id);
             this.isModalOpen = true;
         },
 
@@ -140,7 +166,10 @@ export const useHallazgoStore = defineStore('hallazgo', {
         },
 
         // Obtiene los datos de un hallazgo específico desde la API
-        async fetchHallazgo(id) {
+        async fetchHallazgo(id, force = false) {
+            if (!id) return;
+            if (!force && this.hallazgoCargadoId === id) return;
+
             try {
                 this.loading = true;
                 const response = await axios.get(route('hallazgo.show', { hallazgo: id }));
@@ -158,6 +187,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 }
 
                 this.errors = {};
+                this.hallazgoCargadoId = id;
 
             } catch (error) {
                 console.error('Error al cargar el hallazgo:', error);
@@ -255,13 +285,17 @@ export const useHallazgoStore = defineStore('hallazgo', {
         },
 
         //Metodos para asignar especialista
-        async fetchAsignaciones() {
+        async fetchAsignaciones(force = false) {
             if (!this.hallazgoForm.id) return;
+            if (!force && this.asignacionesCargadasParaHallazgoId === this.hallazgoForm.id) {
+                return;
+            }
             this.loadingAsignaciones = true;
             try {
                 const response = await axios.get(route('hallazgo.asignaciones.listar', { hallazgo: this.hallazgoForm.id }));
                 this.especialistaActual = response.data.actual;
                 this.historialAsignaciones = response.data.historial;
+                this.asignacionesCargadasParaHallazgoId = this.hallazgoForm.id;
             } catch (error) {
                 console.error("Error al cargar las asignaciones:", error);
             } finally {
@@ -285,6 +319,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
 
                 // IMPORTANT: Update hallazgoForm.especialista_id to reflect the new assignment
                 this.hallazgoForm.especialista_id = especialistaId;
+                this.asignacionesCargadasParaHallazgoId = this.hallazgoForm.id;
             } catch (error) {
                 console.error("Error al asignar el especialista:", error);
             } finally {
@@ -422,6 +457,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
                     this.causaRaiz
                 );
                 this.causaRaiz = response.data;
+                this.causaCargadaParaHallazgoId = this.hallazgoForm.id;
                 Swal.fire({
                     title: 'Guardado',
                     text: 'El análisis de causa raíz ha sido guardado correctamente.',
@@ -478,8 +514,13 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.errors = {};
             this.modalTitle = '';
             this.currentTab = 'HallazgoForm';
+            this.isReadOnly = false;
             this.especialistaActual = null;
             this.historialAsignaciones = [];
+            this.asignacionesCargadasParaHallazgoId = null;
+            this.accionesCargadasParaHallazgoId = null;
+            this.causaCargadaParaHallazgoId = null;
+            this.hallazgoCargadoId = null;
             this.loadingAsignaciones = false;
             this.isGestionPlanModalOpen = false;
             this.procesoParaGestionar = null;
@@ -487,6 +528,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.causaRaiz = { hc_metodo: 'cinco_porques' };
             this.accionesDelPlan = [];
             this.loadingPlan = false;
+            this.procesosCargadasParaDocumentoId = null;
         },
         async fetchAcciones() {
             if (!this.hallazgoForm.id || !this.procesoParaGestionar) return;
@@ -494,11 +536,15 @@ export const useHallazgoStore = defineStore('hallazgo', {
             this.accionesDelPlan = response.data;
         },
         // Nueva acción para la vista general de Planes de Acción
-        async fetchTodasLasAcciones(hallazgoId) {
+        async fetchTodasLasAcciones(hallazgoId, force = false) {
+            if (!hallazgoId) return;
+            if (!force && this.accionesCargadasParaHallazgoId === hallazgoId) return;
+
             this.loading = true;
             try {
                 const response = await axios.get(route('api.acciones.por-hallazgo', { hallazgo: hallazgoId }));
                 this.todasLasAcciones = response.data;
+                this.accionesCargadasParaHallazgoId = hallazgoId;
             } catch (error) {
                 console.error("Error al cargar todas las acciones:", error);
                 this.errors.fetch = 'No se pudieron cargar las acciones.';
@@ -506,7 +552,10 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 this.loading = false;
             }
         },
-        async fetchCausaRaiz(hallazgoId) {
+        async fetchCausaRaiz(hallazgoId, force = false) {
+            if (!hallazgoId) return;
+            if (!force && this.causaCargadaParaHallazgoId === hallazgoId) return;
+
             try {
                 const response = await axios.get(route('hallazgos.causas.listar', { hallazgo: hallazgoId }));
                 if (response.data) {
@@ -514,6 +563,7 @@ export const useHallazgoStore = defineStore('hallazgo', {
                 } else {
                     this.causaRaiz = { hc_metodo: 'cinco_porques' };
                 }
+                this.causaCargadaParaHallazgoId = hallazgoId;
             } catch (error) {
                 console.error("Error al cargar el análisis de causa:", error);
                 this.causaRaiz = { hc_metodo: 'cinco_porques' };

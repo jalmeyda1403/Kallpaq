@@ -5,117 +5,114 @@
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title">{{ isEditing ? 'Editar Acción' : 'Nueva Acción' }}</h5>
+                            <h5 class="modal-title">
+                                {{ readonly ? 'Visualizar Acción' : (isEditing ? 'Editar Acción' : 'Nueva Acción') }}
+                            </h5>
                             <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <form @submit.prevent="submitForm">
-                            <div class="modal-body">
-                                <div class="row" v-if="!isEditing">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold custom-label">Proceso Afectado <span
-                                                    class="text-danger">*</span></label>
-                                            <select v-model="form.proceso_id" class="form-control" required>
-                                                <option value="" disabled>Seleccione un proceso...</option>
-                                                <option v-for="proceso in procesos" :key="proceso.id"
-                                                    :value="proceso.id">
-                                                    {{ proceso.proceso_nombre }}
-                                                </option>
-                                            </select>
+                            <fieldset :disabled="readonly" class="border-0 p-0 m-0">
+                                <div class="modal-body">
+                                    <div class="row" v-if="!isEditing">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold custom-label">Proceso Afectado <span
+                                                        class="text-danger">*</span></label>
+                                                <select v-model="form.proceso_id" class="form-control" required>
+                                                    <option value="" disabled>Seleccione un proceso...</option>
+                                                    <option v-for="proceso in procesos" :key="proceso.id"
+                                                        :value="proceso.id">
+                                                        {{ proceso.proceso_nombre }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold custom-label">Tipo de Acción <span
+                                                        class="text-danger">*</span></label>
+                                                <select v-model="form.accion_tipo" class="form-control" required>
+                                                    <option value="" disabled>Seleccione un tipo...</option>
+                                                    <option value="corrección">Corrección (Inmediata)</option>
+                                                    <option value="acción correctiva">Acción Correctiva</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold custom-label">Tipo de Acción <span
-                                                    class="text-danger">*</span></label>
-                                            <select v-model="form.accion_tipo" class="form-control" required>
-                                                <option value="" disabled>Seleccione un tipo...</option>
-                                                <option value="corrección">Corrección (Inmediata)</option>
-                                                <option value="acción correctiva">Acción Correctiva</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="form-group">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <label class="font-weight-bold custom-label">Descripción <span
+                                    <div class="form-group">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <label class="font-weight-bold custom-label">Descripción <span
+                                                    class="text-danger">*</span></label>
+                                            <small class="text-muted">Caracteres: {{ form.accion_descripcion.length }} /
+                                                500</small>
+                                        </div>
+                                        <textarea class="form-control" v-model="form.accion_descripcion" rows="5"
+                                            :maxlength="500" required></textarea>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold custom-label">Responsable <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control"
+                                                    v-model="form.accion_responsable" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold custom-label">Correo Responsable</label>
+                                                <input type="email" class="form-control"
+                                                    v-model="form.accion_responsable_correo">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold custom-label">Fecha Inicio <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="date" class="form-control"
+                                                    v-model="form.accion_fecha_inicio" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold custom-label">Fecha Fin Planificada <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="date" class="form-control"
+                                                    v-model="form.accion_fecha_fin_planificada" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="font-weight-bold custom-label">Estado <span
                                                 class="text-danger">*</span></label>
-                                        <small class="text-muted">Caracteres: {{ form.accion_descripcion.length }} /
-                                            500</small>
+                                        <select class="form-control" v-model="form.accion_estado" required>
+                                            <option value="programada">Programada</option>
+                                            <option value="en proceso">En Proceso</option>
+                                            <option value="implementada">Implementada</option>
+                                            <option value="desestimada">Desestimada</option>
+                                            <option value="finalizada">Finalizada</option>
+                                        </select>
                                     </div>
-                                    <textarea class="form-control" v-model="form.accion_descripcion" rows="5"
-                                        :maxlength="500" required></textarea>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold custom-label">Responsable <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" v-model="form.accion_responsable"
-                                                required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold custom-label">Correo Responsable</label>
-                                            <input type="email" class="form-control"
-                                                v-model="form.accion_responsable_correo">
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold custom-label">Fecha Inicio <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="date" class="form-control" v-model="form.accion_fecha_inicio"
-                                                required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold custom-label">Fecha Fin Planificada <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="date" class="form-control"
-                                                v-model="form.accion_fecha_fin_planificada" required>
-                                        </div>
-                                    </div>
                                 </div>
-
-                                <div class="form-group">
-                                    <label class="font-weight-bold custom-label">Estado <span
-                                            class="text-danger">*</span></label>
-                                    <select class="form-control" v-model="form.accion_estado" required>
-                                        <option value="programada">Programada</option>
-                                        <option value="en proceso">En Proceso</option>
-                                        <option value="implementada">Implementada</option>
-                                        <option value="desestimada">Desestimada</option>
-                                        <option value="finalizada">Finalizada</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <label class="font-weight-bold custom-label">Comentario</label>
-                                        <small class="text-muted">Caracteres: {{ form.accion_comentario.length }} /
-                                            500</small>
-                                    </div>
-                                    <textarea class="form-control" v-model="form.accion_comentario" rows="5"
-                                        :maxlength="500"></textarea>
-                                </div>
-                            </div>
+                            </fieldset>
                             <div class="modal-footer d-flex justify-content-between">
-                                <small class="text-muted">* Campos obligatorios</small>
+                                <small class="text-muted">{{ readonly ? '' : '* Campos obligatorios' }}</small>
                                 <div>
                                     <button type="button" class="btn btn-secondary" @click="closeModal">
-                                        <i class="fa fa-times mr-1"></i> Cancelar
+                                        <i class="fa fa-times mr-1"></i> {{ readonly ? 'Cerrar' : 'Cancelar' }}
                                     </button>
-                                    <button type="submit" class="btn btn-danger ml-2" :disabled="saving">
+                                    <button v-if="!readonly" type="submit" class="btn btn-danger ml-2"
+                                        :disabled="saving">
                                         <i class="fa fa-save mr-1"></i>
                                         <span v-if="saving" class="spinner-border spinner-border-sm mr-1" role="status"
                                             aria-hidden="true"></span>
@@ -144,6 +141,10 @@ const props = defineProps({
     procesos: {
         type: Array,
         default: () => []
+    },
+    readonly: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -163,8 +164,7 @@ const form = reactive({
     accion_responsable_correo: '',
     accion_fecha_inicio: '',
     accion_fecha_fin_planificada: '',
-    accion_estado: 'programada',
-    accion_comentario: ''
+    accion_estado: 'programada'
 });
 
 const isEditing = computed(() => !!form.id);
@@ -178,7 +178,6 @@ watch(() => props.show, (newVal) => {
             if (form.accion_fecha_fin_planificada) form.accion_fecha_fin_planificada = form.accion_fecha_fin_planificada.split('T')[0];
 
             // Handle nested relationships or missing fields if necessary
-            if (!form.accion_comentario) form.accion_comentario = '';
             if (!form.accion_responsable_correo) form.accion_responsable_correo = '';
         } else {
             resetForm();
@@ -219,7 +218,6 @@ const resetForm = () => {
     form.accion_fecha_inicio = '';
     form.accion_fecha_fin_planificada = '';
     form.accion_estado = 'programada';
-    form.accion_comentario = '';
 };
 
 const closeModal = () => {

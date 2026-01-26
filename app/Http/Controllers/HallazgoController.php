@@ -163,8 +163,8 @@ class HallazgoController extends Controller
     public function store(Request $request)
     {
         // Generar el valor para hallazgo_cod
-        $proceso = Proceso::find($request->proceso_id);
-        $ultimoHallazgo = Hallazgo::where('proceso_id', $request->proceso_id)->latest()->first();
+        $proceso = Proceso::find($request->proceso_id, ['*']);
+        $ultimoHallazgo = Hallazgo::where('proceso_id', '=', $request->proceso_id, 'and')->latest()->first();
         $correlativo = $ultimoHallazgo ? (int) explode('-', $ultimoHallazgo->hallazgo_cod)[3] + 1 : 1;
         $clasificacion = ($request->clasificacion === 'NCM' || $request->clasificacion === 'Ncme') ? 'SMP' : $request->clasificacion;
         $hallazgo_cod = $clasificacion . '-' . $proceso->proceso_sigla . '-' . $request->origen . '-' . sprintf('%03d', $correlativo);
@@ -253,9 +253,9 @@ class HallazgoController extends Controller
     {
         $hallazgo = Hallazgo::findOrFail($id);
 
-        $planesAccion = Accion::where('hallazgo_id', $id)->get();
-        $correctivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 1)->count();
-        $preventivas = Accion::where('hallazgo_id', $id)->where('es_correctiva', 0)->count();
+        $planesAccion = Accion::where('hallazgo_id', '=', $id, 'and')->get();
+        $correctivas = Accion::where('hallazgo_id', '=', $id, 'and')->where('es_correctiva', '=', 1, 'and')->count();
+        $preventivas = Accion::where('hallazgo_id', '=', $id, 'and')->where('es_correctiva', '=', 0, 'and')->count();
         $logoPath = public_path('images/logo.png');
 
         $pdf = PDF::loadView('smp.planPDF', compact('logoPath', 'planesAccion', 'hallazgo', 'correctivas', 'preventivas'));
@@ -400,7 +400,7 @@ class HallazgoController extends Controller
         $ouoIds = $userOuos->pluck('id');
 
         // Obtener los procesos asociados a esas OUOs
-        $procesoIds = ProcesoOuo::whereIn('id_ouo', $ouoIds)->pluck('id_proceso')->unique();
+        $procesoIds = ProcesoOuo::whereIn('id_ouo', $ouoIds, 'and', false)->pluck('id_proceso')->unique();
 
         // Filtrar hallazgos relacionados con esos procesos
         $query = Hallazgo::with('procesos', 'acciones');
@@ -469,7 +469,7 @@ class HallazgoController extends Controller
                 ]);
 
                 // Get the name of the newly assigned specialist
-                $specialistName = User::find($validatedData['especialista_id'])->name;
+                $specialistName = User::find($validatedData['especialista_id'], ['*'])->name;
 
                 // Create a HallazgoMovimientos record
                 $hallazgo->movimientos()->create([ // Assuming 'movimientos' is the relationship to HallazgoMovimientos
@@ -499,7 +499,7 @@ class HallazgoController extends Controller
 
         // Iniciar consulta con relaciones necesarias
         // Iniciar consulta con relaciones necesarias
-        $query = Hallazgo::with(['procesos', 'acciones', 'especialista', 'evaluaciones']);
+        $query = Hallazgo::with(['procesos', 'acciones.reprogramaciones', 'especialista', 'evaluaciones']);
         // ->where('hallazgo_estado', 'concluido'); // Comentado para mostrar todos los asignados
 
         // Filtrar SIEMPRE por el especialista actual (Mis SMP Asignadas)
@@ -534,6 +534,11 @@ class HallazgoController extends Controller
     // Método para guardar la evaluación de eficacia
     public function storeEvaluacion(Request $request, Hallazgo $hallazgo)
     {
+        // Solo el especialista asignado puede evaluar eficacia
+        if (auth()->id() !== $hallazgo->especialista_id) {
+            return response()->json(['error' => 'Solo el especialista asignado puede registrar la evaluación de eficacia.'], 403);
+        }
+
         $validatedData = $request->validate([
             'resultado' => 'required|in:con eficacia,sin eficacia',
             'observaciones' => 'required|string',
@@ -543,7 +548,7 @@ class HallazgoController extends Controller
 
         try {
             DB::transaction(function () use ($hallazgo, $validatedData) {
-                // Buscar si ya existe una evaluación
+                // Buscar si ya existe una evaluación (en el ciclo actual)
                 $evaluacion = $hallazgo->evaluaciones()->first();
 
                 if ($evaluacion) {
@@ -564,20 +569,13 @@ class HallazgoController extends Controller
                     ]);
                 }
 
-                // Determinar el nuevo estado según el resultado
                 if ($validatedData['resultado'] === 'sin eficacia') {
-                    // Incrementar el ciclo
                     $hallazgo->hallazgo_ciclo = ($hallazgo->hallazgo_ciclo ?? 0) + 1;
                     $hallazgo->hallazgo_estado = 'evaluado';
-                    // NO establecer fecha de cierre
-                } else { // 'con eficacia'
-                    $hallazgo->hallazgo_estado = 'cerrado';
-                    $hallazgo->hallazgo_fecha_cierre = now();
                 }
 
                 $hallazgo->save();
-
-                // El HallazgoObserver se encargará de registrar el movimiento automáticamente
+                $hallazgo->verificarYActualizarEstado();
             });
 
             return response()->json(['message' => 'Evaluación registrada correctamente.']);
@@ -590,6 +588,11 @@ class HallazgoController extends Controller
 
     public function uploadEvaluacionEvidencia(Request $request, Hallazgo $hallazgo)
     {
+        // Solo el especialista asignado
+        if (auth()->id() !== $hallazgo->especialista_id) {
+            return response()->json(['error' => 'No tiene permisos para subir evidencias de evaluación.'], 403);
+        }
+
         $request->validate([
             'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240', // 10MB max
         ]);
@@ -632,7 +635,8 @@ class HallazgoController extends Controller
 
     public function getEvaluacion(Hallazgo $hallazgo)
     {
-        return response()->json($hallazgo->evaluaciones()->first());
+        $hallazgo->verificarYActualizarEstado();
+        return response()->json($hallazgo->evaluaciones()->with('evaluador:id,name')->latest()->first());
     }
 
     public function uploadPlanAccion(Request $request, Hallazgo $hallazgo)
@@ -669,10 +673,27 @@ class HallazgoController extends Controller
             return response()->json(['error' => 'Debe adjuntar el plan de acción firmado antes de enviar.'], 422);
         }
 
-        // Cambiar estado a 'aprobado' según indicación del usuario
+        // Cambiar estado a 'aprobado'
         $hallazgo->hallazgo_estado = 'aprobado';
         $hallazgo->save();
 
+        // Verificar si transita a 'en proceso' inmediatamente
+        $hallazgo->verificarYActualizarEstado();
+
         return response()->json(['message' => 'Plan de acción enviado correctamente.', 'estado' => $hallazgo->hallazgo_estado]);
+    }
+
+    public function desestimar(Hallazgo $hallazgo)
+    {
+        // Solo se puede desestimar si no está cerrado
+        if ($hallazgo->hallazgo_estado === 'cerrado') {
+            return response()->json(['error' => 'No se puede desestimar un hallazgo cerrado.'], 422);
+        }
+
+        $hallazgo->hallazgo_estado = 'desestimado';
+        $hallazgo->hallazgo_fecha_desestimacion = now();
+        $hallazgo->save();
+
+        return response()->json(['message' => 'Hallazgo desestimado correctamente.', 'estado' => $hallazgo->hallazgo_estado]);
     }
 }

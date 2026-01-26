@@ -76,7 +76,7 @@ Route::get('/debug/recursos', function () {
 
 Auth::routes();
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 Route::get('home', function () {
     return view('app');
@@ -173,11 +173,9 @@ Route::group(['prefix' => 'api'], function () {
 Route::resource('smp', HallazgoController::class);
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
 Route::resource('acciones', AccionController::class)->except(['destroy', 'update']);
-Route::post('/acciones/{accion}/reprogramar', [AccionController::class, 'reprogramar'])->name('acciones.reprogramar');
-Route::post('/acciones/{accion}/concluir', [AccionController::class, 'concluir'])->name('acciones.concluir');
 Route::get('/acciones/evidencia/{path}', [AccionController::class, 'downloadEvidencia'])->name('acciones.download-evidencia')->where('path', '.*');
-Route::post('/acciones/{accion}/upload-evidencia', [AccionController::class, 'uploadEvidencia'])->name('acciones.upload-evidencia');
-Route::post('/acciones/{accion}/delete-evidencia', [AccionController::class, 'deleteEvidencia'])->name('acciones.delete-evidencia');
+// Upload/Delete evidencia moved to controller group or specific methods if needed. 
+// Old definitions removed to consolidate.
 
 
 Route::resource('ouos', OUOController::class);
@@ -322,6 +320,7 @@ Route::controller(HallazgoController::class)
         Route::post('/{hallazgo}/adjuntos', 'subirAdjunto')->name('hallazgo.adjuntos.store');
         Route::post('/{hallazgo}/plan-accion/upload', 'uploadPlanAccion')->name('hallazgo.plan-accion.upload');
         Route::post('/{hallazgo}/plan-accion/enviar', 'enviarPlanAccion')->name('hallazgo.plan-accion.enviar');
+        Route::post('/{hallazgo}/desestimar', 'desestimar')->name('hallazgo.desestimar');
 
         // Rutas para Verificación de Eficacia
         Route::get('/eficacia/listar', 'apiListarEficacia')->name('hallazgo.eficacia.listar');
@@ -401,7 +400,11 @@ Route::controller(AccionController::class) // <-- CAMBIO
     ->group(function () {
         Route::put('/', 'updateAccion')->name('update');
         Route::delete('/', 'destroyAccion')->name('destroy');
-        Route::post('/avance', 'registrarAvance')->name('avance'); // New route
+        Route::post('/reprogramar', 'reprogramar')->name('reprogramar');
+        Route::post('/concluir', 'concluir')->name('concluir');
+        Route::post('/avance', 'registrarAvance')->name('avance');
+        Route::post('/reprogramaciones/{reprogramacion}/aprobar', 'aprobarReprogramacion')->name('reprogramar.aprobar');
+        Route::post('/reprogramaciones/{reprogramacion}/rechazar', 'rechazarReprogramacion')->name('reprogramar.rechazar');
     });
 
 // Análisis de Causa Raíz

@@ -16,18 +16,25 @@ class Accion extends Model
         'accion_cod',
         'accion_tipo',
         'accion_descripcion',
-        'accion_comentario',
+        'accion_descripcion',
         'accion_fecha_inicio',
         'accion_fecha_fin_planificada',
         'accion_fecha_fin_reprogramada',
         'accion_fecha_cancelada',
         'accion_fecha_fin_real',
         'accion_justificacion',
-        'accion_ruta_evidencia',
         'accion_responsable',
         'accion_responsable_correo',
         'accion_estado',
         'accion_ciclo', // Added accion_ciclo
+    ];
+
+    protected $casts = [
+        'accion_fecha_inicio' => 'date',
+        'accion_fecha_fin_planificada' => 'date',
+        'accion_fecha_fin_reprogramada' => 'date',
+        'accion_fecha_cancelada' => 'date',
+        'accion_fecha_fin_real' => 'date',
     ];
 
     public function hallazgoProceso()
@@ -47,6 +54,16 @@ class Accion extends Model
     public function reprogramaciones()
     {
         return $this->hasMany(AccionReprogramacion::class);
+    }
+
+    public function avances()
+    {
+        return $this->hasMany(AccionAvance::class);
+    }
+
+    public function movimientos()
+    {
+        return $this->hasMany(AccionMovimientos::class, 'accion_id');
     }
 
 }

@@ -17,6 +17,7 @@ class AccionReprogramacion extends Model
         'ar_fecha_nueva',
         'ar_justificacion',
         'ar_usuario_id',
+        'ar_estado',
     ];
 
     protected $casts = [
