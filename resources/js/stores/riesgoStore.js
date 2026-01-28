@@ -16,7 +16,8 @@ export const useRiesgoStore = defineStore('riesgo', {
             factor_id: null,
             riesgo_matriz: '',
             riesgo_nivel: '',
-            riesgo_estado: ''
+            riesgo_estado: '',
+            controles_ids: []
         },
         errors: {},
         acciones: [],
@@ -87,7 +88,11 @@ export const useRiesgoStore = defineStore('riesgo', {
             this.asignacionesLoadedForRiesgoId = null; // Reset cache when opening modal
             if (riesgo) {
                 this.riesgoActual = riesgo;
-                this.riesgoForm = { ...riesgo, proceso_nombre: riesgo.proceso ? riesgo.proceso.proceso_nombre : '' };
+                this.riesgoForm = {
+                    ...riesgo,
+                    proceso_nombre: riesgo.proceso ? riesgo.proceso.proceso_nombre : '',
+                    controles_ids: riesgo.controles ? riesgo.controles.map(c => c.id) : []
+                };
                 this.isEditing = true;
                 this.modalTitle = `Editar Riesgo: ${riesgo.id}`;
                 this.currentTab = 'RiesgoForm';
@@ -104,7 +109,8 @@ export const useRiesgoStore = defineStore('riesgo', {
                     factor_id: null,
                     riesgo_matriz: '',
                     riesgo_nivel: '',
-                    riesgo_estado: ''
+                    riesgo_estado: '',
+                    controles_ids: []
                 };
                 this.isEditing = false;
                 this.modalTitle = 'Nuevo Riesgo';

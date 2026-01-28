@@ -64,13 +64,13 @@ class RiesgoController extends Controller
             $query = Riesgo::with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         } elseif ($scope === 'specialist') {
             // Scope: Specialist - Risks where the user is the assigned specialist
-            $query = Riesgo::where('especialista_id', $user->id)
+            $query = Riesgo::where('especialista_id', '=', $user->id, 'and')
                 ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         } else {
             // Default Scope: OUO - Risks related to user's OUOs processes where they are Owner or Delegate
             $procesosIds = $user->getProcesosAsociadosIds();
 
-            $query = Riesgo::whereIn('proceso_id', $procesosIds)
+            $query = Riesgo::whereIn('proceso_id', $procesosIds, 'and', false)
                 ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
         }
 
@@ -133,7 +133,7 @@ class RiesgoController extends Controller
     // Obtener un riesgo con todas sus relaciones para la vista de detalle
     public function getRiesgoCompleto(Riesgo $riesgo)
     {
-        $riesgo->load(['proceso', 'factor', 'obligacion', 'revisiones.responsable']);
+        $riesgo->load(['proceso', 'factor', 'obligacion', 'revisiones.responsable', 'controles']);
         return response()->json($riesgo);
     }
 
@@ -158,14 +158,19 @@ class RiesgoController extends Controller
     public function updateTratamiento(Request $request, Riesgo $riesgo)
     {
         $validated = $request->validate([
-            'riesgo_tratamiento' => 'required|string', // Estrategia: Reducir, Aceptar, etc.
-            'controles' => 'nullable|string',
-            // Aquí se podrían agregar campos para planes de acción específicos si se decide separar
+            'riesgo_tratamiento' => 'required|string',
+            'controles_ids' => 'nullable|array', // New array of IDs
+            'controles_ids.*' => 'exists:controles,id'
         ]);
 
-        $riesgo->update($validated);
+        $riesgo->update(['riesgo_tratamiento' => $validated['riesgo_tratamiento']]);
 
-        return response()->json($riesgo);
+        // Sync M:N relationship
+        if (isset($validated['controles_ids'])) {
+            $riesgo->controles()->sync($validated['controles_ids']);
+        }
+
+        return response()->json($riesgo->load('controles'));
     }
 
     // Actualizar Verificación de Eficacia (Riesgo Residual)
@@ -206,7 +211,7 @@ class RiesgoController extends Controller
         // Verificar si se recibe un `obligacion_id`
         if ($request->has('obligacion_id') && $request->obligacion_id) {
             // Obtener la obligación y su proceso_id
-            $obligacion = Obligacion::find($request->obligacion_id);
+            $obligacion = Obligacion::find($request->obligacion_id, ['*']);
             $proceso_id = $obligacion->proceso_id;
             $request->merge(['proceso_id' => $proceso_id]);
         } else {
@@ -221,7 +226,7 @@ class RiesgoController extends Controller
             $riesgos = $obligacion->riesgos;
 
         } else {
-            $proceso = Proceso::find($request->proceso_id);
+            $proceso = Proceso::find($request->proceso_id, ['*']);
             $riesgos = $proceso->riesgos;
         }
 
@@ -250,7 +255,12 @@ class RiesgoController extends Controller
     public function update(Request $request, Riesgo $riesgo)
     {
         $riesgo->update($request->all());
-        $riesgo->load('proceso');
+
+        if ($request->has('controles_ids')) {
+            $riesgo->controles()->sync($request->controles_ids);
+        }
+
+        $riesgo->load(['proceso', 'controles']);
 
         return response()->json($riesgo);
     }
@@ -258,7 +268,7 @@ class RiesgoController extends Controller
     // Eliminar un riesgo de la base de datos
     public function destroy(Riesgo $riesgo)
     {
-        $riesgo->delete();
+        Riesgo::destroy($riesgo->id);
 
         return response()->json($riesgo);
     }
@@ -380,10 +390,10 @@ class RiesgoController extends Controller
     public function buscar(Request $request)
     {
         $q = $request->query('q', '');
-        $riesgos = Riesgo::where('riesgo_nombre', 'LIKE', "%{$q}%")
-                         ->orWhere('riesgo_cod', 'LIKE', "%{$q}%")
-                         ->limit(20)
-                         ->get();
+        $riesgos = Riesgo::where('riesgo_nombre', 'LIKE', "%{$q}%", 'and')
+            ->orWhere('riesgo_cod', 'LIKE', "%{$q}%")
+            ->limit(20)
+            ->get();
 
         $riesgos = $riesgos->map(function ($r) {
             return [

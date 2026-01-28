@@ -93,21 +93,10 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label class="font-weight-bold mb-0">Controles Actuales <span
-                                                    class="text-danger">*</span></label>
-                                            <small class="text-muted">
-                                                {{ store.riesgoForm.riesgo_controles ?
-                                                    store.riesgoForm.riesgo_controles.length : 0 }}/500
-                                            </small>
-                                        </div>
-                                        <textarea class="form-control" id="riesgo_controles" rows="5"
-                                            v-model="store.riesgoForm.riesgo_controles"
-                                            placeholder="Describa los controles actuales para mitigar este riesgo..."
-                                            maxlength="500"
-                                            :class="{ 'is-invalid': store.errors.riesgo_controles }"></textarea>
-                                        <div class="invalid-feedback" v-if="store.errors.riesgo_controles">
-                                            {{ store.errors.riesgo_controles[0] }}
+                                        <ControlSelector v-model="store.riesgoForm.controles_ids"
+                                            label="Controles Actuales" />
+                                        <div class="invalid-feedback d-block" v-if="store.errors.controles_ids">
+                                            {{ store.errors.controles_ids[0] }}
                                         </div>
                                     </div>
                                 </div>
@@ -276,6 +265,7 @@
 import { ref, watch, computed } from 'vue';
 import { useRiesgoStore } from '@/stores/riesgoStore';
 import Dialog from 'primevue/dialog';
+import ControlSelector from '../controles/ControlSelector.vue';
 
 const store = useRiesgoStore();
 

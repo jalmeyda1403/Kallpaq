@@ -75,8 +75,7 @@
                                         </div>
                                         <textarea v-model="form.analisis_humano" class="form-control" rows="5" required
                                             placeholder="Justifique por qué esta norma aplica o no a la organización..."
-                                            maxlength="500"
-                                            @input="updateAnalisisCharCount"></textarea>
+                                            maxlength="500" @input="updateAnalisisCharCount"></textarea>
                                     </div>
 
                                     <!-- 3. Riesgo y Tipo de Obligación -->
@@ -115,13 +114,13 @@
                                                 <i class="fas fa-clipboard-list mr-1"></i>Obligación Principal
                                             </label>
                                             <small class="form-text text-muted ml-auto">
-                                                {{ form.obligacion_principal ? form.obligacion_principal.length : 0 }}/500
+                                                {{ form.obligacion_principal ? form.obligacion_principal.length : 0
+                                                }}/500
                                             </small>
                                         </div>
                                         <textarea v-model="form.obligacion_principal" class="form-control" rows="5"
                                             placeholder="Describa la obligación principal derivada de esta norma"
-                                            maxlength="500"
-                                            @input="updateObligacionCharCount"></textarea>
+                                            maxlength="500" @input="updateObligacionCharCount"></textarea>
                                     </div>
 
                                     <!-- 5. Proceso Afectado con ModalHijo -->
@@ -195,8 +194,7 @@
                                         </div>
                                         <textarea v-model="form.analisis_humano" class="form-control" rows="3" required
                                             placeholder="Explique por qué esta norma NO aplica a la organización..."
-                                            maxlength="500"
-                                            @input="updateAnalisisCharCount"></textarea>
+                                            maxlength="500" @input="updateAnalisisCharCount"></textarea>
                                     </div>
                                 </div>
                             </div>

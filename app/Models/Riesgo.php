@@ -49,14 +49,15 @@ class Riesgo extends Model
         return $this->belongsToMany(Obligacion::class, 'obligacion_riesgo');
     }
 
-    public function acciones()
+    /**
+     * Relación con los controles (Refactorizado ISO 37301).
+     * Muchos a Muchos con la tabla controles.
+     */
+    public function controles()
     {
-        return $this->hasMany(RiesgoAccion::class, 'riesgo_id');
-    }
-
-    public function revisiones()
-    {
-        return $this->hasMany(RiesgoRevision::class, 'riesgo_id');
+        return $this->belongsToMany(Control::class, 'control_riesgo', 'riesgo_id', 'control_id')
+            ->withPivot(['eficacia', 'fecha_ultima_evaluacion', 'fecha_revaluacion', 'observaciones'])
+            ->withTimestamps();
     }
     public function calcularRiesgoValor()
     {

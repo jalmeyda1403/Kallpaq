@@ -306,10 +306,9 @@ class AIService
     protected function analizarChunk(array $items): array
     {
         $prompt = "Analiza las siguientes normas legales y selecciona SOLO aquellas que cumplan estos criterios:\n";
-        $prompt .= "1. NO es una designación, nombramiento, renuncia o encargatura de puesto (DESCARTAR estas).\n";
-        $prompt .= "2. Involucra a la 'Contraloría General de la República' O establece una obligación/regulación explícita para entidades públicas.\n";
-        $prompt .= "3. Si es una norma puramente administrativa irrelevante (ej. fe de erratas menor, aprobación de viajes), DESCARTAR.\n\n";
-        $prompt .= "4. Si es una norma del sector privado o público que no involucra a la Contraloría General de la República o recursos del estado, DESCARTAR.\n\n";
+        $prompt .= "1. CRITERIO DE EXCLUSIÓN TOTAL: Si la norma trata sobre 'designar', 'nombrar', 'aceptar renuncia', 'dar por concluida designación', 'encargar funciones' o 'autorizar viaje', DESCARTAR INMEDIATAMENTE.\n";
+        $prompt .= "2. CRITERIO DE INCLUSIÓN: La norma debe ser relevante para la GESTIÓN PÚBLICA, CONTROL INTERNO o GESTIÓN DE RIESGOS.\n";
+        $prompt .= "3. PRIORIDAD: Normas que mencionen explícitamente a la 'Contraloría General de la República', 'Sistema Nacional de Control' o establezcan obligaciones de reporte/cumplimiento para entidades.\n\n";
         $prompt .= "Devuelve un JSON con una lista de IDs de las normas relevantes. Ejemplo: {\"relevantes\": [1, 4, 5]}\n\n";
         $prompt .= "Normas:\n" . json_encode($items, JSON_UNESCAPED_UNICODE);
 

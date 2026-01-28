@@ -40,6 +40,7 @@ use App\Http\Controllers\AuditoriaEspecificaController;
 use App\Http\Controllers\AuditoriaEvaluacionController;
 use App\Http\Controllers\AuditoriaInformeController;
 use App\Http\Controllers\AuditoriaHallazgoController;
+use App\Http\Controllers\ControlController;
 
 // ... existing routes ...
 
@@ -297,7 +298,9 @@ Route::get('riesgos/{proceso_id?}/listar', [RiesgoController::class, 'listar'])-
 
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
 
-// Rutas API para Obligaciones
+// Alias route for consistent API usage
+Route::get('api/subareas-compliance', [ObligacionController::class, 'apiSubareas']);
+
 Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () {
     Route::get('/', [ObligacionController::class, 'apiIndex'])->name('index');
     Route::get('/mis-obligaciones', [ObligacionController::class, 'misObligaciones'])->name('mine');
@@ -306,6 +309,15 @@ Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () 
     Route::put('/{id}', [ObligacionController::class, 'update'])->name('update');
     Route::delete('/{id}', [ObligacionController::class, 'destroy'])->name('destroy');
     Route::get('/{id}/riesgos', [ObligacionController::class, 'listariesgos'])->name('listariesgos');
+    Route::get('/{id}/acciones', [ObligacionController::class, 'listarAcciones'])->name('listarAcciones');
+    Route::post('/{id}/acciones', [ObligacionController::class, 'storeAccion'])->name('storeAccion');
+});
+
+Route::middleware('auth')->prefix('api/controles')->name('api.controles.')->group(function () {
+    Route::get('/', [ControlController::class, 'index'])->name('index');
+    Route::post('/', [ControlController::class, 'store'])->name('store');
+    Route::put('/{id}', [ControlController::class, 'update'])->name('update');
+    Route::delete('/{id}', [ControlController::class, 'destroy'])->name('destroy');
 });
 
 // Rutas API para Hallazgos

@@ -37,6 +37,8 @@
                                                     <option value="" disabled>Seleccione un tipo...</option>
                                                     <option value="corrección">Corrección (Inmediata)</option>
                                                     <option value="acción correctiva">Acción Correctiva</option>
+                                                    <option value="cumplimiento">Acción de Cumplimiento (ISO 37301)
+                                                    </option>
                                                 </select>
                                             </div>
                                         </div>
@@ -102,6 +104,17 @@
                                         </select>
                                     </div>
 
+                                    <div class="custom-control custom-switch mt-3">
+                                        <input type="checkbox" class="custom-control-input" id="es_control_permanente"
+                                            v-model="form.es_control_permanente">
+                                        <label class="custom-control-label font-weight-bold"
+                                            for="es_control_permanente">
+                                            ¿Establece un Control Permanente?
+                                        </label>
+                                        <small class="d-block text-muted">Active esto si la acción resultará en una
+                                            medida de control que debe mantenerse en el tiempo.</small>
+                                    </div>
+
 
                                 </div>
                             </fieldset>
@@ -164,7 +177,8 @@ const form = reactive({
     accion_responsable_correo: '',
     accion_fecha_inicio: '',
     accion_fecha_fin_planificada: '',
-    accion_estado: 'programada'
+    accion_estado: 'programada',
+    es_control_permanente: false
 });
 
 const isEditing = computed(() => !!form.id);
@@ -214,10 +228,10 @@ const resetForm = () => {
     form.accion_tipo = '';
     form.accion_descripcion = '';
     form.accion_responsable = '';
-    form.accion_responsable_correo = '';
     form.accion_fecha_inicio = '';
     form.accion_fecha_fin_planificada = '';
     form.accion_estado = 'programada';
+    form.es_control_permanente = false;
 };
 
 const closeModal = () => {

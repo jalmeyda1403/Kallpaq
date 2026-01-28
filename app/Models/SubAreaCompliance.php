@@ -23,12 +23,12 @@ class SubAreaCompliance extends Model
      */
     public function area_compliance()
     {
-        return $this->hasMany(AreaCompliance::class, 'area_compliance_id');
+        return $this->belongsTo(AreaCompliance::class, 'area_compliance_id');
     }
 
     public function documentos()
     {
         return $this->hasMany(Documento::class, 'subarea_compliance_id');
     }
- 
+
 }

@@ -243,4 +243,12 @@ onMounted(() => {
 .badge-dark {
     background-color: #343a40;
 }
+
+.opacity-50 {
+    opacity: 0.5;
+}
+
+.pointer-events-none {
+    pointer-events: none;
+}
 </style>

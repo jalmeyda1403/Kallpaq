@@ -23,6 +23,7 @@ export const useObligacionStore = defineStore('obligacion', {
             proceso_nombre: '',
             area_compliance_id: null,
             area_compliance_nombre: '',
+            subarea_compliance_id: null, // Add field
             documento_tecnico_normativo: '',
             obligacion_principal: '',
             obligacion_controles: '',
@@ -35,6 +36,7 @@ export const useObligacionStore = defineStore('obligacion', {
     actions: {
         async fetchObligaciones() {
             this.loading = true;
+            this.obligaciones = []; // Clear cached data
             try {
                 const response = await axios.get(route('api.obligaciones.index'), {
                     params: this.filters
@@ -51,6 +53,7 @@ export const useObligacionStore = defineStore('obligacion', {
 
         async fetchMisObligaciones() {
             this.loading = true;
+            this.obligaciones = []; // Clear cached data
             try {
                 const response = await axios.get(route('api.obligaciones.mine'), {
                     params: this.filters
@@ -138,7 +141,8 @@ export const useObligacionStore = defineStore('obligacion', {
                 this.form.proceso_id = obligacion.proceso_id;
                 this.form.proceso_nombre = obligacion.proceso.proceso_nombre; // Asumiendo que la relación 'proceso' está cargada
                 this.form.area_compliance_id = obligacion.area_compliance_id;
-                this.form.area_compliance_nombre = obligacion.area_compliance.area_compliance_nombre; // Asumiendo que la relación 'area_compliance' está cargada
+                this.form.area_compliance_nombre = obligacion.area_compliance?.area_compliance_nombre;
+                this.form.subarea_compliance_id = obligacion.subarea_compliance_id; // Add mapping
                 this.form.documento_tecnico_normativo = obligacion.documento_tecnico_normativo;
                 this.form.obligacion_principal = obligacion.obligacion_principal;
                 this.form.obligacion_controles = obligacion.obligacion_controles;
@@ -174,6 +178,7 @@ export const useObligacionStore = defineStore('obligacion', {
                 proceso_nombre: '',
                 area_compliance_id: null,
                 area_compliance_nombre: '',
+                subarea_compliance_id: null, // Initial state
                 documento_tecnico_normativo: '',
                 obligacion_principal: '',
                 obligacion_controles: '',

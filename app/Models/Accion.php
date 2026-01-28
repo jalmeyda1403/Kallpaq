@@ -12,6 +12,7 @@ class Accion extends Model
     protected $table = 'acciones';
     protected $fillable = [
         'hallazgo_id',
+        'obligacion_id', // ISO 37301 Link
         'hallazgo_proceso_id',
         'accion_cod',
         'accion_tipo',
@@ -27,6 +28,7 @@ class Accion extends Model
         'accion_responsable_correo',
         'accion_estado',
         'accion_ciclo', // Added accion_ciclo
+        'es_control_permanente',
     ];
 
     protected $casts = [
@@ -44,6 +46,11 @@ class Accion extends Model
     public function hallazgo()
     {
         return $this->belongsTo(Hallazgo::class);
+    }
+
+    public function obligacion()
+    {
+        return $this->belongsTo(Obligacion::class);
     }
 
     public function responsable()

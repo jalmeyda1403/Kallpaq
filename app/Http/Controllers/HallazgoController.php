@@ -163,19 +163,49 @@ class HallazgoController extends Controller
     public function store(Request $request)
     {
         // Generar el valor para hallazgo_cod
-        $proceso = Proceso::find($request->proceso_id, ['*']);
-        $ultimoHallazgo = Hallazgo::where('proceso_id', '=', $request->proceso_id, 'and')->latest()->first();
-        $correlativo = $ultimoHallazgo ? (int) explode('-', $ultimoHallazgo->hallazgo_cod)[3] + 1 : 1;
+        $proceso = null;
+        $sigla = 'GEN';
+        $correlativo = 1;
+
+        if ($request->filled('proceso_id')) {
+            $proceso = Proceso::find($request->proceso_id);
+            if ($proceso) {
+                $sigla = $proceso->proceso_sigla;
+                // Buscar último hallazgo de este proceso para correlativo
+                $ultimoHallazgo = Hallazgo::where('hallazgo_cod', 'like', "%-{$sigla}-%")->latest()->first();
+                if ($ultimoHallazgo) {
+                    $parts = explode('-', $ultimoHallazgo->hallazgo_cod);
+                    if (count($parts) >= 4) {
+                        $correlativo = (int) $parts[3] + 1;
+                    }
+                }
+            }
+        } else {
+            // Correlativo para GEN
+            $ultimoHallazgo = Hallazgo::where('hallazgo_cod', 'like', "%-GEN-%")->latest()->first();
+            if ($ultimoHallazgo) {
+                $parts = explode('-', $ultimoHallazgo->hallazgo_cod);
+                if (count($parts) >= 4) {
+                    $correlativo = (int) $parts[3] + 1;
+                }
+            }
+        }
+
         $clasificacion = ($request->clasificacion === 'NCM' || $request->clasificacion === 'Ncme') ? 'SMP' : $request->clasificacion;
-        $hallazgo_cod = $clasificacion . '-' . $proceso->proceso_sigla . '-' . $request->origen . '-' . sprintf('%03d', $correlativo);
+        $hallazgo_cod = $clasificacion . '-' . $sigla . '-' . $request->hallazgo_origen . '-' . sprintf('%03d', $correlativo);
 
         // Agregar hallazgo_cod al arreglo de datos
-        $data = $request->all();
+        // Usamos $request->except para evitar pasar campos que no existen o son calculados si no están en fillable
+        $data = $request->except(['proceso_id']);
         $data['hallazgo_cod'] = $hallazgo_cod;
 
         // Crear un nuevo hallazgo con los datos del formulario
         $hallazgo = Hallazgo::create($data);
 
+        // Si se envió un proceso_id válido, asociarlo en la tabla pivote
+        if ($proceso) {
+            $hallazgo->procesos()->attach($proceso->id);
+        }
 
         // Redirigir a alguna vista o página después de guardar los datos
         return response()->json($hallazgo, 201);

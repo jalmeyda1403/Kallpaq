@@ -74,7 +74,7 @@ class Proceso extends Model
     }
     public function obligaciones()
     {
-        return $this->hasMany(Obligacion::class, 'proceso_id', 'id');
+        return $this->belongsToMany(Obligacion::class, 'obligacion_proceso', 'proceso_id', 'obligacion_id');
     }
 
     public function riesgos()

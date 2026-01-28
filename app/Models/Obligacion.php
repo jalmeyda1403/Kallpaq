@@ -13,19 +13,16 @@ class Obligacion extends Model
     protected $table = 'obligaciones';
 
     protected $fillable = [
-        'proceso_id',
         'area_compliance_id',
+        'subarea_compliance_id',
         'documento_tecnico_normativo',
         'obligacion_principal',
-        'obligacion_controles',
         'consecuencia_incumplimiento',
         'documento_deroga',
         'estado_obligacion',
         'radar_id',
         'documento_id',
         'tipo_obligacion',
-        'nivel_riesgo_inherente',
-        'nivel_riesgo_residual',
         'frecuencia_revision'
     ];
 
@@ -38,13 +35,17 @@ class Obligacion extends Model
         return $this->belongsTo(AreaCompliance::class, 'area_compliance_id');
     }
 
-    /**
-     * Relación con la tabla 'procesos'.
-     * Una obligación pertenece a un proceso.
-     */
-    public function proceso()
+    public function subarea_compliance()
     {
-        return $this->belongsTo(Proceso::class, 'proceso_id');
+        return $this->belongsTo(SubAreaCompliance::class, 'subarea_compliance_id');
+    }
+
+    /**
+     * Relación con la tabla 'procesos' (Muchos a Muchos).
+     */
+    public function procesos()
+    {
+        return $this->belongsToMany(Proceso::class, 'obligacion_proceso', 'obligacion_id', 'proceso_id');
     }
 
     /**
@@ -54,6 +55,14 @@ class Obligacion extends Model
     public function riesgos()
     {
         return $this->belongsToMany(Riesgo::class, 'obligacion_riesgo');
+    }
+
+    /**
+     * Relación con los controles directos.
+     */
+    public function controles()
+    {
+        return $this->belongsToMany(Control::class, 'obligacion_control');
     }
 
 
@@ -98,4 +107,8 @@ class Obligacion extends Model
         return $this->belongsTo(RadarNormativo::class, 'radar_id');
     }
 
+    public function acciones()
+    {
+        return $this->hasMany(Accion::class);
+    }
 }

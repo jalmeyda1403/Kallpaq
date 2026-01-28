@@ -59,7 +59,7 @@
                     <ProgressBar v-if="loading" mode="indeterminate" style="height: 4px;" />
                 </div>
                 <DataTable :value="indicadores" :class="{ 'opacity-50 pointer-events-none': loading }" :paginator="true"
-                    :rows="10"
+                    :rows="10" stripedRows
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                     :rowsPerPageOptions="[10, 20, 50]" responsiveLayout="scroll"
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
@@ -150,7 +150,7 @@ const props = defineProps({
 });
 
 const indicadores = ref([]);
-const loading = ref(false);
+const loading = ref(true);
 const showFormModal = ref(false);
 const showAvanceModal = ref(false);
 const showGraficoModal = ref(false);
@@ -315,19 +315,13 @@ onMounted(() => {
 
 :deep(.p-datatable .p-datatable-tbody > tr > td) {
     padding: 0.65rem !important;
-    /* Increased padding for taller rows */
 }
 
-/* Custom loader styles - remove opacity and change color to red */
-/* Remove the semi-transparent overlay that dims the table content during loading */
-:deep(.p-datatable .p-datatable-loading-overlay) {
-    background: rgba(255, 255, 255, 0) !important;
-    /* Make background completely transparent */
+.opacity-50 {
+    opacity: 0.5;
 }
 
-/* Change the loader icon to red */
-:deep(.p-datatable .p-datatable-loading-icon) {
-    color: red !important;
-    font-size: 2rem !important;
+.pointer-events-none {
+    pointer-events: none;
 }
 </style>
