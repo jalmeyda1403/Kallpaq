@@ -4,7 +4,7 @@
             <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link to="/home"
                         class="text-danger font-weight-bold">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Verificación de Eficacia (Mis Asignaciones)</li>
+                <li class="breadcrumb-item active" aria-current="page">Mis Riesgos Asignados</li>
             </ol>
         </nav>
 
@@ -13,11 +13,11 @@
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
                         <h5 class="card-title text-danger mb-0 font-weight-bold">
-                            <i class="fas fa-check-double mr-2"></i>Riesgos Asignados para Verificación
+                            <i class="fas fa-user-shield mr-2"></i>Mis Riesgos (Especialista / Verificación)
                         </h5>
                     </div>
                     <div class="col-md-6 text-md-right">
-                        <!-- No "New Risk" button here as this is for verification of existing risks -->
+                        <!-- Botones opcionales -->
                     </div>
                 </div>
                 <hr>
@@ -71,7 +71,7 @@
                 </div>
 
                 <div v-if="!loading" class="animate-fade-in">
-                    <DataTable ref="dt" :value="filteredRiesgos" :paginator="true" :rows="10"
+                    <DataTable ref="dt" :value="riesgos" :paginator="true" :rows="10"
                         :class="{ 'opacity-50 pointer-events-none': loading }" :rowsPerPageOptions="[5, 10, 20, 50]"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
                         responsiveLayout="scroll" class="p-datatable-sm table-hover" stripedRows>
@@ -92,7 +92,7 @@
                         <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
                             <template #body="{ data }">
                                 <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A'
-                                    }}</span>
+                                }}</span>
                             </template>
                         </Column>
                         <Column field="riesgo_nombre" header="Descripción del Riesgo" sortable style="width:30%">
@@ -106,7 +106,7 @@
                         <Column field="factor.nombre" header="Factor" sortable style="width:10%">
                             <template #body="{ data }">
                                 <span class="badge badge-light border text-muted">{{ data.factor?.nombre || 'General'
-                                    }}</span>
+                                }}</span>
                             </template>
                         </Column>
                         <Column field="riesgo_nivel" header="Nivel" sortable style="width:10%">
@@ -116,24 +116,14 @@
                                 </span>
                             </template>
                         </Column>
-                        <Column header="Avance Acciones" style="width:10%" class="text-center">
+                        <Column header="Avance Acciones" style="width:15%" class="text-center">
                             <template #body="{ data }">
                                 <span class="font-weight-bold text-dark">
                                     {{ data.acciones_completadas_count }} / {{ data.acciones_total_count }}
                                 </span>
-                                <i v-if="data.reprogramaciones_pendientes_count > 0"
-                                    class="fas fa-exclamation-triangle text-warning ml-1"
-                                    title="Tiene reprogramaciones pendientes de aprobación"></i>
-                            </template>
-                        </Column>
-                        <Column header="% Avance" style="width:10%">
-                            <template #body="{ data }">
-                                <div class="d-flex align-items-center flex-column">
-                                    <span class="small font-weight-bold mb-1">{{ calculateProgress(data) }}%</span>
-                                    <div class="progress progress-xs w-100 rounded-pill" style="height: 4px;">
-                                        <div class="progress-bar rounded-pill bg-success"
-                                            :style="{ width: calculateProgress(data) + '%' }">
-                                        </div>
+                                <div class="progress progress-xs mt-1" style="height: 4px;">
+                                    <div class="progress-bar bg-success"
+                                        :style="{ width: calculateProgress(data) + '%' }">
                                     </div>
                                 </div>
                             </template>
@@ -144,15 +134,18 @@
                             </template>
                         </Column>
 
-                        <Column header="Acciones" :exportable="false" style="width:10%" class="text-center">
+                        <Column header="Acciones" :exportable="false" style="width:15%" class="text-center">
                             <template #body="{ data }">
-                                <!-- Edit button removed as per requirements -->
-
-                                <!-- Task/Verification Button -->
-                                <button class="btn btn-sm btn-light text-info border shadow-xs"
-                                    @click.prevent="openVerificacionModal(data)" title="Verificar Eficacia">
-                                    <i class="fas fa-check-double mr-1"></i> Verificar
-                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-light text-info border shadow-xs"
+                                        @click.prevent="openVerificacionModal(data)" title="Verificar Eficacia">
+                                        <i class="fas fa-check-double mr-1"></i> Verificar
+                                    </button>
+                                    <button class="btn btn-light text-dark border shadow-xs ml-1"
+                                        @click.prevent="openAccionesModal(data)" title="Plan de Acción">
+                                        <i class="fas fa-list"></i>
+                                    </button>
+                                </div>
                             </template>
                         </Column>
                     </DataTable>
@@ -190,10 +183,6 @@ const calculateProgress = (data) => {
     return Math.round((completed / total) * 100);
 };
 
-const filteredRiesgos = computed(() => {
-    return store.riesgos.filter(riesgo => calculateProgress(riesgo) === 100);
-});
-
 const localFilters = ref({
     codigo: store.filters.codigo,
     nombre: store.filters.nombre,
@@ -214,7 +203,12 @@ onMounted(() => {
 
 const openVerificacionModal = (riesgo) => {
     store.openModal(riesgo);
-    store.setCurrentTab('RiesgoVerificacionForm'); // Open directly to Verification tab
+    store.setCurrentTab('RiesgoVerificacionForm');
+};
+
+const openAccionesModal = (riesgo) => {
+    store.openModal(riesgo);
+    store.setCurrentTab('RiesgoAcciones');
 };
 
 const exportCSV = () => {

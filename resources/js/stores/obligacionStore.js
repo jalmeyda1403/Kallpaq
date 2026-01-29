@@ -51,12 +51,12 @@ export const useObligacionStore = defineStore('obligacion', {
             }
         },
 
-        async fetchMisObligaciones() {
+        async fetchMisObligaciones(params = {}) {
             this.loading = true;
             this.obligaciones = []; // Clear cached data
             try {
                 const response = await axios.get(route('api.obligaciones.mine'), {
-                    params: this.filters
+                    params: { ...this.filters, ...params }
                 });
                 this.obligaciones = response.data;
                 this.error = null;

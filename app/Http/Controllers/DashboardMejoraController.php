@@ -69,7 +69,7 @@ class DashboardMejoraController extends Controller
             // Filtrar acciones para que solo se incluyan las de hallazgos que pertenecen a los procesos del usuario
             $accionIds = $hallazgos->pluck('id')->toArray();
             $acciones = $acciones->filter(function ($accion) use ($accionIds) {
-                return in_array($accion->hallazgo_id, $accionIds);
+                return in_array($accion->accion_hallazgo_id, $accionIds);
             })->values();
         }
 

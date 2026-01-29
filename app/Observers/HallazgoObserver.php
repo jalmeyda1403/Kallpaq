@@ -20,7 +20,7 @@ class HallazgoObserver
     public function updated(Hallazgo $hallazgo)
     {
         if ($hallazgo->isDirty('hallazgo_estado') && $hallazgo->hallazgo_estado == 'aprobado') {
-            Accion::where('hallazgo_id', $hallazgo->id)->update(['accion_estado' => 'programada']);
+            Accion::where('accion_hallazgo_id', $hallazgo->id)->update(['accion_estado' => 'programada']);
         }
     }
 

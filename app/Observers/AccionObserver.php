@@ -13,11 +13,11 @@ class AccionObserver
     public function saved(Accion $accion)
     {
         // Encuentra el hallazgo asociado
-        $hallazgo = Hallazgo::find($accion->hallazgo_id);
+        $hallazgo = Hallazgo::find($accion->accion_hallazgo_id);
 
         if ($hallazgo) {
             // Obtener la última fecha de cierre de las acciones asociadas al hallazgo
-            $ultimaFecha = Accion::where('hallazgo_id', $accion->hallazgo_id)
+            $ultimaFecha = Accion::where('accion_hallazgo_id', $accion->accion_hallazgo_id)
                 ->max('accion_fecha_fin_planificada');
 
             // Actualizar la fecha de cierre de acciones en el hallazgo

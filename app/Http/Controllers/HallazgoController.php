@@ -283,9 +283,9 @@ class HallazgoController extends Controller
     {
         $hallazgo = Hallazgo::findOrFail($id);
 
-        $planesAccion = Accion::where('hallazgo_id', '=', $id, 'and')->get();
-        $correctivas = Accion::where('hallazgo_id', '=', $id, 'and')->where('es_correctiva', '=', 1, 'and')->count();
-        $preventivas = Accion::where('hallazgo_id', '=', $id, 'and')->where('es_correctiva', '=', 0, 'and')->count();
+        $planesAccion = Accion::where('accion_hallazgo_id', '=', $id, 'and')->get();
+        $correctivas = Accion::where('accion_hallazgo_id', '=', $id, 'and')->where('es_correctiva', '=', 1, 'and')->count();
+        $preventivas = Accion::where('accion_hallazgo_id', '=', $id, 'and')->where('es_correctiva', '=', 0, 'and')->count();
         $logoPath = public_path('images/logo.png');
 
         $pdf = PDF::loadView('smp.planPDF', compact('logoPath', 'planesAccion', 'hallazgo', 'correctivas', 'preventivas'));

@@ -29,17 +29,17 @@
                                         <div class="form-group" v-if="form.actionType === 'reprogramar'">
                                             <label class="font-weight-bold custom-label">Nueva Fecha Fin <span
                                                     class="text-danger">*</span></label>
-                                            <input v-model="form.ra_fecha_fin_reprogramada" type="date"
+                                            <input v-model="form.accion_fecha_fin_reprogramada" type="date"
                                                 class="form-control" required>
                                         </div>
                                         <div class="form-group">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <label class="font-weight-bold custom-label">Justificación <span
                                                         class="text-danger">*</span></label>
-                                                <small class="text-muted">Caracteres: {{ form.ra_justificacion.length }}
+                                                <small class="text-muted">Caracteres: {{ form.accion_justificacion.length }}
                                                     / 500</small>
                                             </div>
-                                            <textarea v-model="form.ra_justificacion" class="form-control" rows="5"
+                                            <textarea v-model="form.accion_justificacion" class="form-control" rows="5"
                                                 :maxlength="500" required></textarea>
                                         </div>
                                         <!-- Sección de Evidencias (Multi-archivo) -->
@@ -151,7 +151,7 @@
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <div v-if="rep.rar_estado === 'pendiente'">
+                                                        <div v-if="rep.ar_estado === 'solicitado'">
                                                             <button class="btn btn-xs btn-success mr-1"
                                                                 @click="aprobar(rep)" title="Aprobar">
                                                                 <i class="fas fa-check"></i>
@@ -161,8 +161,8 @@
                                                                 <i class="fas fa-times"></i>
                                                             </button>
                                                         </div>
-                                                        <div v-if="rep.rar_evidencia">
-                                                            <a :href="`/storage/${rep.rar_evidencia}`" target="_blank"
+                                                        <div v-if="rep.ar_evidencia">
+                                                            <a :href="`/storage/${rep.ar_evidencia}`" target="_blank"
                                                                 class="btn btn-xs btn-info" title="Ver Evidencia">
                                                                 <i class="fas fa-paperclip"></i>
                                                             </a>
@@ -214,9 +214,9 @@ const existingFiles = ref([]);
 const form = reactive({
     id: null,
     actionType: 'reprogramar',
-    ra_fecha_fin_reprogramada: '',
-    ra_justificacion: '',
-    ra_evidencia: null
+    accion_fecha_fin_reprogramada: '',
+    accion_justificacion: '',
+    accion_evidencia: null
 });
 
 const sortedReprogramaciones = computed(() => {
@@ -289,9 +289,9 @@ const loadExistingFiles = () => {
 
 const resetForm = () => {
     form.actionType = 'reprogramar';
-    form.ra_fecha_fin_reprogramada = '';
-    form.ra_justificacion = '';
-    form.ra_evidencia = null;
+    form.accion_fecha_fin_reprogramada = '';
+    form.accion_justificacion = '';
+    form.accion_evidencia = null;
     // Reset file input manually if possible, or use a key to force re-render
     // Limpiar archivos
     filesToUpload.value = [];
@@ -362,9 +362,9 @@ const submitReprogramacion = async () => {
 
             // Agregar todos los campos del formulario al FormData
             filesFormData.append('actionType', form.actionType);
-            filesFormData.append('ra_justificacion', form.ra_justificacion);
+            filesFormData.append('accion_justificacion', form.accion_justificacion);
             if (form.actionType === 'reprogramar') {
-                filesFormData.append('ra_fecha_fin_reprogramada', form.ra_fecha_fin_reprogramada);
+                filesFormData.append('accion_fecha_fin_reprogramada', form.accion_fecha_fin_reprogramada);
             }
 
             // Agregar archivos existentes que se mantienen
@@ -377,7 +377,7 @@ const submitReprogramacion = async () => {
             // Agregar archivos nuevos para subir
             if (hasNewFiles) {
                 filesToUpload.value.forEach((fileEntry) => {
-                    filesFormData.append('ra_evidencia[]', fileEntry.file, fileEntry.file.name);
+                    filesFormData.append('accion_evidencia[]', fileEntry.file, fileEntry.file.name);
                 });
             }
 
@@ -393,9 +393,9 @@ const submitReprogramacion = async () => {
             // Enviar la información sin archivos
             const formData = new FormData();
             formData.append('actionType', form.actionType);
-            formData.append('ra_justificacion', form.ra_justificacion);
+            formData.append('accion_justificacion', form.accion_justificacion);
             if (form.actionType === 'reprogramar') {
-                formData.append('ra_fecha_fin_reprogramada', form.ra_fecha_fin_reprogramada);
+                formData.append('accion_fecha_fin_reprogramada', form.accion_fecha_fin_reprogramada);
             }
 
             const response = await store.reprogramarAccion(form.id, formData);

@@ -4,7 +4,7 @@
         <div class="header-container">
             <h6 class="mb-0 d-flex align-items-center">
                 <span class="text-dark">{{ formatBreadcrumbId(store.riesgoActual ? store.riesgoActual.id : null)
-                }}</span>
+                    }}</span>
                 <span class="mx-2 text-secondary"><i class="fas fa-chevron-right fa-xs"></i></span>
                 <span class="text-dark">Planes de Tratamiento</span>
             </h6>
@@ -18,7 +18,7 @@
 
         <div class="row mb-3">
             <div class="col-12 text-right">
-                <button class="btn btn-primary btn-sm" @click="openModal()">
+                <button type="button" class="btn btn-primary btn-sm" @click="openModal()">
                     <i class="fas fa-plus"></i> Añadir Acciones
                 </button>
             </div>
@@ -29,29 +29,29 @@
             <template #empty>
                 No hay planes de tratamiento registrados.
             </template>
-            <Column field="ra_descripcion" header="Descripción"></Column>
-            <Column field="ra_responsable" header="Responsable"></Column>
-            <Column field="ra_ciclo" header="Ciclo" headerStyle="width: 80px; text-align: center"
+            <Column field="accion_descripcion" header="Descripción"></Column>
+            <Column field="accion_responsable" header="Responsable"></Column>
+            <Column field="accion_ciclo" header="Ciclo" headerStyle="width: 80px; text-align: center"
                 bodyStyle="text-align: center">
             </Column>
             <Column header="Fecha Inicio">
                 <template #body="slotProps">
-                    {{ formatDate(slotProps.data.ra_fecha_inicio) }}
+                    {{ formatDate(slotProps.data.accion_fecha_inicio) }}
                 </template>
             </Column>
             <Column header="Fecha Fin">
                 <template #body="slotProps">
-                    <div v-if="slotProps.data.ra_fecha_fin_reprogramada">
+                    <div v-if="slotProps.data.accion_fecha_fin_reprogramada">
                         <span class="text-danger" style="text-decoration: line-through;">
-                            {{ formatDate(slotProps.data.ra_fecha_fin_planificada) }}
+                            {{ formatDate(slotProps.data.accion_fecha_fin_planificada) }}
                         </span>
                         <br>
                         <span class="text-success font-weight-bold">
-                            {{ formatDate(slotProps.data.ra_fecha_fin_reprogramada) }}
+                            {{ formatDate(slotProps.data.accion_fecha_fin_reprogramada) }}
                         </span>
                     </div>
                     <div v-else>
-                        {{ formatDate(slotProps.data.ra_fecha_fin_planificada) }}
+                        {{ formatDate(slotProps.data.accion_fecha_fin_planificada) }}
                     </div>
                     <!-- Indicator for pending reprogramming -->
                     <div v-if="hasPendingReprogramming(slotProps.data)" class="mt-1">
@@ -63,8 +63,8 @@
             </Column>
             <Column header="Estado">
                 <template #body="slotProps">
-                    <span class="badge" :class="getEstadoBadgeClass(slotProps.data.ra_estado)">
-                        {{ slotProps.data.ra_estado }}
+                    <span class="badge" :class="getEstadoBadgeClass(slotProps.data.accion_estado)">
+                        {{ slotProps.data.accion_estado }}
                     </span>
                 </template>
             </Column>
@@ -203,7 +203,7 @@ const confirmDelete = (accion) => {
 
 const hasPendingReprogramming = (action) => {
     if (!action.reprogramaciones) return false;
-    return action.reprogramaciones.some(r => r.rar_estado === 'pendiente');
+    return action.reprogramaciones.some(r => r.ar_estado === 'pendiente');
 };
 
 const formatDate = (dateString) => {

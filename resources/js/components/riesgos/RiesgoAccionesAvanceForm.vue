@@ -15,7 +15,7 @@
                                 <div class="form-group">
                                     <label class="font-weight-bold custom-label">Estado <span
                                             class="text-danger">*</span></label>
-                                    <select class="form-control" v-model="form.ra_estado" required>
+                                    <select class="form-control" v-model="form.accion_estado" required>
                                         <option value="programada">Programada</option>
                                         <option value="desestimada">Desestimada</option>
                                         <option value="en proceso">En Proceso</option>
@@ -23,10 +23,10 @@
                                     </select>
                                 </div>
 
-                                <div class="form-group" v-if="form.ra_estado === 'implementada'">
+                                <div class="form-group" v-if="form.accion_estado === 'implementada'">
                                     <label class="font-weight-bold custom-label">Fecha Real de Fin <span
                                             class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" v-model="form.ra_fecha_fin_real" required>
+                                    <input type="date" class="form-control" v-model="form.accion_fecha_fin_real" required>
                                 </div>
 
                                 <div class="form-group">
@@ -46,11 +46,11 @@
                                 <div class="form-group">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <label class="font-weight-bold custom-label">Comentario</label>
-                                        <small class="text-muted">Caracteres: {{ form.ra_comentario.length }}
+                                        <small class="text-muted">Caracteres: {{ form.accion_comentario ? form.accion_comentario.length : 0 }}
                                             /
                                             500</small>
                                     </div>
-                                    <textarea class="form-control" v-model="form.ra_comentario" rows="4"
+                                    <textarea class="form-control" v-model="form.accion_comentario" rows="4"
                                         :maxlength="500"></textarea>
                                 </div>
                             </div>
@@ -94,19 +94,19 @@ const file = ref(null);
 
 const form = reactive({
     id: null,
-    ra_estado: 'programada',
-    ra_fecha_fin_real: '',
-    ra_comentario: ''
+    accion_estado: 'programada',
+    accion_fecha_fin_real: '',
+    accion_comentario: ''
 });
 
 watch(() => props.show, (newVal) => {
     if (newVal) {
         if (props.actionData) {
             form.id = props.actionData.id;
-            form.ra_estado = props.actionData.ra_estado;
-            form.ra_comentario = props.actionData.ra_comentario || '';
-            form.ra_fecha_fin_real = props.actionData.ra_fecha_fin_real
-                ? props.actionData.ra_fecha_fin_real.split('T')[0]
+            form.accion_estado = props.actionData.accion_estado;
+            form.accion_comentario = props.actionData.accion_comentario || '';
+            form.accion_fecha_fin_real = props.actionData.accion_fecha_fin_real
+                ? props.actionData.accion_fecha_fin_real.split('T')[0]
                 : new Date().toISOString().split('T')[0];
         }
         fileName.value = '';
@@ -161,15 +161,15 @@ const submitForm = async () => {
     saving.value = true;
     try {
         const formData = new FormData();
-        formData.append('ra_estado', form.ra_estado);
-        formData.append('ra_comentario', form.ra_comentario);
+        formData.append('accion_estado', form.accion_estado);
+        formData.append('accion_avance_comentario', form.accion_comentario); // Mapping to model field
 
-        if (form.ra_estado === 'implementada') {
-            formData.append('ra_fecha_fin_real', form.ra_fecha_fin_real);
+        if (form.accion_estado === 'implementada') {
+            formData.append('accion_fecha_fin_real', form.accion_fecha_fin_real);
         }
 
         if (file.value) {
-            formData.append('ra_evidencia', file.value);
+            formData.append('accion_avance_evidencia', file.value);
         }
 
         await store.saveAccionAvance(form.id, formData);

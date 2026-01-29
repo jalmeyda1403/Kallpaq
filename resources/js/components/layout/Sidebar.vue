@@ -279,14 +279,14 @@
                                 </li>
                                 <li class="nav-item" v-if="authStore.can('menu.obligaciones.mis_obligaciones')">
                                     <router-link to="/mis-obligaciones" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-user-check"></i>
-                                        <p>Mis Obligaciones</p>
+                                        <i class="nav-icon fas fa-building"></i>
+                                        <p>Mis Obligaciones (UO)</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="authStore.can('menu.obligaciones.seguimiento')">
-                                    <router-link to="/obligaciones/seguimiento" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-tasks"></i>
-                                        <p>Seguimiento de Acciones</p>
+                                <li class="nav-item" v-if="authStore.can('menu.obligaciones.mis_asignados')">
+                                    <router-link to="/obligaciones/asignadas" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-user-check"></i>
+                                        <p>Mis Obligaciones Asignadas</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item" v-if="authStore.can('menu.obligaciones.dashboard')">
@@ -316,16 +316,16 @@
                                         <p>Bandeja de Riesgos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="authStore.can('menu.riesgos.mis_asignados')">
+                                <li class="nav-item" v-if="authStore.can('menu.riesgos.mis_riesgos')">
                                     <router-link to="/riesgos/mis-riesgos" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-user-check"></i>
-                                        <p>Mis Riesgos Asignados</p>
+                                        <i class="nav-icon fas fa-building"></i>
+                                        <p>Mis Riesgos</p>
                                     </router-link>
                                 </li>
-                                <li class="nav-item" v-if="authStore.can('menu.riesgos.eficacia')">
-                                    <router-link to="/riesgos/verificacion" class="nav-link" active-class="active">
-                                        <i class="nav-icon fas fa-tasks"></i>
-                                        <p>Verificar Eficacia Riesgos</p>
+                                <li class="nav-item" v-if="authStore.can('menu.riesgos.mis_asignados')">
+                                    <router-link to="/riesgos/asignados" class="nav-link" active-class="active">
+                                        <i class="nav-icon fas fa-user-check"></i>
+                                        <p>Mis Riesgos Asignados</p>
                                     </router-link>
                                 </li>
                                 <li class="nav-item" v-if="authStore.can('menu.riesgos.dashboard')">
@@ -598,8 +598,8 @@ const canViewModule = (module) => {
         requerimientos: ['menu.requerimientos.bandeja', 'menu.requerimientos.crear', 'menu.requerimientos.mis_requerimientos', 'menu.requerimientos.mis_asignados', 'menu.requerimientos.dashboard'],
         procesos: ['menu.procesos.inventario', 'menu.procesos.listado', 'menu.procesos.documentos', 'menu.procesos.indicadores', 'menu.procesos.caracterizacion'],
         mejora: ['menu.mejora.bandeja', 'menu.mejora.mis_solicitudes', 'menu.mejora.mis_asignados'],
-        obligaciones: ['menu.obligaciones.bandeja', 'menu.obligaciones.mis_obligaciones', 'menu.obligaciones.radar'],
-        riesgos: ['menu.riesgos.bandeja', 'menu.riesgos.mis_asignados'],
+        obligaciones: ['menu.obligaciones.bandeja', 'menu.obligaciones.mis_obligaciones', 'menu.obligaciones.mis_asignados', 'menu.obligaciones.radar'],
+        riesgos: ['menu.riesgos.bandeja', 'menu.riesgos.mis_riesgos', 'menu.riesgos.mis_asignados', 'menu.riesgos.dashboard'],
         continuidad: ['menu.continuidad.planes', 'menu.continuidad.escenarios', 'menu.continuidad.activos', 'menu.continuidad.pruebas'],
         satisfaccion: ['menu.satisfaccion.encuestas', 'menu.satisfaccion.sugerencias', 'menu.satisfaccion.salidas_nc'],
         auditoria: ['menu.auditoria.programa', 'menu.auditoria.gantt', 'menu.auditoria.plan', 'menu.auditoria.auditores', 'menu.auditoria.normas'],

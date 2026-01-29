@@ -116,7 +116,7 @@ class Hallazgo extends Model
 
     public function acciones()
     {
-        return $this->hasMany(Accion::class);
+        return $this->hasMany(Accion::class, 'accion_hallazgo_id');
     }
 
     public function scopeFilterBySig($query, $sig)

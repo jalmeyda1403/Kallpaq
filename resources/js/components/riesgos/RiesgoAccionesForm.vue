@@ -18,9 +18,9 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <label class="font-weight-bold custom-label">Descripción <span
                                                 class="text-danger">*</span></label>
-                                        <small class="text-muted">Caracteres: {{ form.ra_descripcion.length }} / 500</small>
+                                        <small class="text-muted">Caracteres: {{ form.accion_descripcion.length }} / 500</small>
                                     </div>
-                                    <textarea class="form-control" v-model="form.ra_descripcion" rows="5"
+                                    <textarea class="form-control" v-model="form.accion_descripcion" rows="5"
                                         :maxlength="500" required></textarea>
                                 </div>
                                 <div class="row">
@@ -28,7 +28,7 @@
                                         <div class="form-group">
                                             <label class="font-weight-bold custom-label">Responsable <span
                                                     class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" v-model="form.ra_responsable"
+                                            <input type="text" class="form-control" v-model="form.accion_responsable"
                                                 required>
                                         </div>
                                     </div>
@@ -37,7 +37,7 @@
                                             <label class="font-weight-bold custom-label">Correo Responsable <span
                                                     class="text-danger">*</span></label>
                                             <input type="email" class="form-control"
-                                                v-model="form.ra_responsable_correo" required>
+                                                v-model="form.accion_responsable_correo" required>
                                         </div>
                                     </div>
                                 </div>
@@ -46,7 +46,7 @@
                                         <div class="form-group">
                                             <label class="font-weight-bold custom-label">Fecha Inicio <span
                                                     class="text-danger">*</span></label>
-                                            <input type="date" class="form-control" v-model="form.ra_fecha_inicio"
+                                            <input type="date" class="form-control" v-model="form.accion_fecha_inicio"
                                                 required>
                                         </div>
                                     </div>
@@ -55,14 +55,14 @@
                                             <label class="font-weight-bold custom-label">Fecha Fin Planificada <span
                                                     class="text-danger">*</span></label>
                                             <input type="date" class="form-control"
-                                                v-model="form.ra_fecha_fin_planificada" required>
+                                                v-model="form.accion_fecha_fin_planificada" required>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="font-weight-bold custom-label">Estado <span
                                             class="text-danger">*</span></label>
-                                    <select class="form-control" v-model="form.ra_estado" required>
+                                    <select class="form-control" v-model="form.accion_estado" required>
                                         <option value="programada">Programada</option>
                                         <option value="en proceso">En Proceso</option>
                                         <option value="implementada">Implementada</option>
@@ -72,9 +72,9 @@
                                 <div class="form-group">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <label class="font-weight-bold custom-label">Comentario</label>
-                                        <small class="text-muted">Caracteres: {{ form.ra_comentario.length }} / 500</small>
+                                        <small class="text-muted">Caracteres: {{ form.accion_comentario ? form.accion_comentario.length : 0 }} / 500</small>
                                     </div>
-                                    <textarea class="form-control" v-model="form.ra_comentario" rows="5"
+                                    <textarea class="form-control" v-model="form.accion_comentario" rows="5"
                                         :maxlength="500"></textarea>
                                 </div>
                             </div>
@@ -120,13 +120,13 @@ const saving = ref(false);
 
 const form = reactive({
     id: null,
-    ra_descripcion: '',
-    ra_responsable: '',
-    ra_responsable_correo: '',
-    ra_fecha_inicio: '',
-    ra_fecha_fin_planificada: '',
-    ra_estado: 'programada',
-    ra_comentario: ''
+    accion_descripcion: '',
+    accion_responsable: '',
+    accion_responsable_correo: '',
+    accion_fecha_inicio: '',
+    accion_fecha_fin_planificada: '',
+    accion_estado: 'programada',
+    accion_comentario: ''
 });
 
 const isEditing = computed(() => !!form.id);
@@ -136,8 +136,8 @@ watch(() => props.show, (newVal) => {
         if (props.actionData) {
             Object.assign(form, props.actionData);
             // Format dates
-            if (form.ra_fecha_inicio) form.ra_fecha_inicio = form.ra_fecha_inicio.split('T')[0];
-            if (form.ra_fecha_fin_planificada) form.ra_fecha_fin_planificada = form.ra_fecha_fin_planificada.split('T')[0];
+            if (form.accion_fecha_inicio) form.accion_fecha_inicio = form.accion_fecha_inicio.split('T')[0];
+            if (form.accion_fecha_fin_planificada) form.accion_fecha_fin_planificada = form.accion_fecha_fin_planificada.split('T')[0];
         } else {
             resetForm();
         }
@@ -169,13 +169,13 @@ onUnmounted(() => {
 
 const resetForm = () => {
     form.id = null;
-    form.ra_descripcion = '';
-    form.ra_responsable = '';
-    form.ra_responsable_correo = '';
-    form.ra_fecha_inicio = '';
-    form.ra_fecha_fin_planificada = '';
-    form.ra_estado = 'programada';
-    form.ra_comentario = '';
+    form.accion_descripcion = '';
+    form.accion_responsable = '';
+    form.accion_responsable_correo = '';
+    form.accion_fecha_inicio = '';
+    form.accion_fecha_fin_planificada = '';
+    form.accion_estado = 'programada';
+    form.accion_comentario = '';
 };
 
 const closeModal = () => {

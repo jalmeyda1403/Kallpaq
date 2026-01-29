@@ -11,12 +11,12 @@ class Accion extends Model
 
     protected $table = 'acciones';
     protected $fillable = [
-        'hallazgo_id',
-        'obligacion_id', // ISO 37301 Link
-        'hallazgo_proceso_id',
+        'accion_hallazgo_id',
+        'accion_riesgo_id',
+        'accion_obligacion_id', // ISO 37301 Link
+        'accion_hallazgo_proceso_id',
         'accion_cod',
         'accion_tipo',
-        'accion_descripcion',
         'accion_descripcion',
         'accion_fecha_inicio',
         'accion_fecha_fin_planificada',
@@ -28,7 +28,7 @@ class Accion extends Model
         'accion_responsable_correo',
         'accion_estado',
         'accion_ciclo', // Added accion_ciclo
-        'es_control_permanente',
+        'accion_es_control_permanente',
     ];
 
     protected $casts = [
@@ -41,16 +41,21 @@ class Accion extends Model
 
     public function hallazgoProceso()
     {
-        return $this->belongsTo(HallazgoProceso::class);
+        return $this->belongsTo(HallazgoProceso::class, 'accion_hallazgo_proceso_id');
     }
     public function hallazgo()
     {
-        return $this->belongsTo(Hallazgo::class);
+        return $this->belongsTo(Hallazgo::class, 'accion_hallazgo_id');
+    }
+
+    public function riesgo()
+    {
+        return $this->belongsTo(Riesgo::class, 'accion_riesgo_id');
     }
 
     public function obligacion()
     {
-        return $this->belongsTo(Obligacion::class);
+        return $this->belongsTo(Obligacion::class, 'accion_obligacion_id');
     }
 
     public function responsable()
@@ -60,12 +65,12 @@ class Accion extends Model
 
     public function reprogramaciones()
     {
-        return $this->hasMany(AccionReprogramacion::class);
+        return $this->hasMany(AccionReprogramacion::class, 'accion_id');
     }
 
     public function avances()
     {
-        return $this->hasMany(AccionAvance::class);
+        return $this->hasMany(AccionAvance::class, 'accion_id');
     }
 
     public function movimientos()

@@ -309,8 +309,9 @@ Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () 
     Route::put('/{id}', [ObligacionController::class, 'update'])->name('update');
     Route::delete('/{id}', [ObligacionController::class, 'destroy'])->name('destroy');
     Route::get('/{id}/riesgos', [ObligacionController::class, 'listariesgos'])->name('listariesgos');
-    Route::get('/{id}/acciones', [ObligacionController::class, 'listarAcciones'])->name('listarAcciones');
-    Route::post('/{id}/acciones', [ObligacionController::class, 'storeAccion'])->name('storeAccion');
+    // Acciones de Obligaciones (Unificadas en AccionController)
+    Route::get('/{obligacion}/acciones', [AccionController::class, 'getAccionesPorObligacion'])->name('listarAcciones');
+    Route::post('/{obligacion}/acciones', [AccionController::class, 'storeAccionObligacion'])->name('storeAccion');
 });
 
 Route::middleware('auth')->prefix('api/controles')->name('api.controles.')->group(function () {
@@ -778,15 +779,15 @@ Route::prefix('api/radar')->middleware('auth')->name('api.radar.')->group(functi
 });
 
 Route::middleware('auth')->prefix('api')->group(function () {
-    // Riesgo Acciones
-    Route::get('/riesgos/{riesgo}/acciones', [RiesgoAccionController::class, 'index'])->name('api.riesgos.acciones.index');
-    Route::post('/riesgos/{riesgo}/acciones', [RiesgoAccionController::class, 'store'])->name('api.riesgos.acciones.store');
-    Route::put('/riesgo-acciones/{id}', [RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
-    Route::delete('/riesgo-acciones/{id}', [RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
-    Route::post('/riesgo-acciones/{id}/reprogramar', [RiesgoAccionController::class, 'reprogramar'])->name('api.riesgos.acciones.reprogramar');
-    Route::post('/riesgo-acciones/reprogramaciones/{id}/aprobar', [RiesgoAccionController::class, 'aprobarReprogramacion'])->name('api.riesgos.acciones.reprogramar.aprobar');
-    Route::post('/riesgo-acciones/reprogramaciones/{id}/rechazar', [RiesgoAccionController::class, 'rechazarReprogramacion'])->name('api.riesgos.acciones.reprogramar.rechazar');
-    Route::post('/riesgo-acciones/{id}/avance', [RiesgoAccionController::class, 'updateAvance'])->name('api.riesgos.acciones.avance');
+    // Acciones de Riesgos (Unificadas en AccionController)
+    Route::get('/riesgos/{riesgo}/acciones', [AccionController::class, 'getAccionesPorRiesgo'])->name('api.riesgos.acciones.index');
+    Route::post('/riesgos/{riesgo}/acciones', [AccionController::class, 'storeAccionRiesgo'])->name('api.riesgos.acciones.store');
+    Route::put('/riesgo-acciones/{accion}', [AccionController::class, 'updateAccion'])->name('api.riesgos.acciones.update');
+    Route::delete('/riesgo-acciones/{accion}', [AccionController::class, 'destroyAccion'])->name('api.riesgos.acciones.destroy');
+    Route::post('/riesgo-acciones/{accion}/reprogramar', [AccionController::class, 'reprogramar'])->name('api.riesgos.acciones.reprogramar');
+    Route::post('/riesgo-acciones/reprogramaciones/{reprogramacion}/aprobar', [AccionController::class, 'aprobarReprogramacion'])->name('api.riesgos.acciones.reprogramar.aprobar');
+    Route::post('/riesgo-acciones/reprogramaciones/{reprogramacion}/rechazar', [AccionController::class, 'rechazarReprogramacion'])->name('api.riesgos.acciones.reprogramar.rechazar');
+    Route::post('/riesgo-acciones/{accion}/avance', [AccionController::class, 'registrarAvance'])->name('api.riesgos.acciones.avance');
 });
 
 // Rutas para obtener listas (Procesos, Áreas, Subáreas)

@@ -7,8 +7,8 @@
             <div class="card-body p-2">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <input type="text" class="form-control form-control-sm w-75" v-model="search"
-                        placeholder="Buscar controles..." @input="filterControls">
-                    <button class="btn btn-sm btn-outline-danger ml-2" @click="showCreateModal = true">
+                        placeholder="Buscar controles..." @input="filterControls" @keydown.enter.prevent>
+                    <button type="button" class="btn btn-sm btn-outline-danger ml-2" @click="showCreateModal = true">
                         <i class="fas fa-plus"></i> Nuevo
                     </button>
                 </div>
@@ -62,8 +62,9 @@
                     </div>
                 </div>
                 <div class="card-footer p-2 text-right">
-                    <button class="btn btn-sm btn-secondary mr-2" @click="closeCreateModal">Cancelar</button>
-                    <button class="btn btn-sm btn-danger" @click="createControl" :disabled="creating">
+                    <button type="button" class="btn btn-sm btn-secondary mr-2"
+                        @click="closeCreateModal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-danger" @click="createControl" :disabled="creating">
                         {{ creating ? 'Guardando...' : 'Crear' }}
                     </button>
                 </div>

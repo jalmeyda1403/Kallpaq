@@ -85,7 +85,8 @@ class UserController extends Controller
         $user->password = Hash::make('nuevacontraseña');
         $user->save();
 
-        $user->notify(new ResetPasswordNotification());
+        $token = Password::createToken($user);
+        $user->notify(new ResetPasswordNotification($token));
         return redirect()->route('user.index')->with('success', 'Contraseña reiniciada exitosamente. Se ha enviado un correo electrónico al usuario.');
     }
     //Asignar Procesos
@@ -95,7 +96,7 @@ class UserController extends Controller
         // Aquí puedes obtener los procesos asignados al usuario y pasarlos a la vista
         $procesosAsignados = $user->procesos;
 
-        $procesosDisponibles = Proceso::whereNotIn('id', $procesosAsignados->pluck('id'), 'and', false)
+        $procesosDisponibles = Proceso::whereNotIn('id', $procesosAsignados->pluck('id'))
             ->paginate(15);
 
         return view('user.asignarprocesos', compact('user', 'procesosAsignados', 'procesosDisponibles'));
@@ -424,7 +425,7 @@ class UserController extends Controller
 
     public function destroyApi(User $user)
     {
-        User::where('id', '=', $user->id, 'and')->delete();
+        $user->delete();
         return response()->json(['message' => 'Usuario eliminado correctamente']);
     }
 
@@ -488,7 +489,7 @@ class UserController extends Controller
         $counter = 1;
 
         // Check uniqueness and append number if needed
-        while (User::where('user_iniciales', '=', $initials, 'and')->exists()) {
+        while (User::where('user_iniciales', $initials)->exists()) {
             $initials = $baseInitials . $counter;
             $counter++;
         }
@@ -598,7 +599,7 @@ class UserController extends Controller
             // 2. Active/Create specialists
             foreach ($especialistaUsers as $user) {
                 // Check individually to avoid overwriting existing 'cargo' with a default if it exists
-                $especialista = Especialista::where('user_id', '=', $user->id, 'and')->first();
+                $especialista = Especialista::where('user_id', $user->id)->first();
 
                 if ($especialista) {
                     $especialista->update([
@@ -617,7 +618,7 @@ class UserController extends Controller
 
             // 3. Soft delete (deactivate) specialists who no longer have the role
             // We find specialists whose user_id is NOT in the list of current specialist users
-            Especialista::whereNotIn('user_id', $especialistaUserIds, 'and')
+            Especialista::whereNotIn('user_id', $especialistaUserIds)
                 ->update([
                     'estado' => 0,
                     'inactived_at' => now()

@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use App\Services\AIService;
 
 class DocumentoController extends Controller
@@ -30,7 +31,7 @@ class DocumentoController extends Controller
     private function obtenerDocumentosPorProcesos(string $buscar_proceso)
     {
         $documentos = collect();
-        $procesos = Proceso::where('proceso_nombre', 'LIKE', "%{$buscar_proceso}%")->get();
+        $procesos = Proceso::where('proceso_nombre', 'LIKE', "%{$buscar_proceso}%", 'and')->get();
 
         foreach ($procesos as $proceso) {
             $documentos = $documentos->merge($proceso->descendiente_documentos());
@@ -42,7 +43,7 @@ class DocumentoController extends Controller
     {
         $query = $request->input('query');
 
-        $documentos = Documento::where('nombre_documento', 'LIKE', "%{$query}%")->get();
+        $documentos = Documento::where('nombre_documento', 'LIKE', "%{$query}%", 'and')->get();
         $documentos = $documentos->map(function ($documento) {
             return [
                 'id' => $documento->id,
@@ -429,8 +430,7 @@ class DocumentoController extends Controller
 
     public function destroy($id)
     {
-        $documento = Documento::findOrFail($id);
-        $documento->delete();
+        Documento::destroy($id);
 
         return response()->json(['success' => true, 'message' => 'Documento eliminado correctamente.']);
     }
@@ -485,20 +485,20 @@ class DocumentoController extends Controller
                 $url = "https://" . $url;
             }
 
-            \Illuminate\Support\Facades\Log::info("Validando URL: " . $url);
+            Log::info("Validando URL: " . $url);
 
-            $response = \Illuminate\Support\Facades\Http::timeout(8)
+            $response = Http::timeout(8)
                 ->withoutVerifying() // Ignorar errores SSL locales
                 ->get($url);
 
             $isValid = $response->successful() || $response->redirect();
 
-            \Illuminate\Support\Facades\Log::info("Resultado validación: " . ($isValid ? 'Valida' : 'Invalida') . " Status: " . $response->status());
+            Log::info("Resultado validación: " . ($isValid ? 'Valida' : 'Invalida') . " Status: " . $response->status());
 
             return response()->json(['isValid' => $isValid]);
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Error validando URL: " . $e->getMessage());
+            Log::error("Error validando URL: " . $e->getMessage());
             return response()->json(['isValid' => false]);
         }
     }
@@ -572,7 +572,7 @@ class DocumentoController extends Controller
     public function listarHistorial(Documento $documento)
     {
         // Asumiendo que tienes un modelo DocumentoHistorial
-        $historial = DocumentoMovimiento::where('documento_id', $documento->id)
+        $historial = DocumentoMovimiento::where('documento_id', '=', $documento->id, 'and')
             ->with('usuario:id,name,codigo') // Carga el nombre del usuario para mostrarlo
             ->latest() // Ordena por fecha de creación, del más nuevo al más antiguo
             ->get();
@@ -610,7 +610,7 @@ class DocumentoController extends Controller
             'hijo_id' => 'required|exists:documentos,id',
         ]);
 
-        $hijo = Documento::find($data['hijo_id']);
+        $hijo = Documento::find($data['hijo_id'], ['*']);
 
         $hijo->update(['documento_padre_id' => $documento->id]);
 
@@ -721,10 +721,8 @@ class DocumentoController extends Controller
 
     public function destroyVersion($id)
     {
-        $version = DocumentoVersion::findOrFail($id);
-
         // Soft Delete
-        $version->delete();
+        DocumentoVersion::destroy($id);
 
         return response()->json(['message' => 'Versión eliminada con éxito.']);
     }

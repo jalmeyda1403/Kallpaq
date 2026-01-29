@@ -4,7 +4,7 @@
             <ol class="breadcrumb bg-white shadow-sm py-2 px-3 rounded-lg border mb-4">
                 <li class="breadcrumb-item"><router-link to="/home"
                         class="text-danger font-weight-bold">Inicio</router-link></li>
-                <li class="breadcrumb-item active" aria-current="page">Mis Riesgos Asignados</li>
+                <li class="breadcrumb-item active" aria-current="page">Mis Riesgos</li>
             </ol>
         </nav>
 
@@ -13,7 +13,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
                         <h5 class="card-title text-danger mb-0 font-weight-bold">
-                            <i class="fas fa-user-shield mr-2"></i>Mis Riesgos (Especialista)
+                            <i class="fas fa-building mr-2"></i>Mis Riesgos (Unidad Orgánica)
                         </h5>
                     </div>
                     <div class="col-md-6 text-md-right">
@@ -97,7 +97,7 @@
                         <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
                             <template #body="{ data }">
                                 <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A'
-                                    }}</span>
+                                }}</span>
                             </template>
                         </Column>
                         <Column field="riesgo_nombre" header="Descripción del Riesgo" sortable style="width:30%">
@@ -111,7 +111,7 @@
                         <Column field="factor.nombre" header="Factor" sortable style="width:10%">
                             <template #body="{ data }">
                                 <span class="badge badge-light border text-muted">{{ data.factor?.nombre || 'General'
-                                    }}</span>
+                                }}</span>
                             </template>
                         </Column>
                         <Column field="riesgo_nivel" header="Nivel" sortable style="width:10%">
@@ -245,15 +245,15 @@ const localFilters = ref({
 
 const search = () => {
     store.filters = { ...localFilters.value };
-    store.fetchMisRiesgos({ scope: 'specialist' });
+    store.fetchMisRiesgos({ scope: 'ouo' });
 };
 
 onMounted(() => {
-    store.fetchMisRiesgos({ scope: 'specialist' });
+    store.fetchMisRiesgos({ scope: 'ouo' });
 });
 
 const refreshList = () => {
-    store.fetchMisRiesgos({ scope: 'specialist' });
+    store.fetchMisRiesgos({ scope: 'ouo' });
 };
 
 const openAccionesModal = (riesgo) => {

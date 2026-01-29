@@ -35,8 +35,8 @@ export const useRiesgoStore = defineStore('riesgo', {
             factor: '',
             tipo: '',
             nivel: '',
-
-            matriz: ''
+            matriz: '',
+            especialista_id: ''
         },
         especialistas: [],
         especialistaActual: null,
@@ -117,6 +117,20 @@ export const useRiesgoStore = defineStore('riesgo', {
                 this.currentTab = 'RiesgoForm';
                 this.acciones = [];
             }
+            // Pre-fetch specialists list early in the background
+            if (this.especialistas.length === 0) {
+                this.fetchSpecialistsList();
+            }
+        },
+
+        async fetchSpecialistsList() {
+            if (this.especialistas.length > 0) return;
+            try {
+                const response = await axios.get('/especialistas');
+                this.especialistas = response.data;
+            } catch (error) {
+                console.error('Error fetching specialists list:', error);
+            }
         },
 
         openAccionesModal(riesgo) {
@@ -168,13 +182,33 @@ export const useRiesgoStore = defineStore('riesgo', {
             }
         },
 
-        async deleteRiesgo(id) {
+        async createAccion(riesgoId, data) {
+            this.loadingAcciones = true;
             try {
-                await axios.delete(`/api/riesgos/${id}`);
-                this.fetchMisRiesgos();
+                const response = await axios.post(`/api/riesgos/${riesgoId}/acciones`, data);
+                await this.fetchAcciones(riesgoId);
+                return response.data;
             } catch (error) {
-                console.error('Error deleting riesgo:', error);
+                console.error('Error creating accion:', error);
                 throw error;
+            } finally {
+                this.loadingAcciones = false;
+            }
+        },
+
+        async updateAccion(accionId, data) {
+            this.loadingAcciones = true;
+            try {
+                const response = await axios.put(`/api/riesgo-acciones/${accionId}`, data);
+                if (this.riesgoActual && this.riesgoActual.id) {
+                    await this.fetchAcciones(this.riesgoActual.id);
+                }
+                return response.data;
+            } catch (error) {
+                console.error('Error updating accion:', error);
+                throw error;
+            } finally {
+                this.loadingAcciones = false;
             }
         },
 
@@ -199,10 +233,8 @@ export const useRiesgoStore = defineStore('riesgo', {
                     }
                 });
 
-                // Update the action in the list
-                const index = this.acciones.findIndex(a => a.id === id);
-                if (index !== -1) {
-                    this.acciones[index] = response.data;
+                if (this.riesgoActual && this.riesgoActual.id) {
+                    await this.fetchAcciones(this.riesgoActual.id);
                 }
 
                 return response.data;
@@ -211,6 +243,43 @@ export const useRiesgoStore = defineStore('riesgo', {
                 throw error;
             } finally {
                 this.loadingAcciones = false;
+            }
+        },
+
+        async reprogramarAccion(id, formData) {
+            this.loadingAcciones = true;
+            try {
+                const response = await axios.post(`/api/riesgo-acciones/${id}/reprogramar`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Error in reprogramarAccion:', error);
+                throw error;
+            } finally {
+                this.loadingAcciones = false;
+            }
+        },
+
+        async aprobarReprogramacion(id, comentario) {
+            try {
+                const response = await axios.post(`/api/riesgo-acciones/reprogramaciones/${id}/aprobar`, { comentario });
+                return response.data;
+            } catch (error) {
+                console.error('Error approving reprogramming:', error);
+                throw error;
+            }
+        },
+
+        async rechazarReprogramacion(id, comentario) {
+            try {
+                const response = await axios.post(`/api/riesgo-acciones/reprogramaciones/${id}/rechazar`, { comentario });
+                return response.data;
+            } catch (error) {
+                console.error('Error rejecting reprogramming:', error);
+                throw error;
             }
         },
 
@@ -248,12 +317,17 @@ export const useRiesgoStore = defineStore('riesgo', {
             this.loadingAsignaciones = true;
             try {
                 // Fetch available specialists only if not already loaded
-                if (this.especialistas.length === 0) {
-                    const usersResponse = await axios.get('/especialistas');
-                    this.especialistas = usersResponse.data;
+                await this.fetchSpecialistsList();
+
+                // Optimization: If risk already has specialist object, use it instead of API call
+                if (this.riesgoActual && this.riesgoActual.especialista) {
+                    this.especialistaActual = this.riesgoActual.especialista;
+                    this.asignacionesLoadedForRiesgoId = this.riesgoActual.id;
+                    this.loadingAsignaciones = false;
+                    return;
                 }
 
-                // Fetch current assignment
+                // Fetch current assignment (fallback or if not loaded)
                 const asignacionResponse = await axios.get(`/api/riesgos/${this.riesgoActual.id}/asignaciones`);
                 this.especialistaActual = asignacionResponse.data.actual;
                 this.asignacionesLoadedForRiesgoId = this.riesgoActual.id; // Mark as loaded for this risk

@@ -66,29 +66,32 @@ class RiesgoController extends Controller
             // Scope: Specialist - Risks where the user is the assigned specialist
             $query = Riesgo::where('especialista_id', '=', $user->id, 'and')
                 ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
-        } else {
-            // Default Scope: OUO - Risks related to user's OUOs processes where they are Owner or Delegate
+        } elseif ($scope === 'ouo') {
+            // Scope: OUO - Risks related to user's OUOs processes where they are Owner or Delegate
             $procesosIds = $user->getProcesosAsociadosIds();
 
             $query = Riesgo::whereIn('proceso_id', $procesosIds, 'and', false)
                 ->with(['proceso', 'factor', 'revisiones.responsable', 'especialista']);
+        } else {
+            // Default: empty list if scope is unknown
+            $query = Riesgo::where('id', '<', 0, 'and');
         }
 
         // Add counts for actions and reprogrammings
         $query->withCount([
             'acciones as acciones_total_count',
             'acciones as acciones_completadas_count' => function ($query) {
-                $query->whereIn('ra_estado', ['implementada', 'desestimada']);
+                $query->whereIn('accion_estado', ['implementada', 'desestimada']);
             },
             'acciones as acciones_programadas_count' => function ($query) {
-                $query->where('ra_estado', '!=', 'desestimada');
+                $query->where('accion_estado', '!=', 'desestimada');
             },
             'acciones as acciones_pendientes_count' => function ($query) {
-                $query->whereNotIn('ra_estado', ['implementada', 'desestimada']);
+                $query->whereNotIn('accion_estado', ['implementada', 'desestimada']);
             },
             'acciones as reprogramaciones_pendientes_count' => function ($query) {
                 $query->whereHas('reprogramaciones', function ($q) {
-                    $q->where('rar_estado', 'pendiente');
+                    $q->where('ar_estado', 'pendiente');
                 });
             }
         ]);
@@ -123,6 +126,10 @@ class RiesgoController extends Controller
 
         if ($request->has('matriz') && !empty($request->matriz)) {
             $query->where('riesgo_matriz', $request->matriz);
+        }
+
+        if ($request->has('especialista_id') && !empty($request->especialista_id)) {
+            $query->where('especialista_id', $request->especialista_id);
         }
 
         $riesgos = $query->get();

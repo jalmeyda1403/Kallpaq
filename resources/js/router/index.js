@@ -260,9 +260,9 @@ const routes = [
                 component: () => import('@/components/obligaciones/MisObligaciones.vue'),
             },
             {
-                path: 'obligaciones/seguimiento',
-                name: 'obligaciones.seguimiento',
-                component: BladeViewPlaceholder // Placeholder
+                path: 'obligaciones/asignadas',
+                name: 'obligaciones.asignadas',
+                component: () => import('@/components/obligaciones/MisObligacionesAsignadas.vue'),
             },
             {
                 path: 'dashboard/obligaciones',
@@ -287,9 +287,13 @@ const routes = [
                 component: () => import('@/components/riesgos/MisRiesgos.vue'),
             },
             {
+                path: 'riesgos/asignados',
+                name: 'riesgos.asignados',
+                component: () => import('@/components/riesgos/MisRiesgosAsignados.vue'),
+            },
+            {
                 path: 'riesgos/verificacion',
-                name: 'riesgos.verificacion',
-                component: () => import('@/components/riesgos/RiesgoVerificacionIndex.vue'),
+                redirect: { name: 'riesgos.asignados' }
             },
             {
                 path: 'dashboard/riesgos',

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Models\HallazgoProceso;
 use App\Models\AccionReprogramacion;
+use App\Models\Riesgo;
+use App\Models\Obligacion;
 
 class AccionController extends Controller
 {
@@ -27,8 +29,8 @@ class AccionController extends Controller
             ])
             ->select([
                 'id',
-                'hallazgo_id',
-                'hallazgo_proceso_id',
+                'accion_hallazgo_id',
+                'accion_hallazgo_proceso_id',
                 'accion_cod',
                 'accion_tipo',
                 'accion_descripcion',
@@ -36,7 +38,6 @@ class AccionController extends Controller
                 'accion_fecha_inicio',
                 'accion_fecha_fin_planificada',
                 'accion_fecha_fin_reprogramada',
-                'accion_estado',
                 'accion_estado',
                 'created_at',
                 'updated_at'
@@ -95,8 +96,8 @@ class AccionController extends Controller
             ])
             ->select([
                 'id',
-                'hallazgo_id',
-                'hallazgo_proceso_id',
+                'accion_hallazgo_id',
+                'accion_hallazgo_proceso_id',
                 'accion_cod',
                 'accion_tipo',
                 'accion_descripcion',
@@ -104,7 +105,6 @@ class AccionController extends Controller
                 'accion_fecha_inicio',
                 'accion_fecha_fin_planificada',
                 'accion_fecha_fin_reprogramada',
-                'accion_estado',
                 'accion_estado',
                 'created_at',
                 'updated_at'
@@ -256,7 +256,7 @@ class AccionController extends Controller
         }
 
         $accion->accion_estado = 'implementada';
-        $accion->accion_fecha_fin_real = Carbon::now();
+        $accion->accion_fecha_fin_real = Carbon::now()->toDateString();
         $accion->save();
 
         $this->updateHallazgoAvance($accion->hallazgo);
@@ -319,7 +319,7 @@ class AccionController extends Controller
     {
         // Fetch actions related to the specific hallazgo and process
         // Eager load necessary relationships for the frontend display
-        $acciones = Accion::where('hallazgo_id', '=', $hallazgo->id, 'and')
+        $acciones = Accion::where('accion_hallazgo_id', '=', $hallazgo->id, 'and')
             ->whereHas('hallazgoProceso', function ($query) use ($proceso) {
                 $query->where('proceso_id', '=', $proceso->id, 'and');
             })
@@ -484,7 +484,7 @@ class AccionController extends Controller
             ->firstOrFail();
 
         // Generate accion_cod
-        $ultimoAccion = Accion::where('hallazgo_id', '=', $hallazgo->id, 'and')->latest('id')->first();
+        $ultimoAccion = Accion::where('accion_hallazgo_id', '=', $hallazgo->id, 'and')->latest('id')->first();
         if ($ultimoAccion) {
             $parts = explode('-', $ultimoAccion->accion_cod);
             $correlativo = (int) end($parts) + 1;
@@ -493,8 +493,8 @@ class AccionController extends Controller
         }
         $accionCod = $hallazgo->hallazgo_cod . '-' . sprintf('%03d', $correlativo);
 
-        $validatedData['hallazgo_id'] = $hallazgo->id;
-        $validatedData['hallazgo_proceso_id'] = $hallazgoProceso->id;
+        $validatedData['accion_hallazgo_id'] = $hallazgo->id;
+        $validatedData['accion_hallazgo_proceso_id'] = $hallazgoProceso->id;
         $validatedData['accion_cod'] = $accionCod;
         $validatedData['accion_estado'] = 'programada'; // Set initial state to 'programada'
         $validatedData['accion_ciclo'] = $hallazgo->hallazgo_ciclo ?? 0; // Copy hallazgo_ciclo to accion_ciclo
@@ -560,8 +560,8 @@ class AccionController extends Controller
             ])
             ->select([
                 'id',
-                'hallazgo_id',
-                'hallazgo_proceso_id',
+                'accion_hallazgo_id',
+                'accion_hallazgo_proceso_id',
                 'accion_cod',
                 'accion_tipo',
                 'accion_descripcion',
@@ -634,5 +634,85 @@ class AccionController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->download('Plan_Accion_' . $hallazgo->hallazgo_cod . '.pdf');
+    }
+
+    /**
+     * Acciones para Riesgos
+     */
+    public function getAccionesPorRiesgo($riesgoId)
+    {
+        $acciones = Accion::where('accion_riesgo_id', '=', $riesgoId, 'and')
+            ->with([
+                'responsable:id,name,email',
+                'reprogramaciones',
+                'avances.usuario:id,name'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($acciones);
+    }
+
+    public function storeAccionRiesgo(Request $request, $riesgoId)
+    {
+        $request->validate([
+            'accion_descripcion' => 'required|string',
+            'accion_responsable' => 'required',
+            'accion_fecha_inicio' => 'required|date',
+            'accion_fecha_fin_planificada' => 'required|date|after_or_equal:accion_fecha_inicio',
+        ]);
+
+        $accion = new Accion($request->all());
+        $accion->accion_riesgo_id = $riesgoId;
+        $accion->accion_estado = 'programada';
+
+        // Generar código para riesgo
+        $ultimo = Accion::where('accion_riesgo_id', '=', $riesgoId, 'and')->latest('id')->first();
+        $correlativo = $ultimo ? ((int) substr($ultimo->accion_cod, -3)) + 1 : 1;
+        $accion->accion_cod = 'AR-' . $riesgoId . '-' . sprintf('%03d', $correlativo);
+
+        $accion->save();
+
+        return response()->json($accion, 201);
+    }
+
+    /**
+     * Acciones para Obligaciones
+     */
+    public function getAccionesPorObligacion(Obligacion $obligacion)
+    {
+        $acciones = $obligacion->acciones()
+            ->with([
+                'responsable:id,name,email',
+                'reprogramaciones',
+                'avances.usuario:id,name'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($acciones);
+    }
+
+    public function storeAccionObligacion(Request $request, Obligacion $obligacion)
+    {
+        $request->validate([
+            'accion_descripcion' => 'required|string',
+            'accion_responsable' => 'required',
+            'accion_fecha_inicio' => 'required|date',
+            'accion_fecha_fin_planificada' => 'required|date|after_or_equal:accion_fecha_inicio',
+        ]);
+
+        $accion = new Accion($request->all());
+        $accion->accion_obligacion_id = $obligacion->id;
+        $accion->accion_estado = 'programada';
+
+        // Generar código para obligacion
+        $ultimo = Accion::where('accion_obligacion_id', '=', $obligacion->id, 'and')->latest('id')->first();
+        $correlativo = $ultimo ? ((int) substr($ultimo->accion_cod, -3)) + 1 : 1;
+        $accion->accion_cod = 'AO-' . $obligacion->id . '-' . sprintf('%03d', $correlativo);
+
+        $accion->save();
+
+        return response()->json($accion, 201);
     }
 }

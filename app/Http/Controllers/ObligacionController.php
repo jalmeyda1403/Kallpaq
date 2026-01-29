@@ -45,14 +45,31 @@ class ObligacionController extends Controller
     public function misObligaciones(Request $request)
     {
         $user = auth()->user();
+        $scope = $request->query('scope', 'ouo');
 
-        // Obtener IDs de TODOS los procesos asociados a las OUOs del usuario (Unidad Orgánica)
-        $procesoIds = $user->getAllProcesosAsociadosIds();
+        // Seleccionar relaciones base
+        $query = Obligacion::with(['procesos', 'area_compliance', 'subarea_compliance', 'documento', 'radar', 'controles']);
 
-        $query = Obligacion::with('procesos', 'area_compliance', 'subarea_compliance', 'documento', 'radar', 'controles')
-            ->whereHas('procesos', function ($q) use ($procesoIds) {
+        if ($scope === 'specialist') {
+            // Scope: Specialist - Obligaciones donde el usuario es responsable de al menos una acción
+            $query->whereHas('acciones', function ($q) use ($user) {
+                $q->where('accion_responsable', $user->id);
+            });
+        } else {
+            // Scope: OUO - Obligaciones relacionadas a los procesos de las OUOs del usuario
+            $procesoIds = $user->getAllProcesosAsociadosIds();
+            $query->whereHas('procesos', function ($q) use ($procesoIds) {
                 $q->whereIn('procesos.id', $procesoIds);
             });
+        }
+
+        // Agregar estadísticas de acciones para la barra de progreso
+        $query->withCount([
+            'acciones as acciones_total_count',
+            'acciones as acciones_completadas_count' => function ($q) {
+                $q->whereIn('accion_estado', ['implementada', 'finalizada', 'desestimada']);
+            }
+        ]);
 
         // Aplicar los mismos filtros que en apiIndex si es necesario
         if ($request->filled('proceso')) {
@@ -303,8 +320,8 @@ class ObligacionController extends Controller
             'accion_tipo' => 'Correctora', // Default for now
             'accion_estado' => 'abierta',
             'accion_cod' => 'ACT-' . time(), // Simple generation
-            'hallazgo_proceso_id' => $obligacion->procesos->first()->id ?? null, // Link to first process as fallback
-            // 'hallazgo_id' remains null as this is linked to Obligacion
+            'accion_hallazgo_proceso_id' => $obligacion->procesos->first()->id ?? null, // Link to first process as fallback
+            // 'accion_hallazgo_id' remains null as this is linked to Obligacion
         ]);
 
         return response()->json(['message' => 'Acción creada exitosamente', 'accion' => $accion]);

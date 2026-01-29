@@ -9,7 +9,7 @@ class EspecialistaController extends Controller
 {
     public function index()
     {
-        $especialistas = Especialista::all();
+        $especialistas = Especialista::with('user')->get();
         $especialistas = $especialistas->map(function ($especialista) {
             return [
                 'id' => $especialista->user_id,

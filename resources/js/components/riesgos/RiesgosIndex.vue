@@ -59,6 +59,14 @@
                                         <option value="Bajo">Bajo</option>
                                     </select>
                                 </div>
+                                <div class="col">
+                                    <select v-model="localFilters.especialista_id" class="form-control">
+                                        <option value="">Especialista: Todos</option>
+                                        <option v-for="esp in especialistas" :key="esp.id" :value="esp.id">
+                                            {{ esp.descripcion }}
+                                        </option>
+                                    </select>
+                                </div>
                                 <div class="col-auto">
                                     <button type="submit" class="btn bg-dark text-white shadow-sm">
                                         <i class="fas fa-search mr-1"></i> Buscar
@@ -97,7 +105,7 @@
                         <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
                             <template #body="{ data }">
                                 <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A'
-                                    }}</span>
+                                }}</span>
                             </template>
                         </Column>
                         <Column field="riesgo_nombre" header="Descripción del Riesgo" sortable style="width:30%">
@@ -111,7 +119,7 @@
                         <Column field="factor.nombre" header="Factor" sortable style="width:10%">
                             <template #body="{ data }">
                                 <span class="badge badge-light border text-muted">{{ data.factor?.nombre || 'General'
-                                    }}</span>
+                                }}</span>
                             </template>
                         </Column>
                         <Column field="riesgo_nivel" header="Nivel" sortable style="width:10%">
@@ -225,6 +233,7 @@ import ProgressBar from 'primevue/progressbar';
 
 const store = useRiesgoStore();
 const riesgos = computed(() => store.riesgos);
+const especialistas = computed(() => store.especialistas);
 const loading = computed(() => store.loading);
 const dt = ref(null);
 const showMapaCalor = ref(false);
@@ -243,7 +252,8 @@ const localFilters = ref({
     factor: store.filters.factor,
     tipo: store.filters.tipo,
     nivel: store.filters.nivel,
-    matriz: store.filters.matriz
+    matriz: store.filters.matriz,
+    especialista_id: store.filters.especialista_id
 });
 
 const search = () => {
@@ -253,6 +263,7 @@ const search = () => {
 
 onMounted(() => {
     store.fetchMisRiesgos({ scope: null });
+    store.fetchSpecialistsList();
 });
 
 const refreshList = () => {

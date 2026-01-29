@@ -13,7 +13,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-6 text-md-left">
                         <h5 class="card-title text-danger mb-0 font-weight-bold">
-                            <i class="fas fa-clipboard-check mr-2"></i>Mis Obligaciones Asignadas
+                            <i class="fas fa-clipboard-check mr-2"></i>Mis Obligaciones (Unidad Orgánica)
                         </h5>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
                     <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
                         <template #body="{ data }">
                             <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A'
-                            }}</span>
+                                }}</span>
                         </template>
                     </Column>
                     <Column field="documento.nombre_documento" header="Documento" style="width:25%">
@@ -81,7 +81,7 @@
                                 <i class="far fa-file-pdf text-danger mr-2 fa-lg" v-if="data.documento"></i>
                                 <span v-if="data.documento" class="text-break small">{{
                                     data.documento.nombre_documento
-                                }}</span>
+                                    }}</span>
                                 <span v-else class="text-break small text-muted">{{ data.documento_tecnico_normativo
                                     ||
                                     'Sin documento' }}</span>
@@ -91,7 +91,7 @@
                     <Column field="obligacion_principal" header="Obligación Principal" style="width:25%">
                         <template #body="{ data }">
                             <span class="small d-block text-justify text-secondary">{{ data.obligacion_principal
-                            }}</span>
+                                }}</span>
                         </template>
                     </Column>
                     <Column field="consecuencia_incumplimiento" header="Consecuencia" style="width:15%">

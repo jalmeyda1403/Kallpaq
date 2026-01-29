@@ -45,23 +45,7 @@ class DashboardRiesgosController extends Controller
         }
 
         $riesgos = $riesgosQuery->get();
-
-        // Estadísticas generales
-        $stats = [
-            'total' => $riesgos->count(),
-            'criticos' => $riesgos->whereIn('riesgo_nivel', ['Alto', 'Muy Alto'])->count(),
-            'enTratamiento' => $riesgos->whereIn('riesgo_estado', ['en_tratamiento', 'proyecto'])->count(),
-            'vencidos' => $riesgos->filter(function ($r) {
-                return $r->riesgo_fecha_valoracion_rr && Carbon::parse($r->riesgo_fecha_valoracion_rr)->isPast();
-            })->count(),
-            'distribucionNivel' => [
-                'Bajo' => $riesgos->where('riesgo_nivel', 'Bajo')->count(),
-                'Medio' => $riesgos->where('riesgo_nivel', 'Medio')->count(),
-                'Alto' => $riesgos->where('riesgo_nivel', 'Alto')->count(),
-                'Muy Alto' => $riesgos->where('riesgo_nivel', 'Muy Alto')->count(),
-            ],
-            'distribucionEstado' => $riesgos->groupBy('riesgo_estado')->map->count(),
-        ];
+        $stats = $this->getStats($riesgos);
 
         // Acciones (Tratamientos) Vencidas
         $riesgoIds = $riesgos->pluck('id')->toArray();
@@ -104,5 +88,24 @@ class DashboardRiesgosController extends Controller
             'resumenProcesos' => $resumenProcesos,
             'esAdmin' => $esAdmin,
         ]);
+    }
+
+    private function getStats($riesgos)
+    {
+        return [
+            'total' => $riesgos->count(),
+            'criticos' => $riesgos->whereIn('riesgo_nivel', ['Alto', 'Muy Alto'])->count(),
+            'enTratamiento' => $riesgos->whereIn('riesgo_estado', ['en_tratamiento', 'proyecto'])->count(),
+            'vencidos' => $riesgos->filter(function ($r) {
+                return $r->riesgo_fecha_valoracion_rr && Carbon::parse($r->riesgo_fecha_valoracion_rr)->isPast();
+            })->count(),
+            'distribucionNivel' => [
+                'Bajo' => $riesgos->where('riesgo_nivel', 'Bajo')->count(),
+                'Medio' => $riesgos->where('riesgo_nivel', 'Medio')->count(),
+                'Alto' => $riesgos->where('riesgo_nivel', 'Alto')->count(),
+                'Muy Alto' => $riesgos->where('riesgo_nivel', 'Muy Alto')->count(),
+            ],
+            'distribucionEstado' => $riesgos->groupBy('riesgo_estado')->map->count(),
+        ];
     }
 }

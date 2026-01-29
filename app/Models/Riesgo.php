@@ -73,6 +73,16 @@ class Riesgo extends Model
         return $this->belongsTo(Proceso::class, 'proceso_id');
     }
 
+    public function acciones()
+    {
+        return $this->hasMany(Accion::class, 'accion_riesgo_id');
+    }
+
+    public function revisiones()
+    {
+        return $this->hasMany(RiesgoRevision::class, 'riesgo_id');
+    }
+
 
     // Método para asignar la valoración del riesgo
     public function calcularRiesgoNivel()

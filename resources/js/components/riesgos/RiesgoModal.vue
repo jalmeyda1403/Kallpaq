@@ -100,7 +100,10 @@ onMounted(() => {
     });
 
     // Handle hidden event
-    modalRef.value.addEventListener('hidden.bs.modal', () => {
+    modalRef.value.addEventListener('hidden.bs.modal', (event) => {
+        // Prevent closing store modal if the event came from a nested modal/dialog
+        if (event.target !== modalRef.value) return;
+
         if (store.isModalOpen) {
             store.fetchMisRiesgos(); // Refresh list on close
             store.closeModal();

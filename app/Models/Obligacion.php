@@ -109,6 +109,6 @@ class Obligacion extends Model
 
     public function acciones()
     {
-        return $this->hasMany(Accion::class);
+        return $this->hasMany(Accion::class, 'accion_obligacion_id');
     }
 }

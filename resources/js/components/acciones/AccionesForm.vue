@@ -105,10 +105,10 @@
                                     </div>
 
                                     <div class="custom-control custom-switch mt-3">
-                                        <input type="checkbox" class="custom-control-input" id="es_control_permanente"
-                                            v-model="form.es_control_permanente">
+                                        <input type="checkbox" class="custom-control-input" id="accion_es_control_permanente"
+                                            v-model="form.accion_es_control_permanente">
                                         <label class="custom-control-label font-weight-bold"
-                                            for="es_control_permanente">
+                                            for="accion_es_control_permanente">
                                             ¿Establece un Control Permanente?
                                         </label>
                                         <small class="d-block text-muted">Active esto si la acción resultará en una
@@ -178,7 +178,7 @@ const form = reactive({
     accion_fecha_inicio: '',
     accion_fecha_fin_planificada: '',
     accion_estado: 'programada',
-    es_control_permanente: false
+    accion_es_control_permanente: false
 });
 
 const isEditing = computed(() => !!form.id);
@@ -231,7 +231,7 @@ const resetForm = () => {
     form.accion_fecha_inicio = '';
     form.accion_fecha_fin_planificada = '';
     form.accion_estado = 'programada';
-    form.es_control_permanente = false;
+    form.accion_es_control_permanente = false;
 };
 
 const closeModal = () => {
