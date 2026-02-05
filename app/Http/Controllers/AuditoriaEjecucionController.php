@@ -83,7 +83,14 @@ class AuditoriaEjecucionController extends Controller
     public function show($id)
     {
         // $id is agenda_id here
-        $agendaItem = AuditoriaAgenda::with(['checklists', 'proceso', 'auditor.user', 'auditoria'])->findOrFail($id);
+        $agendaItem = AuditoriaAgenda::with(['checklists', 'proceso', 'auditor.user', 'auditoria'])
+            ->withCount([
+                'checklists as total_items',
+                'checklists as completed_items' => function ($query) {
+                    $query->where('estado_cumplimiento', '!=', 'Sin Evaluar');
+                }
+            ])
+            ->findOrFail($id);
 
         // Enriquecer aea_requisito con el nombre de la norma
         if (is_array($agendaItem->aea_requisito)) {

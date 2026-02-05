@@ -446,6 +446,11 @@ const updateItem = async (item, field, value) => {
             [field]: value
         });
         toast.add({ severity: 'success', summary: 'Guardado', detail: 'Item actualizado', life: 1000 });
+
+        // Refresh Agenda Progress in Store (Silent refresh)
+        if (props.agendaId) {
+            store.refreshAgendaItem(props.agendaId);
+        }
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error guardando', life: 3000 });
     }

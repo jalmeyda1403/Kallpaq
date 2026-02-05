@@ -110,7 +110,7 @@
                                                 <i class="fas fa-user-tie text-secondary mr-1"></i>
                                                 <span class="small text-muted font-weight-bold">Auditor:</span>
                                                 <span class="small ml-1">{{ store.getAuditorForAgenda(group.sessions[0])
-                                                    }}</span>
+                                                }}</span>
                                             </div>
 
                                             <!-- Requisitos consolidados -->
@@ -403,7 +403,7 @@ const groupedActivities = computed(() => {
     });
 });
 
-// Progreso Global de la Auditoría (Actividades completadas / Total actividades)
+// Progreso Global de la Auditoría (Promedio de avance de las actividades)
 const globalProgress = computed(() => {
     const rawItems = store.getExecutionList;
     if (!rawItems || rawItems.length === 0) return 0;
@@ -412,8 +412,25 @@ const globalProgress = computed(() => {
     const groups = groupedActivities.value;
     if (groups.length === 0) return 0;
 
-    const completed = groups.filter(g => g.estado === 'Concluida').length;
-    return Math.round((completed / groups.length) * 100);
+    let totalProgressSum = 0;
+
+    groups.forEach(g => {
+        // Determinamos el tipo de sesión principal
+        const type = g.sessions[0].aea_tipo;
+
+        if (['gabinete', 'apertura', 'cierre'].includes(type) || g.estado === 'Programada') {
+            // Para actividades administrativas, es binario (0 o 100)
+            // A menos que estén 'En Curso' que sigue siendo 0 hasta que suban el archivo
+            if (g.estado === 'Concluida') {
+                totalProgressSum += 100;
+            }
+        } else {
+            // Para ejecución (checklist), usamos el porcentaje calculado
+            totalProgressSum += (g.progress || 0);
+        }
+    });
+
+    return Math.round(totalProgressSum / groups.length);
 });
 
 
