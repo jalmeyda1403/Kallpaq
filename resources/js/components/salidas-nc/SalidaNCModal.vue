@@ -93,13 +93,7 @@
                                 </div>
                             </div>
 
-                            <!-- Quinta fila: Responsable -->
-                            <div class="form-group">
-                                <label class="font-weight-bold custom-label">Responsable <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" v-model="form.snc_responsable" class="form-control" required
-                                    placeholder="Ingrese el nombre del responsable...">
-                            </div>
+
 
                             <!-- Sexta fila: Evidencia -->
                             <div class="form-group">

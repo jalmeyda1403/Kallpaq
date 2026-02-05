@@ -12,17 +12,49 @@
                     </div>
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
+                            <!-- Row 1: Tratamiento | Requiere Accion | Estado -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold text-dark custom-label">Tratamiento</label>
+                                        <select v-model="form.snc_tratamiento" class="form-control">
+                                            <option value="">Selecciona...</option>
+                                            <option value="corrección">Corrección</option>
+                                            <option value="concesion o aceptación">Concesión o Aceptación</option>
+                                            <option value="rechazo">Rechazo</option>
+                                            <option value="sustitucion">Sustitución</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold text-dark custom-label">Requiere Acción
+                                            Correctiva</label>
+                                        <select v-model="form.snc_requiere_accion_correctiva" class="form-control">
+                                            <option :value="null">Seleccionar...</option>
+                                            <option :value="true">Sí</option>
+                                            <option :value="false">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold text-dark custom-label">Estado</label>
+                                        <select v-model="form.snc_estado" class="form-control" @change="onEstadoChange">
+                                            <option value="registrada">Registrada</option>
+                                            <option value="en tratamiento">En Tratamiento</option>
+                                            <option value="tratada">Tratada (Cerrada)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Responsable -->
                             <div class="form-group">
-                                <label class="font-weight-bold text-dark custom-label">Tratamiento</label>
-                                <select v-model="form.snc_tratamiento" class="form-control">
-                                    <option value="">Selecciona un tipo de tratamiento...</option>
-                                    <option value="corrección">Corrección</option>
-                                    <option value="concesion">Concesión</option>
-                                    <option value="reclasificación">Reclasificación</option>
-                                    <option value="rechazo">Rechazo</option>
-                                    <option value="retención">Retención</option>
-                                    <option value="disposición">Disposición</option>
-                                </select>
+                                <label class="font-weight-bold text-dark custom-label">Responsable <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" v-model="form.snc_responsable" class="form-control" required
+                                    placeholder="Ingrese el nombre del responsable...">
                             </div>
 
                             <div class="form-group">
@@ -45,26 +77,6 @@
                                         <label class="font-weight-bold text-dark custom-label">Costo Estimado</label>
                                         <input type="number" v-model="form.snc_costo_estimado" class="form-control"
                                             min="0" step="0.01" placeholder="Ingrese el costo estimado...">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold text-dark custom-label">Requiere Acción
-                                            Correctiva</label>
-                                        <select v-model="form.snc_requiere_accion_correctiva" class="form-control">
-                                            <option :value="null">Seleccionar...</option>
-                                            <option :value="true">Sí</option>
-                                            <option :value="false">No</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold text-dark custom-label">Fecha de Cierre</label>
-                                        <input type="date" v-model="form.snc_fecha_cierre" class="form-control">
                                     </div>
                                 </div>
                             </div>
@@ -170,6 +182,7 @@ const emit = defineEmits(['update:show', 'saved']);
 const salidasNCStore = useSalidasNCStore();
 
 const form = ref({
+    snc_responsable: '',
     snc_tratamiento: '',
     snc_descripcion_tratamiento: '',
     snc_fecha_tratamiento: null,
@@ -194,6 +207,16 @@ onMounted(() => {
     // Cargar datos iniciales si es edición
 });
 
+const onEstadoChange = () => {
+    if (form.value.snc_estado === 'tratada') {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        form.value.snc_fecha_cierre = `${year}-${month}-${day}`;
+    }
+};
+
 // Función para formatear fecha para input de tipo date
 const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -208,6 +231,7 @@ watch(() => props.snc, (newVal) => {
     if (newVal) {
         // Cargar datos del tratamiento desde la SNC
         form.value = {
+            snc_responsable: newVal.snc_responsable || '', // Cargar responsable
             snc_tratamiento: newVal.snc_tratamiento || '',
             snc_descripcion_tratamiento: newVal.snc_descripcion_tratamiento || '',
             snc_fecha_tratamiento: newVal.snc_fecha_tratamiento ? formatDateForInput(newVal.snc_fecha_tratamiento) : null,
