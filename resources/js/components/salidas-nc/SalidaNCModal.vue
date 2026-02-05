@@ -13,11 +13,10 @@
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
                             <!-- Primera fila: Origen y Clasificación -->
-                            <div class="row">
+                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Origen <span
-                                                class="text-danger">*</span></label>
+                                        <label class="custom-label">Origen <span class="text-danger">*</span></label>
                                         <select v-model="form.snc_origen" class="form-control" required>
                                             <option value="" disabled>Selecciona...</option>
                                             <option value="cliente">Cliente</option>
@@ -29,7 +28,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Clasificación <span
+                                        <label class="custom-label">Clasificación <span
                                                 class="text-danger">*</span></label>
                                         <select v-model="form.snc_clasificacion" class="form-control" required>
                                             <option value="" disabled>Selecciona...</option>
@@ -42,23 +41,21 @@
                             </div>
 
                             <!-- Segunda fila: Descripción -->
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <label class="font-weight-bold custom-label">Descripción <span
-                                            class="text-danger">*</span></label>
-                                    <small class="form-text text-muted">
+                                    <label class="custom-label">Descripción <span class="text-danger">*</span></label>
+                                    <small class="text-muted font-weight-bold">
                                         {{ form.snc_descripcion ? form.snc_descripcion.length : 0 }}/500
                                     </small>
                                 </div>
-                                <textarea v-model="form.snc_descripcion" class="form-control" rows="5" required
-                                    placeholder="Ingrese la descripción de la no conformidad..."
-                                    @input="updateCharCount" maxlength="500"></textarea>
+                                <textarea v-model="form.snc_descripcion" class="form-control" rows="4" required
+                                    placeholder="Detalle la no conformidad detectada..." @input="updateCharCount"
+                                    maxlength="500"></textarea>
                             </div>
 
                             <!-- Tercera fila: Proceso -->
-                            <div class="form-group">
-                                <label class="font-weight-bold custom-label">Proceso <span
-                                        class="text-danger">*</span></label>
+                            <div class="form-group mb-3">
+                                <label class="custom-label">Proceso <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="text" v-model="processName" class="form-control" readonly
                                         placeholder="Seleccionar proceso..." :required="!form.proceso_id">
@@ -75,17 +72,17 @@
                             </div>
 
                             <!-- Cuarta fila: Cantidad Afectada y Fecha Detección -->
-                            <div class="row">
+                            <div class="row mb-4">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Cantidad Afectada</label>
+                                        <label class="custom-label">Cantidad Afectada</label>
                                         <input type="number" v-model="form.snc_cantidad_afectada" class="form-control"
                                             min="0" placeholder="Ingrese la cantidad afectada...">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Fecha Detección <span
+                                        <label class="custom-label">Fecha Detección <span
                                                 class="text-danger">*</span></label>
                                         <input type="date" v-model="form.snc_fecha_deteccion" class="form-control"
                                             required>
@@ -93,82 +90,75 @@
                                 </div>
                             </div>
 
-
-
                             <!-- Sexta fila: Evidencia -->
-                            <div class="form-group">
-                                <label class="font-weight-bold custom-label">Evidencia</label>
-                                <small class="form-text text-muted mb-2">Adjunte archivos de evidencia si los
-                                    tiene.</small>
+                            <div class="form-group mb-0">
+                                <label class="custom-label">Evidencia</label>
+                                <small class="d-block text-muted mb-2">Adjunte archivos de soporte (imágenes,
+                                    documentos,
+                                    PDFs).</small>
                                 <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
                                     @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging }"
                                     @click="openFileDialog">
                                     <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
                                         multiple>
-                                    <div class="text-center">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
-                                        <p class="mb-0 mt-2">Arrastra y suelta archivos aquí, o haz clic para
-                                            seleccionar.</p>
-                                        <small class="text-muted">(Peso máximo por archivo: 10MB)</small>
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <p class="mb-1 text-dark font-weight-bold">Arrastra archivos aquí o haz clic</p>
+                                        <small class="text-muted">Máximo 10MB por archivo</small>
                                     </div>
                                 </div>
 
                                 <!-- Lista de archivos seleccionados -->
-                                <ul v-if="filesToUpload.length > 0" class="list-group mt-3">
-                                    <li v-for="file in filesToUpload" :key="file.id" class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-file mr-2 text-muted"></i>
-                                                <span>{{ file.file.name }}</span>
-                                                <div class="progress mt-1" style="height: 8px;">
-                                                    <div class="progress-bar" role="progressbar"
-                                                        :style="{ width: file.progress + '%' }"
-                                                        :aria-valuenow="file.progress" aria-valuemin="0"
-                                                        aria-valuemax="100"></div>
+                                <ul v-if="filesToUpload.length > 0" class="list-group mt-3 shadow-sm">
+                                    <li v-for="file in filesToUpload" :key="file.id"
+                                        class="list-group-item border-0 bg-light mb-1 rounded d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center overflow-hidden">
+                                            <div class="mr-3 text-danger"><i class="fas fa-file-alt fa-lg"></i></div>
+                                            <div class="text-truncate">
+                                                <div class="font-weight-bold text-dark">{{ file.file.name }}</div>
+                                                <div class="progress mt-1" style="height: 4px; width: 100px;">
+                                                    <div class="progress-bar bg-danger" role="progressbar"
+                                                        :style="{ width: file.progress + '%' }"></div>
                                                 </div>
                                             </div>
-                                            <button @click="removeFile(file.id)" class="btn btn-danger btn-sm">
-                                                <i class="fas fa-times"></i>
-                                            </button>
                                         </div>
+                                        <button @click="removeFile(file.id)"
+                                            class="btn btn-sm btn-outline-danger border-0 rounded-circle">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </li>
                                 </ul>
 
                                 <!-- Archivos actualmente almacenados -->
-                                <div v-if="existingFiles.length > 0" class="mt-3">
-                                    <label class="font-weight-bold">Archivos Existentes:</label>
-                                    <ul class="list-group">
-                                        <li v-for="(file, index) in existingFiles" :key="index"
-                                            class="list-group-item d-flex justify-content-between align-items-center">
-                                            <div class="text-truncate" style="max-width: 85%;">
-                                                <i class="fas fa-paperclip mr-2 text-muted"></i>
-                                                <a :href="`/storage/${file.path}`" target="_blank"
-                                                    class="text-decoration-none text-dark">
-                                                    {{ file.name }}
-                                                </a>
-                                            </div>
+                                <div v-if="existingFiles.length > 0" class="mt-4">
+                                    <h6 class="custom-label text-muted mb-3">Archivos Adjuntos</h6>
+                                    <div class="list-group shadow-sm">
+                                        <div v-for="(file, index) in existingFiles" :key="index"
+                                            class="list-group-item list-group-item-action border-0 bg-light mb-1 rounded d-flex justify-content-between align-items-center">
+                                            <a :href="`/storage/${file.path}`" target="_blank"
+                                                class="d-flex align-items-center text-dark text-decoration-none text-truncate"
+                                                style="max-width: 85%;">
+                                                <i class="fas fa-paperclip mr-3 text-secondary"></i>
+                                                <span class="font-weight-bold">{{ file.name }}</span>
+                                            </a>
                                             <button type="button" @click="removeExistingFile(index)"
-                                                class="btn btn-danger btn-sm" title="Eliminar archivo">
+                                                class="btn btn-sm btn-outline-danger border-0" title="Eliminar archivo">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
-                                        </li>
-                                    </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Séptima fila: Estado (oculto, valor por defecto) -->
+                            <!-- Séptima fila: Estado (oculto) -->
                             <input type="hidden" v-model="form.snc_estado" value="registrada">
                         </div>
-                        <div class="modal-footer d-flex justify-content-between">
-                            <div></div> <!-- Empty div for spacing -->
-                            <div>
-                                <button type="button" class="btn btn-secondary" @click="close">
-                                    <i class="fas fa-times mr-1"></i> Cancelar
-                                </button>
-                                <button type="submit" class="btn btn-danger ml-2" :disabled="!isValid">
-                                    <i class="fas fa-save mr-1"></i> Guardar
-                                </button>
-                            </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="close">
+                                <i class="fas fa-times mr-1"></i> Cancelar</button>
+                            <button type="submit" class="btn btn-danger" :disabled="!isValid"> <i
+                                    class="fas fa-save mr-1"></i>
+                                Guardar</button>
                         </div>
                     </form>
                 </div>

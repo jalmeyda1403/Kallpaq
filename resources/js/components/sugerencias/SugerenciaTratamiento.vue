@@ -20,10 +20,14 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="font-weight-bold text-dark custom-label">Análisis Inicial</label>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="font-weight-bold text-dark custom-label">Análisis Inicial</label>
+                                    <small class="text-muted">{{ form.sugerencia_analisis ?
+                                        form.sugerencia_analisis.length : 0 }}/300</small>
+                                </div>
                                 <textarea v-model="form.sugerencia_analisis" class="form-control" rows="3"
                                     :disabled="form.sugerencia_estado === 'cerrada'"
-                                    placeholder="Análisis de la sugerencia..."></textarea>
+                                    placeholder="Análisis de la sugerencia..." maxlength="300"></textarea>
                             </div>
 
                             <div class="row">
@@ -43,14 +47,10 @@
                                         <label class="font-weight-bold text-dark custom-label">Estado</label>
                                         <select v-model="form.sugerencia_estado" class="form-control" required
                                             :disabled="form.sugerencia_estado === 'cerrada'">
-                                            <option value="abierta">Abierta</option>
+                                            <option value="identificada">Identificada</option>
                                             <option value="en progreso">En Progreso</option>
-                                            <option value="concluida">Concluida</option>
-                                            <option v-if="form.sugerencia_estado === 'observada' ||
-                                                form.sugerencia_estado === 'observada'" value="observada">Observada
-                                            </option>
-                                            <option v-if="form.sugerencia_estado === 'cerrada' ||
-                                                form.sugerencia_estado === 'cerrada'" value="cerrada">Cerrada
+                                            <option value="implementada">Implementada</option>
+                                            <option v-if="form.sugerencia_estado === 'cerrada'" value="cerrada">Cerrada
                                             </option>
                                         </select>
                                     </div>
@@ -58,11 +58,15 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="font-weight-bold text-dark custom-label">Tratamiento / Acción a
-                                    Tomar</label>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="font-weight-bold text-dark custom-label">Tratamiento / Acción a
+                                        Tomar</label>
+                                    <small class="text-muted">{{ form.sugerencia_tratamiento ?
+                                        form.sugerencia_tratamiento.length : 0 }}/500</small>
+                                </div>
                                 <textarea v-model="form.sugerencia_tratamiento" class="form-control" rows="3"
                                     :disabled="form.sugerencia_estado === 'cerrada'"
-                                    placeholder="Descripción del tratamiento..."></textarea>
+                                    placeholder="Descripción del tratamiento..." maxlength="500"></textarea>
                             </div>
 
                             <div class="row">
@@ -74,11 +78,12 @@
                                             :disabled="form.sugerencia_estado === 'cerrada'">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6"
+                                    v-if="form.sugerencia_estado === 'implementada' || form.sugerencia_estado === 'cerrada'">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Fecha Fin Real</label>
                                         <input type="date" v-model="form.sugerencia_fecha_fin_real" class="form-control"
-                                            :disabled="form.sugerencia_estado === 'cerrada'">
+                                            readonly :disabled="true">
                                     </div>
                                 </div>
                             </div>
@@ -145,7 +150,12 @@
                             </div>
                         </div>
                         <div class="modal-footer d-flex justify-content-between">
-                            <div></div> <!-- Empty div for spacing -->
+                            <div>
+                                <button type="button" class="btn btn-purple" v-if="canCloseSugerencia"
+                                    @click="closeSugerencia">
+                                    <i class="fas fa-check-double mr-1"></i> Cerrar Sugerencia
+                                </button>
+                            </div>
                             <div>
                                 <button type="button" class="btn btn-secondary" @click="close">
                                     <i class="fa fa-times mr-1"></i> Cancelar
@@ -164,8 +174,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import { useSugerenciasStore } from '@/stores/sugerenciasStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Modal } from 'bootstrap';
 
 const props = defineProps({
@@ -173,9 +184,10 @@ const props = defineProps({
     sugerenciaId: Number
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'saved', 'open-evaluation']);
 
 const sugerenciasStore = useSugerenciasStore();
+const authStore = useAuthStore();
 
 const modalRef = ref(null);
 const modalInstance = ref(null);
@@ -193,7 +205,8 @@ const form = ref({
     sugerencia_tratamiento: '',
     sugerencia_estado: '',
     sugerencia_fecha_fin_prog: '',
-    sugerencia_fecha_fin_real: ''
+    sugerencia_fecha_fin_real: '',
+    sugerencia_fecha_cierre: '' // Aseguramos que esté inicializado
 });
 
 const formatDateForInput = (dateString) => {
@@ -264,6 +277,30 @@ const close = () => {
     }
     emit('close');
 };
+
+const canCloseSugerencia = computed(() => {
+    if (!props.sugerenciaId) return false;
+    // La eliminación también usa esta lógica: visible para admin/especialista
+    return authStore.hasRole('admin') || authStore.hasRole('especialista');
+});
+
+const closeSugerencia = () => {
+    // En lugar de cerrar directamente, emitimos evento para abrir modal de evaluación
+    // NO cerramos este modal para mantenerlo de fondo (overlay)
+    emit('open-evaluation', props.sugerenciaId);
+};
+
+watch(() => form.value.sugerencia_estado, (newVal) => {
+    if (newVal === 'implementada') {
+        form.value.sugerencia_fecha_fin_real = new Date().toISOString().split('T')[0];
+    }
+});
+
+watch(() => form.value.sugerencia_tratamiento, (newVal) => {
+    if (newVal && newVal.trim().length > 0 && form.value.sugerencia_estado === 'identificada') {
+        form.value.sugerencia_estado = 'en progreso';
+    }
+});
 
 watch(() => props.show, async (newVal) => {
     if (newVal && props.sugerenciaId) {
@@ -338,9 +375,14 @@ const removeExistingFile = (index) => {
 
 const submitForm = async () => {
     try {
-        // Verificar si hay cambios en los archivos (nuevos o eliminados)
         const hasNewFiles = filesToUpload.value.length > 0;
         const hasFileChanges = hasNewFiles || existingFiles.value.length > 0;
+
+        // Validación: Si el estado es 'implementada', debe haber al menos una evidencia
+        if (form.value.sugerencia_estado === 'implementada' && !hasFileChanges) {
+            alert('Para marcar la sugerencia como Implementada, debe adjuntar al menos una evidencia.');
+            return;
+        }
 
         if (hasFileChanges) {
             // Creamos un FormData para manejar la subida de archivos
@@ -397,6 +439,18 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.btn-purple {
+    background-color: #605ca8;
+    color: white;
+    border-color: #605ca8;
+}
+
+.btn-purple:hover {
+    background-color: #4f4c8b;
+    border-color: #4f4c8b;
+    color: white;
+}
+
 .custom-label {
     font-size: 0.9em !important;
     font-weight: 600 !important;
@@ -452,5 +506,6 @@ onUnmounted(() => {
     opacity: 0.6;
     pointer-events: none;
     cursor: not-allowed;
+    border-color: #e9ecef;
 }
 </style>

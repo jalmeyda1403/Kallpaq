@@ -267,8 +267,8 @@ const exportCSV = () => {
 };
 
 const onSNCSaved = () => {
-    // El store ya actualiza las salidas después de cualquier operación
-    // No es necesario hacer nada adicional aquí
+    // Recargar la lista para reflejar los cambios (especialmente estado y fecha de cierre)
+    fetchSalidasNC();
 };
 
 const truncateText = (text, maxLength) => {

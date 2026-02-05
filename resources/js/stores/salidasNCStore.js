@@ -192,15 +192,12 @@ export const useSalidasNCStore = defineStore('salidasNC', {
                     response = await axios.put(route('api.salidas-nc.update', { id: sncId }), data);
                 }
 
-                // Actualizamos en el store
-                const sncIndex = this.salidas.findIndex(snc => snc.id === sncId);
-                if (sncIndex !== -1) {
-                    this.salidas[sncIndex] = response.data;
-                }
+                // No actualizamos manualmente la lista local para evitar inconsistencias.
+                // Dejamos que el componente llame a fetchSalidasNC() para recargar con los filtros activos.
 
                 // Actualizamos la SNC actual si coincide
                 if (this.currentSNC && this.currentSNC.id === sncId) {
-                    this.currentSNC = response.data;
+                    this.currentSNC = response.data.data;
                 }
 
                 return response.data;

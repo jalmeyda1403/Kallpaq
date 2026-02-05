@@ -11,8 +11,10 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div v-if="sugerencia.sugerencia_estado !== 'concluida'" class="alert alert-warning">
-                            <strong>Advertencia:</strong> Esta sugerencia no está en estado 'concluida' y no puede
+                        <div v-if="!['concluida', 'implementada'].includes(sugerencia.sugerencia_estado)"
+                            class="alert alert-warning">
+                            <strong>Advertencia:</strong> Esta sugerencia no está en estado 'concluida' ni
+                            'implementada' y no puede
                             ser validada.
                         </div>
                         <div v-else>
@@ -174,8 +176,8 @@ watch(() => props.show, (newShow) => {
 const validarSugerencia = async () => {
     if (!sugerencia.value) return;
 
-    if (sugerencia.value.sugerencia_estado !== 'concluida') {
-        alert('Esta sugerencia no está en estado concluida y no puede ser validada.');
+    if (!['concluida', 'implementada'].includes(sugerencia.value.sugerencia_estado)) {
+        alert('Esta sugerencia no está en estado concluida ni implementada y no puede ser validada.');
         return;
     }
 

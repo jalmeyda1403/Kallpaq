@@ -129,6 +129,11 @@
                                 class="mr-2 d-inline-block" @click.prevent="validateSugerencia(data)">
                                 <i class="fas fa-check text-success fa-lg"></i>
                             </a>
+                            <a href="#" title="Eliminar" class="d-inline-block"
+                                v-if="authStore.hasRole('admin') || authStore.hasRole('especialista')"
+                                @click.prevent="deleteSugerencia(data.id)">
+                                <i class="fas fa-trash-alt text-danger fa-lg"></i>
+                            </a>
                         </template>
                     </Column>
                 </DataTable>
@@ -141,11 +146,13 @@
 
             <!-- Modal Tratamiento -->
             <SugerenciaTratamiento :show="showTratamientoModal" :sugerencia-id="selectedSugerencia?.id"
-                @close="closeTratamientoModal" @saved="fetchSugerencias"></SugerenciaTratamiento>
+                @close="closeTratamientoModal" @saved="fetchSugerencias"
+                @open-evaluation="openEvaluacionFromTratamiento">
+            </SugerenciaTratamiento>
 
             <!-- Modal Evaluación -->
             <SugerenciaEvaluacionModal :show="showEvaluacionModal" :sugerencia-id="selectedSugerenciaForEvaluation?.id"
-                @close="closeEvaluacionModal" @validated="fetchSugerencias"></SugerenciaEvaluacionModal>
+                @close="closeEvaluacionModal" @validated="handleEvaluacionValidated"></SugerenciaEvaluacionModal>
         </div>
     </div>
 </template>
@@ -246,6 +253,16 @@ const closeEvaluacionModal = () => {
     selectedSugerenciaForEvaluation.value = null;
 };
 
+const openEvaluacionFromTratamiento = (sugerenciaId) => {
+    // Cerramos el modal de tratamiento (ya se hace en el emit, pero aseguramos)
+    showTratamientoModal.value = false;
+
+    // Abrimos el modal de evaluación
+    // Necesitamos cargar la sugerencia completa si no la tenemos, pero el modal ya lo hace por ID
+    selectedSugerenciaForEvaluation.value = { id: sugerenciaId };
+    showEvaluacionModal.value = true;
+};
+
 const confirmDelete = async () => {
     if (!selectedSugerencia.value) {
         await Swal.fire('Advertencia', 'Por favor selecciona una sugerencia para eliminar.', 'warning');
@@ -344,9 +361,10 @@ const getStatusBadgeClass = (status) => {
     switch (status) {
         case 'abierta': return 'badge badge-warning';
         case 'en progreso': return 'badge badge-primary';
+        case 'implementada': return 'badge badge-success';
         case 'concluida': return 'badge badge-info';
-        case 'observada': return 'badge badge-danger';  // Or another appropriate color
-        case 'cerrada': return 'badge badge-success';
+        case 'observada': return 'badge badge-warning';
+        case 'cerrada': return 'badge badge-purple';
         default: return 'badge badge-secondary';
     }
 };
@@ -364,5 +382,10 @@ onMounted(() => {
     padding: 0.4em 0.8em !important;
     border-radius: 0.375rem !important;
     text-transform: capitalize;
+}
+
+.badge-purple {
+    background-color: #605ca8;
+    color: white;
 }
 </style>

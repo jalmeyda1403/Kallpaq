@@ -85,6 +85,49 @@
                                 </div>
                             </div>
 
+                            <!-- Sección de Evidencias -->
+                            <div class="form-group">
+                                <label class="font-weight-bold custom-label">Evidencias de Implementación</label>
+                                <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
+                                    @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging }"
+                                    @click="openFileDialog">
+                                    <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
+                                        multiple>
+                                    <div class="text-center">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                        <p class="mb-0 mt-2">Arrastra archivos aquí o haz clic para seleccionar.</p>
+                                    </div>
+                                </div>
+
+                                <!-- New Files List -->
+                                <ul v-if="filesToUpload.length > 0" class="list-group mt-2">
+                                    <li v-for="file in filesToUpload" :key="file.id"
+                                        class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>{{ file.file.name }}</span>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            @click="removeFile(file.id)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <!-- Existing Files List -->
+                                <div v-if="existingFiles.length > 0" class="mt-2">
+                                    <label class="small font-weight-bold">Archivos Existentes:</label>
+                                    <ul class="list-group">
+                                        <li v-for="(file, index) in existingFiles" :key="index"
+                                            class="list-group-item d-flex justify-content-between align-items-center">
+                                            <a :href="file.path.startsWith('http') ? file.path : `/storage/${file.path}`"
+                                                target="_blank">{{ file.name }}</a>
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                @click="removeExistingFile(index)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
                             <!-- Estado hidden default -->
                             <input type="hidden" v-model="form.sugerencia_estado">
                         </div>
@@ -106,8 +149,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import { useSugerenciasStore } from '@/stores/sugerenciasStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Modal } from 'bootstrap';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
 
@@ -119,12 +163,14 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved']);
 
 const sugerenciasStore = useSugerenciasStore();
+const authStore = useAuthStore();
 
 const modalRef = ref(null);
 const modalInstance = ref(null);
 const modalTitle = ref('Nueva Sugerencia');
 const processName = ref('');
 const processModal = ref(null); // Referencia al ModalHijo
+const fileInput = ref(null);
 
 const processRoute = route('procesos.buscar');
 
@@ -133,14 +179,24 @@ const form = ref({
     sugerencia_detalle: '',
     sugerencia_fecha_ingreso: '',
     sugerencia_procedencia: '',
-    proceso_id: null, // Cambiado de '' a null para consistencia
-    sugerencia_estado: 'abierta'
+    proceso_id: null,
+    sugerencia_estado: 'identificada', // Default state
+    sugerencia_evidencia: null // For file/s
 });
+
+// Variables para archivos
+const isDragging = ref(false);
+const filesToUpload = ref([]);
+const existingFiles = ref([]);
+let fileCounter = 0;
 
 const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 const loadSugerencia = async (id) => {
@@ -152,10 +208,38 @@ const loadSugerencia = async (id) => {
             sugerencia_fecha_ingreso: formatDateForInput(data.sugerencia_fecha_ingreso),
             sugerencia_procedencia: data.sugerencia_procedencia,
             proceso_id: data.proceso_id,
-            sugerencia_estado: data.sugerencia_estado
+            sugerencia_estado: data.sugerencia_estado,
+            sugerencia_evidencia: null
         };
 
-        // Actualizar el nombre del proceso directamente desde la información que ya viene con la sugerencia
+        // Cargar archivos existentes
+        existingFiles.value = [];
+        if (data.sugerencia_evidencia) {
+            if (Array.isArray(data.sugerencia_evidencia)) {
+                existingFiles.value = data.sugerencia_evidencia.map(item => {
+                    if (typeof item === 'object' && item.path) return item;
+                    return { path: item, name: item.split('/').pop() };
+                });
+            } else if (typeof data.sugerencia_evidencia === 'string') {
+                try {
+                    const parsed = JSON.parse(data.sugerencia_evidencia);
+                    if (Array.isArray(parsed)) {
+                        existingFiles.value = parsed.map(item => {
+                            if (typeof item === 'object' && item.path) return item;
+                            return { path: item, name: item.split('/').pop() };
+                        });
+                    } else {
+                        existingFiles.value = [{ path: parsed, name: parsed.split('/').pop() }];
+                    }
+                } catch (e) {
+                    existingFiles.value = [{
+                        path: data.sugerencia_evidencia,
+                        name: data.sugerencia_evidencia.split('/').pop()
+                    }];
+                }
+            }
+        }
+
         if (data.proceso) {
             processName.value = data.proceso.proceso_nombre || data.proceso.nombre || data.proceso.descripcion || data.proceso.proceso_nombre_corto;
         }
@@ -166,7 +250,6 @@ const loadSugerencia = async (id) => {
     }
 };
 
-// Funciones para manejar el proceso
 const openProcessModal = () => {
     processModal.value.open();
 };
@@ -181,8 +264,52 @@ const clearProcess = () => {
     processName.value = '';
 };
 
+// File handling logic
+const handleFileSelect = (e) => startUpload(Array.from(e.target.files));
+const openFileDialog = () => fileInput.value.click();
+const onDragEnter = () => isDragging.value = true;
+const onDragLeave = () => isDragging.value = false;
+const onDrop = (event) => {
+    isDragging.value = false;
+    startUpload(Array.from(event.dataTransfer.files));
+};
+
+const startUpload = (files) => {
+    const maxFileSize = 10 * 1024 * 1024;
+    files.forEach(file => {
+        if (file.size > maxFileSize) {
+            alert(`El archivo '${file.name}' supera el límite de 10MB.`);
+            return;
+        }
+        filesToUpload.value.push({ id: fileCounter++, file: file, progress: 0 });
+    });
+};
+
+const removeFile = (id) => {
+    filesToUpload.value = filesToUpload.value.filter(f => f.id !== id);
+};
+
+const removeExistingFile = (index) => {
+    existingFiles.value.splice(index, 1);
+};
+
+const canCloseSugerencia = computed(() => {
+    if (!props.sugerenciaId || form.value.sugerencia_estado === 'cerrada') return false;
+    // Check for admin or especialista role
+    return authStore.hasRole('admin') || authStore.hasRole('especialista');
+});
+
+const closeSugerencia = () => {
+    if (confirm('¿Está seguro de cerrar esta sugerencia?')) {
+        form.value.sugerencia_estado = 'cerrada';
+        submitForm();
+    }
+};
+
 watch(() => props.show, async (newVal) => {
     if (newVal) {
+        filesToUpload.value = [];
+        existingFiles.value = [];
         if (props.sugerenciaId) {
             await loadSugerencia(props.sugerenciaId);
         } else {
@@ -192,61 +319,71 @@ watch(() => props.show, async (newVal) => {
                 sugerencia_fecha_ingreso: new Date().toISOString().split('T')[0],
                 sugerencia_procedencia: '',
                 proceso_id: null,
-                sugerencia_estado: 'abierta'
+                sugerencia_estado: 'identificada',
+                sugerencia_evidencia: null
             };
             processName.value = '';
             modalTitle.value = 'Nueva Sugerencia';
         }
 
         await nextTick();
-        if (modalRef.value) {
-            if (!modalInstance.value) {
-                modalInstance.value = new Modal(modalRef.value, {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            }
-            modalInstance.value.show();
+        if (modalRef.value && !modalInstance.value) {
+            modalInstance.value = new Modal(modalRef.value, { backdrop: 'static', keyboard: false });
         }
+        modalInstance.value?.show();
     } else {
-        if (modalInstance.value) {
-            modalInstance.value.hide();
-        }
+        modalInstance.value?.hide();
     }
 });
 
 const close = () => {
-    // Remove focus from the button to prevent ARIA warnings when modal hides
-    if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     emit('close');
 };
 
 const submitForm = async () => {
     try {
+        // Logic to determine status
+        if (form.value.sugerencia_estado !== 'cerrada') {
+            const hasEvidence = filesToUpload.value.length > 0 || existingFiles.value.length > 0;
+
+            // Logic Simplified per user request: 'identificada' default.
+            // If evidence is added, maybe we don't change status here explicitly unless requested.
+            // Keeping it simple as 'identificada' if it's new.
+        }
+
+        // Prepare plain object for the store
+        const submitData = { ...form.value };
+
+        // Remove 'sugerencia_evidencia' (singular) as we use plural for upload
+        delete submitData.sugerencia_evidencia;
+
+        // Add files
+        submitData.sugerencia_evidencias = filesToUpload.value.map(f => f.file);
+        submitData.existing_evidencias = existingFiles.value.map(f => f.path);
+
         if (props.sugerenciaId) {
-            await sugerenciasStore.updateSugerencia(props.sugerenciaId, form.value);
+            await sugerenciasStore.updateSugerencia(props.sugerenciaId, submitData);
         } else {
-            await sugerenciasStore.createSugerencia(form.value);
+            await sugerenciasStore.createSugerencia(submitData);
         }
         emit('saved');
         close();
     } catch (error) {
-        console.error('Error saving sugerencia:', error);
-        alert('Error al guardar la sugerencia: ' + (error.response?.data?.message || error.message));
+        console.error('Error saving:', error);
+        alert('Error: ' + (error.response?.data?.message || error.message));
     }
 };
 
 onMounted(() => {
-    if (modalRef.value) {
-        modalRef.value.addEventListener('hidden.bs.modal', close);
-    }
+    if (modalRef.value) modalRef.value.addEventListener('hidden.bs.modal', close);
 });
 
 onUnmounted(() => {
     modalInstance.value?.dispose();
+    if (modalRef.value) modalRef.value.removeEventListener('hidden.bs.modal', close);
 });
+
 </script>
 
 <style scoped>

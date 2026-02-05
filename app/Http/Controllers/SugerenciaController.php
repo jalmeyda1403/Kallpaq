@@ -40,21 +40,47 @@ class SugerenciaController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'sugerencia_clasificacion' => 'required|string',
-            'sugerencia_detalle' => 'required|string',
-            'sugerencia_fecha_ingreso' => 'required|date',
-            'sugerencia_procedencia' => 'required|string',
-            'proceso_id' => 'required|exists:procesos,id',
-            'sugerencia_estado' => 'required|string',
-        ]);
+        try {
+            \Log::info('Creating suggestion', $request->all());
 
-        $sugerencia = Sugerencia::create($validated);
+            $validated = $request->validate([
+                'sugerencia_clasificacion' => 'required|string',
+                'sugerencia_detalle' => 'required|string',
+                'sugerencia_fecha_ingreso' => 'required|date',
+                'sugerencia_procedencia' => 'required|string',
+                'proceso_id' => 'required|exists:procesos,id',
+                'sugerencia_estado' => 'required|string',
+                'sugerencia_evidencias' => 'nullable',
+                'sugerencia_evidencias.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
+            ]);
 
-        return response()->json([
-            'message' => 'Sugerencia creada exitosamente',
-            'data' => $sugerencia->load('proceso')
-        ], 201);
+            DB::beginTransaction();
+
+            // Create basic record
+            $sugerencia = Sugerencia::create($validated);
+
+            // Handle files
+            if ($request->hasFile('sugerencia_evidencias')) {
+                $files = $request->file('sugerencia_evidencias');
+                $fileData = $this->processNewFiles($files, $sugerencia);
+                $sugerencia->sugerencia_evidencias = $fileData;
+                $sugerencia->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Sugerencia creada exitosamente',
+                'data' => $sugerencia->load('proceso')
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error creating suggestion', $e->errors());
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error creating suggestion', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error creando sugerencia', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function show($id)
@@ -149,10 +175,10 @@ class SugerenciaController extends Controller
     {
         $sugerencia = Sugerencia::findOrFail($id);
 
-        // Only allow validation of suggestions with 'concluida' status
-        if ($sugerencia->sugerencia_estado !== 'concluida') {
+        // Allow validation of suggestions with 'concluida' or 'implementada' status
+        if (!in_array($sugerencia->sugerencia_estado, ['concluida', 'implementada'])) {
             return response()->json([
-                'message' => 'Solo se pueden evaluar sugerencias que han concluido',
+                'message' => 'Solo se pueden evaluar sugerencias que han concluido o implementado',
             ], 400);
         }
 

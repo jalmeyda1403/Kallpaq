@@ -18,8 +18,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Proceso <span
-                                                class="text-danger">*</span></label>
+                                        <label class="custom-label">Proceso <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="text" v-model="processName" class="form-control" readonly
                                                 placeholder="Seleccionar proceso..." :required="!form.proceso_id">
@@ -97,10 +96,10 @@
                                     <div class="form-group">
                                         <label class="font-weight-bold custom-label">Score</label>
                                         <input type="number" :value="averageScore"
-                                            :class="['form-control', getScoreClass(averageScore)]"
-                                            readonly step="0.01" min="0" max="5">
+                                            :class="['form-control', getScoreClass(averageScore)]" readonly step="0.01"
+                                            min="0" max="5">
                                         <small class="text-muted">Promedio de conductores: {{ averageScore || 'N/A'
-                                            }}</small>
+                                        }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -122,18 +121,18 @@
                                 </div>
                                 <div class="col-md-6" v-for="(cat, index) in availableCategories" :key="index">
                                     <div class="d-flex align-items-center p-2 category-item"
-                                         :class="{'selected-category': selectedCategories.includes(cat)}">
+                                        :class="{ 'selected-category': selectedCategories.includes(cat) }">
                                         <div class="custom-control custom-checkbox flex-grow-1">
                                             <input type="checkbox" class="custom-control-input" :id="'cat-' + index"
                                                 :value="cat" v-model="selectedCategories">
-                                            <label class="custom-control-label category-label"
-                                                :for="'cat-' + index">{{ cat }}</label>
+                                            <label class="custom-control-label category-label" :for="'cat-' + index">{{
+                                                cat }}</label>
                                         </div>
                                         <div v-if="selectedCategories.includes(cat)" class="ml-2"
                                             style="min-width: 120px;">
                                             <input type="number" v-model="categoryScores[cat]"
-                                                class="form-control form-control-sm" placeholder="Puntaje"
-                                                step="0.01" min="0" max="5" required>
+                                                class="form-control form-control-sm" placeholder="Puntaje" step="0.01"
+                                                min="0" max="5" required>
                                         </div>
                                     </div>
                                 </div>
@@ -204,12 +203,13 @@
 
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="close">Cancelar</button>
+                            <button type="button" class="btn btn-secondary" @click="close">
+                                <i class="fas fa-times mr-1"></i> Cancelar</button>
                             <button type="submit" class="btn btn-danger"
                                 :disabled="selectedCategoriesCount < 5 || loading">
                                 <span v-if="loading" class="spinner-border spinner-border-sm mr-1" role="status"
                                     aria-hidden="true"></span>
-                                Guardar
+                                <i class="fas fa-save mr-1"></i> Guardar
                             </button>
                         </div>
                     </form>
@@ -405,7 +405,7 @@ const loadEncuesta = async (id) => {
         };
 
         if (encuesta.proceso) {
-            processName.value = encuesta.proceso.proceso_nombre || encuesta.proceso.nombre;
+            processName.value = encuesta.proceso.proceso_nombre || encuesta.proceso.nombre || encuesta.proceso.descripcion || encuesta.proceso.proceso_nombre_corto;
         }
 
         // Format existing file as object with path and name
@@ -606,17 +606,17 @@ onMounted(() => {
 }
 
 /* Improved checkbox styles with red/gray variations */
-.custom-control-input:checked ~ .custom-control-label::before {
+.custom-control-input:checked~.custom-control-label::before {
     color: #fff;
     background-color: #dc3545;
     border-color: #dc3545;
 }
 
-.custom-control-input:focus ~ .custom-control-label::before {
+.custom-control-input:focus~.custom-control-label::before {
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
-.custom-control-input:disabled:checked ~ .custom-control-label::before {
+.custom-control-input:disabled:checked~.custom-control-label::before {
     background-color: #a0a0a0;
 }
 
@@ -624,7 +624,7 @@ onMounted(() => {
     border-color: #adb5bd;
 }
 
-.custom-checkbox .custom-control-input:checked ~ .custom-control-label::after {
+.custom-checkbox .custom-control-input:checked~.custom-control-label::after {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
 }
 
@@ -875,31 +875,36 @@ h6.font-weight-bold.text-dark {
 
 /* Score color styling based on EncuestasIndex palette */
 .score-excellent {
-    background-color: #d1ecf1 !important; /* Excellent score (blue) */
+    background-color: #d1ecf1 !important;
+    /* Excellent score (blue) */
     border-color: #bee5eb !important;
     color: #0c5460 !important;
 }
 
 .score-good {
-    background-color: #d4edda !important; /* Good score (green) */
+    background-color: #d4edda !important;
+    /* Good score (green) */
     border-color: #c3e6cb !important;
     color: #155724 !important;
 }
 
 .score-regular {
-    background-color: #fff3cd !important; /* Regular score (yellow) */
+    background-color: #fff3cd !important;
+    /* Regular score (yellow) */
     border-color: #ffeaa7 !important;
     color: #856404 !important;
 }
 
 .score-bad {
-    background-color: #f8d7da !important; /* Bad score (red) */
+    background-color: #f8d7da !important;
+    /* Bad score (red) */
     border-color: #f5c6cb !important;
     color: #721c24 !important;
 }
 
 .score-very-bad {
-    background-color: #f8d7da !important; /* Very bad score (red) */
+    background-color: #f8d7da !important;
+    /* Very bad score (red) */
     border-color: #f5c6cb !important;
     color: #721c24 !important;
 }

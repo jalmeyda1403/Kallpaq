@@ -45,33 +45,36 @@ export const useSugerenciasStore = defineStore('sugerencias', {
             this.error = null;
 
             try {
-                // Preparamos los datos para enviar al backend
-                const formData = new FormData();
+                let payload;
+                const config = {};
 
-                // Agregamos todos los campos
-                Object.keys(data).forEach(key => {
-                    if (data[key] !== null && data[key] !== undefined) {
-                        if (Array.isArray(data[key])) {
-                            data[key].forEach((item, index) => {
-                                formData.append(`${key}[${index}]`, item);
-                            });
-                        } else if (data[key] instanceof File) {
-                            formData.append(key, data[key], data[key].name);
-                        } else if (typeof data[key] === 'object' && data[key] !== null) {
-                            formData.append(key, JSON.stringify(data[key]));
-                        } else {
-                            formData.append(key, data[key]);
+                if (data instanceof FormData) {
+                    payload = data;
+                    // Let Axios/Browser handle the Content-Type header with boundary
+                } else {
+                    // Prepare FormData if it's a plain object
+                    payload = new FormData();
+                    Object.keys(data).forEach(key => {
+                        if (data[key] !== null && data[key] !== undefined) {
+
+                            if (Array.isArray(data[key])) {
+                                data[key].forEach((item, index) => {
+                                    payload.append(`${key}[${index}]`, item);
+                                });
+                            } else if (data[key] instanceof File) {
+                                payload.append(key, data[key], data[key].name);
+                            } else if (typeof data[key] === 'object' && data[key] !== null) {
+                                payload.append(key, JSON.stringify(data[key]));
+                            } else {
+                                payload.append(key, data[key]);
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
-                const response = await axios.post(route('api.sugerencias.store'), formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+                const response = await axios.post(route('api.sugerencias.store'), payload, config);
 
-                // Actualizamos la lista de sugerencias
+                // Update list
                 await this.fetchSugerencias();
 
                 return response.data;

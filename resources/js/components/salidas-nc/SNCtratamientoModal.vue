@@ -4,7 +4,7 @@
             aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
-                    <div class="modal-header  bg-danger text-white">
+                    <div class="modal-header bg-danger text-white">
                         <h5 class="modal-title" id="tratamientoModalLabel">Tratamiento de Salida No Conforme</h5>
                         <button type="button" class="close text-white" @click="close" aria-label="Cerrar">
                             <span aria-hidden="true">&times;</span>
@@ -14,7 +14,7 @@
                         <div class="modal-body">
                             <!-- Row 1: Tratamiento | Requiere Accion | Estado -->
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Tratamiento</label>
                                         <select v-model="form.snc_tratamiento" class="form-control">
@@ -26,7 +26,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Requiere Acción
                                             Correctiva</label>
@@ -37,7 +37,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Estado</label>
                                         <select v-model="form.snc_estado" class="form-control" @change="onEstadoChange">
@@ -58,9 +58,16 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="font-weight-bold text-dark custom-label">Descripción del
-                                    Tratamiento</label>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="font-weight-bold text-dark custom-label">Descripción del
+                                        Tratamiento</label>
+                                    <small class="text-muted">
+                                        {{ form.snc_descripcion_tratamiento ? form.snc_descripcion_tratamiento.length :
+                                            0 }}/500
+                                    </small>
+                                </div>
                                 <textarea v-model="form.snc_descripcion_tratamiento" class="form-control" rows="3"
+                                    maxlength="500"
                                     placeholder="Ingrese la descripción del tratamiento aplicado..."></textarea>
                             </div>
 
@@ -82,8 +89,13 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="font-weight-bold text-dark custom-label">Observaciones</label>
-                                <textarea v-model="form.snc_observaciones" class="form-control" rows="3"
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="font-weight-bold text-dark custom-label">Observaciones</label>
+                                    <small class="text-muted">
+                                        {{ form.snc_observaciones ? form.snc_observaciones.length : 0 }}/500
+                                    </small>
+                                </div>
+                                <textarea v-model="form.snc_observaciones" class="form-control" rows="3" maxlength="500"
                                     placeholder="Observaciones generales..."></textarea>
                             </div>
 
@@ -149,8 +161,7 @@
                             </div>
 
                         </div>
-                        <div class="modal-footer d-flex justify-content-between">
-                            <div></div> <!-- Empty div for spacing -->
+                        <div class="modal-footer d-flex justify-content-end">
                             <div>
                                 <button type="button" class="btn btn-secondary" @click="close">
                                     <i class="fas fa-times mr-1"></i> Cancelar
@@ -170,6 +181,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useSalidasNCStore } from '@/stores/salidasNCStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Modal } from 'bootstrap';
 
 const props = defineProps({
@@ -180,6 +192,7 @@ const props = defineProps({
 const emit = defineEmits(['update:show', 'saved']);
 
 const salidasNCStore = useSalidasNCStore();
+const authStore = useAuthStore();
 
 const form = ref({
     snc_responsable: '',
@@ -190,7 +203,8 @@ const form = ref({
     snc_requiere_accion_correctiva: null,
     snc_fecha_cierre: null,
     snc_observaciones: '',
-    snc_evidencias: null
+    snc_evidencias: null,
+    snc_estado: 'registrada'
 });
 
 const modalRef = ref(null);
@@ -380,6 +394,18 @@ const isValid = computed(() => {
     return true; // Validación personalizada según sea necesario
 });
 
+const canClose = computed(() => {
+    return authStore.hasRole('admin') || authStore.hasRole('especialista');
+});
+
+const closeNC = () => {
+    if (confirm('¿Está seguro de cerrar esta Salida No Conforme?')) {
+        form.value.snc_estado = 'tratada';
+        onEstadoChange(); // Actualizar fecha de cierre
+        submitForm();
+    }
+};
+
 const submitForm = async () => {
     try {
         // Verificar si hay cambios en los archivos (nuevos o eliminados)
@@ -504,3 +530,4 @@ const submitForm = async () => {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 </style>
+```
