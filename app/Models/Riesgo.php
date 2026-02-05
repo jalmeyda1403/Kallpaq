@@ -33,6 +33,7 @@ class Riesgo extends Model
         'riesgo_estado_rr',
         'riesgo_ciclo',
         'especialista_id',
+        'riesgo_fecha_identificacion',
     ];
 
     public function especialista()
@@ -55,7 +56,7 @@ class Riesgo extends Model
      */
     public function controles()
     {
-        return $this->belongsToMany(Control::class, 'control_riesgo', 'riesgo_id', 'control_id')
+        return $this->belongsToMany(Control::class, 'riesgo_control', 'riesgo_id', 'control_id')
             ->withPivot(['eficacia', 'fecha_ultima_evaluacion', 'fecha_revaluacion', 'observaciones'])
             ->withTimestamps();
     }

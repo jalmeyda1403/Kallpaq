@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Riesgo;
-use App\Models\RiesgoAccion;
+use App\Models\Accion;
 use App\Models\Proceso;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -19,19 +19,9 @@ class DashboardRiesgosController extends Controller
         $userOuos = $user->ouos->pluck('id')->toArray();
 
         $mostrarTodos = filter_var($request->get('mostrarTodos', false), FILTER_VALIDATE_BOOLEAN);
-        $year = $request->get('year');
 
-        // Consulta base de riesgos
+        // Consulta base de riesgos (Histórico completo)
         $riesgosQuery = Riesgo::with(['proceso.ouos', 'acciones', 'especialista']);
-
-        // Filtro de año (basado en created_at o alguna fecha de identificación si existiera)
-        if ($year) {
-            if (is_array($year)) {
-                $riesgosQuery->whereIn(DB::raw('YEAR(created_at)'), $year);
-            } else {
-                $riesgosQuery->whereYear('created_at', $year);
-            }
-        }
 
         // Determinar si debe filtrar por OUO
         $debeFiltrarPorOuo = !$esAdmin || ($esAdmin && !$mostrarTodos);
@@ -47,15 +37,28 @@ class DashboardRiesgosController extends Controller
         $riesgos = $riesgosQuery->get();
         $stats = $this->getStats($riesgos);
 
+        // Identificación por Año y Estado
+        $identificacionPorAno = $riesgos->groupBy(function ($r) {
+            return $r->created_at->year;
+        })->map(function ($items, $year) {
+            return [
+                'year' => $year,
+                'proyecto' => $items->where('riesgo_estado', 'proyecto')->count(),
+                'enTratamiento' => $items->where('riesgo_estado', 'en_tratamiento')->count(),
+                'pendiente' => $items->where('riesgo_estado', 'pendiente')->count(),
+                'controlado' => $items->where('riesgo_estado', 'controlado')->count(),
+            ];
+        })->values()->sortBy('year')->values();
+
         // Acciones (Tratamientos) Vencidas
         $riesgoIds = $riesgos->pluck('id')->toArray();
         $accionesVencidas = [];
         if (!empty($riesgoIds)) {
-            $accionesVencidas = RiesgoAccion::whereIn('riesgo_id', $riesgoIds)
-                ->where('ra_estado', '!=', 'finalizada')
+            $accionesVencidas = Accion::whereIn('accion_riesgo_id', $riesgoIds)
+                ->whereNotIn('accion_estado', ['implementada', 'finalizada', 'desestimada'])
                 ->where(function ($q) {
-                    $q->where('ra_fecha_fin_planificada', '<', Carbon::today())
-                        ->orWhere('ra_fecha_fin_reprogramada', '<', Carbon::today());
+                    $q->where('accion_fecha_fin_planificada', '<', Carbon::today())
+                        ->orWhere('accion_fecha_fin_reprogramada', '<', Carbon::today());
                 })
                 ->with('riesgo')
                 ->get();
@@ -86,6 +89,7 @@ class DashboardRiesgosController extends Controller
             'riesgos' => $riesgos,
             'accionesVencidas' => $accionesVencidas,
             'resumenProcesos' => $resumenProcesos,
+            'identificacionPorAno' => $identificacionPorAno,
             'esAdmin' => $esAdmin,
         ]);
     }

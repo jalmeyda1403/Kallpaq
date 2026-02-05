@@ -43,11 +43,13 @@ class DocumentoController extends Controller
     {
         $query = $request->input('query');
 
-        $documentos = Documento::where('nombre_documento', 'LIKE', "%{$query}%", 'and')->get();
+        $documentos = Documento::where('nombre_documento', 'LIKE', "%{$query}%")->get();
         $documentos = $documentos->map(function ($documento) {
             return [
                 'id' => $documento->id,
+                'nombre_documento' => $documento->nombre_documento,
                 'descripcion' => $documento->nombre_documento,
+                'cod_documento' => $documento->cod_documento
             ];
         });
 

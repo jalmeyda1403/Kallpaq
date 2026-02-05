@@ -6,6 +6,12 @@
             </h6>
         </div>
 
+        <div class="alert alert-light border shadow-sm p-3 mb-3">
+            <small class="text-muted d-block"><i class="fas fa-info-circle mr-1"></i>
+                <strong>Nota:</strong> Esta obligación se vinculará principalmente a un proceso, pero puede
+                afectar a otros vinculándolos en esta lista.</small>
+        </div>
+
         <p class="small text-muted">
             Este módulo permite registrar y visualizar las relaciones entre la obligación y los procesos.
             Seleccione un proceso para añadirlo a la lista.

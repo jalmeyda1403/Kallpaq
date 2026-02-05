@@ -10,10 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::table('riesgos', function (Blueprint $table) {
+            $table->date('riesgo_fecha_identificacion')->nullable()->after('riesgo_nombre');
+        });
+
         Schema::table('obligaciones', function (Blueprint $table) {
-            if (Schema::hasColumn('obligaciones', 'obligacion_controles')) {
-                $table->dropColumn('obligacion_controles');
-            }
+            $table->date('obligacion_fecha_identificacion')->nullable()->after('obligacion_principal');
         });
     }
 
@@ -22,8 +24,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('obligaciones', function (Blueprint $table) {
-            $table->text('obligacion_controles')->nullable();
+        Schema::table('riesgos_and_obligaciones', function (Blueprint $table) {
+            //
         });
     }
 };

@@ -10,6 +10,13 @@ use Illuminate\Http\Request;
 
 class ObligacionController extends Controller
 {
+    protected $obligacionService;
+
+    public function __construct(\App\Services\ObligacionService $obligacionService)
+    {
+        $this->obligacionService = $obligacionService;
+    }
+
 
     public function index(Request $request)
     {
@@ -18,7 +25,7 @@ class ObligacionController extends Controller
 
     public function apiIndex(Request $request)
     {
-        $query = Obligacion::with('procesos', 'area_compliance', 'documento', 'radar', 'subarea_compliance', 'controles');
+        $query = Obligacion::with('procesos', 'area_compliance', 'documento', 'radar', 'subarea_compliance', 'controles', 'evaluacionActual', 'riesgos');
 
         // Filtrar por nombre del proceso (relación pivot)
         if ($request->filled('proceso')) {
@@ -29,7 +36,7 @@ class ObligacionController extends Controller
 
         // Filtrar por nombre del documento
         if ($request->filled('documento')) {
-            $query->where('documento_tecnico_normativo', 'like', '%' . $request->documento . '%');
+            $query->where('obligacion_documento', 'like', '%' . $request->documento . '%');
         }
 
         // Filtrar por fuente
@@ -79,7 +86,7 @@ class ObligacionController extends Controller
         }
 
         if ($request->filled('documento')) {
-            $query->where('documento_tecnico_normativo', 'like', '%' . $request->documento . '%');
+            $query->where('obligacion_documento', 'like', '%' . $request->documento . '%');
         }
 
         if ($request->filled('fuente')) {
@@ -99,7 +106,7 @@ class ObligacionController extends Controller
         $obligaciones = $this->obtenerObligacionesRecursivos($proceso, $obligaciones);
 
         foreach ($obligaciones as $obligacion) {
-            switch ($obligacion->estado_obligacion) {
+            switch ($obligacion->obligacion_estado) {
                 case 'pendiente':
                     $obligacion->estadoClass = 'bg-secondary';  // Gris claro
                     break;
@@ -204,15 +211,16 @@ class ObligacionController extends Controller
         $obligacion->update($request->only([
             'area_compliance_id',
             'subarea_compliance_id',
-            'documento_tecnico_normativo',
+            'obligacion_documento',
             'obligacion_principal',
-            'consecuencia_incumplimiento',
-            'documento_deroga',
-            'estado_obligacion',
+            'obligacion_consecuencia',
+            'obligacion_documento_deroga',
+            'obligacion_estado',
             'radar_id',
             'documento_id',
-            'tipo_obligacion',
-            'frecuencia_revision'
+            'obligacion_tipo',
+            'obligacion_frecuencia',
+            'obligacion_fecha_identificacion'
         ]));
 
         // Sync processes logic handles pivot table
@@ -280,12 +288,12 @@ class ObligacionController extends Controller
         $q = $request->query('q', '');
         // Explicitly pass 'and' to satisfy linter expecting boolean argument
         $obligaciones = Obligacion::where('obligacion_principal', 'LIKE', "%{$q}%", 'and')
-            ->orWhere('documento_tecnico_normativo', 'LIKE', "%{$q}%")
+            ->orWhere('obligacion_documento', 'LIKE', "%{$q}%")
             ->limit(20)
             ->get();
 
         $obligaciones = $obligaciones->map(function ($o) {
-            $desc = $o->documento_tecnico_normativo ? "{$o->documento_tecnico_normativo} - " : "";
+            $desc = $o->obligacion_documento ? "{$o->obligacion_documento} - " : "";
             $desc .= \Illuminate\Support\Str::limit($o->obligacion_principal, 50);
             return [
                 'id' => $o->id,
@@ -329,6 +337,68 @@ class ObligacionController extends Controller
 
     public function apiSubareas()
     {
-        return response()->json(\App\Models\SubAreaCompliance::all());
+        return response()->json(\App\Models\SubAreaCompliance::select('id', 'area_compliance_id', 'subarea_compliance_nombre')->get());
+    }
+
+    /**
+     * Guardar una evaluación de criticidad para la obligación.
+     */
+    public function evaluar(Request $request, $id)
+    {
+        $obligacion = Obligacion::findOrFail($id);
+
+        $validated = $request->validate([
+            'oe_puntaje_total' => 'required|numeric',
+            'oe_criterios_json' => 'required'
+        ]);
+
+        // Asegurarse de que oe_criterios_json sea array si viene como string
+        $criterios = is_string($validated['oe_criterios_json'])
+            ? json_decode($validated['oe_criterios_json'], true)
+            : $validated['oe_criterios_json'];
+
+        $criticidad = $this->obligacionService->calcularCriticidad($validated['oe_puntaje_total']);
+
+        $evaluacion = $obligacion->evaluaciones()->create([
+            'oe_puntaje_total' => $validated['oe_puntaje_total'],
+            'oe_nivel_criticidad' => $criticidad,
+            'oe_fecha_evaluacion' => now(),
+            'oe_criterios_json' => $criterios
+        ]);
+
+        // Actualizar estado automáticamente si estaba identificada
+        if ($obligacion->obligacion_estado === Obligacion::ESTADO_IDENTIFICADA) {
+            $obligacion->update(['obligacion_estado' => Obligacion::ESTADO_EVALUADA]);
+        }
+
+        return response()->json([
+            'message' => 'Evaluación registrada correctamente',
+            'evaluacion' => $evaluacion,
+            'nuevo_estado' => $obligacion->fresh()->obligacion_estado
+        ]);
+    }
+
+    /**
+     * Intentar cambiar el estado de la obligación.
+     */
+    public function cambiarEstado(Request $request, $id)
+    {
+        $obligacion = Obligacion::findOrFail($id);
+        $nuevoEstado = $request->input('nuevo_estado');
+
+        try {
+            if ($this->obligacionService->validarTransicion($obligacion, $nuevoEstado)) {
+                $obligacion->update(['obligacion_estado' => $nuevoEstado]);
+
+                return response()->json([
+                    'message' => 'Estado actualizado correctamente',
+                    'nuevo_estado' => $nuevoEstado
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['error' => 'No se pudo cambiar el estado.'], 422);
     }
 }

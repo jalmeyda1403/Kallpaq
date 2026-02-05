@@ -37,6 +37,17 @@ class AuditoriaEspecificaController extends Controller
         return response()->json($auditoria);
     }
 
+    public function getEquipo($id)
+    {
+        $auditoria = AuditoriaEspecifica::with([
+            'equipo.auditor.user' => function ($q) {
+                $q->select('id', 'name', 'email');
+            }
+        ])->select('id')->findOrFail($id);
+
+        return response()->json(['equipo' => $auditoria->equipo]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -138,10 +149,12 @@ class AuditoriaEspecificaController extends Controller
                 ];
 
                 if (isset($item['id']) && $item['id']) {
-                    // Update existing
-                    AuditoriaAgenda::where('id', $item['id'])->update($data);
+                    $agendaItem = AuditoriaAgenda::find($item['id']);
+                    if ($agendaItem) {
+                        $agendaItem->fill($data);
+                        $agendaItem->save();
+                    }
                 } else {
-                    // Create new
                     AuditoriaAgenda::create($data);
                 }
             }

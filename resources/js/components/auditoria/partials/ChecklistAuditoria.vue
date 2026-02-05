@@ -27,9 +27,6 @@
             <div class="d-flex justify-content-between align-items-end mb-1">
                 <div class="d-flex align-items-center">
                     <small class="text-muted mr-3">{{ completedItems }} / {{ checklists.length }} verificados</small>
-                    <button class="btn btn-soft-danger btn-xs" @click="generateChecklist" :disabled="store.loading">
-                        <i class="fas fa-magic mr-1"></i> Generar Checklist con IA
-                    </button>
                 </div>
                 <small class="font-weight-bold text-primary">{{ progress }}% Completado</small>
             </div>
@@ -69,130 +66,166 @@
             </div>
 
 
-            <div v-else-if="checklists.length === 0" class="text-center py-5 text-muted">
-                <i class="fas fa-clipboard-list fa-3x mb-3 text-secondary"></i>
-                <h5>Lista de Verificación Vacía</h5>
-                <p>Presione "Generar Checklist con IA" para obtener las preguntas guía basadas en las normas aplicables.
-                </p>
-            </div>
-
-            <div v-else class="accordion" id="checklistAccordion">
-                <div v-for="(item, index) in checklists" :key="item.id" class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-white d-flex align-items-center justify-content-between py-2"
-                        :id="'heading' + item.id" data-toggle="collapse" :data-target="'#collapse' + item.id"
-                        style="cursor: pointer;">
-
-                        <div class="d-flex align-items-center" style="width: 70%;">
-                            <div class="mr-3 text-center" style="min-width: 40px;">
-                                <span class="badge badge-pill badge-light border">{{ index + 1 }}</span>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 font-weight-bold text-dark">{{ item.pregunta }}</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-book mr-1"></i> {{ item.norma_referencia }}
-                                    <span class="mx-1">•</span>
-                                    Req. {{ item.requisito_referencia }}
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center">
-                            <span v-if="item.estado_cumplimiento && item.estado_cumplimiento !== 'Sin Evaluar'"
-                                class="badge px-3 py-2 mr-3" :class="getComplianceClass(item.estado_cumplimiento)">
-                                {{ item.estado_cumplimiento }}
+            <div v-else>
+                <!-- TABS DE NORMAS -->
+                <ul class="nav nav-tabs mb-3 border-bottom-0">
+                    <li class="nav-item" v-for="norm in uniqueNorms" :key="norm.id">
+                        <a class="nav-link" href="#"
+                            :class="{ 'active font-weight-bold border-bottom-white': activeTab === norm.id, 'text-muted': activeTab !== norm.id }"
+                            @click.prevent="activeTab = norm.id" style="border-top: 3px solid transparent;"
+                            :style="activeTab === norm.id ? 'border-top-color: #dc3545;' : ''">
+                            <i class="fas fa-book mr-1"></i> {{ norm.nombre }}
+                            <span class="badge badge-pill ml-1"
+                                :class="activeTab === norm.id ? 'badge-danger' : 'badge-light'">
+                                {{ norm.reqCount }} reqs
                             </span>
-                            <i class="fas fa-chevron-down text-muted"></i>
-                        </div>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content bg-white p-3 border rounded shadow-sm">
+                    <!-- AI ACTION PER TAB -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <h6 class="mb-0 text-dark font-weight-bold">
+                            <i class="fas fa-list-ul mr-2 text-danger"></i>
+                            Lista de Verificación {{ getNormName(activeTab) }}
+                        </h6>
+                        <button class="btn btn-soft-danger btn-sm" @click="generateChecklist(activeTab)"
+                            :disabled="isGeneratingAI || store.loading">
+                            <i class="fas" :class="isGeneratingAI ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
+                            Generar/Actualizar con IA
+                        </button>
                     </div>
 
-                    <div :id="'collapse' + item.id" class="collapse" :aria-labelledby="'heading' + item.id"
-                        data-parent="#checklistAccordion">
-                        <div class="card-body border-top bg-light">
-                            <div class="row">
-                                <!-- Columna Izquierda: Guía -->
-                                <div class="col-md-4 border-right">
-                                    <div class="alert alert-info py-2 px-3 small mb-3">
-                                        <strong><i class="fas fa-info-circle mr-1"></i> Evidencia Esperada:</strong>
-                                        <p class="mb-0 mt-1">{{ item.evidencia_esperada || 'No especificada' }}</p>
+                    <div v-if="filteredChecklists.length === 0" class="text-center py-4 text-muted">
+                        <p class="mb-0">No hay verificación generada para esta norma.</p>
+                        <small>Haga clic en "Generar con IA" para crear las preguntas.</small>
+                    </div>
+
+                    <div class="accordion" id="checklistAccordion">
+                        <div v-for="(item, index) in filteredChecklists" :key="item.id" class="card border mb-2">
+                            <div class="card-header bg-white d-flex align-items-center justify-content-between py-2"
+                                :id="'heading' + item.id" data-toggle="collapse" :data-target="'#collapse' + item.id"
+                                style="cursor: pointer;">
+
+                                <div class="d-flex align-items-center" style="width: 70%;">
+                                    <div class="mr-3 text-center" style="min-width: 40px;">
+                                        <span class="badge badge-pill badge-light border">{{ index + 1 }}</span>
                                     </div>
-                                    <div class="small text-justify text-muted">
-                                        <strong>Requisito Contenido:</strong> {{ item.requisito_contenido }}
+                                    <div>
+                                        <h6 class="mb-0 font-weight-bold text-dark">{{ item.pregunta }}</h6>
+                                        <small class="text-muted">
+                                            Req. {{ item.requisito_referencia }}
+                                        </small>
                                     </div>
                                 </div>
 
-                                <!-- Columna Derecha: Evaluación -->
-                                <div class="col-md-8">
-                                    <div class="form-group mb-3">
-                                        <label class="font-weight-bold small">Estado de Cumplimiento</label>
-                                        <div class="btn-group w-100">
-                                            <button type="button" class="btn btn-sm"
-                                                :class="item.estado_cumplimiento === 'Conforme' ? 'btn-success' : 'btn-outline-success'"
-                                                @click="updateItem(item, 'estado_cumplimiento', 'Conforme')">
-                                                <i class="fas fa-check"></i> Conforme
-                                            </button>
-                                            <button type="button" class="btn btn-sm"
-                                                :class="item.estado_cumplimiento === 'No Conforme' ? 'btn-danger' : 'btn-outline-danger'"
-                                                @click="updateItem(item, 'estado_cumplimiento', 'No Conforme')">
-                                                <i class="fas fa-times"></i> No Conforme
-                                            </button>
-                                            <button type="button" class="btn btn-sm"
-                                                :class="item.estado_cumplimiento === 'Oportunidad de Mejora' ? 'btn-warning' : 'btn-outline-warning'"
-                                                @click="updateItem(item, 'estado_cumplimiento', 'Oportunidad de Mejora')">
-                                                <i class="fas fa-lightbulb"></i> Mejora
-                                            </button>
+                                <div class="d-flex align-items-center">
+                                    <span v-if="item.estado_cumplimiento && item.estado_cumplimiento !== 'Sin Evaluar'"
+                                        class="badge px-3 py-2 mr-3"
+                                        :class="getComplianceClass(item.estado_cumplimiento)">
+                                        {{ item.estado_cumplimiento }}
+                                    </span>
+                                    <i class="fas fa-chevron-down text-muted"></i>
+                                </div>
+                            </div>
+
+                            <div :id="'collapse' + item.id" class="collapse" :aria-labelledby="'heading' + item.id"
+                                data-parent="#checklistAccordion">
+                                <div class="card-body border-top bg-light">
+                                    <div class="row">
+                                        <!-- Columna Izquierda: Guía -->
+                                        <div class="col-md-4 border-right">
+                                            <div class="alert alert-info py-2 px-3 small mb-3 text-white">
+                                                <strong><i class="fas fa-info-circle mr-1 text-white"></i> Evidencia
+                                                    Esperada:</strong>
+                                                <p class="mb-0 mt-1 text-white">{{ item.evidencia_esperada ||
+                                                    'No especificada' }}</p>
+                                            </div>
+                                            <div class="small text-justify text-muted bg-white p-2 rounded border">
+                                                <strong class="text-dark">Requisito Contenido:</strong>
+                                                <div class="mt-1">{{ item.requisito_contenido }}</div>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div class="form-group">
-                                        <label class="font-weight-bold small">Evidencia Objetiva / Observaciones</label>
-                                        <textarea class="form-control form-control-sm" rows="4"
-                                            v-model="item.evidencia_registrada" @blur="saveEvidence(item)"
-                                            placeholder="Describa la evidencia encontrada..."></textarea>
-                                    </div>
+                                        <!-- Columna Derecha: Evaluación -->
+                                        <div class="col-md-8">
+                                            <div class="form-group mb-3">
+                                                <label class="font-weight-bold small">Estado de Cumplimiento</label>
+                                                <div class="btn-group w-100">
+                                                    <button type="button" class="btn btn-sm"
+                                                        :class="item.estado_cumplimiento === 'Conforme' ? 'btn-success' : 'btn-outline-success'"
+                                                        @click="updateItem(item, 'estado_cumplimiento', 'Conforme')">
+                                                        <i class="fas fa-check"></i> Conforme
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm"
+                                                        :class="item.estado_cumplimiento === 'No Conforme' ? 'btn-danger' : 'btn-outline-danger'"
+                                                        @click="updateItem(item, 'estado_cumplimiento', 'No Conforme')">
+                                                        <i class="fas fa-times"></i> No Conforme
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm"
+                                                        :class="item.estado_cumplimiento === 'Oportunidad de Mejora' ? 'btn-warning' : 'btn-outline-warning'"
+                                                        @click="updateItem(item, 'estado_cumplimiento', 'Oportunidad de Mejora')">
+                                                        <i class="fas fa-lightbulb"></i> Mejora
+                                                    </button>
+                                                </div>
+                                            </div>
 
-                                    <div v-if="item.estado_cumplimiento === 'No Conforme'"
-                                        class="mt-2 p-2 bg-white border border-danger rounded shadow-sm">
-                                        <label class="text-danger font-weight-bold small mb-1">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i> Hallazgo Detectado
-                                        </label>
-                                        <div class="input-group input-group-sm align-items-start">
-                                            <textarea class="form-control" v-model="item.hallazgo_detectado" rows="4"
-                                                placeholder="Descripción detallada del hallazgo de auditoría..."
-                                                @blur="saveEvidence(item)"></textarea>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-outline-danger" type="button"
-                                                    style="height: 100%; min-height: 40px;"
-                                                    title="Mejorar redacción con IA" @click="improveHallazgo(item)"
-                                                    :disabled="improvingHallazgo[item.id]">
-                                                    <i class="fas"
-                                                        :class="improvingHallazgo[item.id] ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
-                                                </button>
+                                            <div class="form-group">
+                                                <label class="font-weight-bold small">Evidencia Objetiva /
+                                                    Observaciones</label>
+                                                <textarea class="form-control form-control-sm" rows="3"
+                                                    v-model="item.evidencia_registrada" @blur="saveEvidence(item)"
+                                                    placeholder="Describa la evidencia encontrada..."></textarea>
+                                            </div>
+
+                                            <div v-if="item.estado_cumplimiento === 'No Conforme'"
+                                                class="mt-2 p-2 bg-white border border-danger rounded shadow-sm">
+                                                <label class="text-danger font-weight-bold small mb-1">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Hallazgo Detectado
+                                                </label>
+                                                <div class="input-group input-group-sm align-items-start">
+                                                    <textarea class="form-control" v-model="item.hallazgo_detectado"
+                                                        rows="3"
+                                                        placeholder="Descripción detallada del hallazgo de auditoría..."
+                                                        @blur="saveEvidence(item)"></textarea>
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-outline-danger" type="button"
+                                                            style="height: 100%; min-height: 40px;"
+                                                            title="Mejorar redacción con IA"
+                                                            @click="improveHallazgo(item)"
+                                                            :disabled="improvingHallazgo[item.id]">
+                                                            <i class="fas"
+                                                                :class="improvingHallazgo[item.id] ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div v-if="item.estado_cumplimiento === 'Oportunidad de Mejora'"
+                                                class="mt-2 p-2 bg-white border border-warning rounded shadow-sm">
+                                                <label class="text-warning font-weight-bold small mb-1">
+                                                    <i class="fas fa-lightbulb mr-1"></i> Oportunidad de Mejora
+                                                </label>
+                                                <div class="input-group input-group-sm align-items-start">
+                                                    <textarea class="form-control" v-model="item.hallazgo_detectado"
+                                                        rows="3"
+                                                        placeholder="Propuesta detallada para la mejora técnica del proceso..."
+                                                        @blur="saveEvidence(item)"></textarea>
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-outline-warning" type="button"
+                                                            style="height: 100%; min-height: 40px;"
+                                                            title="Mejorar redacción con IA"
+                                                            @click="improveMejora(item)"
+                                                            :disabled="improvingMejora[item.id]">
+                                                            <i class="fas"
+                                                                :class="improvingMejora[item.id] ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div v-if="item.estado_cumplimiento === 'Oportunidad de Mejora'"
-                                        class="mt-2 p-2 bg-white border border-warning rounded shadow-sm">
-                                        <label class="text-warning font-weight-bold small mb-1">
-                                            <i class="fas fa-lightbulb mr-1"></i> Oportunidad de Mejora
-                                        </label>
-                                        <div class="input-group input-group-sm align-items-start">
-                                            <textarea class="form-control" v-model="item.hallazgo_detectado" rows="4"
-                                                placeholder="Propuesta detallada para la mejora técnica del proceso..."
-                                                @blur="saveEvidence(item)"></textarea>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-outline-warning" type="button"
-                                                    style="height: 100%; min-height: 40px;"
-                                                    title="Mejorar redacción con IA" @click="improveMejora(item)"
-                                                    :disabled="improvingMejora[item.id]">
-                                                    <i class="fas"
-                                                        :class="improvingMejora[item.id] ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
                                 </div>
                             </div>
                         </div>
@@ -237,6 +270,32 @@ const progress = computed(() => {
     return Math.round((completedItems.value / checklists.value.length) * 100);
 });
 
+const groupedChecklists = computed(() => {
+    if (!checklists.value) return [];
+
+    const groups = {};
+    checklists.value.forEach(item => {
+        const norm = item.norma_referencia || 'General';
+        const req = item.requisito_referencia || 'Requisitos Generales';
+        const key = `${norm} ${req}`; // Key for grouping
+
+        if (!groups[key]) {
+            groups[key] = {
+                title: key,
+                norm: norm,
+                req: req,
+                items: []
+            };
+        }
+        groups[key].items.push(item);
+    });
+
+    // Sort groups naturally (so 4.1 comes before 10.1)
+    return Object.values(groups).sort((a, b) => {
+        return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
+    });
+});
+
 const statusBadgeClass = computed(() => {
     const status = executionDetail.value?.estado;
     switch (status) {
@@ -266,7 +325,63 @@ const isGeneratingAI = ref(false);
 const aiProgress = ref(0);
 const aiStatusText = ref('Iniciando motor de IA...');
 
-const generateChecklist = async () => {
+// Tabs Logic
+const activeTab = ref(null);
+const uniqueNorms = computed(() => {
+    // Extract unique norms from agenda requirements
+    const reqs = executionDetail.value?.aea_requisito || [];
+    const norms = new Map();
+
+    if (Array.isArray(reqs)) {
+        reqs.forEach(r => {
+            if (r.norma_id) {
+                if (!norms.has(r.norma_id)) {
+                    norms.set(r.norma_id, {
+                        id: r.norma_id,
+                        nombre: r.norma || `Norma ${r.norma_id}`,
+                        reqCount: 0
+                    });
+                }
+                norms.get(r.norma_id).reqCount++;
+            }
+        });
+    }
+
+    if (norms.size === 0) return [{ id: 'all', nombre: 'General', reqCount: reqs.length }];
+    return Array.from(norms.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
+});
+
+// Initialize activeTab
+watch(uniqueNorms, (newVal) => {
+    if (newVal.length > 0 && !activeTab.value) {
+        activeTab.value = newVal[0].id;
+    }
+}, { immediate: true });
+
+const getNormName = (id) => {
+    const n = uniqueNorms.value.find(x => x.id === id);
+    return n ? n.nombre : 'Norma';
+};
+
+const getCountForNorm = (normName) => {
+    if (!checklists.value) return 0;
+    return checklists.value.filter(c => c.norma_referencia === normName).length;
+};
+
+// Filter checklists by Active Tab
+const filteredChecklists = computed(() => {
+    if (!checklists.value) return [];
+    if (activeTab.value === 'all') return checklists.value;
+
+    const normObj = uniqueNorms.value.find(n => n.id === activeTab.value);
+    if (!normObj) return [];
+
+    // Match by norm name (assuming backend saves correct name)
+    return checklists.value.filter(c => c.norma_referencia === normObj.nombre);
+});
+
+
+const generateChecklist = async (normaId = null) => {
     isGeneratingAI.value = true;
     aiProgress.value = 0;
     aiStatusText.value = 'Interpretando requisitos y normas...';
@@ -293,16 +408,26 @@ const generateChecklist = async () => {
     }, 600);
 
     try {
-        const url = window.route ? window.route('api.auditoria.ejecucion.generate', { id: props.agendaId }) : `/api/auditoria/ejecucion/generate-checklist/${props.agendaId}`;
-        await axios.post(url);
+        const url = window.route ? window.route('api.auditoria.ejecucion.generar-checklist', { id: props.agendaId }) : `/api/auditoria/ejecucion/${props.agendaId}/generar-checklist`;
 
+        // Pass norma_id if specific tab selected
+        const payload = {};
+        if (normaId && normaId !== 'all') {
+            payload.norma_id = normaId;
+        }
 
-        aiProgress.value = 100;
-        aiStatusText.value = '¡Checklist generado con éxito!';
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Checklist generado por IA', life: 3000 });
-        await store.fetchExecutionDetail(props.agendaId, true);
+        await axios.post(url, payload);
+
+        // Recargar datos
+        aiStatusText.value = 'Guardando resultados...';
+        aiProgress.value = 90;
+        await loadDetails();
+
+        toast.add({ severity: 'success', summary: 'IA Completada', detail: 'Checklist generado correctamente.', life: 3000 });
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error generando checklist', life: 3000 });
+        console.error('Error generating checklist:', error);
+        const errorMsg = error.response?.data?.error || 'Error generando checklist';
+        toast.add({ severity: 'error', summary: 'Error', detail: errorMsg, life: 5000 });
     } finally {
         clearInterval(interval);
         setTimeout(() => {

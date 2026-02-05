@@ -16,6 +16,11 @@ export const useObligacionStore = defineStore('obligacion', {
             proceso: '',
             fuente: '',
         },
+        // Master lists for dropdowns
+        areas: [],
+        subareas: [],
+        procesos: [],
+        loadingListas: false,
         // Otros estados que puedas necesitar para el formulario de obligación
         form: {
             id: null,
@@ -24,12 +29,14 @@ export const useObligacionStore = defineStore('obligacion', {
             area_compliance_id: null,
             area_compliance_nombre: '',
             subarea_compliance_id: null, // Add field
-            documento_tecnico_normativo: '',
+            obligacion_documento: '',
             obligacion_principal: '',
-            obligacion_controles: '',
-            consecuencia_incumplimiento: '',
-            documento_deroga: '',
-            estado_obligacion: 'pendiente',
+            obligacion_consecuencia: '',
+            obligacion_documento_deroga: '',
+            obligacion_estado: 'pendiente',
+            obligacion_tipo: 'Legal',
+            obligacion_frecuencia: null,
+            obligacion_fecha_identificacion: null,
         },
     }),
 
@@ -143,12 +150,21 @@ export const useObligacionStore = defineStore('obligacion', {
                 this.form.area_compliance_id = obligacion.area_compliance_id;
                 this.form.area_compliance_nombre = obligacion.area_compliance?.area_compliance_nombre;
                 this.form.subarea_compliance_id = obligacion.subarea_compliance_id; // Add mapping
-                this.form.documento_tecnico_normativo = obligacion.documento_tecnico_normativo;
+                this.form.obligacion_documento = obligacion.obligacion_documento;
                 this.form.obligacion_principal = obligacion.obligacion_principal;
-                this.form.obligacion_controles = obligacion.obligacion_controles;
-                this.form.consecuencia_incumplimiento = obligacion.consecuencia_incumplimiento;
-                this.form.documento_deroga = obligacion.documento_deroga;
-                this.form.estado_obligacion = obligacion.estado_obligacion;
+                this.form.obligacion_consecuencia = obligacion.obligacion_consecuencia;
+                this.form.obligacion_documento_deroga = obligacion.obligacion_documento_deroga;
+                this.form.obligacion_estado = obligacion.obligacion_estado;
+                this.form.obligacion_tipo = obligacion.obligacion_tipo;
+                this.form.obligacion_frecuencia = obligacion.obligacion_frecuencia;
+                this.form.obligacion_fecha_identificacion = obligacion.obligacion_fecha_identificacion;
+
+                // Mapear IDs de procesos para el componente de asociación
+                if (obligacion.procesos) {
+                    this.form.procesos_ids = obligacion.procesos.map(p => p.id);
+                } else {
+                    this.form.procesos_ids = [];
+                }
             } else {
                 // Resetear el formulario para una nueva obligación
                 this.resetForm();
@@ -179,12 +195,14 @@ export const useObligacionStore = defineStore('obligacion', {
                 area_compliance_id: null,
                 area_compliance_nombre: '',
                 subarea_compliance_id: null, // Initial state
-                documento_tecnico_normativo: '',
+                obligacion_documento: '',
                 obligacion_principal: '',
-                obligacion_controles: '',
-                consecuencia_incumplimiento: '',
-                documento_deroga: '',
-                estado_obligacion: 'pendiente',
+                obligacion_consecuencia: '',
+                obligacion_documento_deroga: '',
+                obligacion_estado: 'pendiente',
+                obligacion_tipo: 'legal',
+                obligacion_frecuencia: null,
+                obligacion_fecha_identificacion: null,
             };
         },
 
@@ -199,6 +217,26 @@ export const useObligacionStore = defineStore('obligacion', {
                 fuente: '',
             };
             this.fetchObligaciones();
+        },
+
+        async ensureListas() {
+            if (this.areas.length > 0 && this.subareas.length > 0 && this.procesos.length > 0) return;
+
+            this.loadingListas = true;
+            try {
+                const [procRes, areaRes, subRes] = await Promise.all([
+                    axios.get('/api/procesos'),
+                    axios.get('/api/areas-compliance'),
+                    axios.get('/api/subareas-compliance')
+                ]);
+                this.procesos = procRes.data;
+                this.areas = areaRes.data;
+                this.subareas = subRes.data;
+            } catch (error) {
+                console.error('Error loading master lists:', error);
+            } finally {
+                this.loadingListas = false;
+            }
         }
     },
 });

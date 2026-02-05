@@ -151,6 +151,53 @@ class AIService
     }
 
     /**
+     * Extrae la obligación principal de un texto técnico/normativo.
+     */
+    public function extractObligacionFromText(string $text): string
+    {
+        $prompt = "Actúa como un experto en cumplimiento normativo (ISO 37301). 
+        Analiza el siguiente fragmento de un documento técnico o norma legal y extrae la OBLIGACIÓN PRINCIPAL (el 'deber ser').
+
+        Texto: \"$text\"
+
+        Instrucciones:
+        1. Identifica la acción mandatoria o requisito principal.
+        2. Redacta la obligación de forma clara, directa y técnica en tercera persona.
+        3. Si hay múltiples obligaciones, selecciona la más relevante o sintetízalas en una sola declaración coherente.
+        4. Si no se identifica ninguna obligación clara, responde: 'No se identificó una obligación explícita en el fragmento proporcionado'.
+        5. Devuelve SOLO el texto de la obligación, sin introducciones.
+        6. Longitud máxima: 500 caracteres.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    /**
+     * Mejora o sugiere consecuencias del incumplimiento basadas en la obligación principal.
+     */
+    public function improveObligacionConsequence(string $obligacionPrincipal, ?string $currentConsequence = null): string
+    {
+        $prompt = "Actúa como un experto en Compliance y Gestión de Riesgos.
+
+        Contexto (Obligación Principal): \"$obligacionPrincipal\"
+        ";
+
+        if (empty($currentConsequence)) {
+            $prompt .= "La 'Consecuencia del Incumplimiento' está vacía. Sugiere al menos 2 consecuencias lógicas (legales, operativas o reputacionales) derivadas del incumplimiento de esta obligación.
+            Formato de respuesta:
+            - Opción 1: [Consecuencia sugerida]
+            - Opción 2: [Consecuencia sugerida]";
+        } else {
+            $prompt .= "Analiza la siguiente 'Consecuencia' actual: \"$currentConsequence\".
+            Mejora su redacción para que sea más técnica, contundente y alineada con la obligación principal.
+            Mantén un tono formal.";
+        }
+
+        $prompt .= "\n\nIMPORTANTE: Devuelve SOLO el texto de la respuesta, sin introducciones ni explicaciones adicionales. Responde en español.";
+
+        return $this->callOpenAI($prompt);
+    }
+
+    /**
      * Mejora la redacción de un hallazgo de auditoría.
      */
     public function improveHallazgo(string $text): string
@@ -232,6 +279,11 @@ class AIService
 
     protected function callOpenAI(string $prompt, bool $jsonMode = false): string
     {
+        if (empty($this->apiKey)) {
+            Log::error('OpenAI API Key is not configured');
+            throw new \Exception('OpenAI API Key is not configured. Please set OPENAI_API_KEY in your .env file.');
+        }
+
         $params = [
             'model' => 'gpt-4o-mini',
             'messages' => [
@@ -246,16 +298,29 @@ class AIService
         }
 
         $response = Http::withoutVerifying()
+            ->timeout(60) // Increase timeout to 60 seconds
             ->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl . '/chat/completions', $params);
 
         if ($response->successful()) {
-            return $response->json('choices.0.message.content');
+            $content = $response->json('choices.0.message.content');
+            if (empty($content)) {
+                Log::error('OpenAI returned empty content', ['response' => $response->json()]);
+                throw new \Exception('OpenAI returned empty content');
+            }
+            return $content;
         }
 
-        throw new \Exception('OpenAI Error: ' . $response->status());
+        $errorMessage = $response->json('error.message') ?? 'Unknown error';
+        Log::error('OpenAI API Error', [
+            'status' => $response->status(),
+            'error' => $errorMessage,
+            'response' => $response->body()
+        ]);
+
+        throw new \Exception('OpenAI Error: ' . $errorMessage . ' (Status: ' . $response->status() . ')');
     }
 
     /**
@@ -404,83 +469,138 @@ class AIService
     public function generateChecklist($procesoNombre, $normas, $responsable, $requisitosEspecificos = [])
     {
         $reqListText = "";
+        $reqDetailsMap = [];
+
         if (!empty($requisitosEspecificos)) {
             $reqsArr = is_string($requisitosEspecificos) ? explode(',', $requisitosEspecificos) : $requisitosEspecificos;
             foreach ($reqsArr as $r) {
-                $codigo = is_array($r) ? ($r['codigo'] ?? $r['label'] ?? json_encode($r)) : $r;
-                $reqListText .= "- Requisito: $codigo\n";
+                // Prioritize enriched fields from controller
+                $numeral = is_array($r) ? ($r['numeral'] ?? $r['codigo'] ?? $r['label'] ?? 'N/A') : $r;
+                $normaCtx = is_array($r) ? ($r['norma'] ?? $r['nombre'] ?? $normas) : $normas;
+                $denominacion = is_array($r) ? ($r['denominacion'] ?? '') : '';
+                $detalle = is_array($r) ? ($r['detalle'] ?? '') : '';
+
+                // Store for later enrichment
+                $reqDetailsMap[$numeral] = [
+                    'norma' => $normaCtx,
+                    'denominacion' => $denominacion,
+                    'detalle' => $detalle
+                ];
+
+                // Build prompt text
+                $line = "Requisito $numeral ($normaCtx)";
+                if ($denominacion)
+                    $line .= " - $denominacion";
+                if ($detalle) {
+                    $detShort = (strlen($detalle) > 500) ? substr($detalle, 0, 500) . '...' : $detalle;
+                    $line .= "\n  Descripción: $detShort";
+                }
+                $reqListText .= "$line\n\n";
             }
         }
 
-        $prompt = "Actúa como un Auditor Líder ISO 9001/37001. 
-        Genera un checklist de auditoría para el proceso: \"$procesoNombre\". 
-        Normas de referencia: $normas. 
-        Responsable del proceso: $responsable.
-        Requisitos específicos a cubrir:\n$reqListText
+        Log::info('DEBUG AIService - Prompt Requirements:', ['text' => substr($reqListText, 0, 200) . '...']);
+
+        $prompt = "Actúa como un Auditor Líder certificado en normas ISO. 
         
-        INSTRUCCIONES:
-        1. Genera preguntas de auditoría claras y directas.
-        2. Para cada requisito listado, genera al menos una pregunta.
-        3. Define la evidencia objetiva esperada para cada pregunta.
-        4. Responde EXCLUSIVAMENTE en formato JSON.
-        
-        Estructura del JSON esperada:
-        {
-          \"checklist\": [
-            {
-              \"norma_referencia\": \"...\",
-              \"requisito_referencia\": \"...\",
-              \"pregunta\": \"...\",
-              \"evidencia_esperada\": \"...\",
-              \"criterio_auditoria\": \"...\"
-            }
-          ]
-        }";
+CONTEXTO:
+- Proceso: \"$procesoNombre\"
+- Normas: $normas
+- Responsable: $responsable
+
+REQUISITOS A AUDITAR:
+$reqListText
+
+INSTRUCCIONES:
+1. Genera preguntas de auditoría ESPECÍFICAS basadas en la 'Descripción' de cada requisito.
+2. NO uses preguntas genéricas.
+3. Para cada requisito, usa el texto de la descripción para formular la pregunta (ej. '¿Cómo se determina X?' si el requisito pide determinar X).
+4. Responde en JSON.
+
+JSON Esperado:
+{
+  \"checklist\": [
+    {
+      \"norma_referencia\": \"[Norma correcta]\",
+      \"requisito_referencia\": \"[Solo número, ej. 4.2]\",
+      \"pregunta\": \"[Pregunta específica]\",
+      \"evidencia_esperada\": \"[Documentos específicos]\",
+      \"criterio_auditoria\": \"[Resumen criterio]\"
+    }
+  ]
+}";
 
         try {
-            $res = $this->callOpenAI($prompt, true);
+            // Aumentar timeout implícito si es posible o confiar en la configuración
+            // Use 120s timeout for this heavy operation
+            $params = [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are Jaris, a helpful AI assistant. You MUST always answer in Spanish.'],
+                    ['role' => 'user', 'content' => $prompt]
+                ],
+                'temperature' => 0.3,
+                'response_format' => ['type' => 'json_object']
+            ];
+
+            $response = Http::withoutVerifying()
+                ->timeout(120)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ])->post($this->baseUrl . '/chat/completions', $params);
+
+            if (!$response->successful()) {
+                throw new \Exception('OpenAI Error: ' . ($response->json('error.message') ?? $response->body()));
+            }
+
+            $res = $response->json('choices.0.message.content');
             $data = json_decode($res, true);
 
             if ($data && (isset($data['checklist']) || isset($data['items']))) {
-                return $data['checklist'] ?? $data['items'];
+                $items = $data['checklist'] ?? $data['items'];
+
+                // Post-process: Solo enriquecer campos auxiliares, NUNCA tocar pregunta/evidencia de la IA
+                foreach ($items as &$item) {
+                    $ref = $item['requisito_referencia'] ?? null;
+                    if ($ref && isset($reqDetailsMap[$ref])) {
+                        // Asignar el detalle real del requisito al campo de contenido
+                        $item['requisito_contenido'] = $reqDetailsMap[$ref]['detalle'] ?: $item['criterio_auditoria'];
+
+                        // Corregir norma solo si falta o es placeholder
+                        if (empty($item['norma_referencia']) || stripos($item['norma_referencia'], 'sgc') !== false) {
+                            $item['norma_referencia'] = $reqDetailsMap[$ref]['norma'];
+                        }
+                    }
+                }
+                return $items;
+            } else {
+                throw new \Exception("Respuesta de IA no válida o vacía. Respuesta raw: " . substr($res, 0, 100));
             }
-        } catch (\Exception $e) {
-            Log::error("Error generating checklist with AI: " . $e->getMessage());
-        }
+        } catch (\Throwable $e) {
+            Log::error("OBSERVACIÓN AUTOMÁTICA: Falló la generación IA: " . $e->getMessage());
 
-        // Fallback local
-        return $this->getDummyChecklist($procesoNombre, $requisitosEspecificos, $normas);
-    }
-
-    /**
-     * Fallback manual en caso de que la IA falle.
-     */
-    private function getDummyChecklist($proceso, $requisitos = [], $normas = 'ISO 9001')
-    {
-        $items = [];
-        $reqsArr = is_string($requisitos) ? explode(',', $requisitos) : $requisitos;
-        $reqsToUse = !empty($reqsArr) ? $reqsArr : ['4.4', '7.5'];
-
-        foreach ($reqsToUse as $req) {
-            $codigo = is_array($req) ? ($req['codigo'] ?? $req['label'] ?? 'N/A') : $req;
-            $items[] = [
-                'norma_referencia' => $normas,
-                'requisito_referencia' => $codigo,
-                'pregunta' => "¿Se evidencia el cumplimiento del requisito $codigo en las actividades del proceso $proceso?",
-                'evidencia_esperada' => 'Registros, documentos y entrevistas que demuestren la conformidad.',
-                'criterio_auditoria' => "Cumplimiento normativo de $normas"
+            // En lugar de fallback genérico, devolvemos el error visible en el checklist
+            // para que el usuario sepa que la IA falló y por qué.
+            return [
+                [
+                    'norma_referencia' => 'ERROR SISTEMA',
+                    'requisito_referencia' => '0.0',
+                    'pregunta' => "La IA no pudo generar el checklist. Error: " . $e->getMessage(),
+                    'evidencia_esperada' => "Verificar logs de Laravel (storage/logs/laravel.log) o configuración de OpenAI/Red.",
+                    'criterio_auditoria' => "Fallo de conexión/parsing",
+                    'requisito_contenido' => "Intente nuevamente."
+                ]
             ];
         }
-        return $items;
     }
 
-    /**
-     * Método público para generar texto con IA desde controladores externos.
-     * 
-     * @param string $prompt El prompt a enviar a la IA
-     * @param bool $jsonMode Si se espera respuesta en formato JSON
-     * @return string La respuesta generada por la IA
-     */
+    // Método fallback eliminado o en desuso para evitar confusiones
+    private function getDummyChecklist($proceso, $requisitos = [], $normas = 'ISO 9001')
+    {
+        return [];
+    }
+
     public function generateText(string $prompt, bool $jsonMode = false): string
     {
         return $this->callOpenAI($prompt, $jsonMode);

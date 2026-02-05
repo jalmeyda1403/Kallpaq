@@ -48,7 +48,7 @@ foreach ($data as $row) {
     // 2. Link to Risk (Pivot)
     if (!empty($row['riesgo_cod'])) {
         // riesgo_cod is the ID of the risk, confusingly named in old DB.
-        DB::table('control_riesgo')->insert([
+        DB::table('riesgo_control')->insert([
             'riesgo_id' => $row['riesgo_cod'],
             'control_id' => $control->id,
             'eficacia' => $row['evaluación'] ?? null, // Map accent? 

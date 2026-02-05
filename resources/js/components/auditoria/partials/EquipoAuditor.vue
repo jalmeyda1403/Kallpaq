@@ -174,7 +174,7 @@ const loadData = async () => {
         }
 
         if (needsTeam) {
-            fetches.push(axios.get(`/api/auditorias/${props.auditId}`).then(r => {
+            fetches.push(axios.get(`/api/auditorias/${props.auditId}/equipo`).then(r => {
                 const fetchedTeam = r.data?.equipo || [];
                 team.value = fetchedTeam;
             }));

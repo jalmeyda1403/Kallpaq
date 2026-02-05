@@ -56,7 +56,7 @@
                 <DataTable ref="dt" :value="obligacionStore.obligaciones" v-model:filters="filters" paginator :rows="10"
                     :class="{ 'opacity-50 pointer-events-none': obligacionStore.loading }"
                     :rowsPerPageOptions="[5, 10, 20, 50]" dataKey="id" filterDisplay="menu"
-                    :globalFilterFields="['proceso.proceso_nombre', 'documento_tecnico_normativo', 'obligacion_principal', 'consecuencia_incumplimiento', 'estado_obligacion']"
+                    :globalFilterFields="['obligacion_documento', 'obligacion_principal', 'obligacion_consecuencia', 'obligacion_estado', 'procesos.proceso_nombre']"
                     class="p-datatable-sm table-hover" stripedRows responsiveLayout="scroll">
                     <template #header>
                         <div class="d-flex align-items-center justify-content-end pb-2">
@@ -69,10 +69,15 @@
                             <span class="text-muted small">{{ index + 1 }}</span>
                         </template>
                     </Column>
-                    <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
+                    <Column field="procesos" header="Procesos" sortable style="width:20%">
                         <template #body="{ data }">
-                            <span class="font-weight-500 text-dark">{{ data.proceso?.proceso_nombre || 'N/A'
-                                }}</span>
+                            <div v-if="data.procesos && data.procesos.length" class="d-flex flex-wrap">
+                                <span v-for="p in data.procesos" :key="p.id"
+                                    class="badge badge-light border text-danger mr-1 mb-1 small px-2 py-1">
+                                    <i class="fas fa-network-wired mr-1 opacity-50"></i>{{ p.proceso_nombre }}
+                                </span>
+                            </div>
+                            <span v-else class="text-muted small">N/A</span>
                         </template>
                     </Column>
                     <Column field="documento.nombre_documento" header="Documento" style="width:25%">
@@ -82,7 +87,7 @@
                                 <span v-if="data.documento" class="text-break small">{{
                                     data.documento.nombre_documento
                                     }}</span>
-                                <span v-else class="text-break small text-muted">{{ data.documento_tecnico_normativo
+                                <span v-else class="text-break small text-muted">{{ data.obligacion_documento
                                     ||
                                     'Sin documento' }}</span>
                             </div>
@@ -94,15 +99,15 @@
                                 }}</span>
                         </template>
                     </Column>
-                    <Column field="consecuencia_incumplimiento" header="Consecuencia" style="width:15%">
+                    <Column field="obligacion_consecuencia" header="Consecuencia" style="width:15%">
                         <template #body="{ data }">
-                            <span class="small text-muted">{{ data.consecuencia_incumplimiento }}</span>
+                            <span class="small text-muted">{{ data.obligacion_consecuencia }}</span>
                         </template>
                     </Column>
-                    <Column field="estado_obligacion" header="Estado" style="width:10%" sortable>
+                    <Column field="obligacion_estado" header="Estado" style="width:10%" sortable>
                         <template #body="{ data }">
-                            <span :class="['badge p-2', getEstadoClass(data.estado_obligacion)]">
-                                {{ ucfirst(data.estado_obligacion) }}
+                            <span :class="['badge p-2', getEstadoClass(data.obligacion_estado)]">
+                                {{ ucfirst(data.obligacion_estado) }}
                             </span>
                         </template>
                     </Column>
@@ -164,11 +169,11 @@ const dt = ref(null);
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'proceso.proceso_nombre': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    documento_tecnico_normativo: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    'procesos.proceso_nombre': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    obligacion_documento: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     obligacion_principal: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    consecuencia_incumplimiento: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    estado_obligacion: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    obligacion_consecuencia: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    obligacion_estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
 });
 
 const getEstadoClass = (estado) => {

@@ -2,71 +2,100 @@
     <Teleport to="body">
         <div class="modal fade" tabindex="-1" ref="modalRef" aria-hidden="true" style="z-index: 1050;">
             <div class="modal-dialog modal-dialog-centered modal-xl">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-content">
                     <!-- Bootstrap Header Red Danger -->
                     <div class="modal-header bg-danger text-white py-3">
                         <h5 class="modal-title font-weight-bold">
                             <i class="fas fa-balance-scale mr-2"></i> Gestión de Obligación
+                            <span v-if="form.obligacion_estado" class="badge ml-2 text-capitalize"
+                                :class="getEstadoBadgeClass(form.obligacion_estado)">
+                                {{ form.obligacion_estado.replace('_', ' ') }}
+                            </span>
                         </h5>
-                        <button type="button" class="close text-white opacity-100" @click="closeModal"
-                            aria-label="Close" style="opacity: 1;">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+
+                        <div class="ml-auto d-flex align-items-center">
+                            <select v-if="form.id"
+                                class="form-control form-control-sm mr-3 font-weight-bold text-uppercase"
+                                style="width: auto; height: 30px; padding-top: 2px;" v-model="selectedState"
+                                @change="attemptStateChange">
+                                <option v-for="st in availableStates" :key="st" :value="st">
+                                    {{ st.replace('_', ' ').toUpperCase() }}
+                                </option>
+                            </select>
+
+                            <button type="button" class="close text-white opacity-100" @click="closeModal"
+                                @mousedown.prevent aria-label="Close" style="opacity: 1;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="modal-body bg-light p-0">
-                        <div class="d-flex h-100">
+                    <div class="modal-body p-0" style="max-height: 75vh;">
+                        <div class="d-flex" style="height: 75vh; overflow: hidden;">
                             <!-- Sidebar Navigation -->
-                            <div class="bg-white border-right" style="width: 260px; min-height: 600px;">
-                                <div class="nav flex-column nav-pills py-3" id="v-pills-tab" role="tablist"
-                                    aria-orientation="vertical">
+                            <div class="nav flex-column nav-pills bg-light border-right p-3" style="width: 250px;"
+                                role="tablist" aria-orientation="vertical">
 
-                                    <h6 class="text-secondary mx-3 mt-2">GENERAL</h6>
-                                    <a class="nav-link" href="#"
-                                        :class="{ 'text-danger active': activeTab === 'general' }"
-                                        @click.prevent="activeTab = 'general'" role="tab">
-                                        <i class="fas fa-file-alt"></i> Datos Generales
-                                    </a>
+                                <h6 class="text-secondary mx-3 mt-2">GENERAL</h6>
+                                <a class="nav-link" href="#" :class="{ 'text-danger active': activeTab === 'general' }"
+                                    @click.prevent="activeTab = 'general'" role="tab">
+                                    <i class="fas fa-file-alt"></i> Datos Generales
+                                </a>
 
-                                    <hr class="my-2 border-secondary mx-3 opacity-50">
+                                <hr class="my-2 border-secondary mx-3 opacity-50">
 
-                                    <h6 class="text-secondary mx-3 mt-3">ASOCIACIONES</h6>
-                                    <a class="nav-link" href="#"
-                                        :class="{ 'text-danger active': activeTab === 'procesos' }"
-                                        @click.prevent="activeTab = 'procesos'" role="tab">
-                                        <i class="fas fa-network-wired"></i> Asociar a Procesos
-                                    </a>
-                                    <a class="nav-link" href="#"
-                                        :class="{ 'text-danger active': activeTab === 'evaluacion' }"
-                                        @click.prevent="activeTab = 'evaluacion'" role="tab">
-                                        <i class="fas fa-exclamation-triangle"></i> Evaluación (Riesgos)
-                                    </a>
-                                    <a class="nav-link" href="#"
-                                        :class="{ 'text-danger active': activeTab === 'acciones' }"
-                                        @click.prevent="activeTab = 'acciones'" role="tab">
-                                        <i class="fas fa-tasks"></i> Plan de Acción
-                                    </a>
-                                    <a class="nav-link" href="#"
-                                        :class="{ 'text-danger active': activeTab === 'controles' }"
-                                        @click.prevent="activeTab = 'controles'" role="tab">
-                                        <i class="fas fa-shield-alt"></i> Controles
-                                    </a>
-                                </div>
+                                <h6 class="text-secondary mx-3 mt-3">ASOCIACIONES</h6>
+                                <a class="nav-link" href="#" :class="{ 'text-danger active': activeTab === 'procesos' }"
+                                    @click.prevent="activeTab = 'procesos'" role="tab">
+                                    <i class="fas fa-network-wired"></i> Asociar a Procesos
+                                </a>
+
+                                <a class="nav-link" href="#"
+                                    :class="{ 'text-danger active': activeTab === 'criticidad' }"
+                                    @click.prevent="activeTab = 'criticidad'" role="tab">
+                                    <i class="fas fa-clipboard-check"></i> Evaluación de Criticidad
+                                </a>
+                                <a class="nav-link" href="#"
+                                    :class="{ 'text-danger active': activeTab === 'evaluacion' }"
+                                    @click.prevent="activeTab = 'evaluacion'" role="tab">
+                                    <i class="fas fa-exclamation-triangle"></i> Evaluación (Riesgos)
+                                </a>
+                                <a class="nav-link" href="#" :class="{ 'text-danger active': activeTab === 'acciones' }"
+                                    @click.prevent="activeTab = 'acciones'" role="tab">
+                                    <i class="fas fa-tasks"></i> Plan de Acción
+                                </a>
+                                <a class="nav-link" href="#"
+                                    :class="{ 'text-danger active': activeTab === 'controles' }"
+                                    @click.prevent="activeTab = 'controles'" role="tab">
+                                    <i class="fas fa-shield-alt"></i> Controles
+                                </a>
                             </div>
 
                             <!-- Content Area -->
-                            <div class="col-md-9 px-4 py-4">
+                            <div class="flex-grow-1 p-4" style="overflow-y: auto; height: 100%;">
                                 <!-- Tab: General -->
                                 <div v-if="activeTab === 'general'">
                                     <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">Datos Generales
                                     </h6>
                                     <ObligacionForm v-model="form" :procesos="procesos" :areas="areas"
-                                        :subareas="subareas" />
+                                        :subareas="subareas" :loading="loadingListas"
+                                        @open-ai-assistant="openAIAssistant" />
                                 </div>
 
                                 <!-- Tab: Procesos (Multi-select) -->
                                 <div v-if="activeTab === 'procesos'">
                                     <AsignarProcesosObligacion v-model="form.procesos_ids" :all-procesos="procesos" />
+                                </div>
+
+                                <!-- Tab: Evaluacion Criticidad (ISO 37301) -->
+                                <div v-if="activeTab === 'criticidad'">
+                                    <ObligacionEvaluacionForm v-if="form.id" :obligacion-id="form.id"
+                                        :evaluation="form.evaluacion_actual"
+                                        :read-only="form.obligacion_estado === 'controlada' || form.obligacion_estado === 'inactiva'"
+                                        @evaluated="handleEvaluated" />
+                                    <div v-else class="alert alert-warning">
+                                        Guarde la obligación antes de realizar la evaluación.
+                                    </div>
                                 </div>
 
                                 <!-- Tab: Evaluacion (Riesgos) -->
@@ -78,7 +107,7 @@
                                     <div class="d-flex justify-content-between mb-3">
                                         <div>
                                             <span class="text-muted small">Riesgos vinculados: {{ riesgos.length
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <button class="btn btn-danger btn-sm" @click="openRiesgoModal">
                                             <i class="fas fa-plus mr-1"></i> Crear/Asociar Riesgo
@@ -211,7 +240,7 @@
                                                         <td><span class="badge badge-warning">Riesgo</span></td>
                                                         <td class="font-weight-bold">{{ control.nombre }}</td>
                                                         <td><span class="badge badge-light border">{{ control.tipo
-                                                        }}</span></td>
+                                                                }}</span></td>
                                                         <td class="text-muted small">{{ riesgo.riesgo_nombre }}</td>
                                                     </tr>
                                                 </template>
@@ -223,7 +252,7 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer bg-light border-top-0 py-3">
+                    <div class="modal-footer bg-light border-top-0 py-3" v-if="activeTab !== 'criticidad'">
                         <button type="button" class="btn btn-secondary px-4 checkbox-shadow"
                             @click="closeModal">Cancelar</button>
                         <button type="button" class="btn btn-danger px-4 shadow-sm" @click="submitForm"
@@ -235,17 +264,32 @@
                 </div>
             </div>
         </div>
+
+        <!-- Asistente de IA -->
+        <AsistenteIAObligacionModal @selected="onIAObligacionSelected" />
     </Teleport>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
+import { useObligacionStore } from '../../stores/obligacionStore';
 import { Modal } from 'bootstrap';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import ObligacionForm from './ObligacionForm.vue';
 import AsignarProcesosObligacion from './AsignarProcesosObligacion.vue'; // Import component
 import ControlSelector from '../controles/ControlSelector.vue';
+import AsistenteIAObligacionModal from './AsistenteIAObligacionModal.vue';
+import ObligacionEvaluacionForm from './ObligacionEvaluacionForm.vue';
+
+// Toast configuration
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+});
 
 const props = defineProps({
     show: Boolean,
@@ -258,14 +302,17 @@ const modalInstance = ref(null);
 const activeTab = ref('general');
 const saving = ref(false);
 
-// Data Lists
-const procesos = ref([]);
-const areas = ref([]);
-const subareas = ref([]); // All subareas loaded once
+const store = useObligacionStore();
+
+// Data Lists from store
+const procesos = computed(() => store.procesos);
+const areas = computed(() => store.areas);
+const subareas = computed(() => store.subareas);
+const loadingListas = computed(() => store.loadingListas);
 const riesgos = ref([]);
 const controlesData = ref([]); // Store full objects for direct controls
 const acciones = ref([]);
-const searchProceso = ref('');
+
 
 const form = reactive({
     id: null,
@@ -273,14 +320,99 @@ const form = reactive({
     procesos_ids: [],
     area_compliance_id: '',
     subarea_compliance_id: '',
-    documento_tecnico_normativo: '',
+    obligacion_documento: '',
     obligacion_principal: '',
-    tipo_obligacion: 'Legal',
-    estado_obligacion: 'pendiente',
-    consecuencia_incumplimiento: '',
-    frecuencia_revision: null,
+    obligacion_tipo: 'Legal',
+    obligacion_estado: 'pendiente',
+    obligacion_consecuencia: '',
+    obligacion_documento_deroga: '',
+    obligacion_frecuencia: null,
+    obligacion_fecha_identificacion: null,
     controles_ids: [],
+    evaluacion_actual: null
 });
+
+const searchProceso = ref('');
+const selectedState = ref(null);
+const availableStates = [
+    'identificada', 'evaluada', 'en_tratamiento', 'controlada',
+    'no_controlada', 'suspendida', 'inactiva'
+];
+
+const attemptStateChange = async () => {
+    if (selectedState.value === form.obligacion_estado) return;
+
+    // Confirmación previa
+    const result = await Swal.fire({
+        title: '¿Cambiar estado?',
+        text: `¿Desea cambiar el estado de la obligación a ${selectedState.value.toUpperCase().replace('_', ' ')}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+        selectedState.value = form.obligacion_estado;
+        return;
+    }
+
+    try {
+        const response = await axios.post(`/api/obligaciones/${form.id}/cambiar-estado`, {
+            nuevo_estado: selectedState.value
+        });
+
+        form.obligacion_estado = response.data.nuevo_estado;
+        Toast.fire({ icon: 'success', title: 'Estado actualizado correctamente' });
+
+    } catch (error) {
+        console.error(error);
+        selectedState.value = form.obligacion_estado; // Revertir
+        Swal.fire({
+            icon: 'error',
+            title: 'No se pudo cambiar el estado',
+            text: error.response?.data?.error || 'Error desconocido'
+        });
+    }
+};
+
+watch(() => form.obligacion_estado, (val) => {
+    selectedState.value = val;
+});
+
+const getEstadoBadgeClass = (estado) => {
+    const map = {
+        identificada: 'badge-secondary',
+        evaluada: 'badge-info',
+        en_tratamiento: 'badge-primary',
+        controlada: 'badge-success',
+        no_controlada: 'badge-danger',
+        suspendida: 'badge-warning',
+        inactiva: 'badge-dark',
+        pendiente: 'badge-secondary', // Legacy
+        mitigada: 'badge-success', // Legacy
+        vencida: 'badge-danger' // Legacy
+    };
+    return map[estado] || 'badge-light';
+};
+
+const getSemaforoClass = (v) => {
+    if (!v) return 'badge-secondary';
+    v = v.toString().toLowerCase();
+    if (v.includes('bajo') || v.includes('leve')) return 'badge-success';
+    if (v.includes('medio') || v.includes('moderado')) return 'badge-warning';
+    if (v.includes('alto') || v.includes('crítico') || v.includes('grave')) return 'badge-danger';
+    return 'badge-info';
+};
+
+const handleEvaluated = (data) => {
+    form.evaluacion_actual = data.evaluacion;
+    if (data.nuevo_estado) {
+        form.obligacion_estado = data.nuevo_estado;
+    }
+};
+
+
 
 const filteredProcesos = computed(() => {
     if (!searchProceso.value) return procesos.value;
@@ -293,13 +425,16 @@ const resetForm = () => {
         procesos_ids: [],
         area_compliance_id: '',
         subarea_compliance_id: '',
-        documento_tecnico_normativo: '',
+        obligacion_documento: '',
         obligacion_principal: '',
-        tipo_obligacion: 'Legal',
-        estado_obligacion: 'pendiente',
-        consecuencia_incumplimiento: '',
-        frecuencia_revision: null,
+        obligacion_tipo: 'legal',
+        obligacion_estado: 'pendiente',
+        obligacion_consecuencia: '',
+        obligacion_documento_deroga: '',
+        obligacion_frecuencia: null,
+        obligacion_fecha_identificacion: null,
         controles_ids: [],
+        evaluacion_actual: null
     });
     riesgos.value = [];
     acciones.value = [];
@@ -312,12 +447,15 @@ const populateForm = (data) => {
         procesos_ids: data.procesos ? data.procesos.map(p => p.id) : [], // If loaded with relation
         area_compliance_id: data.area_compliance_id,
         subarea_compliance_id: data.subarea_compliance_id,
-        documento_tecnico_normativo: data.documento_tecnico_normativo,
+        obligacion_documento: data.obligacion_documento,
         obligacion_principal: data.obligacion_principal,
-        tipo_obligacion: data.tipo_obligacion,
-        estado_obligacion: data.estado_obligacion,
-        consecuencia_incumplimiento: data.consecuencia_incumplimiento,
-        frecuencia_revision: data.frecuencia_revision,
+        obligacion_tipo: data.obligacion_tipo,
+        obligacion_estado: data.obligacion_estado,
+        obligacion_consecuencia: data.obligacion_consecuencia,
+        obligacion_documento_deroga: data.obligacion_documento_deroga,
+        obligacion_frecuencia: data.obligacion_frecuencia,
+        obligacion_fecha_identificacion: data.obligacion_fecha_identificacion,
+        evaluacion_actual: data.evaluacion_actual,
         controles_ids: data.controles ? data.controles.map(c => c.id) : [],
     });
 
@@ -328,22 +466,7 @@ const populateForm = (data) => {
 };
 
 const fetchListas = async () => {
-    try {
-        const [procRes, areaRes, subRes] = await Promise.all([
-            axios.get('/api/procesos'), // Ensure this returns all
-            axios.get('/api/areas-compliance'),
-            axios.get('/api/subareas-compliance') // Dedicated endpoint
-        ]);
-        procesos.value = procRes.data;
-        areas.value = areaRes.data;
-        // Prioritize dedicated endpoint data
-        subareas.value = subRes.data || [];
-
-        // Fallback or merge if areas had nested subareas (optional, removing complexity)
-        if (subareas.value.length === 0 && areaRes.data && areaRes.data.length > 0 && areaRes.data[0].subareas) {
-            subareas.value = areaRes.data.flatMap(a => a.subareas);
-        }
-    } catch (e) { console.error("Error loading lists", e); }
+    await store.ensureListas();
 };
 
 const fetchRiesgos = async (id) => {
@@ -359,18 +482,31 @@ const fetchAcciones = async (id) => {
     try {
         const res = await axios.get(`/api/obligaciones/${id}/acciones`);
         acciones.value = res.data;
-        console.log('acciones', res.data)
     } catch (e) { }
 };
 
-watch(() => props.show, (newVal) => {
+watch(() => props.show, async (newVal) => {
     if (newVal) {
         resetForm();
-        fetchListas();
-        if (props.obligacion) populateForm(props.obligacion);
+        await fetchListas();
+        if (props.obligacion) {
+            await nextTick();
+            populateForm(props.obligacion);
+        }
         if (modalInstance.value) modalInstance.value.show();
     } else {
         if (modalInstance.value) modalInstance.value.hide();
+    }
+});
+
+// Watch para cuando cambia el ID de la obligación mientras el modal está abierto
+watch(() => props.obligacion?.id, async (newId, oldId) => {
+    if (props.show && newId && newId !== oldId) {
+        resetForm();
+        await nextTick();
+        if (props.obligacion) {
+            populateForm(props.obligacion);
+        }
     }
 });
 
@@ -404,6 +540,25 @@ const openAccionModal = () => {
     Swal.fire('Info', 'Funcionalidad de Crear Acción pendiente de implementación final en AccionesModule', 'info');
 };
 
+const openAIAssistant = () => {
+    const modalElement = document.getElementById('asistenteIAModal');
+    if (modalElement) {
+        const bsModal = new Modal(modalElement);
+        bsModal.show();
+    } else {
+        console.error('Modal element not found');
+        Swal.fire('Error', 'No se pudo abrir el asistente de IA.', 'error');
+    }
+};
+
+const onIAObligacionSelected = (result) => {
+    form.obligacion_principal = result;
+    Toast.fire({
+        icon: 'success',
+        title: 'Obligación principal actualizada por Jaris.'
+    });
+};
+
 
 onMounted(() => {
     modalInstance.value = new Modal(modalRef.value, { backdrop: 'static', keyboard: false });
@@ -411,37 +566,37 @@ onMounted(() => {
 
 onUnmounted(() => { if (modalInstance.value) modalInstance.value.dispose(); });
 
-// Utility
-const getEstadoBadgeClass = (s) => ({ 'programada': 'badge-secondary', 'implementada': 'badge-success', 'en proceso': 'badge-warning' }[s] || 'badge-light');
-const getSemaforoClass = (v) => 'badge-dark';
+
 
 </script>
 
 <style scoped>
 /* Estilos del menú lateral */
 .nav-pills .nav-link {
-    font-size: 0.9rem;
-    padding: 0.75rem 1rem;
+    color: #495057;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
     border-radius: 0.25rem;
+    transition: all 0.2s;
     text-align: left !important;
-    transition: background-color 0.2s ease-in-out;
 }
 
-.nav-pills .nav-link:not(.active):hover {
-    background-color: #f8f9fa;
-    color: #000;
+.nav-pills .nav-link:hover {
+    background-color: #e9ecef;
 }
 
 .nav-pills .nav-link.active {
     background-color: #fff;
-    font-weight: bold;
+    border-left: 4px solid #dc3545;
     color: #dc3545 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.nav-link i {
-    width: 1.5rem;
-    text-align: left !important;
+.nav-pills .nav-link i {
+    width: 20px;
+    margin-right: 10px;
+    text-align: center;
 }
 
 .nav-pills h6 {
@@ -450,13 +605,10 @@ const getSemaforoClass = (v) => 'badge-dark';
     margin-bottom: 0.5rem;
     letter-spacing: 0.05rem;
     text-align: left !important;
+    color: #6c757d;
 }
 
-.modal-body-scrollable {
-    height: 90vh;
-    /* Ajusta este valor según lo necesites */
-    overflow-y: auto;
-}
+/* Removido modal-body-scrollable - ahora el scroll está en el contenedor interno */
 
 .border-left-danger {
     border-left: 4px solid #dc3545;

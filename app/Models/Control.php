@@ -27,7 +27,7 @@ class Control extends Model
      */
     public function riesgos()
     {
-        return $this->belongsToMany(Riesgo::class, 'control_riesgo')
+        return $this->belongsToMany(Riesgo::class, 'riesgo_control')
             ->withPivot(['eficacia', 'fecha_ultima_evaluacion', 'fecha_revaluacion', 'observaciones'])
             ->withTimestamps();
     }

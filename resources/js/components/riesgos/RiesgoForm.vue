@@ -110,6 +110,16 @@
                             </div>
 
                             <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold mb-0">Fecha de Identificación</label>
+                                        <input type="date" class="form-control"
+                                            v-model="store.riesgoForm.riesgo_fecha_identificacion">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -167,7 +177,7 @@
                                             :class="{ 'is-invalid': store.errors.riesgo_matriz }">
                                             <option value="" disabled>Seleccione matriz</option>
                                             <option v-for="matriz in matrices" :key="matriz" :value="matriz">{{ matriz
-                                                }}
+                                            }}
                                             </option>
                                         </select>
                                         <div class="invalid-feedback" v-if="store.errors.riesgo_matriz">

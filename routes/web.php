@@ -8,7 +8,6 @@ use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\IndicadorController;
 use App\Http\Controllers\PlanificacionSIGController;
 use App\Http\Controllers\PlanificacionPEIController;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RequerimientoController;
@@ -22,12 +21,10 @@ use App\Http\Controllers\ContextoDeterminacionController;
 use App\Http\Controllers\ObligacionController;
 use App\Http\Controllers\AreaComplianceController;
 use App\Http\Controllers\RiesgoController;
-use App\Http\Controllers\RiesgoAccionController;
 use App\Http\Controllers\OUOController;
 use App\Http\Controllers\DiagramaContextoController;
 use App\Http\Controllers\SipocController;
 use App\Http\Controllers\DocumentoController;
-use App\Http\Controllers\DocumentoVersionController;
 use App\Http\Controllers\AuditoriaEjecucionController;
 use App\Http\Controllers\ParteInteresadaController;
 use App\Http\Controllers\TagController;
@@ -41,6 +38,8 @@ use App\Http\Controllers\AuditoriaEvaluacionController;
 use App\Http\Controllers\AuditoriaInformeController;
 use App\Http\Controllers\AuditoriaHallazgoController;
 use App\Http\Controllers\ControlController;
+use App\Http\Controllers\DashboardObligacionesController;
+use App\Http\Controllers\ObligacionIAController;
 
 // ... existing routes ...
 
@@ -170,6 +169,7 @@ Route::group(['prefix' => 'api'], function () {
     // Auditores
     Route::apiResource('auditores', AuditorController::class)->names('api.auditores');
     Route::get('/auditores-disponibles', [AuditorController::class, 'getAvailableUsers'])->name('api.auditores.available-users');
+    Route::get('/api/auditorias/{id}/equipo', [AuditoriaEspecificaController::class, 'getEquipo']);
 });
 Route::resource('smp', HallazgoController::class);
 Route::get('/api/hallazgos', [HallazgoController::class, 'apiListar'])->name('api.hallazgos');
@@ -196,6 +196,9 @@ Route::put('/ouos/{ouo}/users/{user}', [OUOController::class, 'updateUserPivot']
 Route::delete('/ouos/{ouo}/users/{user}', [OUOController::class, 'detachUser'])->name('ouos.users.detach');
 Route::post('/ouos/{ouo}/users', [OUOController::class, 'attachUser'])->name('ouos.users.attach');
 Route::post('/ouos/{ouo}/users/sync', [OUOController::class, 'syncUsers'])->name('ouos.users.sync');
+
+// Ruta de búsqueda de documentos (debe estar ANTES del resource para evitar conflictos)
+Route::middleware('auth')->get('/documentos/buscar', [DocumentoController::class, 'buscar'])->name('documentos.buscar');
 
 Route::resource('documentos', DocumentoController::class);
 Route::resource('sipoc', SipocController::class);
@@ -312,6 +315,15 @@ Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () 
     // Acciones de Obligaciones (Unificadas en AccionController)
     Route::get('/{obligacion}/acciones', [AccionController::class, 'getAccionesPorObligacion'])->name('listarAcciones');
     Route::post('/{obligacion}/acciones', [AccionController::class, 'storeAccionObligacion'])->name('storeAccion');
+
+    // AI Routes
+    Route::post('/ai/extract', [ObligacionIAController::class, 'extractFromDocument'])->name('ai.extract');
+    Route::post('/ai/analyze-file', [ObligacionIAController::class, 'analyzeUploadedFile'])->name('ai.analyze-file');
+    Route::post('/ai/improve-consequence', [ObligacionIAController::class, 'improveConsequence'])->name('ai.improve-consequence');
+
+    // Evaluación y Estado (ISO 37301)
+    Route::post('/{id}/evaluar', [ObligacionController::class, 'evaluar'])->name('evaluar');
+    Route::post('/{id}/cambiar-estado', [ObligacionController::class, 'cambiarEstado'])->name('cambiarEstado');
 });
 
 Route::middleware('auth')->prefix('api/controles')->name('api.controles.')->group(function () {
@@ -365,11 +377,7 @@ Route::prefix('api/riesgos')
         Route::put('/{riesgo}', [RiesgoController::class, 'update'])->name('api.riesgos.update');
         Route::delete('/{riesgo}', [RiesgoController::class, 'destroy'])->name('api.riesgos.destroy');
 
-        // Riesgo Acciones Routes
-        Route::get('/{riesgo}/acciones', [RiesgoAccionController::class, 'index'])->name('api.riesgos.acciones.index');
-        Route::post('/{riesgo}/acciones', [RiesgoAccionController::class, 'store'])->name('api.riesgos.acciones.store');
-        Route::put('/acciones/{id}', [RiesgoAccionController::class, 'update'])->name('api.riesgos.acciones.update');
-        Route::delete('/acciones/{id}', [RiesgoAccionController::class, 'destroy'])->name('api.riesgos.acciones.destroy');
+
     });
 Route::middleware('auth')->group(function () {
     Route::get('/api/hallazgos/{hallazgo}/acciones', [AccionController::class, 'getAccionesPorHallazgo'])->name('api.acciones.por-hallazgo');
@@ -690,6 +698,9 @@ Route::get('/api/dashboard/mejora', [App\Http\Controllers\DashboardMejoraControl
 // Ruta para el dashboard de riesgos
 Route::get('/api/dashboard/riesgos', [App\Http\Controllers\DashboardRiesgosController::class, 'index'])->name('dashboard.riesgos.api');
 
+// Ruta para el dashboard de obligaciones (Nuevo)
+Route::get('/api/dashboard/obligaciones', [DashboardObligacionesController::class, 'index'])->name('dashboard.obligaciones.api');
+
 // Ruta para el dashboard de procesos (Nuevo)
 Route::get('/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'index'])->name('dashboard.procesos.view')->middleware('auth');
 Route::get('/api/dashboard-procesos', [App\Http\Controllers\DashboardProcesosController::class, 'data'])->name('dashboard.procesos.data')->middleware('auth');
@@ -917,7 +928,7 @@ Route::prefix('api/auditoria')->middleware('auth')->name('api.auditoria.')->grou
     Route::get('/ejecucion/por-auditoria/{ae_id}', [AuditoriaEjecucionController::class, 'index'])->name('ejecucion.index');
     Route::get('/ejecucion/detalle/{id}', [AuditoriaEjecucionController::class, 'show'])->name('ejecucion.show');
     Route::put('/ejecucion/item/{id}', [AuditoriaEjecucionController::class, 'updateChecklistItem'])->name('ejecucion.item.update');
-    Route::post('/ejecucion/generate-checklist/{id}', [AuditoriaEjecucionController::class, 'generateChecklist'])->name('ejecucion.generate');
+    Route::post('/ejecucion/generate-checklist/{id}', [AuditoriaEjecucionController::class, 'generateChecklist'])->name('ejecucion.generar-checklist');
     Route::post('/ejecucion/improve-hallazgo', [AuditoriaEjecucionController::class, 'improveHallazgo'])->name('ejecucion.improve-hallazgo');
     Route::post('/ejecucion/improve-mejora', [AuditoriaEjecucionController::class, 'improveMejora'])->name('ejecucion.improve-mejora');
     Route::post('/ejecucion/generate-summary', [AuditoriaEjecucionController::class, 'generateSummary'])->name('ejecucion.generate-summary');

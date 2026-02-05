@@ -10,9 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('documentos', function (Blueprint $table) {
-            $table->string('cod_documento')->nullable()->change();
-        });
+        Schema::rename('control_riesgo', 'riesgo_control');
     }
 
     /**
@@ -20,8 +18,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('documentos', function (Blueprint $table) {
-            $table->string('cod_documento')->nullable(false)->change();
-        });
+        Schema::rename('riesgo_control', 'control_riesgo');
     }
 };

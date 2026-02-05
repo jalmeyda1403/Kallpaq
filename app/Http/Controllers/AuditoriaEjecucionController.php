@@ -6,6 +6,7 @@ use App\Models\AuditoriaAgenda;
 use App\Models\AuditoriaChecklist;
 use App\Models\AuditoriaEspecifica;
 use App\Models\Proceso;
+use App\Models\NormaRequisito;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -83,6 +84,21 @@ class AuditoriaEjecucionController extends Controller
     {
         // $id is agenda_id here
         $agendaItem = AuditoriaAgenda::with(['checklists', 'proceso', 'auditor.user', 'auditoria'])->findOrFail($id);
+
+        // Enriquecer aea_requisito con el nombre de la norma
+        if (is_array($agendaItem->aea_requisito)) {
+            $reqs = $agendaItem->aea_requisito;
+            $updatedReqs = [];
+            foreach ($reqs as $req) {
+                if (isset($req['norma_id'])) {
+                    $norma = \App\Models\NormaAuditable::find($req['norma_id']);
+                    $req['norma'] = $norma ? $norma->nombre : ('Norma ' . $req['norma_id']);
+                }
+                $updatedReqs[] = $req;
+            }
+            $agendaItem->aea_requisito = $updatedReqs;
+        }
+
         return response()->json($agendaItem);
     }
 
@@ -114,58 +130,188 @@ class AuditoriaEjecucionController extends Controller
     }
 
     /**
-     * Generar Checklist (Stub para Fase 3 AI)
+     * Generar Checklist con soporte para filtro por norma (Tabs)
      */
-    public function generateChecklist($id)
+    public function generateChecklist(Request $request, $id)
     {
-        // $id is agenda_id
-        $agendaItem = AuditoriaAgenda::with(['proceso', 'auditoria'])->findOrFail($id);
+        set_time_limit(300); // 5 minutes timeout prevent crash
+        try {
+            \Log::info("Iniciando generateChecklist para Agenda ID: $id on " . date('Y-m-d H:i:s'));
 
-        // Si ya existen ítems, los eliminamos para regenerar (solo los generados por IA)
-        $agendaItem->checklists()->where('ai_generated', true)->delete();
+            // $id is agenda_id
+            $agendaItem = AuditoriaAgenda::with(['proceso', 'auditoria'])->findOrFail($id);
+            $normaId = $request->input('norma_id');
+            $normaFilterName = null;
 
+            if ($normaId) {
+                $normaObj = \App\Models\NormaAuditable::find($normaId);
+                $normaFilterName = $normaObj ? $normaObj->nombre : null;
+            }
 
-        // Prepare context
-        $procName = $agendaItem->proceso ? $agendaItem->proceso->proceso_nombre : ($agendaItem->aea_actividad ?? 'Proceso General');
-        $responsable = $agendaItem->proceso && $agendaItem->proceso->responsable ? $agendaItem->proceso->responsable->name : 'N/A';
-
-        // Get Normas from AuditoriaEspecifica
-        $normas = is_array($agendaItem->auditoria->ae_sistema)
-            ? implode(', ', $agendaItem->auditoria->ae_sistema)
-            : ($agendaItem->auditoria->ae_sistema ?? 'ISO 9001');
-
-        // Get Specific Requirements from Agenda
-        $requisitos = [];
-        if (!empty($agendaItem->aea_requisito)) {
-            $requisitos = $agendaItem->aea_requisito;
-        }
-
-        // Call AI Service
-        $items = $this->aiService->generateChecklist($procName, $normas, $responsable, $requisitos);
+            // Si ya existen ítems, los eliminamos para regenerar
+            // Si hay filtro de norma, borramos SOLO los de esa norma
+            $query = $agendaItem->checklists()->where('ai_generated', true);
+            if ($normaFilterName) {
+                $query->where('norma_referencia', $normaFilterName);
+            }
+            $query->delete();
 
 
-        foreach ($items as $item) {
-            $agendaItem->checklists()->create([
-                'norma_referencia' => $item['norma_referencia'] ?? '',
-                'requisito_referencia' => $item['requisito_referencia'] ?? '',
-                'pregunta' => $item['pregunta'] ?? '',
-                'evidencia_esperada' => $item['evidencia_esperada'] ?? '',
-                'criterio_auditoria' => $item['criterio_auditoria'] ?? '',
-                'requisito_contenido' => $item['criterio_auditoria'] ?? '', // Fallback
-                'ai_generated' => true
+            // Prepare context
+            $procName = $agendaItem->proceso ? $agendaItem->proceso->proceso_nombre : ($agendaItem->aea_actividad ?? 'Proceso General');
+            $responsable = $agendaItem->proceso && $agendaItem->proceso->responsable ? $agendaItem->proceso->responsable->name : 'N/A';
+
+            // Get Normas from AuditoriaEspecifica OR specific norm filter
+            if ($normaFilterName) {
+                $normas = $normaFilterName;
+            } else {
+                $normas = is_array($agendaItem->auditoria->ae_sistema)
+                    ? implode(', ', $agendaItem->auditoria->ae_sistema)
+                    : ($agendaItem->auditoria->ae_sistema ?? 'ISO 9001');
+            }
+
+            // Get Specific Requirements from Agenda and ENRICH with full details
+            $requisitos = [];
+            if (!empty($agendaItem->aea_requisito)) {
+                $rawReqs = $agendaItem->aea_requisito;
+
+                // Filter if requested
+                if ($normaId) {
+                    $requisitos = array_values(array_filter($rawReqs, function ($r) use ($normaId) {
+                        return isset($r['norma_id']) && $r['norma_id'] == $normaId;
+                    }));
+
+                    // Inject norm name to filtered reqs so AI knows the context
+                    foreach ($requisitos as &$req) {
+                        if (!isset($req['norma']) && isset($req['norma_id'])) {
+                            $req['norma'] = $normaFilterName; // We already fetched this above
+                        }
+                    }
+                } else {
+                    $requisitos = $rawReqs;
+                }
+
+                \Log::info('DEBUG Checklist Generation - Raw aea_requisito:', [
+                    'agenda_id' => $id,
+                    'raw_data' => $requisitos,
+                    'is_array' => is_array($requisitos)
+                ]);
+
+                // Enrich with denomination and detail from norma_requisito table
+                if (is_array($requisitos) && !empty($requisitos)) {
+                    $reqIds = array_filter(array_column($requisitos, 'id'));
+
+                    \Log::info('DEBUG Checklist - Extracted IDs:', ['ids' => $reqIds]);
+
+                    if (!empty($reqIds)) {
+                        // Load requirements WITH their associated norms
+                        $requisitosDetallados = NormaRequisito::with('norma')
+                            ->whereIn('nr_id', $reqIds)
+                            ->get()
+                            ->keyBy('nr_id');
+
+                        // Enrich each requirement with full context including norm name
+                        foreach ($requisitos as &$req) {
+                            if (isset($req['id']) && isset($requisitosDetallados[$req['id']])) {
+                                $detalle = $requisitosDetallados[$req['id']];
+
+                                // Add denomination and detail
+                                $req['denominacion'] = $detalle->nr_denominacion;
+                                $req['detalle'] = $detalle->nr_detalle;
+
+                                // Add full norm name (override the short code if exists)
+                                if ($detalle->norma) {
+                                    $req['norma'] = $detalle->norma->nombre; // FIXED: use 'nombre' not 'nombre_norma'
+                                }
+                            }
+                        }
+                        unset($req); // Break reference
+
+                        \Log::info('DEBUG Checklist - Enriched requirements:', [
+                            'enriched_data' => $requisitos
+                        ]);
+                    }
+                }
+            }
+
+            // Call AI Service
+            // Ensure requirements is a clean array to avoid JSON nesting issues
+            $cleanRequisitos = array_values($requisitos);
+
+            \Log::info("Llamando a AIService::generateChecklist...");
+            $items = $this->aiService->generateChecklist($procName, $normas, $responsable, $cleanRequisitos);
+            \Log::info("Respuesta recibida de AIService", ['count' => count($items)]);
+
+
+            foreach ($items as $item) {
+                try {
+                    // Determine the strictly correct norm name to ensure frontend tabs match
+                    $finalNormName = $item['norma_referencia'] ?? '';
+
+                    // 1. Try to match usage of specific requirement to get its exact norm name
+                    $refReq = $item['requisito_referencia'] ?? null;
+                    if ($refReq) {
+                        // Find in $requisitos array
+                        foreach ($requisitos as $r) {
+                            // Loose comparison for 4.1 vs "4.1"
+                            if (isset($r['numeral']) && $r['numeral'] == $refReq) {
+                                if (!empty($r['norma'])) {
+                                    $finalNormName = $r['norma'];
+                                }
+                                break;
+                            }
+                            // Also check encoded keys if needed, but 'numeral' should be standard from enrichment
+                            if (isset($r['nr_numeral']) && $r['nr_numeral'] == $refReq && !empty($r['norma'])) {
+                                $finalNormName = $r['norma'];
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2. If still empty or not matched, and we are filtering by a specific norm, force that norm
+                    if ($normaFilterName && (empty($finalNormName) || stripos($finalNormName, $normaFilterName) === false)) {
+                        $finalNormName = $normaFilterName;
+                    }
+
+                    \Log::info("DEBUG Checklist - Creating Item", [
+                        'norma' => $finalNormName,
+                        'req' => $item['requisito_referencia'] ?? 'N/A'
+                    ]);
+
+                    $agendaItem->checklists()->create([
+                        'norma_referencia' => $finalNormName,
+                        'requisito_referencia' => $item['requisito_referencia'] ?? '',
+                        'pregunta' => $item['pregunta'] ?? '',
+                        'evidencia_esperada' => $item['evidencia_esperada'] ?? '',
+                        'criterio_auditoria' => $item['criterio_auditoria'] ?? '',
+                        'requisito_contenido' => $item['requisito_contenido'] ?? ($item['criterio_auditoria'] ?? ''),
+                        'ai_generated' => true
+                    ]);
+                } catch (\Throwable $innerEx) {
+                    \Log::error("ERROR al crear checklist item: " . $innerEx->getMessage());
+                }
+            }
+
+            if ($agendaItem->checklists()->count() === 0) {
+                $agendaItem->checklists()->create([
+                    'norma_referencia' => $normas,
+                    'pregunta' => 'Verificar cumplimiento general del proceso ' . $procName,
+                    'ai_generated' => false
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Checklist generado correctamente',
+                'count' => $agendaItem->checklists()->count()
             ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error generando checklist IA: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return response()->json(['error' => 'Error backend: ' . $e->getMessage()], 500);
         }
-
-        if ($agendaItem->checklists()->count() === 0) {
-            $agendaItem->checklists()->create([
-                'norma_referencia' => $normas,
-                'pregunta' => 'Verificar cumplimiento general del proceso ' . $procName,
-                'ai_generated' => false
-            ]);
-        }
-
-        return response()->json($agendaItem->load('checklists'));
     }
+
+
 
     /**
      * Mejora la redacción de un hallazgo mediante IA.

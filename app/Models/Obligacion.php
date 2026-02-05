@@ -12,18 +12,28 @@ class Obligacion extends Model
     // Especificamos el nombre de la tabla en caso de que no siga la convención predeterminada
     protected $table = 'obligaciones';
 
+    // Estados de la obligación (ISO 37301)
+    const ESTADO_IDENTIFICADA = 'identificada';
+    const ESTADO_EVALUADA = 'evaluada';
+    const ESTADO_EN_TRATAMIENTO = 'en_tratamiento';
+    const ESTADO_CONTROLADA = 'controlada';
+    const ESTADO_NO_CONTROLADA = 'no_controlada';
+    const ESTADO_SUSPENDIDA = 'suspendida';
+    const ESTADO_INACTIVA = 'inactiva';
+
     protected $fillable = [
         'area_compliance_id',
         'subarea_compliance_id',
-        'documento_tecnico_normativo',
+        'obligacion_documento',
         'obligacion_principal',
-        'consecuencia_incumplimiento',
-        'documento_deroga',
-        'estado_obligacion',
+        'obligacion_consecuencia',
+        'obligacion_documento_deroga',
+        'obligacion_estado',
         'radar_id',
         'documento_id',
-        'tipo_obligacion',
-        'frecuencia_revision'
+        'obligacion_tipo',
+        'obligacion_frecuencia',
+        'obligacion_fecha_identificacion'
     ];
 
     /**
@@ -58,6 +68,23 @@ class Obligacion extends Model
     }
 
     /**
+     * Relación con las evaluaciones de criticidad.
+     */
+    public function evaluaciones()
+    {
+        return $this->hasMany(ObligacionEvaluacion::class)->orderBy('oe_fecha_evaluacion', 'desc');
+    }
+
+    /**
+     * Obtener la evaluación más reciente.
+     */
+    public function evaluacionActual()
+    {
+        return $this->hasOne(ObligacionEvaluacion::class)->latestOfMany('oe_fecha_evaluacion');
+    }
+
+
+    /**
      * Relación con los controles directos.
      */
     public function controles()
@@ -79,7 +106,7 @@ class Obligacion extends Model
      */
     public function cambiarEstado($estado)
     {
-        $this->update(['estado' => $estado]);
+        $this->update(['obligacion_estado' => $estado]);
     }
     public function cantidadRiesgos()
     {
@@ -88,7 +115,7 @@ class Obligacion extends Model
 
     public function getEstadoClassAttribute()
     {
-        return match ($this->estado_obligacion) {
+        return match ($this->obligacion_estado) {
             'pendiente' => 'bg-warning text-dark',
             'controlada' => 'bg-success',
             'inactiva' => 'bg-secondary',

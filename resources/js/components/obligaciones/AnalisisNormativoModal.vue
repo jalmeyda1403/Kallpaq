@@ -98,7 +98,7 @@
                                                 <label class="font-weight-bold custom-label">
                                                     Tipo Obligación
                                                 </label>
-                                                <select v-model="form.tipo_obligacion" class="form-control">
+                                                <select v-model="form.obligacion_tipo" class="form-control">
                                                     <option value="Legal">Legal</option>
                                                     <option value="Contractual">Contractual</option>
                                                     <option value="Voluntaria">Voluntaria</option>
@@ -246,7 +246,7 @@ const form = ref({
     estado_documento: 'vigente',
     obligacion_principal: '',
     nivel_riesgo_inherente: 'Medio',
-    tipo_obligacion: 'Legal',
+    obligacion_tipo: 'Legal',
     proceso_id: null,
     area_compliance_id: null,
     subarea_compliance_id: null
@@ -309,7 +309,7 @@ watch(() => props.show, async (newVal) => {
             estado_documento: 'vigente',
             obligacion_principal: props.norma.resumen_ia,
             nivel_riesgo_inherente: 'Medio',
-            tipo_obligacion: 'Legal',
+            obligacion_tipo: 'Legal',
             proceso_id: null,
             area_compliance_id: null,
             subarea_compliance_id: null

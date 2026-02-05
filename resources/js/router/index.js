@@ -267,7 +267,7 @@ const routes = [
             {
                 path: 'dashboard/obligaciones',
                 name: 'dashboard.obligaciones',
-                component: BladeViewPlaceholder // Placeholder
+                component: () => import('@/components/dashboard/DashboardObligaciones.vue')
             },
             {
                 path: 'radar-obligaciones',

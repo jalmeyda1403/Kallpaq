@@ -110,18 +110,22 @@
                                                 <i class="fas fa-user-tie text-secondary mr-1"></i>
                                                 <span class="small text-muted font-weight-bold">Auditor:</span>
                                                 <span class="small ml-1">{{ store.getAuditorForAgenda(group.sessions[0])
-                                                }}</span>
+                                                    }}</span>
                                             </div>
 
                                             <!-- Requisitos consolidados -->
-                                            <div v-if="group.requirements"
+                                            <div v-if="group.requirements_list && group.requirements_list.length > 0"
                                                 class="info-item mb-1 w-100 border-top mt-1 pt-1">
                                                 <i class="fas fa-clipboard-list text-secondary mr-1"></i>
                                                 <span class="small text-muted font-weight-bold">Requisitos
                                                     Planificados:</span>
-                                                <span class="small ml-1 text-primary font-weight-bold">
-                                                    {{ group.requirements }}
-                                                </span>
+                                                <div class="mt-1">
+                                                    <div v-for="(req, rIdx) in group.requirements_list" :key="rIdx"
+                                                        class="ml-3 small">
+                                                        <span class="font-weight-bold text-dark">{{ req.norma }}:</span>
+                                                        <span class="text-primary ml-1">{{ req.numerals }}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -325,18 +329,67 @@ const groupedActivities = computed(() => {
 
 
         // Agregar Requisitos al Set (para que sean únicos)
+        if (!groups[key].all_requirements_objs) groups[key].all_requirements_objs = [];
+
         if (item.aea_requisito) {
-            const reqs = Array.isArray(item.aea_requisito) ? item.aea_requisito : [item.aea_requisito];
+            let reqs = [];
+            // Safe handling for various formats
+            if (Array.isArray(item.aea_requisito)) {
+                reqs = item.aea_requisito;
+            } else if (typeof item.aea_requisito === 'string') {
+                try {
+                    const parsed = JSON.parse(item.aea_requisito);
+                    if (Array.isArray(parsed)) reqs = parsed;
+                    else reqs = [parsed];
+                } catch (e) {
+                    // It's a simple string, treat as single item with no norm
+                    reqs = [{ numeral: item.aea_requisito, norma: 'General' }];
+                }
+            } else if (typeof item.aea_requisito === 'object') {
+                // Single object fallback
+                reqs = [item.aea_requisito];
+            }
+
             reqs.forEach(r => {
-                const val = (r && typeof r === 'object') ? (r.numeral || r.label) : r;
-                if (val) groups[key].all_requirements.add(val);
+                if (r && typeof r === 'object') {
+                    // Try to resolve Norm Name
+                    let nName = r.norma || r.nombre_norma;
+                    if (!nName && r.norma_id && normasMap.value[r.norma_id]) {
+                        nName = normasMap.value[r.norma_id];
+                    }
+
+                    groups[key].all_requirements_objs.push({
+                        norma: nName || 'N/A',
+                        numeral: r.numeral || r.label || 'Req'
+                    });
+                } else if (typeof r === 'string') {
+                    groups[key].all_requirements_objs.push({
+                        norma: 'General',
+                        numeral: r
+                    });
+                }
             });
         }
     });
 
     return Object.values(groups).map(g => {
-        // Convertir Set a string para la vista
-        g.requirements = Array.from(g.all_requirements).sort().join(', ');
+        // Agrupar requisitos por norma
+        const reqMap = {};
+        if (g.all_requirements_objs && g.all_requirements_objs.length > 0) {
+            g.all_requirements_objs.forEach(r => {
+                const norma = r.norma || 'General';
+                if (!reqMap[norma]) reqMap[norma] = new Set();
+                reqMap[norma].add(r.numeral);
+            });
+        }
+
+        g.requirements_list = Object.entries(reqMap).map(([norma, set]) => ({
+            norma,
+            numerals: Array.from(set).sort().join(', ')
+        }));
+
+        // Mantener compatibilidad simple si es necesario
+        g.requirements = g.requirements_list.map(r => `${r.norma}: ${r.numerals}`).join(' | ');
 
         // BUG FIX: Asegurarnos de usar la sesión que TIENE los requisitos 
         // para que al iniciar la ejecución, el controlador los encuentre en 'aea_requisito'.
@@ -371,6 +424,22 @@ const executionCode = computed(() => {
 });
 
 const loading = computed(() => store.loading);
+
+// Normas Map for fallback
+const normasMap = ref({});
+const loadNormas = async () => {
+    try {
+        const url = window.route ? window.route('api.auditoria.especifica.requisitos', { id: props.auditId }) : `/api/auditoria/especifica/${props.auditId}/requisitos-disponibles`;
+        const res = await axios.get(url);
+        if (Array.isArray(res.data)) {
+            res.data.forEach(n => {
+                normasMap.value[n.id] = n.nombre;
+            });
+        }
+    } catch (e) {
+        console.error("Error loading norms map", e);
+    }
+};
 
 const selectedExecutionId = computed({
     get: () => store.selectedExecutionId,
@@ -488,6 +557,7 @@ const formatDateShort = (dateStr) => {
 
 onMounted(() => {
     loadData();
+    loadNormas();
 });
 
 watch(() => props.auditId, (newId) => {

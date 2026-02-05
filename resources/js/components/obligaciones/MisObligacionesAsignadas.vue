@@ -72,10 +72,15 @@
                                 <span class="text-muted small">{{ index + 1 }}</span>
                             </template>
                         </Column>
-                        <Column field="proceso.proceso_nombre" header="Proceso" sortable style="width:20%">
+                        <Column field="procesos" header="Procesos" sortable style="width:20%">
                             <template #body="{ data }">
-                                <span class="font-weight-500 text-dark">{{ data.procesos[0]?.proceso_nombre || 'N/A'
-                                    }}</span>
+                                <div v-if="data.procesos && data.procesos.length" class="d-flex flex-wrap">
+                                    <span v-for="p in data.procesos" :key="p.id"
+                                        class="badge badge-light border text-danger mr-1 mb-1 small px-2 py-1">
+                                        <i class="fas fa-network-wired mr-1 opacity-50"></i>{{ p.proceso_nombre }}
+                                    </span>
+                                </div>
+                                <span v-else class="text-muted small">N/A</span>
                             </template>
                         </Column>
                         <Column field="obligacion_principal" header="Obligación Principal" sortable style="width:30%">
@@ -83,9 +88,9 @@
                                 <div class="d-flex flex-column">
                                     <span class="text-secondary small text-justify">{{ data.obligacion_principal
                                         }}</span>
-                                    <template v-if="data.documento_tecnico_normativo">
+                                    <template v-if="data.obligacion_documento">
                                         <small class="text-muted mt-1">
-                                            <i class="fas fa-file-alt mr-1"></i>{{ data.documento_tecnico_normativo }}
+                                            <i class="fas fa-file-alt mr-1"></i>{{ data.obligacion_documento }}
                                         </small>
                                     </template>
                                 </div>
@@ -105,10 +110,10 @@
                             </template>
                         </Column>
 
-                        <Column field="estado_obligacion" header="Estado" sortable style="width:10%">
+                        <Column field="obligacion_estado" header="Estado" sortable style="width:10%">
                             <template #body="{ data }">
-                                <span :class="['badge p-2', getEstadoClass(data.estado_obligacion)]">
-                                    {{ data.estado_obligacion }}
+                                <span :class="['badge p-2', getEstadoClass(data.obligacion_estado)]">
+                                    {{ data.obligacion_estado }}
                                 </span>
                             </template>
                         </Column>

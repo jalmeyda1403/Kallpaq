@@ -111,18 +111,22 @@ class RadarController extends Controller
             $obligacion = Obligacion::create([
                 'radar_id' => $radar->id,
                 'documento_id' => $documento->id,
-                'documento_tecnico_normativo' => $request->input('cod_documento', $radar->numero_norma),
+                'obligacion_documento' => $request->input('cod_documento', $radar->numero_norma),
                 'obligacion_principal' => $request->input('obligacion_principal', $radar->resumen_ia ?? 'Sin descripción'),
-                'obligacion_controles' => $request->input('obligacion_controles'),
-                'consecuencia_incumplimiento' => $request->input('consecuencia_incumplimiento'),
-                'estado_obligacion' => 'pendiente',
-                'tipo_obligacion' => $request->input('tipo_obligacion', 'Legal'),
-                'nivel_riesgo_inherente' => $request->input('nivel_riesgo_inherente', 'Alto'),
-                'proceso_id' => $request->input('proceso_id'),
+                'obligacion_consecuencia' => $request->input('consecuencia_incumplimiento'),
+                'obligacion_estado' => 'pendiente',
+                'obligacion_tipo' => $request->input('obligacion_tipo', 'legal'),
+                'obligacion_frecuencia' => $request->input('obligacion_frecuencia'),
                 'area_compliance_id' => $request->input('area_compliance_id'),
+                'subarea_compliance_id' => $request->input('subarea_compliance_id'),
             ]);
 
-            // 3. Actualizar Radar
+            // 3. Vincular procesos (Many-to-Many)
+            if ($request->has('proceso_id')) {
+                $obligacion->procesos()->sync([$request->input('proceso_id')]);
+            }
+
+            // 4. Actualizar Radar
             $radar->update([
                 'estado' => 'Aplicable',
                 'analisis_humano' => $request->input('analisis_humano')

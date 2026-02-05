@@ -17,6 +17,7 @@ export const useRiesgoStore = defineStore('riesgo', {
             riesgo_matriz: '',
             riesgo_nivel: '',
             riesgo_estado: '',
+            riesgo_fecha_identificacion: null,
             controles_ids: []
         },
         errors: {},
@@ -110,6 +111,7 @@ export const useRiesgoStore = defineStore('riesgo', {
                     riesgo_matriz: '',
                     riesgo_nivel: '',
                     riesgo_estado: '',
+                    riesgo_fecha_identificacion: null,
                     controles_ids: []
                 };
                 this.isEditing = false;
