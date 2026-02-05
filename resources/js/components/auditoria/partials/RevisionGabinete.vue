@@ -1,11 +1,18 @@
 <template>
     <div class="card border-0 shadow-none">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0 text-primary">
-                <i class="fas fa-search-plus mr-2"></i>Revisión de Gabinete (Hallazgos)
-            </h5>
-            <small class="text-muted">Revise y afine la redacción de los Hallazgos de No Conformidad y Oportunidades de
-                Mejora.</small>
+        <div class="header-container mb-3">
+            <div>
+                <h5 class="mb-0 text-primary">
+                    <i class="fas fa-search-plus mr-2"></i>Revisión de Gabinete (Hallazgos)
+                </h5>
+                <small class="text-muted d-block mt-1">Revise y afine la redacción de los Hallazgos de No Conformidad y
+                    Oportunidades de
+                    Mejora.</small>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary ml-3" @click="loadHallazgos" :disabled="loading"
+                style="min-width: 120px;">
+                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Refrescar
+            </button>
         </div>
         <div class="card-body p-0">
             <div v-if="loading" class="text-center py-5">
@@ -99,7 +106,7 @@
                                                     </button>
                                                 </div>
                                                 <small class="text-muted">{{ (item.hallazgo_resumen || '').length
-                                                    }}/255</small>
+                                                }}/255</small>
                                             </div>
                                             <textarea class="form-control" v-model="item.hallazgo_resumen" rows="2"
                                                 maxlength="255"
@@ -112,7 +119,7 @@
                                                 <label class="font-weight-bold small text-dark">Descripción
                                                     (Condición)</label>
                                                 <small class="text-muted">{{ (item.hallazgo_redaccion || '').length
-                                                    }}/1000</small>
+                                                }}/1000</small>
                                             </div>
                                             <textarea class="form-control" v-model="item.hallazgo_redaccion" rows="5"
                                                 maxlength="1000"
@@ -297,5 +304,17 @@ watch(() => props.auditId, (newVal) => {
 
 .accordion .card-header:hover {
     background-color: #e9ecef !important;
+}
+
+.header-container {
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-left: 0.5rem solid #17a2b8;
+    /* Cyan for Gabinete/Review to distinguish from Execution (Orange) */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 </style>

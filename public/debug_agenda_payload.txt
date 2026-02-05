@@ -415,7 +415,26 @@ Array
             [aea_actividad] => GESTIÓN DE LA COMUNICACIÓN
             [aea_auditado] => 
             [auditor_id] => 2
-            [aea_requisito] => 
+            [aea_requisito] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 2
+                            [norma_id] => 1
+                            [numeral] => 4.2
+                            [norma] => ISO 9001:2025
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 3
+                            [norma_id] => 1
+                            [numeral] => 4.3
+                            [norma] => ISO 9001:2025
+                        )
+
+                )
+
             [aea_tipo] => ejecucion
         )
 
