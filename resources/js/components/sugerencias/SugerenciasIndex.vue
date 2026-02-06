@@ -254,13 +254,31 @@ const closeEvaluacionModal = () => {
 };
 
 const openEvaluacionFromTratamiento = (sugerenciaId) => {
-    // Cerramos el modal de tratamiento (ya se hace en el emit, pero aseguramos)
-    showTratamientoModal.value = false;
+    // NO cerramos el modal de tratamiento para que quede de fondo (overlay)
+    // showTratamientoModal.value = false; 
 
     // Abrimos el modal de evaluación
-    // Necesitamos cargar la sugerencia completa si no la tenemos, pero el modal ya lo hace por ID
     selectedSugerenciaForEvaluation.value = { id: sugerenciaId };
     showEvaluacionModal.value = true;
+};
+
+const handleEvaluacionValidated = () => {
+    // Primero, refrescamos la lista
+    fetchSugerencias();
+
+    // Cerramos modal de evaluación
+    closeEvaluacionModal();
+
+    // Y ahora sí, cerramos el modal de tratamiento porque el flujo terminó
+    closeTratamientoModal();
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Proceso completado',
+        text: 'La sugerencia ha sido validada y cerrada correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+    });
 };
 
 const confirmDelete = async () => {
