@@ -67,6 +67,14 @@ class SugerenciaController extends Controller
                 $sugerencia->save();
             }
 
+            // Registrar movimiento inicial
+            $sugerencia->movimientos()->create([
+                'estado' => $sugerencia->sugerencia_estado,
+                'observacion' => 'Sugerencia registrada en el sistema',
+                'user_id' => Auth::id(),
+                'fecha_movimiento' => now()
+            ]);
+
             DB::commit();
 
             return response()->json([
@@ -85,7 +93,7 @@ class SugerenciaController extends Controller
 
     public function show($id)
     {
-        $sugerencia = Sugerencia::with('proceso')->findOrFail($id);
+        $sugerencia = Sugerencia::with(['proceso', 'movimientos.user'])->findOrFail($id);
         return response()->json($sugerencia);
     }
 
@@ -116,6 +124,24 @@ class SugerenciaController extends Controller
             'sugerencia_evidencias.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
         ]);
 
+        // Restricción: No permitir editar datos base si el estado no es 'identificada'
+        $currentState = $sugerencia->sugerencia_estado;
+        if ($currentState !== 'identificada') {
+            $restrictedFields = [
+                'sugerencia_detalle',
+                'sugerencia_clasificacion',
+                'sugerencia_procedencia',
+                'proceso_id',
+                'sugerencia_fecha_ingreso'
+            ];
+
+            foreach ($restrictedFields as $field) {
+                if ($request->has($field) && $request->input($field) != $sugerencia->$field) {
+                    return response()->json(['message' => "No se puede editar los datos base de la sugerencia (como $field) porque ya no está en estado identificada."], 400);
+                }
+            }
+        }
+
         DB::beginTransaction();
         try {
             // Debug información para ver qué se está recibiendo
@@ -127,7 +153,7 @@ class SugerenciaController extends Controller
             ]);
 
             // Handle file updates for evidences - check if files are being uploaded or update_evidences flag is set
-            $hasFiles = $request->hasFile('sugerencia_evidencias') || !empty($request->file('sugerencia_evidencias')); // Comprobar si hay archivos en el array
+            $hasFiles = $request->hasFile('sugerencia_evidencias') || !empty($request->file('sugerencia_evidencias'));
             $hasUpdateEvidences = $request->has('update_evidences');
 
             \Log::info('Detalles de archivo', [
@@ -137,15 +163,32 @@ class SugerenciaController extends Controller
                 'update_evidences_value' => $request->get('update_evidences')
             ]);
 
+            // 1. Actualizar campos standard primero (siempre)
+            $sugerencia->fill(array_filter($validated, function ($key) {
+                return !in_array($key, ['sugerencia_evidencias']);
+            }, ARRAY_FILTER_USE_KEY));
+
+            // 2. Procesar archivos si es necesario
             if ($hasFiles || $hasUpdateEvidences) {
                 \Log::info('Procesando archivos de evidencia');
-                $this->handleFileUpdate($request, $sugerencia, 'sugerencia_evidencias', 'existing_evidencias');
-            } else {
-                // Actualizar los campos normales si no hay archivos
-                $sugerencia->update(array_filter($validated, function ($key) {
-                    return !in_array($key, ['sugerencia_evidencias']);
-                }, ARRAY_FILTER_USE_KEY));
+                $this->handleFileUpdateNoSave($request, $sugerencia, 'sugerencia_evidencias', 'existing_evidencias');
             }
+
+            // 3. Detectar cambio de estado y registrar movimiento
+            // Esto funcionará ahora porque no hemos llamado a save() en handleFileUpdateNoSave
+            if ($sugerencia->isDirty('sugerencia_estado')) {
+                $oldState = $sugerencia->getOriginal('sugerencia_estado');
+                $newState = $sugerencia->sugerencia_estado;
+
+                $sugerencia->movimientos()->create([
+                    'estado' => $newState,
+                    'observacion' => "Cambio de estado: $oldState -> $newState",
+                    'user_id' => Auth::id(),
+                    'fecha_movimiento' => now()
+                ]);
+            }
+
+            $sugerencia->save();
 
             DB::commit();
 
@@ -204,6 +247,21 @@ class SugerenciaController extends Controller
 
             $sugerencia->save();
 
+            // Registrar movimiento de validación
+            $observacionMovimiento = null;
+            if ($validated['sugerencia_estado'] === 'observada') {
+                $observacionMovimiento = $validated['sugerencia_observacion'];
+            } elseif ($validated['sugerencia_estado'] === 'cerrada') {
+                $observacionMovimiento = 'Sugerencia validada y cerrada exitosamente.';
+            }
+
+            $sugerencia->movimientos()->create([
+                'estado' => $validated['sugerencia_estado'],
+                'observacion' => $observacionMovimiento,
+                'user_id' => Auth::id(),
+                'fecha_movimiento' => now()
+            ]);
+
             DB::commit();
 
             return response()->json([
@@ -241,7 +299,7 @@ class SugerenciaController extends Controller
         return $fileData;
     }
 
-    private function handleFileUpdate(Request $request, $sugerencia, $dbField, $inputField)
+    private function handleFileUpdateNoSave(Request $request, $sugerencia, $dbField, $inputField)
     {
         $currentFiles = [];
         if ($sugerencia->$dbField) {
@@ -282,12 +340,11 @@ class SugerenciaController extends Controller
             $finalFiles = array_merge($finalFiles, $newFiles);
         }
 
-        // Guardar los archivos (el cast 'array' del modelo se encargará de convertir a JSON)
+        // Asignar los archivos al modelo pero NO guardar todavía
         if (count($finalFiles) > 0) {
             $sugerencia->$dbField = $finalFiles;
         } else {
             $sugerencia->$dbField = null;
         }
-        $sugerencia->save();
     }
 }

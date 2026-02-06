@@ -35,7 +35,7 @@
                                 <div class="col">
                                     <select v-model="serverFilters.estado" class="form-control">
                                         <option value="">Todos los Estados</option>
-                                        <option value="registrada">Registrada</option>
+                                        <option value="identificada">Identificada</option>
                                         <option value="en tratamiento">En Tratamiento</option>
                                         <option value="tratada">Tratada</option>
                                     </select>
@@ -106,7 +106,9 @@
                     </Column>
                     <Column field="snc_estado" header="Estado" style="width:10%; text-align: center;">
                         <template #body="{ data }">
-                            {{ data.snc_estado }}
+                            <span :class="getEstadoBadge(data.snc_estado)" class="badge-text">
+                                {{ data.snc_estado }}
+                            </span>
                         </template>
                     </Column>
                     <Column field="snc_fecha_deteccion" header="F. Detección" style="width:10%">
@@ -114,18 +116,21 @@
                             {{ formatDate(data.snc_fecha_deteccion) }}
                         </template>
                     </Column>
-                    <Column header="Acciones" :exportable="false" style="width:12%" headerStyle="width: 12%"
-                        bodyStyle="width: 12%">
+                    <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
+                        bodyStyle="width: 15%">
                         <template #body="{ data }">
-                            <a href="#" title="Editar" class="mr-3 d-inline-block" @click.prevent="openEditModal(data)">
-                                <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                            <a href="#" title="Editar" class="mr-2 d-inline-block"
+                                :class="{ 'disabled-link': data.snc_estado !== 'identificada' }"
+                                @click.prevent="data.snc_estado === 'identificada' ? openEditModal(data) : null">
+                                <i class="fas fa-pencil-alt fa-lg"
+                                    :class="data.snc_estado === 'identificada' ? 'text-warning' : 'text-secondary opacity-50'"></i>
                             </a>
-                            <a href="#" title="Tratamiento" class="mr-3 d-inline-block"
+                            <a href="#" title="Tratamiento" class="mr-2 d-inline-block"
                                 @click.prevent="openTratamientoModal(data)">
                                 <i class="fas fa-tasks text-info fa-lg"></i>
                             </a>
-                            <a href="#" title="Eliminar" class="mr-3 d-inline-block"
-                                @click.prevent="confirmDelete(data.id)">
+                            <a v-if="authStore.hasRole('admin') || authStore.hasRole('especialista')" href="#"
+                                title="Eliminar" class="d-inline-block" @click.prevent="confirmDelete(data.id)">
                                 <i class="fas fa-trash-alt text-danger fa-lg"></i>
                             </a>
                         </template>
@@ -158,7 +163,9 @@ import ProgressBar from 'primevue/progressbar';
 import { FilterMatchMode } from 'primevue/api';
 
 // Usamos el store
+import { useAuthStore } from '@/stores/authStore';
 const salidasNCStore = useSalidasNCStore();
+const authStore = useAuthStore();
 const { salidas: salidasNC, loading } = storeToRefs(salidasNCStore);
 
 const dt = ref(null);
@@ -169,7 +176,6 @@ const filters = ref({
     snc_codigo: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     snc_descripcion: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     snc_producto_servicio: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    snc_tipo: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     snc_clasificacion: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     snc_estado: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
 });
@@ -212,9 +218,14 @@ const openEditModal = async (snc) => {
 const showTratamientoModal = ref(false);
 const selectedSNCForTratamiento = ref(null);
 
-const openTratamientoModal = (snc) => {
-    selectedSNCForTratamiento.value = snc;
-    showTratamientoModal.value = true;
+const openTratamientoModal = async (snc) => {
+    try {
+        await salidasNCStore.fetchSNCById(snc.id);
+        selectedSNCForTratamiento.value = salidasNCStore.getCurrentSNC;
+        showTratamientoModal.value = true;
+    } catch (error) {
+        console.error('Error al cargar datos de la SNC para tratamiento:', error);
+    }
 };
 
 const confirmDelete = async (id) => {
@@ -252,14 +263,15 @@ const getClasificacionBadge = (clasificacion) => {
 };
 
 const getEstadoBadge = (estado) => {
-    const badges = {
-        'registrada': 'badge badge-secondary',
-        'en análisis': 'badge badge-info',
-        'en tratamiento': 'badge badge-warning',
-        'tratada': 'badge badge-primary',
-        'cerrada': 'badge badge-success'
-    };
-    return badges[estado] || 'badge badge-secondary';
+    switch (estado) {
+        case 'identificada': return 'badge badge-secondary';
+        case 'en análisis': return 'badge badge-info';
+        case 'en tratamiento': return 'badge badge-primary';
+        case 'tratada': return 'badge badge-success';
+        case 'cerrada': return 'badge badge-purple'; // Changed to purple to match Sugerencias
+        case 'observada': return 'badge badge-warning';
+        default: return 'badge badge-secondary';
+    }
 };
 
 const exportCSV = () => {
@@ -281,9 +293,23 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.badge {
-    font-size: 0.85rem;
-    padding: 0.35em 0.65em;
+<style>
+/* Improved badge styling */
+.badge-text {
+    font-size: 0.9em !important;
+    font-weight: 500 !important;
+    padding: 0.4em 0.8em !important;
+    border-radius: 0.375rem !important;
+    text-transform: capitalize;
+}
+
+.badge-purple {
+    background-color: #605ca8;
+    color: white;
+}
+
+.disabled-link {
+    cursor: not-allowed;
+    pointer-events: none;
 }
 </style>

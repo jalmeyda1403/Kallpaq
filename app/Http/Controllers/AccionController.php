@@ -256,7 +256,7 @@ class AccionController extends Controller
         }
 
         $accion->accion_estado = 'implementada';
-        $accion->accion_fecha_fin_real = Carbon::now()->toDateString();
+        $accion->accion_fecha_fin_real = Carbon::now();
         $accion->save();
 
         $this->updateHallazgoAvance($accion->hallazgo);

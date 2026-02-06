@@ -1,34 +1,35 @@
 <template>
     <teleport to="body">
-        <div v-if="show" class="modal fade show" tabindex="-1" role="dialog"
-            style="display: block; overflow-y: auto; z-index: 1060;" aria-labelledby="evaluacionModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
+        <div v-if="show" class="modal fade show" role="dialog" style="display: block; overflow-y: auto; z-index: 2050;"
+            aria-labelledby="evaluacionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document" style="pointer-events: auto;">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="evaluacionModalLabel">Evaluación de Sugerencia</h5>
+                    <div class="modal-header bg-purple text-white">
+                        <h5 class="modal-title" id="evaluacionModalLabel">Evaluación de Salida No Conforme</h5>
                         <button type="button" class="close text-white" @click="$emit('close')">
                             <span class="text-white">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div v-if="sugerencia.sugerencia_estado !== 'implementada'" class="alert alert-warning">
-                            <strong>Advertencia:</strong> Esta sugerencia debe estar en estado 'Implementada' para ser
-                            validada (estado actual: {{ sugerencia.sugerencia_estado }}).
+                        <div v-if="snc && snc.snc_estado && snc.snc_estado.toLowerCase() !== 'tratada'"
+                            class="alert alert-warning">
+                            <strong>Advertencia:</strong> Esta Salida NC debe estar en estado 'Tratada' para ser
+                            validada (estado actual: {{ snc.snc_estado }}).
                         </div>
                         <div v-else>
                             <div class="form-group">
-                                <label for="sugerencia_detalle" class="font-weight-bold custom-label">Detalle de la
-                                    Sugerencia</label>
-                                <textarea id="sugerencia_detalle" class="form-control" rows="3"
-                                    v-model="sugerencia.sugerencia_detalle" disabled></textarea>
+                                <label for="snc_descripcion" class="font-weight-bold custom-label">Descripción de la
+                                    SNC</label>
+                                <textarea id="snc_descripcion" class="form-control" rows="3"
+                                    v-model="snc.snc_descripcion" disabled></textarea>
                             </div>
 
                             <div class="form-group">
-                                <label for="sugerencia_tratamiento" class="font-weight-bold custom-label">Tratamiento
+                                <label for="snc_descripcion_tratamiento"
+                                    class="font-weight-bold custom-label">Tratamiento
                                     Realizado</label>
-                                <textarea id="sugerencia_tratamiento" class="form-control" rows="3"
-                                    v-model="sugerencia.sugerencia_tratamiento" disabled></textarea>
+                                <textarea id="snc_descripcion_tratamiento" class="form-control" rows="3"
+                                    v-model="snc.snc_descripcion_tratamiento" disabled></textarea>
                             </div>
 
                             <!-- Archivos de evidencia existentes -->
@@ -38,7 +39,7 @@
                                     <li v-for="(file, index) in existingFiles" :key="index"
                                         class="list-group-item d-flex justify-content-between align-items-center">
                                         <div class="text-truncate" style="max-width: 85%;">
-                                            <i class="fa fa-paperclip mr-2 text-muted"></i>
+                                            <i class="fas fa-paperclip mr-2 text-muted"></i>
                                             <a :href="`/storage/${file.path}`" target="_blank"
                                                 class="text-decoration-none text-dark">
                                                 {{ file.name }}
@@ -46,7 +47,7 @@
                                         </div>
                                         <a :href="`/storage/${file.path}`" target="_blank"
                                             class="btn btn-primary btn-sm">
-                                            <i class="fa fa-download"></i>
+                                            <i class="fas fa-download"></i>
                                         </a>
                                     </li>
                                 </ul>
@@ -56,8 +57,8 @@
                                 <label for="evaluacion_estado" class="font-weight-bold custom-label">Acción a
                                     Tomar</label>
                                 <select id="evaluacion_estado" class="form-control" v-model="evaluacion.estado">
-                                    <option value="cerrada">Cerrar Sugerencia</option>
-                                    <option value="observada">Observar Sugerencia</option>
+                                    <option value="cerrada">Cerrar SNC</option>
+                                    <option value="observada">Observar SNC</option>
                                 </select>
                             </div>
 
@@ -67,45 +68,44 @@
                                         class="font-weight-bold custom-label">Observación</label>
                                     <small class="text-muted">{{ evaluacion.observacion ?
                                         evaluacion.observacion.length : 0
-                                        }}/500</small>
+                                    }}/500</small>
                                 </div>
                                 <textarea id="evaluacion_observacion" class="form-control" rows="4"
-                                    v-model="evaluacion.observacion" maxlength="500"
-                                    placeholder="Ingrese la observación o comentario sobre por qué se observa la sugerencia..."></textarea>
+                                    v-model="evaluacion.observacion" maxlength="500" autofocus
+                                    placeholder="Ingrese la observación o comentario sobre por qué se observa la SNC..."></textarea>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
-                        <button v-if="sugerencia && sugerencia.sugerencia_estado === 'implementada'" type="button"
-                            class="btn btn-danger" @click="validarSugerencia"
-                            :disabled="evaluacion.estado === 'observada' && !evaluacion.observacion.trim()">
-                            {{ evaluacion.estado === 'cerrada' ? 'Cerrar Sugerencia' : 'Observar Sugerencia' }}
+                        <button type="button" class="btn bg-purple text-white" @click="validarSNC"
+                            :disabled="!snc || !snc.snc_estado || snc.snc_estado.toLowerCase() !== 'tratada' || (evaluacion.estado === 'observada' && !evaluacion.observacion.trim())">
+                            {{ evaluacion.estado === 'cerrada' ? 'Cerrar SNC' : 'Observar SNC' }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-if="show" class="modal-backdrop fade show" style="display: block; z-index: 1055;"></div>
+        <div v-if="show" class="modal-backdrop fade show" style="display: block; z-index: 2040;"></div>
     </teleport>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useSugerenciasStore } from '@/stores/sugerenciasStore';
 import Swal from 'sweetalert2';
+import { useSalidasNCStore } from '@/stores/salidasNCStore';
 
 const props = defineProps({
     show: {
         type: Boolean,
         default: false
     },
-    sugerenciaId: {
+    sncId: {
         type: [Number, String],
         required: false
     },
-    sugerenciaData: {
+    sncData: {
         type: Object,
         default: null
     }
@@ -113,46 +113,44 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'validated']);
 
-const sugerenciasStore = useSugerenciasStore();
-const sugerencia = ref(null);
+const salidasNCStore = useSalidasNCStore();
+const snc = ref(null);
 const existingFiles = ref([]);
 const evaluacion = ref({
     estado: 'cerrada', // Default to 'cerrada'
     observacion: ''
 });
 
-// Load the sugerencia 
-watch(() => props.sugerenciaId, async (newId) => {
+// Load the snc 
+watch(() => props.sncId, async (newId) => {
     if (newId) {
         try {
-            // Optimization: If sugerenciaData is provided, use it directly
-            if (props.sugerenciaData) {
-                console.log('Using provided sugerenciaData, skipping fetch');
-                processSugerenciaData(props.sugerenciaData);
+            // Optimization: If sncData is provided, use it directly
+            if (props.sncData) {
+                processSNCData(props.sncData);
             } else {
                 // Otherwise fetch it
-                console.log('Fetching sugerencia from API');
-                const data = await sugerenciasStore.fetchSugerenciaById(newId);
-                processSugerenciaData(data);
+                await salidasNCStore.fetchSNCById(newId);
+                processSNCData(salidasNCStore.getCurrentSNC);
             }
         } catch (error) {
-            console.error('Error loading sugerencia:', error);
+            console.error('Error loading SNC:', error);
         }
     } else {
-        sugerencia.value = null;
+        snc.value = null;
     }
 }, { immediate: true });
 
 // Helper function to process data regardless of source
-const processSugerenciaData = (data) => {
-    sugerencia.value = data;
+const processSNCData = (data) => {
+    snc.value = data;
 
-    // Cargar archivos existentes
+    // Cargar archivos existentes (Evidencias)
     existingFiles.value = [];
-    if (data.sugerencia_evidencias) {
+    if (data.snc_evidencias) {
         // El backend ya devuelve un array (gracias al cast 'array' del modelo)
-        if (Array.isArray(data.sugerencia_evidencias)) {
-            existingFiles.value = data.sugerencia_evidencias.map(item => {
+        if (Array.isArray(data.snc_evidencias)) {
+            existingFiles.value = data.snc_evidencias.map(item => {
                 // Normalizar la estructura
                 if (typeof item === 'object' && item.path) {
                     return {
@@ -167,16 +165,8 @@ const processSugerenciaData = (data) => {
                 }
                 return item;
             });
-        } else if (typeof data.sugerencia_evidencias === 'string') {
-            // Fallback: si por alguna razón viene como string
-            existingFiles.value = [{
-                path: data.sugerencia_evidencias,
-                name: data.sugerencia_evidencias.split('/').pop()
-            }];
         }
     }
-
-    console.log('Archivos existentes cargados (Evaluación):', existingFiles.value);
 
     // Reset evaluation form
     evaluacion.value.estado = 'cerrada';
@@ -189,68 +179,64 @@ watch(() => props.show, (newShow) => {
         // Reset evaluation form when modal opens
         evaluacion.value.estado = 'cerrada';
         evaluacion.value.observacion = '';
-    } else {
-        // Clear data when modal closes
-        sugerencia.value = null;
-        existingFiles.value = [];
     }
 });
 
-const validarSugerencia = async () => {
-    if (!sugerencia.value) return;
+const validarSNC = async () => {
+    if (!snc.value) return;
 
-    if (sugerencia.value.sugerencia_estado !== 'implementada') {
-        Swal.fire('Advertencia', 'Esta sugerencia debe estar en estado Implementada para ser validada.', 'warning');
+    if (!snc.value.snc_estado || snc.value.snc_estado.toLowerCase() !== 'tratada') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Advertencia',
+            text: 'Esta Salida NC no está en estado tratada y no puede ser evaluada (Actual: ' + snc.value.snc_estado + ')'
+        });
         return;
     }
 
     if (evaluacion.value.estado === 'observada' && !evaluacion.value.observacion.trim()) {
-        Swal.fire('Atención', 'Por favor ingrese una observación.', 'warning');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo requerido',
+            text: 'Por favor ingrese una observación.'
+        });
         return;
     }
 
     try {
-        // Prepare the update data
         const updateData = {
-            sugerencia_estado: evaluacion.value.estado
+            snc_estado: evaluacion.value.estado
         };
 
-        // Add observation if the estado is 'observado'
         if (evaluacion.value.estado === 'observada') {
-            updateData.sugerencia_observacion = evaluacion.value.observacion;
-            updateData.sugerencia_fecha_observacion = new Date().toISOString().split('T')[0];
-        } else if (evaluacion.value.estado === 'cerrada') {
-            updateData.sugerencia_fecha_cierre = new Date().toISOString().split('T')[0];
+            updateData.snc_observacion = evaluacion.value.observacion;
         }
 
-        // Validate the sugerencia
-        await sugerenciasStore.validateSugerencia(sugerencia.value.id, updateData);
+        await salidasNCStore.updateSNC(snc.value.id, updateData);
 
         Swal.fire({
             icon: 'success',
-            title: 'Validada',
-            text: 'Sugerencia validada exitosamente.',
+            title: 'Éxito',
+            text: 'Evaluación registrada exitosamente',
             timer: 2000,
             showConfirmButton: false
         });
 
-        // Emit the validated event
-        emit('validated', {
-            id: sugerencia.value.id,
-            estado: evaluacion.value.estado,
-            observacion: evaluacion.value.observacion
-        });
-
-        // Close the modal
+        emit('validated');
         emit('close');
     } catch (error) {
-        console.error('Error validating suggestion:', error);
+        console.error('Error validating SNC:', error);
 
-        // Handle specific error messages
-        const msg = error.response && error.response.data.message ? error.response.data.message : error.message;
-        Swal.fire('Error', 'Error al validar la sugerencia: ' + msg, 'error');
+        // Mejora el mensaje de error para mostrar lo que devuelve el backend si existe
+        const errorMsg = error.response?.data?.message || error.message || 'Error desconocido';
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al evaluar la SNC: ' + errorMsg
+        });
     }
-};
+}
 </script>
 
 <style scoped>
@@ -260,15 +246,10 @@ const validarSugerencia = async () => {
     color: #495057 !important;
 }
 
-/* Smaller font size for labels of file lists */
-.file-list-label {
-    font-size: 0.85em !important;
-    font-weight: 600 !important;
-    color: #6c757d !important;
-    margin-bottom: 0.5rem !important;
+.bg-purple {
+    background-color: #605ca8 !important;
 }
 
-/* File list items */
 .list-group-item {
     transition: all 0.15s ease-in-out;
 }

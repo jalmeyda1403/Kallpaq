@@ -209,6 +209,31 @@ export const useSalidasNCStore = defineStore('salidasNC', {
             }
         },
 
+        async validateSNC(sncId, data) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                // Send as simple object using PUT, controller handles request data automatically
+                const response = await axios.put(route('api.salidas-nc.validate', { id: sncId }), data);
+
+                // Actualizamos la SNC actual si coincide
+                if (this.currentSNC && this.currentSNC.id === sncId) {
+                    this.currentSNC = response.data.data;
+                }
+
+                // Actualizamos la lista
+                await this.fetchSalidasNC();
+
+                return response.data;
+            } catch (error) {
+                this.error = error.message;
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
         resetCurrentSNC() {
             this.currentSNC = null;
         }

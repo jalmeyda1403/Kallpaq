@@ -43,6 +43,11 @@ class Sugerencia extends Model
         return $this->belongsTo(Proceso::class);
     }
 
+    public function movimientos()
+    {
+        return $this->hasMany(SugerenciaMovimiento::class)->orderBy('fecha_movimiento', 'desc');
+    }
+
     // Scopes
     public function scopeFilterByEstado($query, $estado)
     {
@@ -84,9 +89,9 @@ class Sugerencia extends Model
         if ($procesoNombre) {
             return $query->whereHas('proceso', function ($subquery) use ($procesoNombre) {
                 $subquery->where('proceso_nombre', 'LIKE', '%' . $procesoNombre . '%')
-                         ->orWhere('nombre', 'LIKE', '%' . $procesoNombre . '%')
-                         ->orWhere('descripcion', 'LIKE', '%' . $procesoNombre . '%')
-                         ->orWhere('proceso_nombre_corto', 'LIKE', '%' . $procesoNombre . '%');
+                    ->orWhere('nombre', 'LIKE', '%' . $procesoNombre . '%')
+                    ->orWhere('descripcion', 'LIKE', '%' . $procesoNombre . '%')
+                    ->orWhere('proceso_nombre_corto', 'LIKE', '%' . $procesoNombre . '%');
             });
         }
         return $query;

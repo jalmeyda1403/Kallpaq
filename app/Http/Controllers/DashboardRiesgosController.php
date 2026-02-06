@@ -20,6 +20,25 @@ class DashboardRiesgosController extends Controller
 
         $mostrarTodos = filter_var($request->get('mostrarTodos', false), FILTER_VALIDATE_BOOLEAN);
 
+        $riesgos = $this->getRiesgos($esAdmin, $mostrarTodos, $userOuos);
+        $stats = $this->getStats($riesgos);
+
+        $identificacionPorAno = $this->getIdentificacionPorAno($riesgos);
+        $accionesVencidas = $this->getAccionesVencidas($riesgos);
+        $resumenProcesos = $this->getResumenProcesos($riesgos);
+
+        return response()->json([
+            'stats' => $stats,
+            'riesgos' => $riesgos,
+            'accionesVencidas' => $accionesVencidas,
+            'resumenProcesos' => $resumenProcesos,
+            'identificacionPorAno' => $identificacionPorAno,
+            'esAdmin' => $esAdmin,
+        ]);
+    }
+
+    private function getRiesgos($esAdmin, $mostrarTodos, $userOuos)
+    {
         // Consulta base de riesgos (Histórico completo)
         $riesgosQuery = Riesgo::with(['proceso.ouos', 'acciones', 'especialista']);
 
@@ -34,11 +53,31 @@ class DashboardRiesgosController extends Controller
             });
         }
 
-        $riesgos = $riesgosQuery->get();
-        $stats = $this->getStats($riesgos);
+        return $riesgosQuery->get();
+    }
 
-        // Identificación por Año y Estado
-        $identificacionPorAno = $riesgos->groupBy(function ($r) {
+    private function getStats($riesgos)
+    {
+        return [
+            'total' => $riesgos->count(),
+            'criticos' => $riesgos->whereIn('riesgo_nivel', ['Alto', 'Muy Alto'])->count(),
+            'enTratamiento' => $riesgos->whereIn('riesgo_estado', ['en_tratamiento', 'proyecto'])->count(),
+            'vencidos' => $riesgos->filter(function (Riesgo $r) {
+                return $r->riesgo_fecha_valoracion_rr && Carbon::parse($r->riesgo_fecha_valoracion_rr)->isPast();
+            })->count(),
+            'distribucionNivel' => [
+                'Bajo' => $riesgos->where('riesgo_nivel', 'Bajo')->count(),
+                'Medio' => $riesgos->where('riesgo_nivel', 'Medio')->count(),
+                'Alto' => $riesgos->where('riesgo_nivel', 'Alto')->count(),
+                'Muy Alto' => $riesgos->where('riesgo_nivel', 'Muy Alto')->count(),
+            ],
+            'distribucionEstado' => $riesgos->groupBy('riesgo_estado')->map->count(),
+        ];
+    }
+
+    private function getIdentificacionPorAno($riesgos)
+    {
+        return $riesgos->groupBy(function (Riesgo $r) {
             return $r->created_at->year;
         })->map(function ($items, $year) {
             return [
@@ -49,22 +88,27 @@ class DashboardRiesgosController extends Controller
                 'controlado' => $items->where('riesgo_estado', 'controlado')->count(),
             ];
         })->values()->sortBy('year')->values();
+    }
 
-        // Acciones (Tratamientos) Vencidas
+    private function getAccionesVencidas($riesgos)
+    {
         $riesgoIds = $riesgos->pluck('id')->toArray();
-        $accionesVencidas = [];
-        if (!empty($riesgoIds)) {
-            $accionesVencidas = Accion::whereIn('accion_riesgo_id', $riesgoIds)
-                ->whereNotIn('accion_estado', ['implementada', 'finalizada', 'desestimada'])
-                ->where(function ($q) {
-                    $q->where('accion_fecha_fin_planificada', '<', Carbon::today())
-                        ->orWhere('accion_fecha_fin_reprogramada', '<', Carbon::today());
-                })
-                ->with('riesgo')
-                ->get();
+        if (empty($riesgoIds)) {
+            return [];
         }
 
-        // Resumen por Proceso
+        return Accion::whereIn('accion_riesgo_id', $riesgoIds)
+            ->whereNotIn('accion_estado', ['implementada', 'finalizada', 'desestimada'])
+            ->where(function ($q) {
+                $q->where('accion_fecha_fin_planificada', '<', Carbon::today())
+                    ->orWhere('accion_fecha_fin_reprogramada', '<', Carbon::today());
+            })
+            ->with('riesgo')
+            ->get();
+    }
+
+    private function getResumenProcesos($riesgos)
+    {
         $procesosIds = $riesgos->pluck('proceso_id')->unique()->toArray();
         $procesos = [];
         if (!empty($procesosIds)) {
@@ -84,32 +128,6 @@ class DashboardRiesgosController extends Controller
             ];
         }
 
-        return response()->json([
-            'stats' => $stats,
-            'riesgos' => $riesgos,
-            'accionesVencidas' => $accionesVencidas,
-            'resumenProcesos' => $resumenProcesos,
-            'identificacionPorAno' => $identificacionPorAno,
-            'esAdmin' => $esAdmin,
-        ]);
-    }
-
-    private function getStats($riesgos)
-    {
-        return [
-            'total' => $riesgos->count(),
-            'criticos' => $riesgos->whereIn('riesgo_nivel', ['Alto', 'Muy Alto'])->count(),
-            'enTratamiento' => $riesgos->whereIn('riesgo_estado', ['en_tratamiento', 'proyecto'])->count(),
-            'vencidos' => $riesgos->filter(function ($r) {
-                return $r->riesgo_fecha_valoracion_rr && Carbon::parse($r->riesgo_fecha_valoracion_rr)->isPast();
-            })->count(),
-            'distribucionNivel' => [
-                'Bajo' => $riesgos->where('riesgo_nivel', 'Bajo')->count(),
-                'Medio' => $riesgos->where('riesgo_nivel', 'Medio')->count(),
-                'Alto' => $riesgos->where('riesgo_nivel', 'Alto')->count(),
-                'Muy Alto' => $riesgos->where('riesgo_nivel', 'Muy Alto')->count(),
-            ],
-            'distribucionEstado' => $riesgos->groupBy('riesgo_estado')->map->count(),
-        ];
+        return $resumenProcesos;
     }
 }

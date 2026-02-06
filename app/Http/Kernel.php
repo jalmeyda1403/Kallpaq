@@ -13,13 +13,13 @@ class Kernel extends HttpKernel
      *
      * @var array<int, class-string|string>
      */
-    
-     protected $routeMiddleware = [
+
+    protected $routeMiddleware = [
         // otros middlewares
         'checkDatabaseConnection' => \App\Http\Middleware\CheckDatabaseConnection::class,
     ];
-    
-     protected $middleware = [
+
+    protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
@@ -47,8 +47,8 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -71,9 +71,9 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+        'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
 
     ];
 
-   
+
 }

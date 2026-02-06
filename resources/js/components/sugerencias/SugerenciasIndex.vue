@@ -33,6 +33,7 @@
                                 <div class="col">
                                     <select v-model="filters.estado" class="form-control">
                                         <option value="">Todos los Estados</option>
+                                        <option value="identificada">Identificada</option>
                                         <option value="abierta">Abierta</option>
                                         <option value="en progreso">En Progreso</option>
                                         <option value="concluida">Concluida</option>
@@ -117,9 +118,12 @@
                     <Column header="Acciones" :exportable="false" style="width:15%" headerStyle="width: 15%"
                         bodyStyle="width: 15%">
                         <template #body="{ data }">
-                            <a href="#" title="Editar" class="mr-2 d-inline-block" @click.prevent="editSugerencia(data)"
+                            <a href="#" title="Editar" class="mr-2 d-inline-block"
+                                :class="{ 'disabled-link': data.sugerencia_estado !== 'identificada' }"
+                                @click.prevent="(!authStore.hasRole('facilitador') && data.sugerencia_estado === 'identificada') ? editSugerencia(data) : null"
                                 v-if="!authStore.hasRole('facilitador')">
-                                <i class="fas fa-pencil-alt text-warning fa-lg"></i>
+                                <i class="fas fa-pencil-alt fa-lg"
+                                    :class="data.sugerencia_estado === 'identificada' ? 'text-warning' : 'text-secondary opacity-50'"></i>
                             </a>
                             <a href="#" title="Tratamiento" class="mr-2 d-inline-block"
                                 @click.prevent="openTratamiento(data)">
@@ -152,7 +156,8 @@
 
             <!-- Modal Evaluación -->
             <SugerenciaEvaluacionModal :show="showEvaluacionModal" :sugerencia-id="selectedSugerenciaForEvaluation?.id"
-                @close="closeEvaluacionModal" @validated="handleEvaluacionValidated"></SugerenciaEvaluacionModal>
+                :sugerencia-data="selectedSugerenciaForEvaluation" @close="closeEvaluacionModal"
+                @validated="handleEvaluacionValidated"></SugerenciaEvaluacionModal>
         </div>
     </div>
 </template>
@@ -258,7 +263,21 @@ const openEvaluacionFromTratamiento = (sugerenciaId) => {
     // showTratamientoModal.value = false; 
 
     // Abrimos el modal de evaluación
-    selectedSugerenciaForEvaluation.value = { id: sugerenciaId };
+    // Optimización: Usamos la sugerencia que ya tenemos seleccionada (que tiene los últimos cambios del tratamiento tras guardarse)
+    // Pero espera, selectedSugerencia puede no tener TODOS los campos actualizados si no refrescamos...
+    // Sin embargo, acabamos de hacer 'fetchSugerencias' en el evento @saved del tratamiento.
+    // Lo ideal es buscar la sugerencia actualizada en la lista 'sugerencias' del store.
+
+    // Como hicimos fetch, la lista está fresca. Busquemos el objeto completo.
+    const sugerenciaActualizada = sugerencias.value.find(s => s.id === sugerenciaId);
+
+    if (sugerenciaActualizada) {
+        selectedSugerenciaForEvaluation.value = sugerenciaActualizada;
+    } else {
+        // Fallback
+        selectedSugerenciaForEvaluation.value = { id: sugerenciaId };
+    }
+
     showEvaluacionModal.value = true;
 };
 
@@ -377,6 +396,7 @@ const getClasificacionFullName = (code) => {
 
 const getStatusBadgeClass = (status) => {
     switch (status) {
+        case 'identificada': return 'badge badge-secondary';
         case 'abierta': return 'badge badge-warning';
         case 'en progreso': return 'badge badge-primary';
         case 'implementada': return 'badge badge-success';
@@ -405,5 +425,10 @@ onMounted(() => {
 .badge-purple {
     background-color: #605ca8;
     color: white;
+}
+
+.disabled-link {
+    cursor: not-allowed;
+    pointer-events: none;
 }
 </style>

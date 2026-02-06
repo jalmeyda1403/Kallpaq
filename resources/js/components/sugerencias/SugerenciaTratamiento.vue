@@ -19,15 +19,27 @@
                                 </small>
                             </div>
 
+                            <!-- Alert when suggestion is observed -->
+                            <div v-if="form.sugerencia_estado === 'observada'" class="alert alert-warning mb-3">
+                                <p class="mb-1">
+                                    <strong><i class="fa fa-exclamation-triangle mr-1"></i> Sugerencia
+                                        Observada:</strong>
+                                    {{ form.sugerencia_observacion || 'Sin detalles de observación.' }}
+                                </p>
+                                <p class="mb-0 small text-muted">
+                                    Fecha: {{ formatDate(form.sugerencia_fecha_observacion) }}
+                                </p>
+                            </div>
+
                             <div class="form-group">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <label class="font-weight-bold text-dark custom-label">Análisis Inicial</label>
                                     <small class="text-muted">{{ form.sugerencia_analisis ?
-                                        form.sugerencia_analisis.length : 0 }}/300</small>
+                                        form.sugerencia_analisis.length : 0 }}/500</small>
                                 </div>
-                                <textarea v-model="form.sugerencia_analisis" class="form-control" rows="3"
+                                <textarea v-model="form.sugerencia_analisis" class="form-control" rows="4"
                                     :disabled="form.sugerencia_estado === 'cerrada'"
-                                    placeholder="Análisis de la sugerencia..." maxlength="300"></textarea>
+                                    placeholder="Análisis de la sugerencia..." maxlength="500"></textarea>
                             </div>
 
                             <div class="row">
@@ -50,6 +62,7 @@
                                             <option value="identificada">Identificada</option>
                                             <option value="en progreso">En Progreso</option>
                                             <option value="implementada">Implementada</option>
+                                            <option value="observada">Observada</option>
                                             <option v-if="form.sugerencia_estado === 'cerrada'" value="cerrada">Cerrada
                                             </option>
                                         </select>
@@ -62,11 +75,11 @@
                                     <label class="font-weight-bold text-dark custom-label">Tratamiento / Acción a
                                         Tomar</label>
                                     <small class="text-muted">{{ form.sugerencia_tratamiento ?
-                                        form.sugerencia_tratamiento.length : 0 }}/500</small>
+                                        form.sugerencia_tratamiento.length : 0 }}/300</small>
                                 </div>
                                 <textarea v-model="form.sugerencia_tratamiento" class="form-control" rows="3"
                                     :disabled="form.sugerencia_estado === 'cerrada'"
-                                    placeholder="Descripción del tratamiento..." maxlength="500"></textarea>
+                                    placeholder="Descripción del tratamiento..." maxlength="300"></textarea>
                             </div>
 
                             <div class="row">
@@ -148,7 +161,45 @@
                                     </ul>
                                 </div>
                             </div>
+
+                            <hr class="my-4">
+
+                            <!-- Historial de Movimientos -->
+                            <div class="mt-4">
+                                <h6 class="font-weight-bold mb-3"><i class="fas fa-history mr-2"></i>Historial de
+                                    Movimientos</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-striped"
+                                        style="font-size: 0.85rem;">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="width: 15%;">Fecha</th>
+                                                <th style="width: 15%;">Estado</th>
+                                                <th style="width: 20%;">Responsable</th>
+                                                <th style="width: 50%;">Comentarios / Observación</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="mov in movimientos" :key="mov.id">
+                                                <td>{{ formatDateDateTime(mov.fecha_movimiento) }}</td>
+                                                <td>
+                                                    <span :class="getStatusBadgeClass(mov.estado)">
+                                                        {{ mov.estado }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ mov.user ? mov.user.name : 'Sistema' }}</td>
+                                                <td>{{ mov.observacion || '-' }}</td>
+                                            </tr>
+                                            <tr v-if="movimientos.length === 0">
+                                                <td colspan="4" class="text-center text-muted">No hay movimientos
+                                                    registrados.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="modal-footer d-flex justify-content-between">
                             <div>
                                 <button type="button" class="btn btn-purple" v-if="canCloseSugerencia"
@@ -178,6 +229,7 @@ import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import { useSugerenciasStore } from '@/stores/sugerenciasStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     show: Boolean,
@@ -198,6 +250,7 @@ const isDragging = ref(false);
 const filesToUpload = ref([]);
 let fileCounter = 0;
 const existingFiles = ref([]);
+const movimientos = ref([]); // Store for history
 
 const form = ref({
     sugerencia_analisis: '',
@@ -206,7 +259,9 @@ const form = ref({
     sugerencia_estado: '',
     sugerencia_fecha_fin_prog: '',
     sugerencia_fecha_fin_real: '',
-    sugerencia_fecha_cierre: '' // Aseguramos que esté inicializado
+    sugerencia_fecha_cierre: '', // Aseguramos que esté inicializado
+    sugerencia_observacion: '',
+    sugerencia_fecha_observacion: ''
 });
 
 const formatDateForInput = (dateString) => {
@@ -221,6 +276,24 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
+const formatDateDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString();
+};
+
+const getStatusBadgeClass = (status) => {
+    switch (status) {
+        case 'abierta': return 'badge badge-warning';
+        case 'en progreso': return 'badge badge-primary';
+        case 'implementada': return 'badge badge-success';
+        case 'concluida': return 'badge badge-info';
+        case 'observada': return 'badge badge-warning';
+        case 'cerrada': return 'badge badge-purple';
+        default: return 'badge badge-secondary';
+    }
+};
+
 const loadSugerencia = async (id) => {
     try {
         // Cargamos la sugerencia específica en el store
@@ -232,8 +305,13 @@ const loadSugerencia = async (id) => {
             sugerencia_estado: data.sugerencia_estado,
             sugerencia_fecha_fin_prog: formatDateForInput(data.sugerencia_fecha_fin_prog),
             sugerencia_fecha_fin_real: formatDateForInput(data.sugerencia_fecha_fin_real),
-            sugerencia_fecha_cierre: data.sugerencia_fecha_cierre
+            sugerencia_fecha_cierre: data.sugerencia_fecha_cierre,
+            sugerencia_observacion: data.sugerencia_observacion,
+            sugerencia_fecha_observacion: data.sugerencia_fecha_observacion
         };
+
+        // Cargar movimientos
+        movimientos.value = data.movimientos || [];
 
         // Cargar archivos existentes
         existingFiles.value = [];
@@ -313,7 +391,8 @@ watch(() => props.show, async (newVal) => {
             if (!modalInstance.value) {
                 modalInstance.value = new Modal(modalRef.value, {
                     backdrop: 'static',
-                    keyboard: false
+                    keyboard: false,
+                    focus: false // Important: Disable focus trap so overlay modal (Evaluation) can receive input
                 });
             }
             modalInstance.value.show();
@@ -356,7 +435,7 @@ const startUpload = (files) => {
 
     files.forEach(file => {
         if (file.size > maxFileSize) {
-            alert(`El archivo '${file.name}' supera el límite de 10MB y no será subido.`);
+            Swal.fire('Error', `El archivo '${file.name}' supera el límite de 10MB y no será subido.`, 'error');
             return; // Skip this file
         }
 
@@ -380,7 +459,7 @@ const submitForm = async () => {
 
         // Validación: Si el estado es 'implementada', debe haber al menos una evidencia
         if (form.value.sugerencia_estado === 'implementada' && !hasFileChanges) {
-            alert('Para marcar la sugerencia como Implementada, debe adjuntar al menos una evidencia.');
+            Swal.fire('Advertencia', 'Para marcar la sugerencia como Implementada, debe adjuntar al menos una evidencia.', 'warning');
             return;
         }
 
@@ -419,11 +498,19 @@ const submitForm = async () => {
             await sugerenciasStore.updateSugerencia(props.sugerenciaId, form.value);
         }
 
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Tratamiento guardado exitosamente',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
         emit('saved');
         close();
     } catch (error) {
         console.error('Error saving tratamiento:', error);
-        alert('Error al guardar el tratamiento: ' + (error.response?.data?.message || error.message));
+        Swal.fire('Error', 'Error al guardar el tratamiento: ' + (error.response?.data?.message || error.message), 'error');
     }
 };
 

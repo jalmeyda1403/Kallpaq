@@ -11,131 +11,141 @@
                     </div>
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Clasificación <span
-                                                class="text-danger">*</span></label>
-                                        <select v-model="form.sugerencia_clasificacion" class="form-control" required>
-                                            <option value="" disabled>Selecciona...</option>
-                                            <option value="MP">Mejora de procesos y servicios (MP)</option>
-                                            <option value="MT">Mejora tecnológica (MT)</option>
-                                            <option value="AC">Atención al cliente y trato del personal (AC)</option>
-                                            <option value="MF">Mejora de infraestructura física (MF)</option>
-                                            <option value="CF">Capacitación y formación (CF)</option>
-                                            <option value="CT">Comunicación y transparencia (CT)</option>
-                                        </select>
+                            <fieldset :disabled="!isEditable">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold custom-label">Clasificación <span
+                                                    class="text-danger">*</span></label>
+                                            <select v-model="form.sugerencia_clasificacion" class="form-control"
+                                                required>
+                                                <option value="" disabled>Selecciona...</option>
+                                                <option value="MP">Mejora de procesos y servicios (MP)</option>
+                                                <option value="MT">Mejora tecnológica (MT)</option>
+                                                <option value="AC">Atención al cliente y trato del personal (AC)
+                                                </option>
+                                                <option value="MF">Mejora de infraestructura física (MF)</option>
+                                                <option value="CF">Capacitación y formación (CF)</option>
+                                                <option value="CT">Comunicación y transparencia (CT)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold custom-label">Procedencia <span
+                                                    class="text-danger">*</span></label>
+                                            <select v-model="form.sugerencia_procedencia" class="form-control" required>
+                                                <option value="" disabled>Selecciona...</option>
+                                                <option value="virtual">Virtual</option>
+                                                <option value="fisico">Físico</option>
+                                                <option value="entrevista">Entrevista</option>
+                                                <option value="encuesta">Encuesta</option>
+                                                <option value="otros">Otros</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Procedencia <span
-                                                class="text-danger">*</span></label>
-                                        <select v-model="form.sugerencia_procedencia" class="form-control" required>
-                                            <option value="" disabled>Selecciona...</option>
-                                            <option value="virtual">Virtual</option>
-                                            <option value="fisico">Físico</option>
-                                            <option value="entrevista">Entrevista</option>
-                                            <option value="encuesta">Encuesta</option>
-                                            <option value="otros">Otros</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="form-group">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label class="font-weight-bold custom-label">Detalle de la Sugerencia <span
-                                            class="text-danger">*</span></label>
-                                    <small class="form-text text-muted">
-                                        {{ form.sugerencia_detalle ? form.sugerencia_detalle.length : 0 }}/500
-                                    </small>
-                                </div>
-                                <textarea v-model="form.sugerencia_detalle" class="form-control" rows="5" required
-                                    placeholder="Describe la sugerencia..." maxlength="500"></textarea>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Fecha de Ingreso <span
+                                <div class="form-group">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <label class="font-weight-bold custom-label">Detalle de la Sugerencia <span
                                                 class="text-danger">*</span></label>
-                                        <input type="date" v-model="form.sugerencia_fecha_ingreso" class="form-control"
-                                            required>
+                                        <small class="form-text text-muted">
+                                            {{ form.sugerencia_detalle ? form.sugerencia_detalle.length : 0 }}/500
+                                        </small>
                                     </div>
+                                    <textarea v-model="form.sugerencia_detalle" class="form-control" rows="5" required
+                                        placeholder="Describe la sugerencia..." maxlength="500"></textarea>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold custom-label">Proceso <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="text" v-model="processName" class="form-control" readonly
-                                                placeholder="Seleccionar proceso..." :required="!form.proceso_id">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-dark" type="button" @click="openProcessModal">
-                                                    <i class="fa fa-search"></i>
-                                                </button>
-                                                <button class="btn btn-danger" type="button" v-if="form.proceso_id"
-                                                    @click="clearProcess">
-                                                    <i class="fa fa-times"></i>
-                                                </button>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold custom-label">Fecha de Ingreso <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="date" v-model="form.sugerencia_fecha_ingreso"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold custom-label">Proceso <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <input type="text" v-model="processName" class="form-control" readonly
+                                                    placeholder="Seleccionar proceso..." :required="!form.proceso_id">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-dark" type="button"
+                                                        @click="openProcessModal">
+                                                        <i class="fa fa-search"></i>
+                                                    </button>
+                                                    <button class="btn btn-danger" type="button" v-if="form.proceso_id"
+                                                        @click="clearProcess">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Sección de Evidencias -->
-                            <div class="form-group">
-                                <label class="font-weight-bold custom-label">Evidencias de Implementación</label>
-                                <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
-                                    @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging }"
-                                    @click="openFileDialog">
-                                    <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
-                                        multiple>
-                                    <div class="text-center">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
-                                        <p class="mb-0 mt-2">Arrastra archivos aquí o haz clic para seleccionar.</p>
+                                <!-- Sección de Evidencias -->
+                                <div class="form-group">
+                                    <label class="font-weight-bold custom-label">Evidencias de Implementación</label>
+                                    <div class="drop-zone" @dragenter.prevent="onDragEnter"
+                                        @dragleave.prevent="onDragLeave" @dragover.prevent @drop.prevent="onDrop"
+                                        :class="{ 'drag-over': isDragging }" @click="openFileDialog">
+                                        <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
+                                            multiple>
+                                        <div class="text-center">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                            <p class="mb-0 mt-2">Arrastra archivos aquí o haz clic para seleccionar.</p>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- New Files List -->
-                                <ul v-if="filesToUpload.length > 0" class="list-group mt-2">
-                                    <li v-for="file in filesToUpload" :key="file.id"
-                                        class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>{{ file.file.name }}</span>
-                                        <button type="button" class="btn btn-sm btn-danger"
-                                            @click="removeFile(file.id)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </li>
-                                </ul>
-
-                                <!-- Existing Files List -->
-                                <div v-if="existingFiles.length > 0" class="mt-2">
-                                    <label class="small font-weight-bold">Archivos Existentes:</label>
-                                    <ul class="list-group">
-                                        <li v-for="(file, index) in existingFiles" :key="index"
+                                    <!-- New Files List -->
+                                    <ul v-if="filesToUpload.length > 0" class="list-group mt-2">
+                                        <li v-for="file in filesToUpload" :key="file.id"
                                             class="list-group-item d-flex justify-content-between align-items-center">
-                                            <a :href="file.path.startsWith('http') ? file.path : `/storage/${file.path}`"
-                                                target="_blank">{{ file.name }}</a>
+                                            <span>{{ file.file.name }}</span>
                                             <button type="button" class="btn btn-sm btn-danger"
-                                                @click="removeExistingFile(index)">
-                                                <i class="fas fa-trash"></i>
+                                                @click="removeFile(file.id)">
+                                                <i class="fas fa-times"></i>
                                             </button>
                                         </li>
                                     </ul>
-                                </div>
-                            </div>
 
-                            <!-- Estado hidden default -->
-                            <input type="hidden" v-model="form.sugerencia_estado">
+                                    <!-- Existing Files List -->
+                                    <div v-if="existingFiles.length > 0" class="mt-2">
+                                        <label class="small font-weight-bold">Archivos Existentes:</label>
+                                        <ul class="list-group">
+                                            <li v-for="(file, index) in existingFiles" :key="index"
+                                                class="list-group-item d-flex justify-content-between align-items-center">
+                                                <a :href="file.path.startsWith('http') ? file.path : `/storage/${file.path}`"
+                                                    target="_blank">{{ file.name }}</a>
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                    @click="removeExistingFile(index)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Estado hidden default -->
+                                <input type="hidden" v-model="form.sugerencia_estado">
+                            </fieldset>
                         </div>
                         <div class="modal-footer">
+                            <div v-if="!isEditable" class="alert alert-warning mb-0 py-1 mr-auto">
+                                <i class="fas fa-lock mr-1"></i> Solo lectura (Estado {{ form.sugerencia_estado }})
+                            </div>
                             <button type="button" class="btn btn-secondary" @click="close">
-                                <i class="fa fa-times mr-1"></i> Cancelar</button>
-                            <button type="submit" class="btn btn-danger"> <i class="fa fa-save mr-1"></i>
-                                Guardar</button>
+                                <i class="fa fa-times mr-1"></i> {{ isEditable ? 'Cancelar' : 'Cerrar' }}</button>
+                            <button type="submit" class="btn btn-danger" :disabled="!isEditable" v-if="isEditable">
+                                <i class="fa fa-save mr-1"></i>
+                                Guardar
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -154,6 +164,7 @@ import { useSugerenciasStore } from '@/stores/sugerenciasStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Modal } from 'bootstrap';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     show: Boolean,
@@ -299,11 +310,27 @@ const canCloseSugerencia = computed(() => {
     return authStore.hasRole('admin') || authStore.hasRole('especialista');
 });
 
+const isEditable = computed(() => {
+    if (!props.sugerenciaId) return true; // Creación siempre editable
+    return form.value.sugerencia_estado === 'identificada';
+});
+
 const closeSugerencia = () => {
-    if (confirm('¿Está seguro de cerrar esta sugerencia?')) {
-        form.value.sugerencia_estado = 'cerrada';
-        submitForm();
-    }
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: "¿Desea cerrar esta sugerencia?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cerrar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.value.sugerencia_estado = 'cerrada';
+            submitForm();
+        }
+    });
 };
 
 watch(() => props.show, async (newVal) => {
@@ -367,11 +394,20 @@ const submitForm = async () => {
         } else {
             await sugerenciasStore.createSugerencia(submitData);
         }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Sugerencia guardada exitosamente',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
         emit('saved');
         close();
     } catch (error) {
         console.error('Error saving:', error);
-        alert('Error: ' + (error.response?.data?.message || error.message));
+        Swal.fire('Error', 'Error: ' + (error.response?.data?.message || error.message), 'error');
     }
 };
 

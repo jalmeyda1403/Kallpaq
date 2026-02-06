@@ -1,7 +1,7 @@
 <template>
-    <Teleport to="body">
-        <div ref="modalRef" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="tratamientoModalLabel"
-            aria-hidden="true">
+    <teleport to="body">
+        <div v-if="show" class="modal fade show" role="dialog" style="display: block; overflow-y: auto; z-index: 1060;"
+            aria-labelledby="tratamientoModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header bg-danger text-white">
@@ -12,12 +12,33 @@
                     </div>
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
+                            <!-- Alerta cuando está cerrada -->
+                            <div v-if="form.snc_estado === 'cerrada'" class="alert alert-purple mb-3">
+                                <small class="text-white">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Salida No Conforme cerrada el {{ formatDate(form.snc_fecha_cierre) }}
+                                </small>
+                            </div>
+
+                            <!-- Alerta de Observación -->
+                            <div v-if="form.snc_estado === 'observada'" class="alert alert-warning mb-3">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    <strong>¡Atención! Esta Salida NC ha sido observada</strong>
+                                </div>
+                                <hr class="my-2" style="border-top-color: rgba(0,0,0,0.1);">
+                                <p class="mb-0 text-dark">
+                                    {{ snc.snc_observacion || 'Sin motivo de observación registrado.' }}
+                                </p>
+                            </div>
+
                             <!-- Row 1: Tratamiento | Requiere Accion | Estado -->
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Tratamiento</label>
-                                        <select v-model="form.snc_tratamiento" class="form-control">
+                                        <select v-model="form.snc_tratamiento" class="form-control"
+                                            :disabled="form.snc_estado === 'cerrada'">
                                             <option value="">Selecciona...</option>
                                             <option value="corrección">Corrección</option>
                                             <option value="concesion o aceptación">Concesión o Aceptación</option>
@@ -30,7 +51,8 @@
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Requiere Acción
                                             Correctiva</label>
-                                        <select v-model="form.snc_requiere_accion_correctiva" class="form-control">
+                                        <select v-model="form.snc_requiere_accion_correctiva" class="form-control"
+                                            :disabled="form.snc_estado === 'cerrada'">
                                             <option :value="null">Seleccionar...</option>
                                             <option :value="true">Sí</option>
                                             <option :value="false">No</option>
@@ -40,10 +62,14 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Estado</label>
-                                        <select v-model="form.snc_estado" class="form-control" @change="onEstadoChange">
-                                            <option value="registrada">Registrada</option>
+                                        <select v-model="form.snc_estado" class="form-control" @change="onEstadoChange"
+                                            :disabled="form.snc_estado === 'cerrada'">
+                                            <option value="identificada">Identificada</option>
+                                            <option value="en análisis">En Análisis</option>
                                             <option value="en tratamiento">En Tratamiento</option>
-                                            <option value="tratada">Tratada (Cerrada)</option>
+                                            <option value="tratada">Tratada</option>
+                                            <option value="cerrada" disabled>Cerrada</option>
+                                            <option value="observada" disabled>Observada</option>
                                         </select>
                                     </div>
                                 </div>
@@ -54,6 +80,7 @@
                                 <label class="font-weight-bold text-dark custom-label">Responsable <span
                                         class="text-danger">*</span></label>
                                 <input type="text" v-model="form.snc_responsable" class="form-control" required
+                                    :disabled="form.snc_estado === 'cerrada'"
                                     placeholder="Ingrese el nombre del responsable...">
                             </div>
 
@@ -68,36 +95,40 @@
                                 </div>
                                 <textarea v-model="form.snc_descripcion_tratamiento" class="form-control" rows="3"
                                     maxlength="500"
+                                    :disabled="form.snc_tratamiento === 'concesion o aceptación' || form.snc_estado === 'cerrada'"
                                     placeholder="Ingrese la descripción del tratamiento aplicado..."></textarea>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-bold text-dark custom-label">Fecha de
-                                            Tratamiento</label>
-                                        <input type="date" v-model="form.snc_fecha_tratamiento" class="form-control">
+                                        <label class="font-weight-bold text-dark custom-label">Fecha de Tratamiento
+                                            (Prog.)</label>
+                                        <input type="date" v-model="form.snc_fecha_fecha_fin_prog" class="form-control"
+                                            :disabled="form.snc_estado === 'cerrada'">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="font-weight-bold text-dark custom-label">Costo Estimado</label>
                                         <input type="number" v-model="form.snc_costo_estimado" class="form-control"
-                                            min="0" step="0.01" placeholder="Ingrese el costo estimado...">
+                                            min="0" step="0.01" placeholder="Ingrese el costo estimado..."
+                                            :disabled="form.snc_estado === 'cerrada'">
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label class="font-weight-bold text-dark custom-label">Observaciones</label>
-                                    <small class="text-muted">
-                                        {{ form.snc_observaciones ? form.snc_observaciones.length : 0 }}/500
-                                    </small>
+                            <div class="row" v-if="form.snc_estado === 'tratada' || form.snc_estado === 'cerrada'">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold text-dark custom-label">Fecha Fin Real</label>
+                                        <input type="date" v-model="form.snc_fecha_fin_real" class="form-control"
+                                            readonly disabled>
+                                    </div>
                                 </div>
-                                <textarea v-model="form.snc_observaciones" class="form-control" rows="3" maxlength="500"
-                                    placeholder="Observaciones generales..."></textarea>
                             </div>
+
+
 
                             <!-- Sección de Evidencias (Multi-archivo) -->
                             <div class="form-group">
@@ -105,10 +136,11 @@
                                 <small class="form-text text-muted mb-2">Adjunte archivos de evidencia del tratamiento
                                     si los tiene.</small>
                                 <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
-                                    @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging }"
-                                    @click="openFileDialog">
+                                    @dragover.prevent @drop.prevent="onDrop"
+                                    :class="{ 'drag-over': isDragging, 'disabled': form.snc_estado === 'cerrada' }"
+                                    @click="form.snc_estado !== 'cerrada' && openFileDialog()">
                                     <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
-                                        multiple>
+                                        multiple :disabled="form.snc_estado === 'cerrada'">
                                     <div class="text-center">
                                         <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
                                         <p class="mb-0 mt-2">Arrastra y suelta archivos aquí, o haz clic para
@@ -152,7 +184,8 @@
                                                 </a>
                                             </div>
                                             <button type="button" @click="removeExistingFile(index)"
-                                                class="btn btn-danger btn-sm" title="Eliminar archivo">
+                                                class="btn btn-danger btn-sm" title="Eliminar archivo"
+                                                v-if="form.snc_estado !== 'cerrada'">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </li>
@@ -160,13 +193,53 @@
                                 </div>
                             </div>
 
+                            <!-- Sección Historial de Movimientos -->
+                            <div v-if="snc && snc.movimientos && snc.movimientos.length > 0" class="mt-4">
+                                <h6 class="font-weight-bold mb-3"><i class="fas fa-history mr-2"></i>Historial de
+                                    Movimientos</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-striped"
+                                        style="font-size: 0.85rem;">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="width: 15%;">Fecha</th>
+                                                <th style="width: 15%;">Estado</th>
+                                                <th style="width: 20%;">Responsable</th>
+                                                <th style="width: 50%;">Comentarios / Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="mov in snc.movimientos" :key="mov.id">
+                                                <td>{{ formatDateDateTime(mov.fecha_movimiento) }}</td>
+                                                <td>
+                                                    <span :class="getEstadoBadgeClass(mov.estado)">
+                                                        {{ capitalizeFirstLetter(mov.estado) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ mov.user ? mov.user.name : 'Sistema' }}</td>
+                                                <td>{{ mov.observacion || '-' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="modal-footer d-flex justify-content-end">
+                            <div class="mr-auto"
+                                v-if="canClose && snc && (snc.snc_estado === 'tratada' || snc.snc_estado === 'cerrada')">
+                                <!-- Mostrar botón cerrar solo si es tratada, si es cerrada ya no se puede hacer mucho pero podría querer ver historial -->
+                                <button type="button" class="btn bg-purple text-white" @click="openEvaluacionModal"
+                                    v-if="snc.snc_estado === 'tratada'">
+                                    <i class="fas fa-check-double mr-1"></i> Cerrar / Observar SNC
+                                </button>
+                            </div>
                             <div>
                                 <button type="button" class="btn btn-secondary" @click="close">
                                     <i class="fas fa-times mr-1"></i> Cancelar
                                 </button>
-                                <button type="submit" class="btn btn-danger ml-2" :disabled="!isValid">
+                                <button type="submit" class="btn btn-danger ml-2"
+                                    :disabled="!isValid || form.snc_estado === 'cerrada'">
                                     <i class="fas fa-save mr-1"></i> Guardar
                                 </button>
                             </div>
@@ -175,6 +248,12 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal de Evaluación (Validación/Cierre) -->
+        <SNCEvaluacionModal :show="showEvaluacionModal" :snc-id="snc?.id" :snc-data="snc" @close="closeEvaluacionModal"
+            @validated="onSNCValidated" />
+
+        <div v-if="show" class="modal-backdrop fade show" style="z-index: 1055;"></div>
     </Teleport>
 </template>
 
@@ -183,6 +262,9 @@ import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useSalidasNCStore } from '@/stores/salidasNCStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Modal } from 'bootstrap';
+import SNCEvaluacionModal from './SNCEvaluacionModal.vue';
+
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     show: Boolean,
@@ -198,13 +280,13 @@ const form = ref({
     snc_responsable: '',
     snc_tratamiento: '',
     snc_descripcion_tratamiento: '',
-    snc_fecha_tratamiento: null,
+    snc_fecha_fecha_fin_prog: null,
+    snc_fecha_fin_real: null,
     snc_costo_estimado: null,
     snc_requiere_accion_correctiva: null,
     snc_fecha_cierre: null,
-    snc_observaciones: '',
     snc_evidencias: null,
-    snc_estado: 'registrada'
+    snc_estado: 'identificada'
 });
 
 const modalRef = ref(null);
@@ -227,9 +309,25 @@ const onEstadoChange = () => {
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
-        form.value.snc_fecha_cierre = `${year}-${month}-${day}`;
+        form.value.snc_fecha_fin_real = `${year}-${month}-${day}`;
+    } else {
+        form.value.snc_fecha_fin_real = null;
     }
 };
+
+// Watch para tratamiento
+watch(() => form.value.snc_tratamiento, (newVal) => {
+    if (newVal === 'concesion o aceptación') {
+        // Solo cambiar el estado a 'tratada' si no está cerrada
+        if (form.value.snc_estado !== 'cerrada') {
+            form.value.snc_estado = 'tratada';
+            onEstadoChange(); // Actualizar fecha fin real
+        }
+        form.value.snc_descripcion_tratamiento = 'No aplica por concesión o aceptación';
+    } else if (form.value.snc_descripcion_tratamiento === 'No aplica por concesión o aceptación') {
+        form.value.snc_descripcion_tratamiento = '';
+    }
+});
 
 // Función para formatear fecha para input de tipo date
 const formatDateForInput = (dateString) => {
@@ -248,13 +346,13 @@ watch(() => props.snc, (newVal) => {
             snc_responsable: newVal.snc_responsable || '', // Cargar responsable
             snc_tratamiento: newVal.snc_tratamiento || '',
             snc_descripcion_tratamiento: newVal.snc_descripcion_tratamiento || '',
-            snc_fecha_tratamiento: newVal.snc_fecha_tratamiento ? formatDateForInput(newVal.snc_fecha_tratamiento) : null,
+            snc_fecha_fecha_fin_prog: newVal.snc_fecha_fecha_fin_prog ? formatDateForInput(newVal.snc_fecha_fecha_fin_prog) : null,
+            snc_fecha_fin_real: newVal.snc_fecha_fin_real ? formatDateForInput(newVal.snc_fecha_fin_real) : null,
             snc_costo_estimado: newVal.snc_costo_estimado || null,
             snc_requiere_accion_correctiva: newVal.snc_requiere_accion_correctiva,
             snc_fecha_cierre: newVal.snc_fecha_cierre ? formatDateForInput(newVal.snc_fecha_cierre) : null,
-            snc_observaciones: newVal.snc_observaciones || '',
             snc_evidencias: newVal.snc_evidencias || null,
-            snc_estado: newVal.snc_estado || 'registrada'
+            snc_estado: newVal.snc_estado || 'identificada'
         };
 
         // Cargar archivos existentes
@@ -285,10 +383,8 @@ watch(() => props.snc, (newVal) => {
                 }];
             }
         }
-
-        console.log('Archivos existentes cargados (SNC Tratamiento):', existingFiles.value);
     }
-});
+}, { immediate: true });
 
 watch(() => props.show, async (newVal) => {
     if (newVal) {
@@ -398,12 +494,59 @@ const canClose = computed(() => {
     return authStore.hasRole('admin') || authStore.hasRole('especialista');
 });
 
-const closeNC = () => {
-    if (confirm('¿Está seguro de cerrar esta Salida No Conforme?')) {
-        form.value.snc_estado = 'tratada';
-        onEstadoChange(); // Actualizar fecha de cierre
-        submitForm();
-    }
+const showEvaluacionModal = ref(false);
+
+const openEvaluacionModal = () => {
+    showEvaluacionModal.value = true;
+};
+
+const closeEvaluacionModal = () => {
+    showEvaluacionModal.value = false;
+};
+
+const onSNCValidated = () => {
+    emit('saved');
+    close();
+};
+
+const getEstadoBadgeClass = (estado) => {
+    const classes = {
+        'identificada': 'badge badge-secondary',
+        'en análisis': 'badge badge-info',
+        'en tratamiento': 'badge badge-primary',
+        'tratada': 'badge badge-success',
+        'cerrada': 'badge badge-purple',
+        'observada': 'badge badge-warning'
+    };
+    return classes[estado] || 'badge badge-light';
+};
+
+const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+// Funciones auxiliares para la tabla de historial
+const formatDateDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString();
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const getInitials = (name) => {
+    if (!name) return 'S';
+    return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
 };
 
 const submitForm = async () => {
@@ -461,16 +604,31 @@ const submitForm = async () => {
                 form.value.snc_requiere_accion_correctiva = boolValue ? 1 : 0;
             }
 
+            // Asegurar que si el estado no es 'tratada', la fecha fin real sea null
+            if (form.value.snc_estado !== 'tratada') {
+                form.value.snc_fecha_fin_real = null;
+            }
+
             // Actualizar la SNC con la información de tratamiento
             await salidasNCStore.updateTratamiento(props.snc.id, form.value);
         }
 
         // Show success feedback
-        alert('Tratamiento actualizado exitosamente');
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Tratamiento actualizado exitosamente',
+            timer: 2000,
+            showConfirmButton: false
+        });
         emit('saved');
         close();
     } catch (e) {
-        alert('No se pudo guardar: ' + (e.response?.data?.message || e.message));
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo guardar: ' + (e.response?.data?.message || e.message)
+        });
         console.error(e);
     }
 };
@@ -528,6 +686,31 @@ const submitForm = async () => {
     background-color: #f8f9fa;
     transform: translateY(-1px);
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.bg-purple {
+    background-color: #605ca8 !important;
+}
+
+.avatar-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.alert-purple {
+    background-color: #605ca8;
+    color: white;
+    border-color: #4f4c8b;
+}
+
+.alert-purple .text-white {
+    color: white !important;
 }
 </style>
 ```

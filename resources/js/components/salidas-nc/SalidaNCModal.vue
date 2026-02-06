@@ -12,153 +12,174 @@
                     </div>
                     <form @submit.prevent="submitForm">
                         <div class="modal-body">
-                            <!-- Primera fila: Origen y Clasificación -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="custom-label">Origen <span class="text-danger">*</span></label>
-                                        <select v-model="form.snc_origen" class="form-control" required>
-                                            <option value="" disabled>Selecciona...</option>
-                                            <option value="cliente">Cliente</option>
-                                            <option value="auditoría interna">Auditoría Interna</option>
-                                            <option value="auditoría externa">Auditoría Externa</option>
-                                            <option value="otro">Otro</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="custom-label">Clasificación <span
-                                                class="text-danger">*</span></label>
-                                        <select v-model="form.snc_clasificacion" class="form-control" required>
-                                            <option value="" disabled>Selecciona...</option>
-                                            <option value="crítica">Crítica</option>
-                                            <option value="mayor">Mayor</option>
-                                            <option value="menor">Menor</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Segunda fila: Descripción -->
-                            <div class="form-group mb-3">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label class="custom-label">Descripción <span class="text-danger">*</span></label>
-                                    <small class="text-muted font-weight-bold">
-                                        {{ form.snc_descripcion ? form.snc_descripcion.length : 0 }}/500
-                                    </small>
-                                </div>
-                                <textarea v-model="form.snc_descripcion" class="form-control" rows="4" required
-                                    placeholder="Detalle la no conformidad detectada..." @input="updateCharCount"
-                                    maxlength="500"></textarea>
-                            </div>
-
-                            <!-- Tercera fila: Proceso -->
-                            <div class="form-group mb-3">
-                                <label class="custom-label">Proceso <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="text" v-model="processName" class="form-control" readonly
-                                        placeholder="Seleccionar proceso..." :required="!form.proceso_id">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-dark" type="button" @click="openProcessModal">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                        <button class="btn btn-danger" type="button" v-if="form.proceso_id"
-                                            @click="clearProcess">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cuarta fila: Cantidad Afectada y Fecha Detección -->
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="custom-label">Cantidad Afectada</label>
-                                        <input type="number" v-model="form.snc_cantidad_afectada" class="form-control"
-                                            min="0" placeholder="Ingrese la cantidad afectada...">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="custom-label">Fecha Detección <span
-                                                class="text-danger">*</span></label>
-                                        <input type="date" v-model="form.snc_fecha_deteccion" class="form-control"
-                                            required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sexta fila: Evidencia -->
-                            <div class="form-group mb-0">
-                                <label class="custom-label">Evidencia</label>
-                                <small class="d-block text-muted mb-2">Adjunte archivos de soporte (imágenes,
-                                    documentos,
-                                    PDFs).</small>
-                                <div class="drop-zone" @dragenter.prevent="onDragEnter" @dragleave.prevent="onDragLeave"
-                                    @dragover.prevent @drop.prevent="onDrop" :class="{ 'drag-over': isDragging }"
-                                    @click="openFileDialog">
-                                    <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
-                                        multiple>
-                                    <div class="text-center py-4">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                                        <p class="mb-1 text-dark font-weight-bold">Arrastra archivos aquí o haz clic</p>
-                                        <small class="text-muted">Máximo 10MB por archivo</small>
-                                    </div>
-                                </div>
-
-                                <!-- Lista de archivos seleccionados -->
-                                <ul v-if="filesToUpload.length > 0" class="list-group mt-3 shadow-sm">
-                                    <li v-for="file in filesToUpload" :key="file.id"
-                                        class="list-group-item border-0 bg-light mb-1 rounded d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center overflow-hidden">
-                                            <div class="mr-3 text-danger"><i class="fas fa-file-alt fa-lg"></i></div>
-                                            <div class="text-truncate">
-                                                <div class="font-weight-bold text-dark">{{ file.file.name }}</div>
-                                                <div class="progress mt-1" style="height: 4px; width: 100px;">
-                                                    <div class="progress-bar bg-danger" role="progressbar"
-                                                        :style="{ width: file.progress + '%' }"></div>
-                                                </div>
-                                            </div>
+                            <fieldset :disabled="!isEditable">
+                                <!-- Primera fila: Origen y Clasificación -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="custom-label">Origen <span
+                                                    class="text-danger">*</span></label>
+                                            <select v-model="form.snc_origen" class="form-control" required>
+                                                <option value="" disabled>Selecciona...</option>
+                                                <option value="cliente">Cliente</option>
+                                                <option value="auditoría interna">Auditoría Interna</option>
+                                                <option value="auditoría externa">Auditoría Externa</option>
+                                                <option value="otro">Otro</option>
+                                            </select>
                                         </div>
-                                        <button @click="removeFile(file.id)"
-                                            class="btn btn-sm btn-outline-danger border-0 rounded-circle">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </li>
-                                </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="custom-label">Clasificación <span
+                                                    class="text-danger">*</span></label>
+                                            <select v-model="form.snc_clasificacion" class="form-control" required>
+                                                <option value="" disabled>Selecciona...</option>
+                                                <option value="crítica">Crítica</option>
+                                                <option value="mayor">Mayor</option>
+                                                <option value="menor">Menor</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <!-- Archivos actualmente almacenados -->
-                                <div v-if="existingFiles.length > 0" class="mt-4">
-                                    <h6 class="custom-label text-muted mb-3">Archivos Adjuntos</h6>
-                                    <div class="list-group shadow-sm">
-                                        <div v-for="(file, index) in existingFiles" :key="index"
-                                            class="list-group-item list-group-item-action border-0 bg-light mb-1 rounded d-flex justify-content-between align-items-center">
-                                            <a :href="`/storage/${file.path}`" target="_blank"
-                                                class="d-flex align-items-center text-dark text-decoration-none text-truncate"
-                                                style="max-width: 85%;">
-                                                <i class="fas fa-paperclip mr-3 text-secondary"></i>
-                                                <span class="font-weight-bold">{{ file.name }}</span>
-                                            </a>
-                                            <button type="button" @click="removeExistingFile(index)"
-                                                class="btn btn-sm btn-outline-danger border-0" title="Eliminar archivo">
-                                                <i class="fas fa-trash-alt"></i>
+                                <!-- Segunda fila: Descripción -->
+                                <div class="form-group mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <label class="custom-label">Descripción <span
+                                                class="text-danger">*</span></label>
+                                        <small class="text-muted font-weight-bold">
+                                            {{ form.snc_descripcion ? form.snc_descripcion.length : 0 }}/500
+                                        </small>
+                                    </div>
+                                    <textarea v-model="form.snc_descripcion" class="form-control" rows="4" required
+                                        placeholder="Detalle la no conformidad detectada..." @input="updateCharCount"
+                                        maxlength="500"></textarea>
+                                </div>
+
+                                <!-- Tercera fila: Proceso -->
+                                <div class="form-group mb-3">
+                                    <label class="custom-label">Proceso <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" v-model="processName" class="form-control" readonly
+                                            placeholder="Seleccionar proceso..." :required="!form.proceso_id">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-dark" type="button" @click="openProcessModal">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                            <button class="btn btn-danger" type="button" v-if="form.proceso_id"
+                                                @click="clearProcess">
+                                                <i class="fas fa-times"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Séptima fila: Estado (oculto) -->
-                            <input type="hidden" v-model="form.snc_estado" value="registrada">
+                                <!-- Cuarta fila: Cantidad Afectada y Fecha Detección -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="custom-label">Cantidad Afectada <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" v-model="form.snc_cantidad_afectada"
+                                                class="form-control" min="0"
+                                                placeholder="Ingrese la cantidad afectada..." required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="custom-label">Fecha Detección <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="date" v-model="form.snc_fecha_deteccion" class="form-control"
+                                                required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Quinta fila: Responsable -->
+                                <div class="form-group mb-4">
+                                    <label class="custom-label">Responsable <span class="text-danger">*</span></label>
+                                    <input type="text" v-model="form.snc_responsable" class="form-control" required
+                                        placeholder="Nombre del responsable de la no conformidad...">
+                                </div>
+
+                                <!-- Sexta fila: Evidencia -->
+                                <div class="form-group mb-0">
+                                    <label class="custom-label">Evidencia</label>
+                                    <small class="d-block text-muted mb-2">Adjunte archivos de soporte (imágenes,
+                                        documentos,
+                                        PDFs).</small>
+                                    <div class="drop-zone" @dragenter.prevent="onDragEnter"
+                                        @dragleave.prevent="onDragLeave" @dragover.prevent @drop.prevent="onDrop"
+                                        :class="{ 'drag-over': isDragging }" @click="openFileDialog">
+                                        <input type="file" ref="fileInput" class="d-none" @change="handleFileSelect"
+                                            multiple>
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                            <p class="mb-1 text-dark font-weight-bold">Arrastra archivos aquí o haz clic
+                                            </p>
+                                            <small class="text-muted">Máximo 10MB por archivo</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lista de archivos seleccionados -->
+                                    <ul v-if="filesToUpload.length > 0" class="list-group mt-3 shadow-sm">
+                                        <li v-for="file in filesToUpload" :key="file.id"
+                                            class="list-group-item border-0 bg-light mb-1 rounded d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center overflow-hidden">
+                                                <div class="mr-3 text-danger"><i class="fas fa-file-alt fa-lg"></i>
+                                                </div>
+                                                <div class="text-truncate">
+                                                    <div class="font-weight-bold text-dark">{{ file.file.name }}</div>
+                                                    <div class="progress mt-1" style="height: 4px; width: 100px;">
+                                                        <div class="progress-bar bg-danger" role="progressbar"
+                                                            :style="{ width: file.progress + '%' }"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button @click="removeFile(file.id)"
+                                                class="btn btn-sm btn-outline-danger border-0 rounded-circle">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Archivos actualmente almacenados -->
+                                    <div v-if="existingFiles.length > 0" class="mt-4">
+                                        <h6 class="custom-label text-muted mb-3">Archivos Adjuntos</h6>
+                                        <div class="list-group shadow-sm">
+                                            <div v-for="(file, index) in existingFiles" :key="index"
+                                                class="list-group-item list-group-item-action border-0 bg-light mb-1 rounded d-flex justify-content-between align-items-center">
+                                                <a :href="`/storage/${file.path}`" target="_blank"
+                                                    class="d-flex align-items-center text-dark text-decoration-none text-truncate"
+                                                    style="max-width: 85%;">
+                                                    <i class="fas fa-paperclip mr-3 text-secondary"></i>
+                                                    <span class="font-weight-bold">{{ file.name }}</span>
+                                                </a>
+                                                <button type="button" @click="removeExistingFile(index)"
+                                                    class="btn btn-sm btn-outline-danger border-0"
+                                                    title="Eliminar archivo">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Séptima fila: Estado (oculto) -->
+                                <input type="hidden" v-model="form.snc_estado" value="identificada">
+                            </fieldset>
                         </div>
                         <div class="modal-footer">
+                            <div v-if="!isEditable" class="alert alert-warning mb-0 py-1 mr-auto">
+                                <i class="fas fa-lock mr-1"></i> Solo lectura (Estado {{ form.snc_estado }})
+                            </div>
                             <button type="button" class="btn btn-secondary" @click="close">
-                                <i class="fas fa-times mr-1"></i> Cancelar</button>
-                            <button type="submit" class="btn btn-danger" :disabled="!isValid"> <i
-                                    class="fas fa-save mr-1"></i>
-                                Guardar</button>
+                                <i class="fas fa-times mr-1"></i> {{ isEditable ? 'Cancelar' : 'Cerrar' }}</button>
+                            <button type="submit" class="btn btn-danger" :disabled="!isValid || !isEditable"
+                                v-if="isEditable">
+                                <i class="fas fa-save mr-1"></i>
+                                {{ snc ? 'Guardar Cambios' : 'Crear' }}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -176,6 +197,7 @@ import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useSalidasNCStore } from '@/stores/salidasNCStore';
 import { Modal } from 'bootstrap';
 import ModalHijo from '@/components/generales/ModalHijo.vue';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     show: Boolean,
@@ -197,7 +219,7 @@ const form = ref({
     snc_descripcion_tratamiento: '',
     snc_fecha_tratamiento: null,
     snc_costo_estimado: null,
-    snc_estado: 'registrada',
+    snc_estado: 'identificada',
     snc_requiere_accion_correctiva: null,
     snc_fecha_cierre: null,
     snc_observaciones: '',
@@ -294,7 +316,7 @@ watch(() => props.snc, (newVal) => {
             snc_descripcion_tratamiento: '',
             snc_fecha_tratamiento: null,
             snc_costo_estimado: null,
-            snc_estado: 'registrada',
+            snc_estado: 'identificada',
             snc_requiere_accion_correctiva: false, // Cambiado de null a false para que sea un booleano
             snc_fecha_cierre: null,
             snc_observaciones: '',
@@ -395,7 +417,7 @@ const startUpload = (files) => {
 
     files.forEach(file => {
         if (file.size > maxFileSize) {
-            alert(`El archivo '${file.name}' supera el límite de 10MB y no será subido.`);
+            Swal.fire('Error', `El archivo '${file.name}' supera el límite de 10MB y no será subido.`, 'error');
             return; // Skip this file
         }
 
@@ -455,7 +477,7 @@ watch(() => props.show, async (newVal) => {
             snc_descripcion_tratamiento: '',
             snc_fecha_tratamiento: null,
             snc_costo_estimado: null,
-            snc_estado: 'registrada',
+            snc_estado: 'identificada',
             snc_requiere_accion_correctiva: null,
             snc_fecha_cierre: null,
             snc_observaciones: '',
@@ -506,6 +528,12 @@ const isValid = computed(() => {
         form.value.snc_clasificacion &&
         form.value.snc_estado
     );
+});
+
+const isEditable = computed(() => {
+    if (!props.snc) return true; // Creación siempre editable
+    // Edición solo si está identificada
+    return form.value.snc_estado === 'identificada';
 });
 
 const removeCurrentFile = () => {

@@ -14,38 +14,42 @@ class SalidaNoConforme extends Model
     protected $fillable = [
         'snc_descripcion',
         'snc_cantidad_afectada',
-        'snc_fecha_deteccion',
         'snc_responsable',
         'snc_origen',
         'snc_clasificacion',
         'snc_tratamiento',
         'snc_descripcion_tratamiento',
-        'snc_fecha_tratamiento',
         'snc_costo_estimado',
         'snc_estado',
+        'snc_observacion',
         'snc_requiere_accion_correctiva',
+        'snc_fecha_deteccion',
+        'snc_fecha_fecha_fin_prog',
+        'snc_fecha_fin_real',
+        'snc_fecha_observacion',
         'snc_fecha_cierre',
         'snc_observaciones',
-        'proceso_id',
         'snc_archivos',
         'snc_evidencias',
+        'proceso_id',
     ];
 
     protected $casts = [
-        'snc_fecha_deteccion' => 'date',
-        'snc_fecha_tratamiento' => 'date',
-        'snc_fecha_cierre' => 'date',
         'snc_cantidad_afectada' => 'decimal:2',
         'snc_costo_estimado' => 'decimal:2',
         'snc_requiere_accion_correctiva' => 'boolean',
+        'snc_fecha_deteccion' => 'date',
+        'snc_fecha_fecha_fin_prog' => 'date',
+        'snc_fecha_fin_real' => 'date',
+        'snc_fecha_cierre' => 'date',
+        'snc_fecha_observacion' => 'datetime',
         'snc_archivos' => 'array',
         'snc_evidencias' => 'array',
     ];
 
-    // Accessors
-    public function getResponsableNombreAttribute()
+    public function movimientos()
     {
-        return $this->snc_responsable;
+        return $this->hasMany(SalidaNoConformeMovimiento::class)->orderBy('created_at', 'desc');
     }
 
     public function proceso()
@@ -53,20 +57,17 @@ class SalidaNoConforme extends Model
         return $this->belongsTo(Proceso::class);
     }
 
+    // Accessors
+    public function getResponsableNombreAttribute()
+    {
+        return $this->snc_responsable;
+    }
 
-    // Scopes para filtrado
+    // Scopes (kept for backward compatibility with filtering logic)
     public function scopeFilterByEstado($query, $estado)
     {
         if ($estado) {
             return $query->where('snc_estado', $estado);
-        }
-        return $query;
-    }
-
-    public function scopeFilterByTipo($query, $tipo)
-    {
-        if ($tipo) {
-            return $query->where('snc_tipo', $tipo);
         }
         return $query;
     }
@@ -83,9 +84,9 @@ class SalidaNoConforme extends Model
     {
         if ($descripcion) {
             return $query->where(function ($q) use ($descripcion) {
-                $q->where('snc_codigo', 'LIKE', "%{$descripcion}%")
-                    ->orWhere('snc_descripcion', 'LIKE', "%{$descripcion}%")
-                    ->orWhere('snc_producto_servicio', 'LIKE', "%{$descripcion}%");
+                // snc_codigo and snc_producto_servicio removed as they are not in schema
+                $q->where('snc_descripcion', 'LIKE', "%{$descripcion}%")
+                    ->orWhere('snc_responsable', 'LIKE', "%{$descripcion}%");
             });
         }
         return $query;
