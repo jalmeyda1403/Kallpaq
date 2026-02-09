@@ -1,51 +1,51 @@
 <template>
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 font-weight-bold text-uppercase text-dark">
-                <i class="fas fa-clipboard-check mr-2 text-danger"></i>Evaluación de Criticidad (ISO 37301)
-            </h6>
+    <div class="evaluation-container">
 
-        </div>
-        <div class="card-body">
+        <div v-if="!readOnly">
+            <p class="text-muted small mb-4">
+                Complete la siguiente rúbrica para determinar la criticidad de la obligación.
+                El nivel de criticidad determinará los requisitos de control necesarios.
+            </p>
 
+            <div v-for="(settings, key) in rubricaDefinitions" :key="key" class="mb-4">
+                <label class="font-weight-bold text-dark">{{ settings.label }}</label>
+                <p class="small text-muted mb-2">{{ settings.description }}</p>
 
+                <select class="form-control custom-select" v-model.number="form[key]">
+                    <option :value="null" disabled>Seleccione una opción...</option>
+                    <option v-for="opcion in settings.options" :key="opcion.value" :value="opcion.value">
+                        {{ opcion.label }} ({{ opcion.value }} pts)
+                    </option>
+                </select>
+            </div>
 
-            <div v-if="!readOnly">
-                <p class="text-muted small mb-4">
-                    Complete la siguiente rúbrica para determinar la criticidad de la obligación.
-                    El nivel de criticidad determinará los requisitos de control necesarios.
-                </p>
-
-                <div v-for="(settings, key) in rubricaDefinitions" :key="key" class="mb-4">
-                    <label class="font-weight-bold text-dark">{{ settings.label }}</label>
-                    <p class="small text-muted mb-2">{{ settings.description }}</p>
-
-                    <select class="form-control custom-select" v-model.number="form[key]">
-                        <option :value="null" disabled>Seleccione una opción...</option>
-                        <option v-for="opcion in settings.options" :key="opcion.value" :value="opcion.value">
-                            {{ opcion.label }} ({{ opcion.value }} pts)
-                        </option>
-                    </select>
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <div style="flex: 1; margin-right: 20px;">
+                    <div class="p-2 rounded d-flex justify-content-between align-items-center" :class="previewClass">
+                        <span class="font-weight-bold ml-2">NIVEL: {{ (nivelEstimado ||
+                            '').replace('_', '').toUpperCase() }}</span>
+                        <span class="small font-weight-bold mr-2">({{ puntajeTotal }} PTS)</span>
+                    </div>
                 </div>
-
-                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                    <div style="flex: 1; margin-right: 20px;">
-                        <div class="p-2 rounded d-flex justify-content-between align-items-center"
-                            :class="previewClass">
-                            <span class="font-weight-bold ml-2">NIVEL: {{ (nivelEstimado ||
-                                '').replace('_', '').toUpperCase() }}</span>
-                            <span class="small font-weight-bold mr-2">({{ puntajeTotal }} PTS)</span>
-                        </div>
-                    </div>
-                    <div>
-                        <button class="btn btn-danger shadow-sm" @click="saveEvaluation"
-                            :disabled="loading || !isComplete">
-                            <i class="fas fa-save mr-1"></i> Guardar Evaluación
-                        </button>
-                    </div>
+                <div>
+                    <button class="btn btn-danger shadow-sm" @click="saveEvaluation" :disabled="loading || !isComplete">
+                        <i class="fas fa-save mr-1"></i> Guardar Evaluación
+                    </button>
                 </div>
             </div>
         </div>
+
+        <!-- Read Only View -->
+        <div v-else class="alert alert-light border">
+            <h6 class="alert-heading font-weight-bold">Evaluación Completada</h6>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center p-3 rounded" :class="previewClass">
+                <strong>NIVEL CRITICIDAD: {{ localEvaluation?.oe_nivel_criticidad?.toUpperCase() }}</strong>
+                <strong>PUNTAJE: {{ localEvaluation?.oe_puntaje_total }}</strong>
+            </div>
+            <p class="mt-3 small text-muted">La evaluación no se puede modificar en el estado actual.</p>
+        </div>
+
     </div>
 </template>
 

@@ -1,2 +1,0 @@
-Foreign Keys on table 'riesgo_controles':
-- riesgo_controles_riesgo_cod_foreign

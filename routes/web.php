@@ -323,6 +323,7 @@ Route::prefix('api/obligaciones')->name('api.obligaciones.')->group(function () 
 
     // Evaluación y Estado (ISO 37301)
     Route::post('/{id}/evaluar', [ObligacionController::class, 'evaluar'])->name('evaluar');
+    Route::post('/{id}/cumplimiento', [ObligacionController::class, 'registrarCumplimiento'])->name('cumplimiento');
     Route::post('/{id}/cambiar-estado', [ObligacionController::class, 'cambiarEstado'])->name('cambiarEstado');
 });
 

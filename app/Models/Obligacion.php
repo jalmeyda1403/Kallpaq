@@ -21,6 +21,11 @@ class Obligacion extends Model
     const ESTADO_SUSPENDIDA = 'suspendida';
     const ESTADO_INACTIVA = 'inactiva';
 
+    const CUMPLIMIENTO_PENDIENTE = 'pendiente';
+    const CUMPLIMIENTO_CUMPLIDA = 'cumplida';
+    const CUMPLIMIENTO_PARCIAL = 'parcialmente_cumplida';
+    const CUMPLIMIENTO_NO_CUMPLIDA = 'no_cumplida';
+
     protected $fillable = [
         'area_compliance_id',
         'subarea_compliance_id',
@@ -33,8 +38,40 @@ class Obligacion extends Model
         'documento_id',
         'obligacion_tipo',
         'obligacion_frecuencia',
-        'obligacion_fecha_identificacion'
+        'obligacion_fecha_identificacion',
+        'cumplimiento',
+        'fecha_cumplimiento',
+        'comentario_cumplimiento'
     ];
+
+    protected $casts = [
+        'fecha_cumplimiento' => 'date',
+        'obligacion_fecha_identificacion' => 'date'
+    ];
+
+    /**
+     * Actualiza el cumplimiento y ajusta el estado automáticamente.
+     */
+    public function actualizarCumplimiento($cumplimiento, $comentario = null, $fecha = null)
+    {
+        $this->cumplimiento = $cumplimiento;
+        $this->comentario_cumplimiento = $comentario;
+        $this->fecha_cumplimiento = $fecha ?? now();
+
+        // Lógica automática de estados
+        if ($cumplimiento === self::CUMPLIMIENTO_CUMPLIDA) {
+            $this->obligacion_estado = self::ESTADO_CONTROLADA;
+        } elseif ($cumplimiento === self::CUMPLIMIENTO_NO_CUMPLIDA) {
+            $this->obligacion_estado = self::ESTADO_NO_CONTROLADA;
+        } elseif ($cumplimiento === self::CUMPLIMIENTO_PARCIAL) {
+            // Opcional: Mantener en tratamiento o definir otro estado
+            if ($this->obligacion_estado !== self::ESTADO_EN_TRATAMIENTO) {
+                $this->obligacion_estado = self::ESTADO_EN_TRATAMIENTO;
+            }
+        }
+
+        $this->save();
+    }
 
     /**
      * Relación con la tabla 'areas_compliance'.

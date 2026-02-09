@@ -401,4 +401,28 @@ class ObligacionController extends Controller
 
         return response()->json(['error' => 'No se pudo cambiar el estado.'], 422);
     }
+    /**
+     * Registrar el cumplimiento de la obligación.
+     */
+    public function registrarCumplimiento(Request $request, $id)
+    {
+        $obligacion = Obligacion::findOrFail($id);
+
+        $validated = $request->validate([
+            'cumplimiento' => 'required|in:pendiente,cumplida,parcialmente_cumplida,no_cumplida',
+            'comentario_cumplimiento' => 'nullable|string',
+            'fecha_cumplimiento' => 'nullable|date'
+        ]);
+
+        $obligacion->actualizarCumplimiento(
+            $validated['cumplimiento'],
+            $validated['comentario_cumplimiento'] ?? null,
+            $validated['fecha_cumplimiento'] ?? now()
+        );
+
+        return response()->json([
+            'message' => 'Cumplimiento registrado correctamente',
+            'obligacion' => $obligacion->fresh()
+        ]);
+    }
 }

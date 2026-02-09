@@ -30,65 +30,68 @@
                         </div>
                     </div>
 
-                    <div class="modal-body p-0" style="max-height: 75vh;">
+                    <div class="modal-body p-0" style="height: 75vh;">
                         <div class="d-flex" style="height: 75vh; overflow: hidden;">
-                            <!-- Sidebar Navigation -->
-                            <div class="nav flex-column nav-pills bg-light border-right p-3" style="width: 250px;"
-                                role="tablist" aria-orientation="vertical">
+                            <div class="nav flex-column nav-pills bg-light border-right p-3"
+                                style="width: 250px; min-width: 250px; flex-shrink: 0;" role="tablist"
+                                aria-orientation="vertical">
 
-                                <h6 class="text-secondary mx-3 mt-2">GENERAL</h6>
-                                <a class="nav-link" href="#" :class="{ 'text-danger active': activeTab === 'general' }"
-                                    @click.prevent="activeTab = 'general'" role="tab">
-                                    <i class="fas fa-file-alt"></i> Datos Generales
-                                </a>
+                                <h6 class="text-secondary mx-3 mt-2">FASES</h6>
 
-                                <hr class="my-2 border-secondary mx-3 opacity-50">
-
-                                <h6 class="text-secondary mx-3 mt-3">ASOCIACIONES</h6>
-                                <a class="nav-link" href="#" :class="{ 'text-danger active': activeTab === 'procesos' }"
-                                    @click.prevent="activeTab = 'procesos'" role="tab">
-                                    <i class="fas fa-network-wired"></i> Asociar a Procesos
+                                <a class="nav-link" href="#"
+                                    :class="{ 'text-danger active': activeTab === 'identificacion' }"
+                                    @click.prevent="activeTab = 'identificacion'" role="tab">
+                                    <i class="fas fa-search"></i> 1. Identificación
                                 </a>
 
                                 <a class="nav-link" href="#"
                                     :class="{ 'text-danger active': activeTab === 'criticidad' }"
                                     @click.prevent="activeTab = 'criticidad'" role="tab">
-                                    <i class="fas fa-clipboard-check"></i> Evaluación de Criticidad
+                                    <i class="fas fa-balance-scale"></i> 2. Evaluación
                                 </a>
+
                                 <a class="nav-link" href="#"
-                                    :class="{ 'text-danger active': activeTab === 'evaluacion' }"
-                                    @click.prevent="activeTab = 'evaluacion'" role="tab">
-                                    <i class="fas fa-exclamation-triangle"></i> Evaluación (Riesgos)
+                                    :class="{ 'text-danger active': activeTab === 'tratamiento' }"
+                                    @click.prevent="activeTab = 'tratamiento'" role="tab">
+                                    <i class="fas fa-shield-alt"></i> 3. Tratamiento
                                 </a>
-                                <a class="nav-link" href="#" :class="{ 'text-danger active': activeTab === 'acciones' }"
-                                    @click.prevent="activeTab = 'acciones'" role="tab">
-                                    <i class="fas fa-tasks"></i> Plan de Acción
-                                </a>
+
                                 <a class="nav-link" href="#"
-                                    :class="{ 'text-danger active': activeTab === 'controles' }"
-                                    @click.prevent="activeTab = 'controles'" role="tab">
-                                    <i class="fas fa-shield-alt"></i> Controles
+                                    :class="{ 'text-danger active': activeTab === 'cumplimiento' }"
+                                    @click.prevent="activeTab = 'cumplimiento'" role="tab">
+                                    <i class="fas fa-check-circle"></i> 4. Cumplimiento
                                 </a>
+
+                                <a class="nav-link" href="#"
+                                    :class="{ 'text-danger active': activeTab === 'seguimiento' }"
+                                    @click.prevent="activeTab = 'seguimiento'" role="tab">
+                                    <i class="fas fa-history"></i> 5. Seguimiento
+                                </a>
+
                             </div>
 
                             <!-- Content Area -->
                             <div class="flex-grow-1 p-4" style="overflow-y: auto; height: 100%;">
-                                <!-- Tab: General -->
-                                <div v-if="activeTab === 'general'">
+
+                                <!-- 1. IDENTIFICACIÓN -->
+                                <div v-if="activeTab === 'identificacion'">
                                     <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">Datos Generales
                                     </h6>
                                     <ObligacionForm v-model="form" :procesos="procesos" :areas="areas"
                                         :subareas="subareas" :loading="loadingListas"
                                         @open-ai-assistant="openAIAssistant" />
-                                </div>
 
-                                <!-- Tab: Procesos (Multi-select) -->
-                                <div v-if="activeTab === 'procesos'">
+                                    <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2 mt-4">Alcance y
+                                        Procesos Vinculados</h6>
+                                    <p class="text-muted small mb-2">Seleccione los procesos a los que aplica esta
+                                        obligación.</p>
                                     <AsignarProcesosObligacion v-model="form.procesos_ids" :all-procesos="procesos" />
                                 </div>
 
-                                <!-- Tab: Evaluacion Criticidad (ISO 37301) -->
+                                <!-- 2. EVALUACIÓN DE CRITICIDAD -->
                                 <div v-if="activeTab === 'criticidad'">
+                                    <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">Evaluación de
+                                        Criticidad (ISO 37301)</h6>
                                     <ObligacionEvaluacionForm v-if="form.id" :obligacion-id="form.id"
                                         :evaluation="form.evaluacion_actual"
                                         :read-only="form.obligacion_estado === 'controlada' || form.obligacion_estado === 'inactiva'"
@@ -98,156 +101,37 @@
                                     </div>
                                 </div>
 
-                                <!-- Tab: Evaluacion (Riesgos) -->
-                                <div v-if="activeTab === 'evaluacion'">
-                                    <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">
-                                        Evaluación de Riesgo de Incumplimiento
-                                    </h6>
-
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <div>
-                                            <span class="text-muted small">Riesgos vinculados: {{ riesgos.length
-                                                }}</span>
-                                        </div>
-                                        <button class="btn btn-danger btn-sm" @click="openRiesgoModal">
-                                            <i class="fas fa-plus mr-1"></i> Crear/Asociar Riesgo
-                                        </button>
-                                    </div>
-
-                                    <div v-if="riesgos.length === 0" class="text-center py-5">
-                                        <img src="https://illustrations.popsy.co/gray/cushion.svg"
-                                            style="height: 120px; opacity: 0.6;" class="mb-3">
-                                        <p class="text-muted">No se han asociado riesgos a esta obligación.</p>
-                                    </div>
-
-                                    <div v-else class="list-group shadow-sm">
-                                        <div v-for="riesgo in riesgos" :key="riesgo.id"
-                                            class="list-group-item list-group-item-action flex-column align-items-start border-left-danger p-3 mb-2 rounded border-0 shadow-sm">
-                                            <div class="d-flex w-100 justify-content-between">
-                                                <h6 class="mb-1 text-dark font-weight-bold">{{ riesgo.riesgo_nombre }}
-                                                </h6>
-                                                <span class="badge" :class="getSemaforoClass(riesgo.riesgo_valoracion)">
-                                                    {{ riesgo.riesgo_valoracion }}
-                                                </span>
-                                            </div>
-                                            <p class="mb-1 text-muted small">{{ riesgo.riesgo_descripcion }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Tab: Acciones -->
-                                <div v-if="activeTab === 'acciones'">
-                                    <div
-                                        class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                                        <h6 class="text-danger font-weight-bold mb-0">Plan de Acción</h6>
-                                        <button class="btn btn-danger btn-sm shadow-sm" @click="openAccionModal">
-                                            <i class="fas fa-plus mr-1"></i> Nueva Acción
-                                        </button>
-                                    </div>
-
+                                <!-- 3. TRATAMIENTO (Dinámico) -->
+                                <div v-if="activeTab === 'tratamiento'">
+                                    <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">Tratamiento de la
+                                        Obligación</h6>
                                     <div v-if="!form.id" class="alert alert-warning">
-                                        Guarde la obligación antes de agregar acciones.
+                                        Guarde la obligación antes de definir el tratamiento.
                                     </div>
+                                    <ObligacionTratamiento v-else :obligacion="form" :riesgos="riesgos"
+                                        :acciones="acciones" :controles-riesgos="controlesRiesgos"
+                                        v-model:controles="form.controles_ids" @open-riesgos="openRiesgoModal"
+                                        @open-acciones="openAccionModal" />
+                                </div>
 
-                                    <div v-else>
-                                        <div v-if="acciones.length === 0" class="text-center py-5 text-muted">
-                                            Sin acciones registradas para esta obligación.
-                                        </div>
-                                        <table v-else class="table table-hover table-sm small border shadow-sm">
-                                            <thead class="bg-white">
-                                                <tr>
-                                                    <th>Descripción</th>
-                                                    <th>Responsable</th>
-                                                    <th>Fecha Fin</th>
-                                                    <th>Estado</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="accion in acciones" :key="accion.id">
-                                                    <td>
-                                                        {{ accion.accion_descripcion }}
-                                                        <span v-if="accion.es_control_permanente"
-                                                            class="badge badge-info ml-1"
-                                                            title="Establece un Control Permanente">
-                                                            <i class="fas fa-shield-alt"></i> Control
-                                                        </span>
-                                                    </td>
-                                                    <td>{{ accion.responsable?.name || 'N/A' }}</td>
-                                                    <td>{{ accion.accion_fecha_fin_planificada || 'N/A' }}</td>
-                                                    <td>
-                                                        <span class="badge"
-                                                            :class="getEstadoBadgeClass(accion.accion_estado)">
-                                                            {{ accion.accion_estado }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="text-right">
-                                                        <button class="btn btn-xs btn-light text-danger"><i
-                                                                class="fas fa-pencil-alt"></i></button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                <!-- 4. CUMPLIMIENTO -->
+                                <div v-if="activeTab === 'cumplimiento'">
+                                    <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">Gestión de
+                                        Cumplimiento</h6>
+                                    <ObligacionCumplimiento :obligacion="form" :read-only="false"
+                                        @saved="handleCumplimientoSaved" />
+                                </div>
+
+                                <!-- 5. SEGUIMIENTO -->
+                                <div v-if="activeTab === 'seguimiento'">
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">Historial de Cambios y Auditoría</h6>
+                                        <p class="small text-muted">Próximamente: Log de auditoría de cambios en la
+                                            obligación.</p>
                                     </div>
                                 </div>
 
-                                <!-- Tab: Controles -->
-                                <!-- Tab: Controles -->
-                                <div v-if="activeTab === 'controles'">
-                                    <h6 class="text-danger font-weight-bold mb-3 border-bottom pb-2">Controles de
-                                        Cumplimiento (ISO 37301)</h6>
-
-                                    <!-- Controles Directos -->
-                                    <div class="mb-4">
-                                        <ControlSelector v-model="form.controles_ids"
-                                            label="Controles de Cumplimiento Directos"
-                                            helperText="Vincule controles del catálogo maestro que aplican directamente a esta obligación." />
-                                    </div>
-
-                                    <!-- Vista Consolidada -->
-                                    <h6 class="small font-weight-bold text-muted text-uppercase mb-3 mt-4">Matriz
-                                        Consolidada de Controles</h6>
-
-                                    <div v-if="riesgos.length === 0 && !controlesData.length"
-                                        class="alert alert-info small">
-                                        No se han detectado controles (directos o vía riesgos) para esta obligación.
-                                    </div>
-
-                                    <div v-else class="table-responsive">
-                                        <table class="table table-sm table-hover border small">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th>Origen</th>
-                                                    <th>Control</th>
-                                                    <th>Tipo</th>
-                                                    <th>Referencia</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!-- Directos -->
-                                                <tr v-for="ctrl in controlesData" :key="'dir-' + ctrl.id"
-                                                    class="table-success">
-                                                    <td><span class="badge badge-success">Directo</span></td>
-                                                    <td class="font-weight-bold">{{ ctrl.nombre }}</td>
-                                                    <td><span class="badge badge-light border">{{ ctrl.tipo }}</span>
-                                                    </td>
-                                                    <td class="text-muted">Obligación Principal</td>
-                                                </tr>
-
-                                                <!-- Vía Riesgos -->
-                                                <template v-for="riesgo in riesgos" :key="'r-'+riesgo.id">
-                                                    <tr v-for="control in riesgo.controles" :key="'rc-' + control.id">
-                                                        <td><span class="badge badge-warning">Riesgo</span></td>
-                                                        <td class="font-weight-bold">{{ control.nombre }}</td>
-                                                        <td><span class="badge badge-light border">{{ control.tipo
-                                                                }}</span></td>
-                                                        <td class="text-muted small">{{ riesgo.riesgo_nombre }}</td>
-                                                    </tr>
-                                                </template>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -277,10 +161,12 @@ import { Modal } from 'bootstrap';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import ObligacionForm from './ObligacionForm.vue';
-import AsignarProcesosObligacion from './AsignarProcesosObligacion.vue'; // Import component
+import AsignarProcesosObligacion from './AsignarProcesosObligacion.vue';
 import ControlSelector from '../controles/ControlSelector.vue';
 import AsistenteIAObligacionModal from './AsistenteIAObligacionModal.vue';
 import ObligacionEvaluacionForm from './ObligacionEvaluacionForm.vue';
+import ObligacionTratamiento from './ObligacionTratamiento.vue';
+import ObligacionCumplimiento from './ObligacionCumplimiento.vue';
 
 // Toast configuration
 const Toast = Swal.mixin({
@@ -299,7 +185,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved']);
 const modalRef = ref(null);
 const modalInstance = ref(null);
-const activeTab = ref('general');
+const activeTab = ref('identificacion');
 const saving = ref(false);
 
 const store = useObligacionStore();
@@ -312,6 +198,7 @@ const loadingListas = computed(() => store.loadingListas);
 const riesgos = ref([]);
 const controlesData = ref([]); // Store full objects for direct controls
 const acciones = ref([]);
+const controlesRiesgos = ref([]);
 
 
 const form = reactive({
@@ -329,7 +216,10 @@ const form = reactive({
     obligacion_frecuencia: null,
     obligacion_fecha_identificacion: null,
     controles_ids: [],
-    evaluacion_actual: null
+    evaluacion_actual: null,
+    cumplimiento: 'pendiente',
+    fecha_cumplimiento: null,
+    comentario_cumplimiento: ''
 });
 
 const searchProceso = ref('');
@@ -412,6 +302,12 @@ const handleEvaluated = (data) => {
     }
 };
 
+const handleCumplimientoSaved = (updatedObligacion) => {
+    Object.assign(form, updatedObligacion);
+    emit('saved');
+    // Optional: reload lists or notify parent
+};
+
 
 
 const filteredProcesos = computed(() => {
@@ -434,11 +330,14 @@ const resetForm = () => {
         obligacion_frecuencia: null,
         obligacion_fecha_identificacion: null,
         controles_ids: [],
-        evaluacion_actual: null
+        evaluacion_actual: null,
+        cumplimiento: 'pendiente',
+        fecha_cumplimiento: null,
+        comentario_cumplimiento: ''
     });
     riesgos.value = [];
     acciones.value = [];
-    activeTab.value = 'general';
+    activeTab.value = 'identificacion';
 };
 
 const populateForm = (data) => {
@@ -457,6 +356,9 @@ const populateForm = (data) => {
         obligacion_fecha_identificacion: data.obligacion_fecha_identificacion,
         evaluacion_actual: data.evaluacion_actual,
         controles_ids: data.controles ? data.controles.map(c => c.id) : [],
+        cumplimiento: data.cumplimiento,
+        fecha_cumplimiento: data.fecha_cumplimiento,
+        comentario_cumplimiento: data.comentario_cumplimiento
     });
 
     if (data.id) {
@@ -475,6 +377,16 @@ const fetchRiesgos = async (id) => {
         riesgos.value = res.data.riesgos;
         controlesData.value = res.data.controles_directos; // Full objects
         form.controles_ids = res.data.controles_directos.map(c => c.id);
+
+        // Extract risk controls for Tratamiento view
+        controlesRiesgos.value = [];
+        if (riesgos.value && riesgos.value.length > 0) {
+            riesgos.value.forEach(r => {
+                if (r.controles) {
+                    controlesRiesgos.value.push(...r.controles);
+                }
+            });
+        }
     } catch (e) { }
 };
 
