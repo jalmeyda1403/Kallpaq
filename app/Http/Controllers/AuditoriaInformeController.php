@@ -125,7 +125,10 @@ class AuditoriaInformeController extends Controller
         $auditoria = AuditoriaEspecifica::with([
             'agenda.auditados',
             'agenda.checklists',
-            'agenda.proceso'
+            'agenda.proceso',
+            'equipo' => function ($query) {
+                $query->where('aeq_rol', '!=', 'Observador')->with('usuario');
+            }
         ])->findOrFail($ae_id);
 
         // Obtener auditados con su proceso
@@ -233,7 +236,8 @@ class AuditoriaInformeController extends Controller
                 'objetivo' => $auditoria->ae_objetivo,
                 'alcance' => $auditoria->ae_alcance,
                 'fecha_inicio' => $auditoria->ae_fecha_inicio,
-                'fecha_fin' => $auditoria->ae_fecha_fin
+                'fecha_fin' => $auditoria->ae_fecha_fin,
+                'equipo' => $auditoria->equipo
             ],
             'auditados' => array_values(array_unique($auditados, SORT_REGULAR)),
             'procesos_auditados' => $procesosAuditados,

@@ -21,7 +21,7 @@
         <!-- 2. ALCANCE Y CRITERIOS -->
         <div class="section-title">2. ALCANCE Y CRITERIOS</div>
         <div class="content-box">
-            {{ informe.alcance_criterios || 'No especificado' }}
+            {{ formattedCriterios }}
         </div>
 
         <!-- 3. PROCESOS AUDITADOS -->
@@ -133,7 +133,8 @@
                                 <div class="small text-muted mt-1"><strong>Evidencia:</strong> {{ item.evidencia }}
                                 </div>
                             </td>
-                            <td class="text-center">{{ item.clasificacion || 'N/A' }}</td>
+                            <td class="text-center">{{ item.hallazgo_clasificacion || item.clasificacion || 'N/A' }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -153,23 +154,41 @@
             {{ informe.recomendaciones || 'No especificado' }}
         </div>
 
+        <!-- 10. EQUIPO AUDITOR -->
+        <div class="section-title">10. EQUIPO AUDITOR</div>
+        <table class="content-table">
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="auditData.equipo && auditData.equipo.length > 0" v-for="(miembro, index) in auditData.equipo"
+                    :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td>
+                        {{ miembro.auditor?.user?.name || miembro.usuario?.name || 'Desconocido' }}
+                    </td>
+                    <td>{{ miembro.aeq_rol || 'Auditor' }}</td>
+                </tr>
+                <tr v-else>
+                    <td colspan="3" class="text-center text-muted">No se ha registrado el equipo auditor.</td>
+                </tr>
+            </tbody>
+        </table>
+
         <!-- Firmas -->
         <div class="firmas-container mt-5">
             <table width="100%">
                 <tr>
-                    <td width="50%" align="center">
+                    <td width="100%" align="center">
                         <div class="firma-line"></div>
                         <div class="firma-name font-weight-bold">
                             {{ elaboradoPor || 'Líder de Auditoría' }}
                         </div>
                         <div class="firma-cargo small">Auditor Líder</div>
-                    </td>
-                    <td width="50%" align="center">
-                        <div class="firma-line"></div>
-                        <div class="firma-name font-weight-bold">
-                            {{ aprobadoPor || 'Responsable del SIG' }}
-                        </div>
-                        <div class="firma-cargo small">Aprobado por</div>
                     </td>
                 </tr>
             </table>
@@ -194,6 +213,12 @@ const props = defineProps({
 
 const logoUrl = '/images/logo.png';
 const currentDate = new Date().toLocaleDateString();
+
+// Computed for formatting criteria
+const formattedCriterios = computed(() => {
+    if (!props.informe.alcance_criterios) return 'No especificado';
+    return props.informe.alcance_criterios.replace(/\n/g, ', ');
+});
 
 </script>
 

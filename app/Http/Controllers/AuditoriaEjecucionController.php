@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class AuditoriaEjecucionController extends Controller
 {
+    use \App\Traits\CalculatesAuditHours;
+
     protected $aiService;
 
     public function __construct(\App\Services\AIService $aiService)
@@ -129,9 +131,10 @@ class AuditoriaEjecucionController extends Controller
             return $value !== null;
         }));
 
-
-        // Optional: Update Agenda status to 'Concluida' if all items checked?
-        // Or keep it 'En Curso' until explicit close.
+        // Recalculate Executed Hours for the Audit
+        if ($item->agenda && $item->agenda->ae_id) {
+            $this->updateExecutedHours($item->agenda->ae_id);
+        }
 
         return response()->json($item);
     }
@@ -383,6 +386,11 @@ class AuditoriaEjecucionController extends Controller
             $agendaItem->aea_archivo = $path;
             $agendaItem->estado = 'Concluida';
             $agendaItem->save();
+
+            // Recalculate Executed Hours
+            if ($agendaItem->ae_id) {
+                $this->updateExecutedHours($agendaItem->ae_id);
+            }
 
             return response()->json([
                 'message' => 'Archivo subido correctamente',

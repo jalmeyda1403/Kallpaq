@@ -15,8 +15,7 @@ class AuditoriaEquipo extends Model
         'ae_id',
         'auditor_id', // Links to User/Personal
         'aeq_rol',
-        'aeq_horas_planificadas',
-        'aeq_horas_ejecutadas'
+        'aeq_horas_programadas'
     ];
 
     public function auditoria()

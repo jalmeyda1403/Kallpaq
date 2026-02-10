@@ -36,15 +36,17 @@ class NormaAuditableController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
+            'na_nombre' => 'required|string|max:255',
+            'na_descripcion' => 'nullable|string',
+            'na_sistema' => 'nullable|string|max:255',
             'requisitos' => 'array'
         ]);
 
         return DB::transaction(function () use ($request) {
             $norma = NormaAuditable::create([
-                'nombre' => $request->nombre,
-                'descripcion' => $request->descripcion
+                'na_nombre' => $request->na_nombre,
+                'na_descripcion' => $request->na_descripcion,
+                'na_sistema' => $request->na_sistema
             ]);
 
             if ($request->has('requisitos')) {
@@ -66,15 +68,17 @@ class NormaAuditableController extends Controller
         $norma = NormaAuditable::findOrFail($id);
 
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
+            'na_nombre' => 'required|string|max:255',
+            'na_descripcion' => 'nullable|string',
+            'na_sistema' => 'nullable|string|max:255',
             'requisitos' => 'array'
         ]);
 
         return DB::transaction(function () use ($request, $norma) {
             $norma->update([
-                'nombre' => $request->nombre,
-                'descripcion' => $request->descripcion
+                'na_nombre' => $request->na_nombre,
+                'na_descripcion' => $request->na_descripcion,
+                'na_sistema' => $request->na_sistema
             ]);
 
             if ($request->has('requisitos')) {
@@ -104,10 +108,10 @@ class NormaAuditableController extends Controller
 
     public function generateRequirements(Request $request)
     {
-        $request->validate(['nombre_norma' => 'required|string']);
+        $request->validate(['na_nombre' => 'required|string']);
 
         try {
-            $requirements = $this->aiService->generateNormaRequirements($request->nombre_norma);
+            $requirements = $this->aiService->generateNormaRequirements($request->na_nombre);
             return response()->json($requirements);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error generating requirements: ' . $e->getMessage()], 500);
@@ -138,7 +142,8 @@ class NormaAuditableController extends Controller
             ];
         }
 
-        return Excel::download(new class ($data) implements FromArray, WithHeadings {
+        return Excel::download(
+            new class ($data) implements FromArray, WithHeadings {
             protected $data;
             public function __construct(array $data)
             {
@@ -152,7 +157,9 @@ class NormaAuditableController extends Controller
             {
                 return ['numeral', 'denominacion', 'detalle'];
             }
-        }, 'plantilla_requisitos_norma.xlsx');
+            },
+            'plantilla_requisitos_norma.xlsx'
+        );
     }
 
     public function import(Request $request)

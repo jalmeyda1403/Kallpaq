@@ -19,12 +19,21 @@
                         </div>
                         <div class="card-body bg-white pt-0">
                             <div class="row">
-                                <div class="col-md-10">
+                                <div class="col-md-7">
                                     <div class="form-group mb-3">
                                         <label class="small font-weight-bold text-uppercase text-muted">Nombre de la
                                             Norma
                                             <span class="text-danger">*</span></label>
-                                        <input v-model="form.nombre" type="text"
+                                        <input v-model="form.na_nombre" type="text"
+                                            class="form-control border-light-gray shadow-none"
+                                            placeholder="Ej. ISO 9001:2015">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group mb-3">
+                                        <label class="small font-weight-bold text-uppercase text-muted">Sistema
+                                        </label>
+                                        <input v-model="form.na_sistema" type="text"
                                             class="form-control border-light-gray shadow-none"
                                             placeholder="Ej. ISO 9001:2015">
                                     </div>
@@ -43,8 +52,9 @@
                             </div>
                             <div class="form-group mb-0">
                                 <label class="small font-weight-bold text-uppercase text-muted">Descripción</label>
-                                <textarea v-model="form.descripcion" class="form-control border-light-gray shadow-none"
-                                    rows="2" placeholder="Breve descripción del alcance..."></textarea>
+                                <textarea v-model="form.na_descripcion"
+                                    class="form-control border-light-gray shadow-none" rows="2"
+                                    placeholder="Breve descripción del alcance..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -168,8 +178,9 @@ const isEdit = ref(false);
 
 const form = ref({
     id: null,
-    nombre: '',
-    descripcion: '',
+    na_nombre: '',
+    na_descripcion: '',
+    na_sistema: '',
     requisitos: []
 });
 
@@ -180,8 +191,9 @@ const open = (norma = null) => {
     if (norma) {
         // Precargar datos básicos inmediatamente para evitar parpadeo en info general
         form.value.id = norma.id;
-        form.value.nombre = norma.nombre;
-        form.value.descripcion = norma.descripcion;
+        form.value.na_nombre = norma.na_nombre;
+        form.value.na_descripcion = norma.na_descripcion;
+        form.value.na_sistema = norma.na_sistema;
 
         // Cargar requisitos desde el servidor
         loadNorma(norma.id);
@@ -196,8 +208,9 @@ const open = (norma = null) => {
 const resetForm = () => {
     form.value = {
         id: null,
-        nombre: '',
-        descripcion: '',
+        na_nombre: '',
+        na_descripcion: '',
+        na_sistema: '',
         requisitos: []
     };
 };
@@ -297,14 +310,14 @@ const triggerResize = () => {
 };
 
 const generateAI = async () => {
-    if (!form.value.nombre) {
+    if (!form.value.na_nombre) {
         Swal.fire('Atención', 'Ingresa el nombre de la norma primero.', 'warning');
         return;
     }
 
     generating.value = true;
     try {
-        const response = await axios.post('/api/auditoria/normas/generate', { nombre_norma: form.value.nombre });
+        const response = await axios.post('/api/auditoria/normas/generate', { na_nombre: form.value.na_nombre });
         if (Array.isArray(response.data)) {
             // Map AI response to new field names
             const mappedData = response.data.map(r => ({
@@ -325,7 +338,7 @@ const generateAI = async () => {
 };
 
 const save = async () => {
-    if (!form.value.nombre) return;
+    if (!form.value.na_nombre) return;
     saving.value = true;
     try {
         if (isEdit.value) {

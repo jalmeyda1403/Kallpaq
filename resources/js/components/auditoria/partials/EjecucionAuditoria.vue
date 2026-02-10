@@ -21,13 +21,16 @@
             <!-- BARRA DE PROGRESO GENERAL DE LA AUDITORÍA -->
             <div class="px-3 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="small font-weight-bold text-muted">AVANCE GENERAL DE AUDITORÍA</span>
-                    <span class="badge badge-primary">{{ globalProgress }}%</span>
+                    <span class="small font-weight-bold text-uppercase text-secondary"
+                        style="letter-spacing: 0.5px;">Avance General</span>
+                    <span class="badge badge-pill badge-primary shadow-sm px-3">{{ globalProgress }}%</span>
                 </div>
-                <div class="progress"
-                    style="height: 10px; border-radius: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar"
-                        :style="{ width: globalProgress + '%' }"></div>
+                <div class="progress shadow-inset"
+                    style="height: 12px; border-radius: 20px; background-color: #e9ecef;">
+                    <div class="progress-bar bg-gradient-primary" role="progressbar"
+                        :style="{ width: globalProgress + '%' }" :aria-valuenow="globalProgress" aria-valuemin="0"
+                        aria-valuemax="100">
+                    </div>
                 </div>
             </div>
 
@@ -110,7 +113,7 @@
                                                 <i class="fas fa-user-tie text-secondary mr-1"></i>
                                                 <span class="small text-muted font-weight-bold">Auditor:</span>
                                                 <span class="small ml-1">{{ store.getAuditorForAgenda(group.sessions[0])
-                                                }}</span>
+                                                    }}</span>
                                             </div>
 
                                             <!-- Requisitos consolidados -->
@@ -147,6 +150,14 @@
                                             <small class="text-muted" style="font-size: 0.7rem;">
                                                 {{ group.completed_items }} de {{ group.total_items }} verificados
                                             </small>
+                                            <div class="mt-1 text-right">
+                                                <span class="badge badge-light border text-muted"
+                                                    title="Horas Ejecutadas Estimadas">
+                                                    <i class="fas fa-hourglass-half mr-1"></i> {{ group.executed_hours
+                                                    }}
+                                                    Hrs
+                                                </span>
+                                            </div>
                                         </div>
 
                                         <!-- PROGRESO PARA ESPECIALES (Archivo) -->
@@ -159,54 +170,87 @@
                                             <div v-else class="alert alert-secondary p-1 mb-2 small text-center">
                                                 <i class="fas fa-info-circle mr-1"></i> Pendiente Documento
                                             </div>
+                                            <div class="text-right">
+                                                <span class="badge badge-light border text-muted"
+                                                    title="Horas Ejecutadas Estimadas">
+                                                    <i class="fas fa-hourglass-half mr-1"></i> {{ group.executed_hours
+                                                    }}
+                                                    Hrs
+                                                </span>
+                                            </div>
                                         </div>
 
 
                                         <!-- BOTONES DE ACCIÓN -->
-                                        <div class="d-flex flex-column">
+                                        <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                                             <!-- Bloque Administrativo (Apertura/Cierre/Gabinete) -->
                                             <div v-if="['gabinete', 'apertura', 'cierre'].indexOf(group.sessions[0].aea_tipo) !== -1"
-                                                class="mb-2">
-                                                <button class="btn btn-sm btn-block rounded-pill shadow-sm mb-2"
-                                                    :class="group.estado === 'Concluida' ? 'btn-outline-primary' : 'btn-danger'"
-                                                    @click="openUploadModal(group.main_session)">
-                                                    <i class="fas"
-                                                        :class="group.estado === 'Concluida' ? 'fa-sync-alt' : 'fa-upload'"></i>
-                                                    {{ group.estado === 'Concluida' ? 'Cambiar Archivo' :
-                                                        'Subir Documento' }}
-                                                </button>
+                                                class="d-flex align-items-center">
                                                 <a v-if="group.main_session.aea_archivo"
                                                     :href="'/storage/' + group.main_session.aea_archivo" target="_blank"
-                                                    class="btn btn-outline-info btn-sm btn-block rounded-pill">
-                                                    <i class="fas fa-external-link-alt mr-1"></i> Ver Documento
+                                                    class="btn btn-outline-info btn-sm rounded-circle shadow-sm mr-2 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;" v-tooltip="'Ver Documento'">
+                                                    <i class="fas fa-external-link-alt"></i>
                                                 </a>
+                                                <button
+                                                    class="btn btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;"
+                                                    :class="group.estado === 'Concluida' ? 'btn-outline-primary' : 'btn-danger'"
+                                                    @click="openUploadModal(group.main_session)"
+                                                    v-tooltip="group.estado === 'Concluida' ? 'Cambiar Archivo' : 'Subir Documento'">
+                                                    <i class="fas"
+                                                        :class="group.estado === 'Concluida' ? 'fa-sync-alt' : 'fa-upload'"></i>
+                                                </button>
                                             </div>
 
                                             <!-- Bloque Proceso -->
-                                            <div v-else class="mb-2">
+                                            <div v-else class="d-flex align-items-center">
+                                                <!-- Botón Auditados (Solo para Ejecución) -->
+                                                <button
+                                                    v-if="group.main_session.aea_tipo === 'ejecucion' && group.estado !== 'Cancelada'"
+                                                    class="btn btn-outline-info btn-sm rounded-circle shadow-sm mr-2 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;"
+                                                    @click="selectAuditados(group.main_session)"
+                                                    v-tooltip="'Ver Auditados'">
+                                                    <i class="fas fa-users"></i>
+                                                </button>
+
+                                                <!-- Primary Action (Iniciar/Continuar/Ver) -->
                                                 <button v-if="group.estado === 'Concluida'"
-                                                    class="btn btn-outline-success btn-sm btn-block rounded-pill mb-1"
-                                                    @click="selectItem(group.main_session)">
-                                                    <i class="fas fa-eye mr-1"></i> Ver Resultados
+                                                    class="btn btn-primary btn-sm rounded-circle shadow-sm mr-2 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;"
+                                                    @click="selectItem(group.main_session)"
+                                                    v-tooltip="'Ver Resultados'">
+                                                    <i class="fas fa-eye"></i>
                                                 </button>
                                                 <button v-else-if="group.estado === 'En Curso'"
-                                                    class="btn btn-primary btn-sm btn-block rounded-pill shadow-sm mb-1"
-                                                    @click="selectItem(group.main_session)">
-                                                    <i class="fas fa-play-circle mr-1"></i> Continuar Checklist
+                                                    class="btn btn-success btn-sm rounded-circle shadow-sm mr-2 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;"
+                                                    @click="selectItem(group.main_session)" v-tooltip="'Continuar'">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button v-else-if="group.estado === 'Cancelada'" disabled
+                                                    class="btn btn-secondary btn-sm rounded-circle shadow-sm mr-2 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;" v-tooltip="'Cancelada'">
+                                                    <i class="fas fa-ban"></i>
                                                 </button>
                                                 <button v-else
-                                                    class="btn btn-danger btn-sm btn-block rounded-pill shadow-sm mb-1"
-                                                    @click="selectItem(group.main_session)">
-                                                    <i class="fas fa-plus-circle mr-1"></i> Iniciar Ejecución
+                                                    class="btn btn-warning btn-sm rounded-circle shadow-sm mr-2 d-flex align-items-center justify-content-center text-white"
+                                                    style="width: 32px; height: 32px;"
+                                                    @click="selectItem(group.main_session)"
+                                                    v-tooltip="'Iniciar Ejecución'">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+
+                                                <!-- Botón Cancelar (Al final) -->
+                                                <button v-if="!['Concluida', 'Cancelada'].includes(group.estado)"
+                                                    class="btn btn-outline-danger btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;"
+                                                    @click="confirmCancel(group.main_session)"
+                                                    v-tooltip="'Cancelar Actividad'">
+                                                    <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
-
-                                            <!-- Botón Auditados (Solo para Ejecución) -->
-                                            <button v-if="group.main_session.aea_tipo === 'ejecucion'"
-                                                class="btn btn-outline-info btn-sm btn-block rounded-pill"
-                                                @click="selectAuditados(group.main_session)">
-                                                <i class="fas fa-users mr-1"></i> Auditados
-                                            </button>
 
                                         </div>
 
@@ -396,41 +440,50 @@ const groupedActivities = computed(() => {
         const bestSession = g.sessions.find(s => s.aea_requisito && s.aea_requisito.length > 0) || g.sessions[0];
         g.main_session = bestSession;
 
-        // Calcular progreso del grupo
-        g.progress = g.total_items > 0 ? Math.round((g.completed_items / g.total_items) * 100) : 0;
+        // Restore Progress Calculation for Group
+        if (['gabinete', 'apertura', 'cierre'].includes(g.sessions[0].aea_tipo)) {
+            g.progress = (g.estado === 'Concluida') ? 100 : 0;
+        } else {
+            g.progress = g.total_items > 0 ? Math.round((g.completed_items / g.total_items) * 100) : 0;
+            if (g.estado === 'Concluida') g.progress = 100;
+        }
+
+        // Calcular horas ejecutadas estimadas
+        let totalExecutedMinutes = 0;
+        g.sessions.forEach(s => {
+            if (s.aea_hora_inicio && s.aea_hora_fin && s.estado !== 'Cancelada') {
+                const start = new Date(`2000-01-01T${s.aea_hora_inicio}`);
+                const end = new Date(`2000-01-01T${s.aea_hora_fin}`);
+                let diff = (end - start) / 1000 / 60; // minutes
+                if (diff < 0) diff += 24 * 60; // Handle midnight crossing if needed, though rare here
+
+                let sessionProgress = 0;
+                if (['apertura', 'cierre', 'gabinete'].includes(s.aea_tipo)) {
+                    sessionProgress = (s.estado === 'Concluida') ? 1 : 0;
+                } else {
+                    // Execution
+                    if (s.estado === 'Concluida') sessionProgress = 1;
+                    else if (s.completed_items > 0 && s.total_items > 0) {
+                        sessionProgress = s.completed_items / s.total_items;
+                    }
+                }
+                totalExecutedMinutes += diff * sessionProgress;
+            }
+        });
+        g.executed_hours = (totalExecutedMinutes / 60).toFixed(2);
 
         return g;
     });
 });
 
-// Progreso Global de la Auditoría (Promedio de avance de las actividades)
+// Progreso Global de la Auditoría (Persistido)
 const globalProgress = computed(() => {
-    const rawItems = store.getExecutionList;
-    if (!rawItems || rawItems.length === 0) return 0;
-
-    // Contamos por grupo único (igual que la vista)
-    const groups = groupedActivities.value;
-    if (groups.length === 0) return 0;
-
-    let totalProgressSum = 0;
-
-    groups.forEach(g => {
-        // Determinamos el tipo de sesión principal
-        const type = g.sessions[0].aea_tipo;
-
-        if (['gabinete', 'apertura', 'cierre'].includes(type) || g.estado === 'Programada') {
-            // Para actividades administrativas, es binario (0 o 100)
-            // A menos que estén 'En Curso' que sigue siendo 0 hasta que suban el archivo
-            if (g.estado === 'Concluida') {
-                totalProgressSum += 100;
-            }
-        } else {
-            // Para ejecución (checklist), usamos el porcentaje calculado
-            totalProgressSum += (g.progress || 0);
-        }
-    });
-
-    return Math.round(totalProgressSum / groups.length);
+    // Si viene en auditData (al cargar inicialmente)
+    if (props.auditData && props.auditData.ae_avance !== undefined) {
+        return Math.round(props.auditData.ae_avance);
+    }
+    // Fallback provisional si no se ha recargado
+    return 0;
 });
 
 
@@ -473,7 +526,51 @@ const getStatusClass = (status) => {
         case 'En Curso': return 'badge-primary';
         case 'Concluida': return 'badge-success';
         case 'Cerrado': return 'badge-dark';
+        case 'Cancelada': return 'badge-secondary';
         default: return 'badge-secondary';
+    }
+};
+
+const confirmCancel = (session) => {
+    // Usar SweetAlert2 si está disponible (this.$swal) o window.Swal
+    const swal = window.Swal || (this && this.$swal);
+
+    if (swal) {
+        swal.fire({
+            title: '¿Cancelar Actividad?',
+            text: "Esta acción marcará la actividad como cancelada y no podrá deshacerse.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No, mantener'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                cancelActivity(session);
+            }
+        });
+    } else {
+        if (confirm('¿Está seguro de CANCELAR esta actividad? Esto no se puede deshacer.')) {
+            cancelActivity(session);
+        }
+    }
+};
+
+const cancelActivity = async (session) => {
+    try {
+        const url = window.route
+            ? window.route('api.auditoria.especifica.agenda.cancelar', { id: session.id })
+            : `/api/api/auditoria/especifica/${session.id}/agenda/cancelar`; // Adjusted path based on api.php group
+
+        // Actually, route definition was: prefix('auditoria/especifica') -> '/{id}/agenda/cancelar'
+        // So path is /api/auditoria/especifica/{id}/agenda/cancelar
+        await axios.put(`/api/auditoria/especifica/${session.id}/agenda/cancelar`);
+
+        toast.add({ severity: 'info', summary: 'Cancelada', detail: 'Actividad cancelada correctamente', life: 3000 });
+        store.loadData(props.auditId);
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cancelar la actividad', life: 3000 });
     }
 };
 
@@ -705,6 +802,68 @@ watch(() => props.auditId, (newId) => {
         opacity: 1;
     }
 }
+
+.bg-gradient-primary {
+    background: linear-gradient(90deg, #007bff, #6610f2);
+}
+
+.shadow-inset {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Professional Buttons */
+.btn-professional {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-professional:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-professional:active {
+    transform: translateY(0) scale(0.95);
+}
+
+/* Finished: Blue Gradient */
+.btn-finished {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+}
+
+/* Processing: Green Gradient */
+.btn-processing {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+}
+
+/* Pending: Yellow Gradient */
+.btn-pending {
+    background: linear-gradient(135deg, #ffc107, #d39e00);
+    color: white;
+    /* Ensure visibility */
+}
+
+/* Cancel: Red (X) */
+.btn-cancel {
+    background: white;
+    border: 2px solid #dc3545;
+    color: #dc3545;
+}
+
+.btn-cancel:hover {
+    background: #dc3545;
+    color: white;
+}
+
+
 
 .zoomIn {
     animation-name: zoomIn;

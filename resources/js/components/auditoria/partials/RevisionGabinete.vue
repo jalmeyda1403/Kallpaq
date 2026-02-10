@@ -9,10 +9,16 @@
                     Oportunidades de
                     Mejora.</small>
             </div>
-            <button class="btn btn-sm btn-outline-secondary ml-3" @click="loadHallazgos" :disabled="loading"
-                style="min-width: 120px;">
-                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Refrescar
-            </button>
+            <div class="d-flex">
+                <button class="btn btn-sm btn-primary ml-3 shadow-sm" @click="openNewHallazgoModal"
+                    style="min-width: 140px;">
+                    <i class="fas fa-plus-circle mr-1"></i> Nuevo Hallazgo
+                </button>
+                <button class="btn btn-sm btn-outline-secondary ml-2" @click="loadHallazgos" :disabled="loading"
+                    style="min-width: 120px;">
+                    <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Refrescar
+                </button>
+            </div>
         </div>
         <div class="card-body p-0">
             <div v-if="loading" class="text-center py-5">
@@ -40,7 +46,10 @@
                                         </span>
                                     </div>
                                     <div class="mr-3 font-weight-bold text-dark" style="font-size: 1.1em;">
-                                        {{ item.requisito_referencia }} - {{ item.norma_referencia }}
+                                        {{ item.requisito_referencia }}
+                                        <span class="text-muted font-weight-normal mx-2">|</span>
+                                        <span class="text-info"><i class="fas fa-project-diagram mr-1"></i>{{
+                                            item.agenda?.proceso?.proceso_nombre || 'Proceso no definido' }}</span>
                                     </div>
 
                                     <!-- Clasificación Dropdown (Stop Propagation to prevent collapse toggle) -->
@@ -174,6 +183,138 @@
                 </div>
             </div>
         </div>
+
+        <!-- NEW HALLAZGO MODAL -->
+        <div class="modal fade" id="newHallazgoModal" tabindex="-1" role="dialog" aria-hidden="true"
+            data-backdrop="static" ref="newHallazgoModalRef">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title font-weight-bold"><i class="fas fa-plus-circle mr-2"></i>Registrar Nuevo
+                            Hallazgo (Gabinete)</h5>
+                        <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body bg-light">
+                        <form @submit.prevent="saveNewHallazgo">
+                            <div class="card shadow-sm border-0 mb-0">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold small text-uppercase">Proceso
+                                                    (Agenda)</label>
+                                                <select class="form-control" v-model="newHallazgo.agenda_id" required>
+                                                    <option value="" disabled>Seleccione un proceso...</option>
+                                                    <option v-for="proc in agendaProcesos" :key="proc.agenda_id"
+                                                        :value="proc.agenda_id">
+                                                        {{ proc.proceso_nombre }} ({{ proc.tipo }})
+                                                    </option>
+                                                </select>
+                                                <small class="form-text text-muted">Seleccione el proceso auditado al
+                                                    que pertenece el hallazgo.</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold small text-uppercase">Norma
+                                                    Referencia</label>
+                                                <select class="form-control" v-model="newHallazgo.norma_referencia"
+                                                    required>
+                                                    <option value="" disabled>Seleccione...</option>
+                                                    <option v-for="norma in normasAuditables" :key="norma.id"
+                                                        :value="norma.na_nombre">
+                                                        {{ norma.na_nombre }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold small text-uppercase">Numeral /
+                                                    Requisito</label>
+                                                <select class="form-control" v-model="newHallazgo.requisito_referencia"
+                                                    required :disabled="!newHallazgo.norma_referencia">
+                                                    <option value="" disabled>Seleccione...</option>
+                                                    <option v-for="req in availableRequisitos" :key="req.id"
+                                                        :value="req.nr_numeral">
+                                                        {{ req.nr_numeral }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" v-if="requisitoDetalle">
+                                        <div class="col-12">
+                                            <div class="form-group alert alert-secondary p-2 mb-3">
+                                                <label class="font-weight-bold small text-muted mb-1">Detalle del
+                                                    Requisito
+                                                    ({{ newHallazgo.requisito_referencia }})</label>
+                                                <p class="mb-0 small" style="white-space: pre-wrap;">{{ requisitoDetalle
+                                                    }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold small text-uppercase">Tipo</label>
+                                                <select class="form-control" v-model="newHallazgo.estado_cumplimiento"
+                                                    required>
+                                                    <option value="No Conforme">No Conforme</option>
+                                                    <option value="Oportunidad de Mejora">Oportunidad de Mejora
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold small text-uppercase">Clasificación
+                                                    Inicial</label>
+                                                <select v-model="newHallazgo.hallazgo_clasificacion"
+                                                    class="form-control">
+                                                    <option value="">Seleccione...</option>
+                                                    <option value="NCM">NCM (No Conformidad Mayor)</option>
+                                                    <option value="NCMe">NCMe (No Conformidad Menor)</option>
+                                                    <option value="Odm">Odm (Oportunidad de Mejora)</option>
+                                                    <option value="Obs">Obs (Observación)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="font-weight-bold small text-uppercase">Descripción del
+                                            Hallazgo</label>
+                                        <textarea class="form-control" v-model="newHallazgo.hallazgo_detectado" rows="4"
+                                            required placeholder="Describa el hallazgo detectado..."></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="font-weight-bold small text-uppercase">Evidencia</label>
+                                        <textarea class="form-control" v-model="newHallazgo.evidencia_registrada"
+                                            rows="2" placeholder="Describa la evidencia..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right mt-3">
+                                <button type="button" class="btn btn-secondary mr-2"
+                                    @click="closeModal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary px-4" :disabled="savingHallazgo">
+                                    <i class="fas" :class="savingHallazgo ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                                    Guardar Hallazgo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </template>
 
@@ -181,6 +322,7 @@
 import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
     auditId: {
@@ -190,14 +332,62 @@ const props = defineProps({
 });
 
 const hallazgos = ref([]);
+const agendaProcesos = ref([]);
+const normasAuditables = ref([]);
+const availableRequisitos = ref([]);
+const requisitoDetalle = ref('');
 const loading = ref(true);
 const makingSummary = ref({});
+const savingHallazgo = ref(false);
+
+const newHallazgo = ref({
+    agenda_id: '',
+    norma_referencia: '',
+    requisito_referencia: '',
+    hallazgo_detectado: '',
+    evidencia_registrada: '',
+    estado_cumplimiento: 'No Conforme',
+    hallazgo_clasificacion: ''
+});
+
+// ...
+
+const loadNormas = async () => {
+    try {
+        const response = await axios.get(`/api/auditorias/${props.auditId}/normas`);
+        normasAuditables.value = response.data;
+    } catch (error) {
+        console.error("Error loading norms", error);
+    }
+};
+
+
+
+const newHallazgoModalRef = ref(null);
+let newHallazgoModalInstance = null;
 
 const loadHallazgos = async () => {
     loading.value = true;
     try {
         const response = await axios.get(`/api/auditoria/hallazgos/revision/${props.auditId}`);
-        hallazgos.value = response.data.map(h => {
+        let data = response.data;
+
+        // Ordenar: Primero por Numeral (requisito_referencia) y luego por Proceso Nombre
+        data.sort((a, b) => {
+            // Comparar Numerales (simple string compare for now, ideally semantic version compare)
+            const numA = a.requisito_referencia || '';
+            const numB = b.requisito_referencia || '';
+            const numComparison = numA.localeCompare(numB, undefined, { numeric: true, sensitivity: 'base' });
+
+            if (numComparison !== 0) return numComparison;
+
+            // Si numerales iguales, comparar por proceso usuario
+            const procA = a.agenda?.proceso?.proceso_nombre || '';
+            const procB = b.agenda?.proceso?.proceso_nombre || '';
+            return procA.localeCompare(procB);
+        });
+
+        hallazgos.value = data.map(h => {
             // Lógica para valor por defecto
             let defaultClasificacion = h.hallazgo_clasificacion || 'N/A';
 
@@ -225,6 +415,70 @@ const loadHallazgos = async () => {
         Swal.fire('Error', 'No se pudieron cargar los hallazgos para revisión', 'error');
     } finally {
         loading.value = false;
+    }
+};
+
+const loadAgendaProcesos = async () => {
+    try {
+        const response = await axios.get(`/api/auditorias/${props.auditId}/agenda-procesos`);
+        agendaProcesos.value = response.data;
+    } catch (error) {
+        console.error("Error loading agenda processes", error);
+    }
+};
+
+const openNewHallazgoModal = () => {
+    // Reset form
+    newHallazgo.value = {
+        agenda_id: '',
+        norma_referencia: '',
+        requisito_referencia: '',
+        hallazgo_detectado: '',
+        evidencia_registrada: '',
+        estado_cumplimiento: 'No Conforme',
+        hallazgo_clasificacion: ''
+    };
+
+    // Ensure Modal is initialized
+    if (!newHallazgoModalInstance && newHallazgoModalRef.value) {
+        newHallazgoModalInstance = new Modal(newHallazgoModalRef.value, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+
+    if (newHallazgoModalInstance) {
+        newHallazgoModalInstance.show();
+    } else {
+        console.error("Modal element reference is missing.");
+    }
+
+    if (agendaProcesos.value.length === 0) {
+        loadAgendaProcesos();
+    }
+    if (normasAuditables.value.length === 0) {
+        loadNormas();
+    }
+};
+
+const closeModal = () => {
+    newHallazgoModalInstance?.hide();
+};
+
+const saveNewHallazgo = async () => {
+    savingHallazgo.value = true;
+    try {
+        await axios.post('/api/auditorias/hallazgos/gabinete', newHallazgo.value);
+
+        closeModal();
+
+        Swal.fire('Éxito', 'Hallazgo registrado correctamente.', 'success');
+        loadHallazgos(); // Recargar lista
+    } catch (error) {
+        console.error("Error saving hallazgo", error);
+        Swal.fire('Error', 'No se pudo registrar el hallazgo.', 'error');
+    } finally {
+        savingHallazgo.value = false;
     }
 };
 
@@ -288,11 +542,45 @@ const guardarRedaccion = async (item) => {
 onMounted(() => {
     if (props.auditId) {
         loadHallazgos();
+        loadAgendaProcesos();
     }
 });
 
 watch(() => props.auditId, (newVal) => {
-    if (newVal) loadHallazgos();
+    if (newVal) {
+        loadHallazgos();
+        loadAgendaProcesos();
+    }
+});
+
+watch(() => newHallazgo.value.norma_referencia, (newVal) => {
+    if (!newVal) {
+        availableRequisitos.value = [];
+        return;
+    }
+    const norma = normasAuditables.value.find(n => n.na_nombre === newVal);
+    if (norma && norma.requisitos) {
+        availableRequisitos.value = norma.requisitos;
+    } else {
+        availableRequisitos.value = [];
+    }
+    // Si cambia la norma, limpiar requisito seleccionado si no existe en la nueva lista
+    // (O simplemente limpiar siempre para obligar a reseleccionar)
+    newHallazgo.value.requisito_referencia = '';
+    requisitoDetalle.value = '';
+});
+
+watch(() => newHallazgo.value.requisito_referencia, (newVal) => {
+    if (!newVal) {
+        requisitoDetalle.value = '';
+        return;
+    }
+    const req = availableRequisitos.value.find(r => r.nr_numeral === newVal);
+    if (req) {
+        requisitoDetalle.value = req.nr_detalle || '';
+    } else {
+        requisitoDetalle.value = '';
+    }
 });
 
 </script>

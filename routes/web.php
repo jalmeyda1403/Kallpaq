@@ -166,6 +166,11 @@ Route::group(['prefix' => 'api'], function () {
     Route::put('/auditorias/{id}/equipo', [AuditoriaEspecificaController::class, 'updateEquipo'])->name('api.auditorias.equipo');
     Route::post('/auditorias/{id}/evaluacion', [AuditoriaEspecificaController::class, 'storeEvaluacion'])->name('api.auditorias.evaluacion');
 
+    // Hallazgos Gabinete Rutas
+    Route::get('/auditorias/{id}/agenda-procesos', [AuditoriaHallazgoController::class, 'getAgendaProcesos'])->name('api.auditorias.agenda-procesos');
+    Route::get('/auditorias/{id}/normas', [AuditoriaHallazgoController::class, 'getNormasByAudit'])->name('api.auditorias.normas');
+    Route::post('/auditorias/hallazgos/gabinete', [AuditoriaHallazgoController::class, 'storeHallazgoGabinete'])->name('api.auditorias.hallazgos.gabinete');
+
     // Auditores
     Route::apiResource('auditores', AuditorController::class)->names('api.auditores');
     Route::get('/auditores-disponibles', [AuditorController::class, 'getAvailableUsers'])->name('api.auditores.available-users');

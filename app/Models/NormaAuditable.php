@@ -13,8 +13,9 @@ class NormaAuditable extends Model
     protected $table = 'normas_auditables';
 
     protected $fillable = [
-        'nombre',
-        'descripcion'
+        'na_nombre',
+        'na_descripcion',
+        'na_sistema'
     ];
 
     public function requisitos()

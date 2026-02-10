@@ -65,14 +65,9 @@ class ProgramaAuditoriaController extends Controller
                             'ae_horas_hombre',
                             'ae_fecha_inicio',
                             'ae_fecha_fin',
-                            'ae_estado'
-                        ])->withCount([
-
-                                    'agenda as total_actividades',
-                                    'agenda as actividades_concluidas' => function ($q) {
-                                        $q->where('estado', 'Concluida');
-                                    }
-                                ]);
+                            'ae_estado',
+                            'ae_avance' // Select persisted progress
+                        ]);
                     },
                     'auditoriasEspecificas.procesos:id,proceso_nombre'
                 ])->find($id);
@@ -82,13 +77,9 @@ class ProgramaAuditoriaController extends Controller
             return response()->json(['message' => 'Programa no encontrado'], 404);
         }
 
-        // Calculate Compliance using the already loaded relationship
-        $audits = $programa->auditoriasEspecificas->map(function ($audit) {
-            $totalAct = $audit->total_actividades ?? 0;
-            $doneAct = $audit->actividades_concluidas ?? 0;
-            $audit->progreso_ejecucion = $totalAct > 0 ? round(($doneAct / $totalAct) * 100) : 0;
-            return $audit;
-        });
+        // Calculate Compliance based on executed status (Performance optimized)
+        // We no longer calculate individual audit progress here as it is persisted in ae_avance
+        $audits = $programa->auditoriasEspecificas;
 
         $total = $audits->count();
         $cancelled = $audits->where('ae_estado', 'Cancelada')->count();
@@ -98,7 +89,7 @@ class ProgramaAuditoriaController extends Controller
         $compliance = $denominator > 0 ? round(($executed / $denominator) * 100, 2) : 0;
 
         $programa->compliance = $compliance;
-        $programa->auditorias_especificas = $audits; // Asegurar que se devuelven los datos con el progreso
+        // $programa->auditorias_especificas is already set by relation
 
         return response()->json($programa);
 

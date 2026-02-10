@@ -19,6 +19,7 @@ class AuditoriaAgenda extends Model
         'aea_hora_fin',
         'aea_actividad',
         'auditor_id',
+        'observador_id',
         'aea_requisito',
         'aea_lugar',
         'aea_tipo',
@@ -38,6 +39,11 @@ class AuditoriaAgenda extends Model
     public function auditor()
     {
         return $this->belongsTo(Auditor::class, 'auditor_id');
+    }
+
+    public function observador()
+    {
+        return $this->belongsTo(Auditor::class, 'observador_id');
     }
 
     public function proceso()

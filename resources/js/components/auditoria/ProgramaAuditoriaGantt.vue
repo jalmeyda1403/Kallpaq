@@ -58,7 +58,7 @@
 
                     <div class="d-flex align-items-center mb-4">
                         <span class="text-muted small mr-2"><i class="fas fa-fingerprint"></i> v{{ programa.pa_version
-                            }}</span>
+                        }}</span>
                         <span class="badge badge-info rounded-pill px-3">{{ programa.pa_estado }}</span>
                     </div>
 
@@ -217,11 +217,11 @@
                                 <div class="d-flex align-items-center">
                                     <div class="progress flex-grow-1 mr-2" style="height: 6px; border-radius: 10px;">
                                         <div class="progress-bar"
-                                            :class="data.progreso_ejecucion === 100 ? 'bg-success' : 'bg-primary'"
-                                            :style="{ width: (data.progreso_ejecucion || 0) + '%' }"></div>
+                                            :class="(data.ae_avance || 0) == 100 ? 'bg-success' : 'bg-primary'"
+                                            :style="{ width: (data.ae_avance || 0) + '%' }"></div>
                                     </div>
-                                    <span class="small font-weight-bold text-muted">{{ data.progreso_ejecucion || 0
-                                        }}%</span>
+                                    <span class="small font-weight-bold text-muted">{{ data.ae_avance || 0
+                                    }}%</span>
                                 </div>
                             </template>
                         </Column>

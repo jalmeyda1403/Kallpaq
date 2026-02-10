@@ -21,6 +21,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('auditoria/especifica')->group(function () {
+        // ... existing routes ...
+        Route::put('/{id}/agenda/cancelar', [App\Http\Controllers\AuditoriaEspecificaController::class, 'cancelarActividad']);
+    });
+
     // Salidas No Conformes
     Route::prefix('salidas-nc')->name('api.salidas-nc.')->group(function () {
         Route::get('/', [SalidaNoConformeController::class, 'index'])->name('index');

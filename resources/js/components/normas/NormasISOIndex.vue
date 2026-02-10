@@ -32,14 +32,14 @@
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                     class="p-datatable-sm p-datatable-striped p-datatable-hoverable-rows">
 
-                    <Column field="nombre" header="Norma" sortable style="width:20%">
+                    <Column field="na_nombre" header="Norma" sortable style="width:20%">
                         <template #body="slotProps">
-                            <span class="font-weight-bold text-dark">{{ slotProps.data.nombre }}</span>
+                            <span class="font-weight-bold text-dark">{{ slotProps.data.na_nombre }}</span>
                         </template>
                     </Column>
-                    <Column field="descripcion" header="Descripción" style="width:50%">
+                    <Column field="na_descripcion" header="Descripción" style="width:50%">
                         <template #body="slotProps">
-                            <span class="text-muted" style="font-size: 0.70rem;">{{ slotProps.data.descripcion ||
+                            <span class="text-muted" style="font-size: 0.70rem;">{{ slotProps.data.na_descripcion ||
                                 'Sin descripción' }}</span>
                         </template>
                     </Column>
@@ -112,7 +112,7 @@ const editNorma = (norma) => {
 const confirmDelete = (norma) => {
     Swal.fire({
         title: '¿Eliminar Norma?',
-        text: `Se eliminará la norma ${norma.nombre} y sus requisitos.`,
+        text: `Se eliminará la norma ${norma.na_nombre} y sus requisitos.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',

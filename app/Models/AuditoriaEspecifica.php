@@ -27,6 +27,7 @@ class AuditoriaEspecifica extends Model
         'ae_ciclo',
         'ae_sistema',
         'ae_tipo',
+        'ae_avance',
     ];
 
     protected $casts = [

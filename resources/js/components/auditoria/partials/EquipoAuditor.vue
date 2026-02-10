@@ -48,8 +48,8 @@
                                 <tr>
                                     <th class="pl-3">Nombre del Auditor</th>
                                     <th>Rol en el Equipo</th>
-                                    <th class="text-center">H. Planificadas</th>
-                                    <th class="text-center">H. Ejecutadas</th>
+                                    <th class="text-center">H. Prog.</th>
+                                    <th class="text-center">H. Ejec.</th>
                                     <th class="text-center" style="width: 80px;">Acción</th>
                                 </tr>
                             </thead>
@@ -73,12 +73,11 @@
                                         </select>
                                     </td>
                                     <td class="text-center align-middle">
-                                        <input type="number" step="0.5" v-model="member.aeq_horas_planificadas"
-                                            class="form-control form-control-sm text-center border-0 bg-transparent p-0"
-                                            style="max-width: 60px; margin: 0 auto;" />
+                                        <span class="font-weight-bold text-secondary">{{ member.aeq_horas_programadas ||
+                                            0 }}</span>
                                     </td>
                                     <td class="text-center align-middle">
-                                        <span class="font-weight-bold text-secondary">{{ member.aeq_horas_ejecutadas ||
+                                        <span class="font-weight-bold text-success">{{ member.aeq_horas_ejecutadas ||
                                             0 }}</span>
                                     </td>
                                     <td class="text-center align-middle">
@@ -129,7 +128,7 @@ const saving = ref(false);
 const auditorsList = ref([]);
 const team = ref([]);
 const roles = ['Auditor Líder', 'Auditor Interno', 'Auditor', 'Especialista', 'Observador'];
-const newMember = ref({ auditor_id: null, aeq_rol: 'Auditor', aeq_horas_planificadas: 0, aeq_horas_ejecutadas: 0 });
+const newMember = ref({ auditor_id: null, aeq_rol: 'Auditor', aeq_horas_programadas: 0 });
 
 // Compute filtered auditors for the dropdown (exclude already in team)
 const availableAuditors = computed(() => {
@@ -229,7 +228,7 @@ const addMember = () => {
     }
 
     team.value.push({ ...newMember.value });
-    newMember.value = { auditor_id: null, aeq_rol: 'Auditor Interno', aeq_horas_planificadas: 0, aeq_horas_ejecutadas: 0 };
+    newMember.value = { auditor_id: null, aeq_rol: 'Auditor Interno', aeq_horas_programadas: 0 };
 };
 
 const removeMember = (index) => {

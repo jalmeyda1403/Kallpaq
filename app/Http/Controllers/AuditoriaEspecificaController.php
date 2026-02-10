@@ -6,12 +6,15 @@ use App\Models\AuditoriaEspecifica;
 use App\Models\AuditoriaAgenda;
 use App\Models\AuditoriaEquipo;
 use App\Models\AuditoriaEvaluacion;
+use App\Traits\CalculatesAuditHours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class AuditoriaEspecificaController extends Controller
 {
+    use CalculatesAuditHours;
+
     public function index($pa_id)
     {
         // Listar auditorías de un programa específico
@@ -143,6 +146,7 @@ class AuditoriaEspecificaController extends Controller
                     'aea_hora_fin' => $item['aea_hora_fin'],
                     'aea_actividad' => $item['aea_actividad'],
                     'auditor_id' => $item['auditor_id'] ?? null,
+                    'observador_id' => $item['observador_id'] ?? null,
                     'aea_requisito' => $item['aea_requisito'] ?? null,
                     'aea_lugar' => $item['aea_lugar'] ?? null,
                     'aea_tipo' => $item['aea_tipo'] ?? 'ejecucion',
@@ -197,11 +201,7 @@ class AuditoriaEspecificaController extends Controller
                     'ae_id' => $ae_id,
                     'auditor_id' => $auditorId,
                     'aeq_rol' => $miembro['aeq_rol'] ?? 'Auditor',
-                    'aeq_horas_planificadas' => $miembro['aeq_horas_planificadas'] ?? 0,
-                    // Keep existing executed hours if updating? Or trust request? Trust request usually, or preserve.
-                    // If request sends 0 but DB has value, we might want to preserve unless explicit.
-                    // For now, allow overwrite as per previous logic.
-                    'aeq_horas_ejecutadas' => $miembro['aeq_horas_ejecutadas'] ?? 0,
+                    // Horas programadas se calculan automáticamente desde la agenda
                 ];
 
                 if ($existingMap->has($auditorId)) {
@@ -234,52 +234,22 @@ class AuditoriaEspecificaController extends Controller
         }
     }
 
-    private function updateCalculatedHours($ae_id)
+
+
+    public function cancelarActividad($id)
     {
-        $audit = AuditoriaEspecifica::with(['agenda', 'equipo.auditor'])->find($ae_id);
-        if (!$audit)
-            return;
+        $agendaItem = AuditoriaAgenda::with('auditoria')->findOrFail($id);
+        $agendaItem->estado = 'Cancelada';
+        $agendaItem->save();
 
-        // Map to store hours per auditor_id (from auditores table)
-        $hoursMap = []; // auditor_id => hours
-
-        foreach ($audit->equipo as $member) {
-            $hoursMap[$member->auditor_id] = 0;
+        if ($agendaItem->auditoria) {
+            $this->updateCalculatedHours($agendaItem->auditoria->id);
         }
 
-        foreach ($audit->agenda as $item) {
-            if (!$item->aea_hora_inicio || !$item->aea_hora_fin)
-                continue;
-
-            $start = \Carbon\Carbon::parse($item->aea_hora_inicio);
-            $end = \Carbon\Carbon::parse($item->aea_hora_fin);
-
-            // Ensure positive duration
-            $minutes = $end->diffInMinutes($start);
-            $duration = $minutes / 60;
-
-            if (in_array($item->aea_tipo, ['apertura', 'cierre', 'gabinete'])) {
-                // Add to all members
-                foreach ($audit->equipo as $member) {
-                    $hoursMap[$member->auditor_id] += $duration;
-                }
-            } else {
-                // Execution
-                // Ensure agenda item has an auditor_id (Auditor ID)
-                if ($item->auditor_id && isset($hoursMap[$item->auditor_id])) {
-                    $hoursMap[$item->auditor_id] += $duration;
-                }
-            }
-        }
-
-        foreach ($audit->equipo as $member) {
-            $newHours = $hoursMap[$member->auditor_id] ?? 0;
-            if ($member->aeq_horas_ejecutadas != $newHours) {
-                $member->aeq_horas_ejecutadas = $newHours;
-                $member->save();
-            }
-        }
+        return response()->json(['message' => 'Actividad cancelada', 'item' => $agendaItem]);
     }
+
+
 
     // Evaluación de Auditores
     public function storeEvaluacion(Request $request, $ae_id)

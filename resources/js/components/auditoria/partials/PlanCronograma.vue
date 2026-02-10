@@ -65,6 +65,7 @@
                                     <th class="align-middle" style="width: 40px;">#</th>
                                     <th class="align-middle" style="min-width: 150px;">Proceso / Actividad</th>
                                     <th class="align-middle" style="min-width: 130px;">Auditor</th>
+                                    <th class="align-middle" style="min-width: 130px;">Observador</th>
                                     <th class="align-middle" style="width: 100px;">H. Inicio</th>
                                     <th class="align-middle" style="width: 100px;">H. Fin</th>
                                     <th class="align-middle">Requisitos</th>
@@ -102,7 +103,21 @@
                                             class="form-control form-control-xs border-0"
                                             @change="updateAuditorName(row)">
                                             <option :value="null">Por definir</option>
-                                            <option v-for="m in equipo" :key="m.auditor_id" :value="m.auditor_id">
+                                            <option v-for="m in auditoresTeam" :key="m.auditor_id"
+                                                :value="m.auditor_id">
+                                                {{ m.auditor?.user?.name || m.usuario?.name || 'Desconocido' }}
+                                            </option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div v-if="['apertura', 'cierre', 'gabinete'].includes(row.aea_tipo)">
+                                            <span class="text-muted small">-</span>
+                                        </div>
+                                        <select v-else v-model="row.observador_id"
+                                            class="form-control form-control-xs border-0">
+                                            <option :value="null">Ninguno</option>
+                                            <option v-for="m in observadoresTeam" :key="'obs-' + m.auditor_id"
+                                                :value="m.auditor_id">
                                                 {{ m.auditor?.user?.name || m.usuario?.name || 'Desconocido' }}
                                             </option>
                                         </select>
@@ -159,18 +174,45 @@
             <div v-show="localActiveTab === 'balance'" class="row">
                 <div class="col-md-5">
                     <div class="p-4 bg-white border rounded shadow-sm h-100">
-                        <h6 class="font-weight-bold text-dark mb-4 d-flex align-items-center">
-                            <i class="fas fa-chart-bar text-danger mr-3 fa-lg"></i> HH Totales por Auditor
-                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h6 class="font-weight-bold text-dark mb-0 d-flex align-items-center">
+                                <i class="fas fa-chart-bar text-danger mr-3 fa-lg"></i> Carga por Auditor
+                            </h6>
+                            <button v-if="selectedAuditors.size > 0"
+                                class="btn btn-xs btn-outline-secondary rounded-pill" @click="clearAuditorSelection"
+                                title="Mostrar Todos">
+                                <i class="fas fa-times mr-1"></i> Ver Todos
+                            </button>
+                        </div>
+
                         <div class="row">
-                            <div v-for="aud in auditorBalance" :key="aud.name" class="col-md-12 mb-4">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="font-weight-bold text-dark small text-uppercase">{{ aud.name }}</span>
-                                    <span class="badge badge-danger px-3 py-1">{{ aud.hours }} h</span>
-                                </div>
-                                <div class="progress" style="height: 12px; border-radius: 6px;">
-                                    <div class="progress-bar bg-gradient-danger shadow-sm" role="progressbar"
-                                        :style="{ width: aud.percentage + '%' }" :aria-valuenow="aud.hours"></div>
+                            <div v-for="aud in auditorBalance" :key="aud.id"
+                                class="col-md-12 mb-3 cursor-pointer user-select-none"
+                                @click="toggleAuditorSelection(aud.id)">
+                                <div class="p-2 rounded transition-all"
+                                    :class="selectedAuditors.has(aud.id) ? 'bg-light-primary border-primary border' : 'hover-bg-light'">
+
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle mr-2"
+                                                :class="selectedAuditors.has(aud.id) ? 'text-primary' : 'text-muted opacity-25'"></i>
+                                            <div>
+                                                <span class="font-weight-bold text-dark small text-uppercase d-block">{{
+                                                    aud.name }}</span>
+                                                <span v-if="aud.isObserver" class="badge badge-secondary"
+                                                    style="font-size: 0.6rem;">Observador</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge px-3 py-1 align-self-start"
+                                            :class="aud.isObserver ? 'badge-secondary' : 'badge-danger'">
+                                            {{ aud.hours }} h
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 8px; border-radius: 6px;">
+                                        <div class="progress-bar shadow-sm" role="progressbar"
+                                            :class="aud.isObserver ? 'bg-secondary' : (selectedAuditors.has(aud.id) ? 'bg-primary' : 'bg-gradient-danger')"
+                                            :style="{ width: aud.percentage + '%' }" :aria-valuenow="aud.hours"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div v-if="auditorBalance.length === 0" class="col-12 py-5 text-center text-muted italic">
@@ -182,8 +224,14 @@
 
                 <div class="col-md-7">
                     <div class="p-4 bg-white border rounded shadow-sm h-100">
-                        <h6 class="font-weight-bold text-dark mb-4 d-flex align-items-center">
-                            <i class="fas fa-chart-line text-info mr-3 fa-lg"></i> HH Totales por Día
+                        <h6 class="font-weight-bold text-dark mb-4 d-flex align-items-center justify-content-between">
+                            <span>
+                                <i class="fas fa-chart-line text-info mr-3 fa-lg"></i> HH Totales por Día
+                            </span>
+                            <span v-if="selectedAuditors.size > 0" class="badge badge-primary font-weight-normal">
+                                Filtrado por {{ selectedAuditors.size }} {{ selectedAuditors.size === 1 ? 'persona' :
+                                    'personas' }}
+                            </span>
                         </h6>
                         <div style="height: 350px; position: relative;">
                             <canvas ref="chartCanvas"></canvas>
@@ -197,7 +245,7 @@
 
             <!-- Sección de Vista Agenda -->
             <div v-show="localActiveTab === 'agenda'" class="row">
-                <div class="col-md-12">
+                <div class="col-md-7">
                     <div class="p-4 bg-white border rounded shadow-sm">
                         <h6 class="font-weight-bold text-dark mb-4 d-flex align-items-center">
                             <i class="fas fa-list-ol text-danger mr-3 fa-lg"></i> Agenda Consolidada por Día
@@ -297,7 +345,7 @@
                     <tr>
                         <th>Fecha de Auditoría</th>
                         <td>{{ formatDateFull(auditData.ae_fecha_inicio) }} - {{ formatDateFull(auditData.ae_fecha_fin)
-                        }}</td>
+                            }}</td>
                     </tr>
                 </table>
             </div>
@@ -396,22 +444,62 @@ const currentRowForRequisitos = ref(null);
 const pdfTemplate = ref(null);
 const printModalRef = ref(null);
 
+const auditoresTeam = computed(() => {
+    return equipo.value.filter(m => m.aeq_rol !== 'Observador');
+});
+
+const observadoresTeam = computed(() => {
+    return equipo.value.filter(m => m.aeq_rol === 'Observador');
+});
+
 const totalHH = computed(() => {
     let hours = 0;
     agenda.value.forEach(row => {
         const diff = getTimeDiff(row.aea_hora_inicio, row.aea_hora_fin);
         const dayCount = Object.values(row.schedule).filter(v => v === true).length;
-        hours += (diff * dayCount);
+
+        if (['apertura', 'cierre', 'gabinete'].includes(row.aea_tipo)) {
+            hours += (diff * dayCount * equipo.value.length);
+        } else {
+            // Auditor + Observer (if any)
+            let multiplier = 0;
+            if (row.auditor_id) multiplier++;
+            if (row.observador_id) multiplier++;
+            hours += (diff * dayCount * multiplier);
+        }
     });
     return parseFloat(hours.toFixed(2));
 });
 
+const selectedAuditors = ref(new Set());
+
+const toggleAuditorSelection = (auditorId) => {
+    if (selectedAuditors.value.has(auditorId)) {
+        selectedAuditors.value.delete(auditorId);
+    } else {
+        selectedAuditors.value.add(auditorId);
+    }
+    // Trigger chart update
+    renderChart();
+};
+
+const clearAuditorSelection = () => {
+    selectedAuditors.value.clear();
+    renderChart();
+};
+
 const auditorBalance = computed(() => {
     const balance = {};
-    // Initialize balance for all team members
+
+    // Initialize for all team members
     equipo.value.forEach(m => {
-        const name = m.auditor?.user?.name || m.usuario?.name || 'Desconocido';
-        balance[name] = 0;
+        balance[m.auditor_id] = {
+            id: m.auditor_id,
+            name: m.auditor?.user?.name || m.usuario?.name || 'Desconocido',
+            role: m.aeq_rol,
+            isObserver: m.aeq_rol === 'Observador',
+            hours: 0
+        };
     });
 
     agenda.value.forEach(row => {
@@ -420,25 +508,29 @@ const auditorBalance = computed(() => {
         const hh = diff * dayCount;
 
         if (['apertura', 'cierre', 'gabinete'].includes(row.aea_tipo)) {
-            // Add hours to EVERY team member
-            Object.keys(balance).forEach(name => {
-                balance[name] += hh;
+            // Add to ALL members
+            Object.values(balance).forEach(aud => {
+                aud.hours += hh;
             });
-        } else if (row.auditor_id) {
-            // Find member name by ID to key the balance object
-            const member = equipo.value.find(m => m.auditor_id === row.auditor_id);
-            if (member) {
-                const name = member.auditor?.user?.name || member.usuario?.name || 'Desconocido';
-                balance[name] = (balance[name] || 0) + hh;
+        } else {
+            // Auditor
+            if (row.auditor_id && balance[row.auditor_id]) {
+                balance[row.auditor_id].hours += hh;
+            }
+            // Observer
+            if (row.observador_id && balance[row.observador_id]) {
+                balance[row.observador_id].hours += hh;
             }
         }
     });
 
-    const list = Object.entries(balance).map(([name, hours]) => ({
-        name,
-        hours: parseFloat(hours.toFixed(2))
+    const list = Object.values(balance).map(a => ({
+        ...a,
+        hours: parseFloat(a.hours.toFixed(2))
     }));
+
     const max = Math.max(...list.map(a => a.hours), 1);
+
     return list.map(a => ({
         ...a,
         percentage: Math.min(100, (a.hours / max) * 100)
@@ -447,15 +539,33 @@ const auditorBalance = computed(() => {
 
 const totalHHPerDay = computed(() => {
     if (!days.value) return [];
+
     return days.value.map(day => {
         let total = 0;
         agenda.value.forEach(row => {
             if (row.schedule && row.schedule[day.date]) {
                 const hh = getTimeDiff(row.aea_hora_inicio, row.aea_hora_fin);
+
+                // Filtering Logic
                 if (['apertura', 'cierre', 'gabinete'].includes(row.aea_tipo)) {
-                    total += (hh * equipo.value.length);
-                } else if (row.auditor_id) {
-                    total += hh;
+                    // For administrative, sum hours for each SELECTED member (or all if none selected)
+                    equipo.value.forEach(member => {
+                        if (selectedAuditors.value.size === 0 || selectedAuditors.value.has(member.auditor_id)) {
+                            total += hh;
+                        }
+                    });
+                } else {
+                    // Execution
+                    if (row.auditor_id) {
+                        if (selectedAuditors.value.size === 0 || selectedAuditors.value.has(row.auditor_id)) {
+                            total += hh;
+                        }
+                    }
+                    if (row.observador_id) {
+                        if (selectedAuditors.value.size === 0 || selectedAuditors.value.has(row.observador_id)) {
+                            total += hh;
+                        }
+                    }
                 }
             }
         });
@@ -474,34 +584,40 @@ const renderChart = () => {
     }
 
     const data = totalHHPerDay.value;
-    const isLarge = data.length > 10; // Threshold for switching to Area Chart
+    const isLarge = data.length > 10;
     const chartType = isLarge ? 'line' : 'bar';
+
+    // Different color if filtering
+    const isFiltered = selectedAuditors.value.size > 0;
+    const baseColor = isFiltered ? 'rgba(0, 123, 255, 0.7)' : 'rgba(220, 53, 69, 0.7)';
+    const borderColor = isFiltered ? 'rgba(0, 123, 255, 1)' : 'rgba(220, 53, 69, 1)';
+    const bgLarge = isFiltered ? 'rgba(0, 123, 255, 0.2)' : 'rgba(220, 53, 69, 0.2)';
 
     chartInstance = new Chart(chartCanvas.value, {
         type: chartType,
         data: {
             labels: data.map(d => d.label),
             datasets: [{
-                label: 'HH Totales',
+                label: isFiltered ? 'HH Filtradas' : 'HH Totales',
                 data: data.map(d => d.total),
-                backgroundColor: isLarge ? 'rgba(220, 53, 69, 0.2)' : 'rgba(220, 53, 69, 0.7)',
-                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: isLarge ? bgLarge : baseColor,
+                borderColor: borderColor,
                 borderWidth: 2,
                 borderRadius: isLarge ? 0 : 5,
                 barThickness: isLarge ? undefined : 30,
                 fill: isLarge,
                 tension: 0.4,
-                pointRadius: isLarge ? 3 : 0 // Show points for line chart
+                pointRadius: isLarge ? 3 : 0
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { display: isFiltered },
                 tooltip: {
                     callbacks: {
-                        label: (context) => ` ${context.parsed.y} HH Totales`
+                        label: (context) => ` ${context.parsed.y} HH`
                     }
                 }
             },
@@ -535,6 +651,12 @@ const getAgendaForDay = (date) => {
             } else if (row.auditor_id) {
                 const m = equipo.value.find(x => x.auditor_id === row.auditor_id);
                 auditorName = m ? (m.auditor?.user?.name || m.usuario?.name || 'User') : 'Desconocido';
+
+                if (row.observador_id) {
+                    const o = equipo.value.find(x => x.auditor_id === row.observador_id);
+                    const obsName = o ? (o.auditor?.user?.name || o.usuario?.name || 'User') : 'Desconocido';
+                    auditorName += ` + Obs: ${obsName}`;
+                }
             }
 
             list.push({
@@ -609,11 +731,10 @@ const initSchedule = () => {
 const addRow = () => {
     agenda.value.push({
         auditor_id: null,
+        observador_id: null,
         aea_hora_inicio: '08:00',
         aea_hora_fin: '17:00',
         aea_requisito: [],
-        aea_tipo: 'ejecucion',
-        itemIds: {},
         aea_tipo: 'ejecucion',
         itemIds: {},
         schedule: initSchedule() // Ensure explicit initialization based on days
@@ -674,6 +795,7 @@ const syncWithProcesos = () => {
                 proceso_id: p.id,
                 aea_actividad: name,
                 auditor_id: null,
+                observador_id: null,
                 aea_requisito: '',
                 aea_tipo: 'ejecucion',
                 aea_hora_inicio: '08:30',
@@ -949,9 +1071,10 @@ const assignAuditData = (data) => {
     if (data.agenda && data.agenda.length > 0) {
         const grouped = {};
         data.agenda.forEach(a => {
-            // Use auditor_id in key if available, else aea_auditor (which is empty string now likely)
+            // Use auditor_id in key if available, else aea_auditor
             const audKey = a.auditor_id || 'no-auditor';
-            const key = `${a.aea_actividad}-${audKey}-${a.aea_hora_inicio}-${a.aea_hora_fin}`;
+            const obsKey = a.observador_id || 'no-observer';
+            const key = `${a.aea_actividad}-${audKey}-${obsKey}-${a.aea_hora_inicio}-${a.aea_hora_fin}`;
             if (!grouped[key]) {
                 // Try to recover proceso_id if missing (legacy data healing)
                 let pId = a.proceso_id;
@@ -964,7 +1087,8 @@ const assignAuditData = (data) => {
                     proceso_id: pId || null,
                     aea_actividad: a.aea_actividad,
                     aea_auditor: a.aea_auditor, // Legacy/Display
-                    auditor_id: a.auditor_id,   // NEW
+                    auditor_id: a.auditor_id,
+                    observador_id: a.observador_id, // NEW
                     aea_requisito: a.aea_requisito,
                     aea_tipo: a.aea_tipo || 'ejecucion',
                     aea_hora_inicio: a.aea_hora_inicio.substring(0, 5),
@@ -1066,6 +1190,7 @@ const save = async () => {
                         aea_actividad: row.aea_actividad,
                         aea_auditado: null,
                         auditor_id: row.auditor_id,
+                        observador_id: row.observador_id || null,
                         aea_requisito: row.aea_requisito,
                         aea_tipo: row.aea_tipo
                     });
