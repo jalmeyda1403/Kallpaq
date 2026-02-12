@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property \Illuminate\Support\Carbon $ar_fecha_nueva
+ */
 class AccionReprogramacion extends Model
 {
     use HasFactory;

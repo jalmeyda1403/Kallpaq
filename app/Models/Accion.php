@@ -5,8 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property \Illuminate\Support\Carbon|null $accion_fecha_fin_reprogramada
+ * @property \Illuminate\Support\Carbon|null $accion_fecha_fin_real
+ */
 class Accion extends Model
 {
+
     use HasFactory;
 
     protected $table = 'acciones';
